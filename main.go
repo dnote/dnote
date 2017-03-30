@@ -12,9 +12,10 @@ type Config struct {
 	Channel string
 }
 
-type Note struct {
-	Channel string
-}
+type Note map[string][]string
+
+const configFilename = ".dnoterc"
+const dnoteFilename = ".dnote"
 
 func getConfigPath() (string, error) {
 	usr, err := user.Current()
@@ -22,10 +23,19 @@ func getConfigPath() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/.dnote", usr.HomeDir), nil
+	return fmt.Sprintf("%s/%s", usr.HomeDir, configFilename), nil
 }
 
-func touchDotDnote() error {
+func getDnotePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteFilename), nil
+}
+
+func generateConfigFile() error {
 	content := []byte("channel: general\n")
 	configPath, err := getConfigPath()
 	if err != nil {
@@ -34,6 +44,43 @@ func touchDotDnote() error {
 
 	err = ioutil.WriteFile(configPath, content, 0644)
 	return err
+}
+
+func touchDnoteFile() error {
+	dnotePath, err := getDnotePath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(dnotePath, []byte{}, 0644)
+	return err
+}
+
+// initDnote creates a config file if one does not exist
+func initDnote() error {
+	configPath, err := getConfigPath()
+	if err != nil {
+		return err
+	}
+	dnotePath, err := getDnotePath()
+	if err != nil {
+		return err
+	}
+
+	if !checkFileExists(configPath) {
+		err := generateConfigFile()
+		if err != nil {
+			return err
+		}
+	}
+	if !checkFileExists(dnotePath) {
+		err := touchDnoteFile()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func check(e error) {
@@ -61,6 +108,15 @@ func readConfig() (Config, error) {
 	}
 
 	return ret, nil
+}
+
+func getCurrentChannel() (string, error) {
+	config, err := readConfig()
+	if err != nil {
+		return "", err
+	}
+
+	return config.Channel, nil
 }
 
 func writeConfig(config Config) error {
@@ -99,11 +155,84 @@ func changeChannel(channelName string) error {
 	return nil
 }
 
-func main() {
-	if _, err := os.Stat("~/.dnote"); os.IsNotExist(err) {
-		err = touchDotDnote()
-		check(err)
+func readNote() (Note, error) {
+	ret := Note{}
+
+	notePath, err := getDnotePath()
+	if err != nil {
+		return ret, err
 	}
+
+	b, err := ioutil.ReadFile(notePath)
+	if err != nil {
+		return ret, nil
+	}
+
+	err = yaml.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, nil
+}
+
+func writeNote(content string) error {
+	note, err := readNote()
+	if err != nil {
+		return err
+	}
+
+	channel, err := getCurrentChannel()
+	if err != nil {
+		return err
+	}
+
+	if _, ok := note[channel]; ok {
+		note[channel] = append(note[channel], content)
+	} else {
+		note[channel] = []string{content}
+	}
+
+	d, err := yaml.Marshal(note)
+	if err != nil {
+		return err
+	}
+
+	notePath, err := getDnotePath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(notePath, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getChannels() ([]string, error) {
+	note, err := readNote()
+	if err != nil {
+		return nil, err
+	}
+
+	channels := make([]string, len(note))
+	for k := range note {
+		channels = append(channels, k)
+	}
+
+	return channels, nil
+}
+
+func checkFileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !os.IsNotExist(err)
+}
+
+func main() {
+	err := initDnote()
+	check(err)
 
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - A command line tool to spontaneously record new learnings\n")
@@ -121,5 +250,22 @@ func main() {
 		channel := os.Args[2]
 		err := changeChannel(channel)
 		check(err)
+	case "new":
+		note := os.Args[2]
+		err := writeNote(note)
+		check(err)
+	case "channels":
+		currentChannel, err := getCurrentChannel()
+		check(err)
+		channels, err := getChannels()
+		check(err)
+
+		for _, channel := range channels {
+			if channel == currentChannel {
+				fmt.Printf("* %v\n", channel)
+			} else {
+				fmt.Printf("  %v\n", channel)
+			}
+		}
 	}
 }
