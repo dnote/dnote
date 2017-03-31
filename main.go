@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"sort"
 )
 
 type Config struct {
@@ -217,10 +218,12 @@ func getBooks() ([]string, error) {
 		return nil, err
 	}
 
-	books := make([]string, len(note))
+	books := make([]string, 0, len(note))
 	for k := range note {
 		books = append(books, k)
 	}
+
+	sort.Strings(books)
 
 	return books, nil
 }
@@ -237,25 +240,25 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - A command line tool to spontaneously record new learnings\n")
 		fmt.Println("Commands:")
-		fmt.Println("  use - choose the book")
-		fmt.Println("  new - write a new note")
-		fmt.Println("  books - show books")
+		fmt.Println("  use [u] - choose the book")
+		fmt.Println("  new [n] - write a new note")
+		fmt.Println("  ls [l] - show books")
 		os.Exit(0)
 	}
 
 	command := os.Args[1]
 
 	switch command {
-	case "use":
+	case "use", "u":
 		book := os.Args[2]
 		err := changeBook(book)
 		check(err)
-	case "new":
+	case "new", "n":
 		note := os.Args[2]
 		fmt.Println(note)
 		err := writeNote(note)
 		check(err)
-	case "books":
+	case "ls", "l", "books":
 		currentBook, err := getCurrentBook()
 		check(err)
 		books, err := getBooks()
@@ -268,5 +271,8 @@ func main() {
 				fmt.Printf("  %v\n", book)
 			}
 		}
+	default:
+		break
 	}
+
 }
