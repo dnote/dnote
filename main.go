@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Channel string
+	Book string
 }
 
 type Note map[string][]string
@@ -36,7 +36,7 @@ func getDnotePath() (string, error) {
 }
 
 func generateConfigFile() error {
-	content := []byte("channel: general\n")
+	content := []byte("book: general\n")
 	configPath, err := getConfigPath()
 	if err != nil {
 		return err
@@ -110,13 +110,13 @@ func readConfig() (Config, error) {
 	return ret, nil
 }
 
-func getCurrentChannel() (string, error) {
+func getCurrentBook() (string, error) {
 	config, err := readConfig()
 	if err != nil {
 		return "", err
 	}
 
-	return config.Channel, nil
+	return config.Book, nil
 }
 
 func writeConfig(config Config) error {
@@ -138,14 +138,14 @@ func writeConfig(config Config) error {
 	return nil
 }
 
-// changeChannel replaces the channel name in the dnote config file
-func changeChannel(channelName string) error {
+// changeBook replaces the book name in the dnote config file
+func changeBook(bookName string) error {
 	config, err := readConfig()
 	if err != nil {
 		return err
 	}
 
-	config.Channel = channelName
+	config.Book = bookName
 
 	err = writeConfig(config)
 	if err != nil {
@@ -182,15 +182,15 @@ func writeNote(content string) error {
 		return err
 	}
 
-	channel, err := getCurrentChannel()
+	book, err := getCurrentBook()
 	if err != nil {
 		return err
 	}
 
-	if _, ok := note[channel]; ok {
-		note[channel] = append(note[channel], content)
+	if _, ok := note[book]; ok {
+		note[book] = append(note[book], content)
 	} else {
-		note[channel] = []string{content}
+		note[book] = []string{content}
 	}
 
 	d, err := yaml.Marshal(note)
@@ -211,18 +211,18 @@ func writeNote(content string) error {
 	return nil
 }
 
-func getChannels() ([]string, error) {
+func getBooks() ([]string, error) {
 	note, err := readNote()
 	if err != nil {
 		return nil, err
 	}
 
-	channels := make([]string, len(note))
+	books := make([]string, len(note))
 	for k := range note {
-		channels = append(channels, k)
+		books = append(books, k)
 	}
 
-	return channels, nil
+	return books, nil
 }
 
 func checkFileExists(filepath string) bool {
@@ -237,9 +237,9 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - A command line tool to spontaneously record new learnings\n")
 		fmt.Println("Commands:")
-		fmt.Println("  use - choose the channel")
+		fmt.Println("  use - choose the book")
 		fmt.Println("  new - write a new note")
-		fmt.Println("  channels - show channels")
+		fmt.Println("  books - show books")
 		os.Exit(0)
 	}
 
@@ -247,24 +247,25 @@ func main() {
 
 	switch command {
 	case "use":
-		channel := os.Args[2]
-		err := changeChannel(channel)
+		book := os.Args[2]
+		err := changeBook(book)
 		check(err)
 	case "new":
 		note := os.Args[2]
+		fmt.Println(note)
 		err := writeNote(note)
 		check(err)
-	case "channels":
-		currentChannel, err := getCurrentChannel()
+	case "books":
+		currentBook, err := getCurrentBook()
 		check(err)
-		channels, err := getChannels()
+		books, err := getBooks()
 		check(err)
 
-		for _, channel := range channels {
-			if channel == currentChannel {
-				fmt.Printf("* %v\n", channel)
+		for _, book := range books {
+			if book == currentBook {
+				fmt.Printf("* %v\n", book)
 			} else {
-				fmt.Printf("  %v\n", channel)
+				fmt.Printf("  %v\n", book)
 			}
 		}
 	}
