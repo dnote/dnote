@@ -268,11 +268,17 @@ func checkUpdates() error {
 	return nil
 }
 
+func heartbeat() {
+	http.Get("http://api.dnote.io/heartbeat")
+}
+
 func main() {
 	err := initDnote()
 	check(err)
 	err = checkUpdates()
 	check(err)
+
+	heartbeat()
 
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
