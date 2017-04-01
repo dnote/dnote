@@ -1,5 +1,7 @@
 # Dnote CLI
 
+![Dnote](assets/main.png)
+
 A command line interface for spontaneously capturing the things you learn while coding
 
 ## Installation
