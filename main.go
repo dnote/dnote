@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/user"
 	"sort"
@@ -17,6 +19,7 @@ type Note map[string][]string
 
 const configFilename = ".dnoterc"
 const dnoteFilename = ".dnote"
+const version = "v0.0.1"
 
 func getConfigPath() (string, error) {
 	usr, err := user.Current()
@@ -233,16 +236,50 @@ func checkFileExists(filepath string) bool {
 	return !os.IsNotExist(err)
 }
 
+func checkUpdates() error {
+	endpoint := "https://api.github.com/repos/dnote-io/cli/releases"
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	var x []map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&x)
+	if err != nil {
+		return err
+	}
+
+	if len(x) == 0 {
+		return nil
+	}
+
+	latestRelease := x[0]
+	latestVersion := latestRelease["tag_name"]
+
+	if version != latestVersion {
+		fmt.Println("==")
+		fmt.Printf("Update available: %s\n", latestVersion)
+		fmt.Printf("See: %s\n", x[0]["html_url"])
+		fmt.Println("==\n")
+	}
+
+	return nil
+}
+
 func main() {
 	err := initDnote()
 	check(err)
+	err = checkUpdates()
+	check(err)
 
 	if len(os.Args) < 2 {
-		fmt.Println("Dnote - A command line tool to spontaneously record new learnings\n")
+		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
 		fmt.Println("Commands:")
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
-		fmt.Println("  ls [l] - show books")
+		fmt.Println("  books [b] - show books")
 		os.Exit(0)
 	}
 
@@ -258,7 +295,7 @@ func main() {
 		fmt.Println(note)
 		err := writeNote(note)
 		check(err)
-	case "ls", "l", "books":
+	case "books", "b":
 		currentBook, err := getCurrentBook()
 		check(err)
 		books, err := getBooks()
