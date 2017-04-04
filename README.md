@@ -54,6 +54,7 @@ e.g.
 ## Links
 
 * [Website](https://dnote.io)
+* [Making Dnote (blog article)](https://github.com/dnote-io/cli)
 
 ## License
 
