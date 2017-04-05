@@ -285,7 +285,7 @@ func main() {
 		notes, err := getNotesInBook(bookName)
 		check(err)
 
-		fmt.Printf("Notes:\n")
+		fmt.Printf("Notes in book %s:\n", bookName)
 
 		for _, note := range notes {
 			fmt.Printf("%s\n", note)
@@ -297,7 +297,7 @@ func main() {
 		notes, err := getNotesInBook(bookName)
 		check(err)
 
-		fmt.Printf("Notes:\n")
+		fmt.Printf("Notes in book %s:\n", bookName)
 
 		for _, note := range notes {
 			fmt.Printf("%s\n", note)
