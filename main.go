@@ -198,6 +198,35 @@ func getBooks() ([]string, error) {
 	return books, nil
 }
 
+func getNotesInBook(bookName string) ([]string, error) {
+	note, err := readNote()
+	if err != nil {
+		return nil, err
+	}
+
+	notes := make([]string, 0, len(note))
+	for k, v := range note {
+		if k == bookName {
+			for _, noteContent := range v {
+				notes = append(notes, noteContent)
+			}
+		}
+	}
+
+	sort.Strings(notes)
+
+	return notes, nil
+}
+
+func getNotesInCurrentBook() ([]string, error) {
+	currentBook, err := getCurrentBook()
+	if err != nil {
+		return nil, err
+	}
+
+	return getNotesInBook(currentBook)
+}
+
 func checkFileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	return !os.IsNotExist(err)
@@ -251,6 +280,16 @@ func main() {
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
+	case "notes", "ln":
+		bookName := os.Args[2]
+		notes, err := getNotesInBook(bookName)
+		check(err)
+
+		fmt.Printf("Notes:\n")
+
+		for _, note := range notes {
+			fmt.Printf("%s\n", note)
+		}
 	default:
 		break
 	}
