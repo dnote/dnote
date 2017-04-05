@@ -290,6 +290,18 @@ func main() {
 		for _, note := range notes {
 			fmt.Printf("%s\n", note)
 		}
+	case "list", "l":
+		bookName, err := getCurrentBook()
+		check(err)
+
+		notes, err := getNotesInBook(bookName)
+		check(err)
+
+		fmt.Printf("Notes:\n")
+
+		for _, note := range notes {
+			fmt.Printf("%s\n", note)
+		}
 	default:
 		break
 	}
