@@ -229,8 +229,10 @@ func main() {
 		check(err)
 	case "new", "n":
 		note := os.Args[2]
-		fmt.Println(note)
-		err := writeNote(note)
+		currentBook, err := getCurrentBook()
+		check(err)
+		fmt.Printf("[+] Added to: %s\n", currentBook)
+		err = writeNote(note)
 		check(err)
 	case "books", "b":
 		currentBook, err := getCurrentBook()

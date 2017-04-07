@@ -9,7 +9,7 @@ import (
 )
 
 const configFilename = ".dnoterc"
-const DnoteUpdateFilename = ".dnote-update"
+const DnoteUpdateFilename = ".dnote-upgrade"
 const dnoteFilename = ".dnote"
 
 func GetConfigPath() (string, error) {
@@ -52,7 +52,6 @@ func TouchDnoteFile() error {
 }
 
 func TouchDnoteUpgradeFile() error {
-	fmt.Println("toching dnoteupdate")
 	dnoteUpdatePath, err := GetDnoteUpdatePath()
 	if err != nil {
 		return err

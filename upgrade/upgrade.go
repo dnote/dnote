@@ -56,7 +56,7 @@ func getLastUpdateEpoch() (int64, error) {
 		return 0, err
 	}
 
-	re := regexp.MustCompile(`LAST_UPDATE_EPOCH: (\d+)\n`)
+	re := regexp.MustCompile(`LAST_UPGRADE_EPOCH: (\d+)`)
 	match := re.FindStringSubmatch(string(b))
 
 	if len(match) != 2 {
