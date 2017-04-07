@@ -206,17 +206,16 @@ func checkFileExists(filepath string) bool {
 func main() {
 	err := initDnote()
 	check(err)
-	err = upgrade.AutoUpdate()
-	if err != nil {
-		fmt.Println("Warning - Failed to check for update:", err)
-	}
 
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
-		fmt.Println("Commands:")
+		fmt.Println("Main commands:")
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
 		fmt.Println("  books [b] - show books")
+		fmt.Println("")
+		fmt.Println("Other commands:")
+		fmt.Println("  upgrade - upgrade dnote")
 		os.Exit(0)
 	}
 
@@ -247,8 +246,17 @@ func main() {
 				fmt.Printf("  %v\n", book)
 			}
 		}
+	case "upgrade":
+		err := upgrade.Upgrade()
+		check(err)
+	case "--version":
+		fmt.Println(utils.Version)
 	default:
 		break
 	}
 
+	err = upgrade.AutoUpgrade()
+	if err != nil {
+		fmt.Println("Warning - Failed to check for update:", err)
+	}
 }

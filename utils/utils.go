@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/user"
 	"strconv"
 	"time"
@@ -11,6 +13,7 @@ import (
 const configFilename = ".dnoterc"
 const DnoteUpdateFilename = ".dnote-upgrade"
 const dnoteFilename = ".dnote"
+const Version = "0.0.3"
 
 func GetConfigPath() (string, error) {
 	usr, err := user.Current()
@@ -71,4 +74,18 @@ func GetDnoteUpdatePath() (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", usr.HomeDir, DnoteUpdateFilename), nil
+}
+
+func AskConfirmation(question string) (bool, error) {
+	fmt.Printf("%s [Y/n]: ", question)
+
+	reader := bufio.NewReader(os.Stdin)
+	res, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+
+	ok := res == "y\n" || res == "Y\n" || res == "\n"
+
+	return ok, nil
 }

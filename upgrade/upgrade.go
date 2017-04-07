@@ -20,8 +20,6 @@ import (
 	"github.com/google/go-github/github"
 )
 
-const version = "0.0.3"
-
 func GetDnoteUpdatePath() (string, error) {
 	usr, err := user.Current()
 	if err != nil {
@@ -85,23 +83,31 @@ func shouldCheckUpdate() (bool, error) {
 	return now-lastEpoch > updatePeriod, nil
 }
 
-// AutoUpdate triggers update if needed
-func AutoUpdate() error {
+// AutoUpgrade triggers update if needed
+func AutoUpgrade() error {
 	shouldCheck, err := shouldCheckUpdate()
 	if err != nil {
 		return err
 	}
 
 	if shouldCheck {
-		tryUpgrade()
+		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
+		if err != nil {
+			return err
+		}
+
+		if willCheck {
+			err := Upgrade()
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
 }
 
-func tryUpgrade() error {
-	defer utils.TouchDnoteUpgradeFile()
-
+func Upgrade() error {
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
@@ -118,19 +124,23 @@ func tryUpgrade() error {
 	}
 
 	// Check if up to date
-	if latestVersion == version {
-		fmt.Printf("Up-to-date: %s", version)
+	if latestVersion == utils.Version {
+		fmt.Printf("Up-to-date: %s\n", utils.Version)
+		utils.TouchDnoteUpgradeFile()
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
+		utils.TouchDnoteUpgradeFile()
 		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 		return nil
 	}
 
 	// Download temporary file
+	fmt.Printf("Downloading: %s\n", latestVersion)
 	tmpPath := path.Join(os.TempDir(), "dnote_update")
+
 	out, err := os.Create(tmpPath)
 	if err != nil {
 		return err
@@ -159,7 +169,15 @@ func tryUpgrade() error {
 		return err
 	}
 
-	fmt.Printf("Updated: v%s -> v%s", version, latestVersion)
+	// Make it executable
+	err = os.Chmod(cmdPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	utils.TouchDnoteUpgradeFile()
+
+	fmt.Printf("Updated: v%s -> v%s\n", utils.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }
