@@ -242,6 +242,7 @@ func main() {
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
 		fmt.Println("  books [b] - show books")
+		fmt.Println("  notes - show notes for book")
 		fmt.Println("")
 		fmt.Println("Other commands:")
 		fmt.Println("  upgrade - upgrade dnote")
@@ -280,19 +281,21 @@ func main() {
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
-	case "notes", "ln":
-		bookName := os.Args[2]
-		notes, err := getNotesInBook(bookName)
+	case "notes":
+		defaultBookName, err := getCurrentBook()
+
 		check(err)
 
-		fmt.Printf("Notes in book %s:\n", bookName)
+		var bookName string
 
-		for _, note := range notes {
-			fmt.Printf("%s\n", note)
+		if len(os.Args) == 2 {
+			bookName = defaultBookName
+		} else if len(os.Args) == 4 && os.Args[2] == "-b" {
+			bookName = os.Args[3]
+		} else {
+			fmt.Println("Invalid argument passed to notes")
+			os.Exit(1)
 		}
-	case "list", "l":
-		bookName, err := getCurrentBook()
-		check(err)
 
 		notes, err := getNotesInBook(bookName)
 		check(err)
