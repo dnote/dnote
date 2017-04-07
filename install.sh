@@ -17,14 +17,14 @@ install() {
   if [ "$UNAME" = "Darwin" ]; then
     OSX_ARCH=$(uname -m)
     if [ "${OSX_ARCH}" = "x86_64" ]; then
-      PLATFORM="darwin-amd64"
+      PLATFORM="darwin_amd64"
     else
       not_supported
     fi
   elif [ "$UNAME" = "Linux" ]; then
     LINUX_ARCH=$(uname -m)
     if [ "${LINUX_ARCH}" = "x86_64" ]; then
-      PLATFORM="linux-amd64"
+      PLATFORM="linux_amd64"
     else
       not_supported
     fi
@@ -38,8 +38,8 @@ install() {
     echo "Error fetching. Please try again."
     exit 1
   else
-    echo "Download Dnote binary from curl https://github.com/dnote-io/cli/releases/download/$LATEST/dnote-$PLATFORM to $DEST"
-    if curl -sL https://github.com/dnote-io/cli/releases/download/$LATEST/dnote-$PLATFORM -o $DEST; then
+    echo "Download Dnote binary from curl https://github.com/dnote-io/cli/releases/download/$LATEST/dnote_$PLATFORM to $DEST"
+    if curl -sL https://github.com/dnote-io/cli/releases/download/$LATEST/dnote_$PLATFORM -o $DEST; then
       chmod +x $DEST
       echo "Dnote installation was successful"
     else
