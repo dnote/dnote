@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"net/http"
 	"os"
-	"os/user"
 	"sort"
+
+	"github.com/dnote-io/cli/upgrade"
+	"github.com/dnote-io/cli/utils"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
@@ -17,73 +18,39 @@ type Config struct {
 
 type Note map[string][]string
 
-const configFilename = ".dnoterc"
-const dnoteFilename = ".dnote"
-const version = "v0.0.1"
-
-func getConfigPath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, configFilename), nil
-}
-
-func getDnotePath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteFilename), nil
-}
-
-func generateConfigFile() error {
-	content := []byte("book: general\n")
-	configPath, err := getConfigPath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(configPath, content, 0644)
-	return err
-}
-
-func touchDnoteFile() error {
-	dnotePath, err := getDnotePath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(dnotePath, []byte{}, 0644)
-	return err
-}
-
 // initDnote creates a config file if one does not exist
 func initDnote() error {
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return err
 	}
-	dnotePath, err := getDnotePath()
+	dnotePath, err := utils.GetDnotePath()
+	if err != nil {
+		return err
+	}
+	dnoteUpdatePath, err := utils.GetDnoteUpdatePath()
 	if err != nil {
 		return err
 	}
 
 	if !checkFileExists(configPath) {
-		err := generateConfigFile()
+		err := utils.GenerateConfigFile()
 		if err != nil {
 			return err
 		}
 	}
 	if !checkFileExists(dnotePath) {
-		err := touchDnoteFile()
+		err := utils.TouchDnoteFile()
 		if err != nil {
 			return err
 		}
 	}
-
+	if !checkFileExists(dnoteUpdatePath) {
+		err := utils.TouchDnoteUpgradeFile()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -96,7 +63,7 @@ func check(e error) {
 func readConfig() (Config, error) {
 	var ret Config
 
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return ret, err
 	}
@@ -129,7 +96,7 @@ func writeConfig(config Config) error {
 		return err
 	}
 
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return err
 	}
@@ -162,7 +129,7 @@ func changeBook(bookName string) error {
 func readNote() (Note, error) {
 	ret := Note{}
 
-	notePath, err := getDnotePath()
+	notePath, err := utils.GetDnotePath()
 	if err != nil {
 		return ret, err
 	}
@@ -202,7 +169,7 @@ func writeNote(content string) error {
 		return err
 	}
 
-	notePath, err := getDnotePath()
+	notePath, err := utils.GetDnotePath()
 	if err != nil {
 		return err
 	}
@@ -236,56 +203,19 @@ func checkFileExists(filepath string) bool {
 	return !os.IsNotExist(err)
 }
 
-func checkUpdates() error {
-	endpoint := "https://api.github.com/repos/dnote-io/cli/releases"
-	resp, err := http.Get(endpoint)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	var x []map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&x)
-	if err != nil {
-		return err
-	}
-
-	if len(x) == 0 {
-		return nil
-	}
-
-	latestRelease := x[0]
-	latestVersion := latestRelease["tag_name"]
-
-	if version != latestVersion {
-		fmt.Println("==")
-		fmt.Printf("Update available: %s\n", latestVersion)
-		fmt.Printf("See: %s\n", x[0]["html_url"])
-		fmt.Println("==\n")
-	}
-
-	return nil
-}
-
-func heartbeat() {
-	http.Get("http://api.dnote.io/heartbeat")
-}
-
 func main() {
 	err := initDnote()
 	check(err)
-	err = checkUpdates()
-	check(err)
-
-	heartbeat()
 
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
-		fmt.Println("Commands:")
+		fmt.Println("Main commands:")
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
 		fmt.Println("  books [b] - show books")
+		fmt.Println("")
+		fmt.Println("Other commands:")
+		fmt.Println("  upgrade - upgrade dnote")
 		os.Exit(0)
 	}
 
@@ -298,8 +228,10 @@ func main() {
 		check(err)
 	case "new", "n":
 		note := os.Args[2]
-		fmt.Println(note)
-		err := writeNote(note)
+		currentBook, err := getCurrentBook()
+		check(err)
+		fmt.Printf("[+] Added to: %s\n", currentBook)
+		err = writeNote(note)
 		check(err)
 	case "books", "b":
 		currentBook, err := getCurrentBook()
@@ -314,8 +246,17 @@ func main() {
 				fmt.Printf("  %v\n", book)
 			}
 		}
+	case "upgrade":
+		err := upgrade.Upgrade()
+		check(err)
+	case "--version":
+		fmt.Println(utils.Version)
 	default:
 		break
 	}
 
+	err = upgrade.AutoUpgrade()
+	if err != nil {
+		fmt.Println("Warning - Failed to check for update:", err)
+	}
 }
