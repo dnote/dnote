@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/user"
 	"sort"
+
+	"github.com/dnote-io/cli/upgrade"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
@@ -19,7 +20,6 @@ type Note map[string][]string
 
 const configFilename = ".dnoterc"
 const dnoteFilename = ".dnote"
-const version = "v0.0.1"
 
 func getConfigPath() (string, error) {
 	usr, err := user.Current()
@@ -236,49 +236,13 @@ func checkFileExists(filepath string) bool {
 	return !os.IsNotExist(err)
 }
 
-func checkUpdates() error {
-	endpoint := "https://api.github.com/repos/dnote-io/cli/releases"
-	resp, err := http.Get(endpoint)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	var x []map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&x)
-	if err != nil {
-		return err
-	}
-
-	if len(x) == 0 {
-		return nil
-	}
-
-	latestRelease := x[0]
-	latestVersion := latestRelease["tag_name"]
-
-	if version != latestVersion {
-		fmt.Println("==")
-		fmt.Printf("Update available: %s\n", latestVersion)
-		fmt.Printf("See: %s\n", x[0]["html_url"])
-		fmt.Println("==\n")
-	}
-
-	return nil
-}
-
-func heartbeat() {
-	http.Get("http://api.dnote.io/heartbeat")
-}
-
 func main() {
 	err := initDnote()
 	check(err)
-	err = checkUpdates()
-	check(err)
-
-	heartbeat()
+	err = upgrade.AutoUpdate()
+	if err != nil {
+		fmt.Println("Warning: Failed to check for update", err)
+	}
 
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
