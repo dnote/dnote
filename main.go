@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"sort"
 
 	"github.com/dnote-io/cli/upgrade"
+	"github.com/dnote-io/cli/utils"
 
 	"gopkg.in/yaml.v2"
 )
@@ -18,72 +18,39 @@ type Config struct {
 
 type Note map[string][]string
 
-const configFilename = ".dnoterc"
-const dnoteFilename = ".dnote"
-
-func getConfigPath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, configFilename), nil
-}
-
-func getDnotePath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteFilename), nil
-}
-
-func generateConfigFile() error {
-	content := []byte("book: general\n")
-	configPath, err := getConfigPath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(configPath, content, 0644)
-	return err
-}
-
-func touchDnoteFile() error {
-	dnotePath, err := getDnotePath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(dnotePath, []byte{}, 0644)
-	return err
-}
-
 // initDnote creates a config file if one does not exist
 func initDnote() error {
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return err
 	}
-	dnotePath, err := getDnotePath()
+	dnotePath, err := utils.GetDnotePath()
+	if err != nil {
+		return err
+	}
+	dnoteUpdatePath, err := utils.GetDnoteUpdatePath()
 	if err != nil {
 		return err
 	}
 
 	if !checkFileExists(configPath) {
-		err := generateConfigFile()
+		err := utils.GenerateConfigFile()
 		if err != nil {
 			return err
 		}
 	}
 	if !checkFileExists(dnotePath) {
-		err := touchDnoteFile()
+		err := utils.TouchDnoteFile()
 		if err != nil {
 			return err
 		}
 	}
-
+	if !checkFileExists(dnoteUpdatePath) {
+		err := utils.TouchDnoteUpgradeFile()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -96,7 +63,7 @@ func check(e error) {
 func readConfig() (Config, error) {
 	var ret Config
 
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return ret, err
 	}
@@ -129,7 +96,7 @@ func writeConfig(config Config) error {
 		return err
 	}
 
-	configPath, err := getConfigPath()
+	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return err
 	}
@@ -162,7 +129,7 @@ func changeBook(bookName string) error {
 func readNote() (Note, error) {
 	ret := Note{}
 
-	notePath, err := getDnotePath()
+	notePath, err := utils.GetDnotePath()
 	if err != nil {
 		return ret, err
 	}
@@ -202,7 +169,7 @@ func writeNote(content string) error {
 		return err
 	}
 
-	notePath, err := getDnotePath()
+	notePath, err := utils.GetDnotePath()
 	if err != nil {
 		return err
 	}
@@ -241,7 +208,7 @@ func main() {
 	check(err)
 	err = upgrade.AutoUpdate()
 	if err != nil {
-		fmt.Println("Warning: Failed to check for update", err)
+		fmt.Println("Warning - Failed to check for update:", err)
 	}
 
 	if len(os.Args) < 2 {

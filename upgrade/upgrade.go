@@ -1,9 +1,8 @@
 package upgrade
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,14 +11,25 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	"regexp"
 	"runtime"
+	"strconv"
 	"time"
 
+	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
 )
 
-const dnoteUpdateFilename = ".dnote-update"
 const version = "0.0.3"
+
+func GetDnoteUpdatePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, utils.DnoteUpdateFilename), nil
+}
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
@@ -33,37 +43,46 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 
 	return nil
 }
-func getDnoteUpdatePath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
 
-	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteUpdateFilename), nil
-}
-
-// shouldCheckUpdate checks if update should be checked
-func shouldCheckUpdate() (bool, error) {
-	updatePath, err := getDnoteUpdatePath()
+// getLastUpdateEpoch reads and parses the last update epoch
+func getLastUpdateEpoch() (int64, error) {
+	updatePath, err := utils.GetDnoteUpdatePath()
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	b, err := ioutil.ReadFile(updatePath)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
-	buf := bytes.NewBuffer(b)
-	lastEpoch, err := binary.ReadVarint(buf)
+	re := regexp.MustCompile(`LAST_UPDATE_EPOCH: (\d+)\n`)
+	match := re.FindStringSubmatch(string(b))
+
+	if len(match) != 2 {
+		msg := fmt.Sprintf("Error parsing %s", utils.DnoteUpdateFilename)
+		return 0, errors.New(msg)
+	}
+
+	lastEpoch, err := strconv.ParseInt(match[1], 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return lastEpoch, nil
+}
+
+// shouldCheckUpdate checks if update should be checked
+func shouldCheckUpdate() (bool, error) {
+	var updatePeriod int64 = 86400 * 7
+
+	now := time.Now().Unix()
+	lastEpoch, err := getLastUpdateEpoch()
 	if err != nil {
 		return false, err
 	}
 
-	now := time.Now().Unix()
-	var epochTarget int64 = 86400 * 7 // 7 days
-
-	return now-lastEpoch > epochTarget, nil
+	return now-lastEpoch > updatePeriod, nil
 }
 
 // AutoUpdate triggers update if needed
@@ -74,13 +93,15 @@ func AutoUpdate() error {
 	}
 
 	if shouldCheck {
-		Update()
+		tryUpgrade()
 	}
 
 	return nil
 }
 
-func Update() error {
+func tryUpgrade() error {
+	defer utils.TouchDnoteUpgradeFile()
+
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
@@ -139,6 +160,6 @@ func Update() error {
 	}
 
 	fmt.Printf("Updated: v%s -> v%s", version, latestVersion)
-	fmt.Println("Change note: https://github.com/dnote-io/cli/releases")
+	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }
