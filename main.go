@@ -16,9 +16,6 @@ type Config struct {
 	Book string
 }
 
-type Note map[string][]string
-
-// initDnote creates a config file if one does not exist
 func initDnote() error {
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
@@ -51,7 +48,14 @@ func initDnote() error {
 			return err
 		}
 	}
+
+	err = upgrade.Migrate()
+	if err != nil {
+		return err
+	}
+
 	return nil
+
 }
 
 func check(e error) {
@@ -126,29 +130,8 @@ func changeBook(bookName string) error {
 	return nil
 }
 
-func readNote() (Note, error) {
-	ret := Note{}
-
-	notePath, err := utils.GetDnotePath()
-	if err != nil {
-		return ret, err
-	}
-
-	b, err := ioutil.ReadFile(notePath)
-	if err != nil {
-		return ret, nil
-	}
-
-	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
-}
-
 func writeNote(content string) error {
-	note, err := readNote()
+	note, err := utils.GetNote()
 	if err != nil {
 		return err
 	}
@@ -183,7 +166,7 @@ func writeNote(content string) error {
 }
 
 func getBooks() ([]string, error) {
-	note, err := readNote()
+	note, err := utils.GetNote()
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +182,7 @@ func getBooks() ([]string, error) {
 }
 
 func getNotesInBook(bookName string) ([]string, error) {
-	note, err := readNote()
+	note, err := utils.GetNote()
 	if err != nil {
 		return nil, err
 	}
@@ -305,6 +288,9 @@ func main() {
 		for _, note := range notes {
 			fmt.Printf("%s\n", note)
 		}
+	case "sync":
+		//err := sync.Sync()
+		//check(err)
 	default:
 		break
 	}
