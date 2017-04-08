@@ -198,6 +198,35 @@ func getBooks() ([]string, error) {
 	return books, nil
 }
 
+func getNotesInBook(bookName string) ([]string, error) {
+	note, err := readNote()
+	if err != nil {
+		return nil, err
+	}
+
+	notes := make([]string, 0, len(note))
+	for k, v := range note {
+		if k == bookName {
+			for _, noteContent := range v {
+				notes = append(notes, noteContent)
+			}
+		}
+	}
+
+	sort.Strings(notes)
+
+	return notes, nil
+}
+
+func getNotesInCurrentBook() ([]string, error) {
+	currentBook, err := getCurrentBook()
+	if err != nil {
+		return nil, err
+	}
+
+	return getNotesInBook(currentBook)
+}
+
 func checkFileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	return !os.IsNotExist(err)
@@ -213,6 +242,7 @@ func main() {
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
 		fmt.Println("  books [b] - show books")
+		fmt.Println("  notes - show notes for book")
 		fmt.Println("")
 		fmt.Println("Other commands:")
 		fmt.Println("  upgrade - upgrade dnote")
@@ -251,6 +281,30 @@ func main() {
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
+	case "notes":
+		defaultBookName, err := getCurrentBook()
+
+		check(err)
+
+		var bookName string
+
+		if len(os.Args) == 2 {
+			bookName = defaultBookName
+		} else if len(os.Args) == 4 && os.Args[2] == "-b" {
+			bookName = os.Args[3]
+		} else {
+			fmt.Println("Invalid argument passed to notes")
+			os.Exit(1)
+		}
+
+		notes, err := getNotesInBook(bookName)
+		check(err)
+
+		fmt.Printf("Notes in book %s:\n", bookName)
+
+		for _, note := range notes {
+			fmt.Printf("%s\n", note)
+		}
 	default:
 		break
 	}
