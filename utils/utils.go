@@ -2,27 +2,32 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/user"
+	"sort"
 	"strconv"
 	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
+type Config struct {
+	Book string
+}
+
 // Deprecated. See upgrade/migrate.go
 type YAMLDnote map[string][]string
 
-// TODO: Change to DNote when YAMLDnote is removed
-type JSONDnote map[string]Book
+type Dnote map[string]Book
 type Book []Note
 type Note struct {
-	ID        string
-	Content   string
-	CreatedAt int64
+	UID     string
+	Content string
+	AddedOn int64
 }
 
 const configFilename = ".dnoterc"
@@ -37,7 +42,7 @@ func init() {
 }
 
 func GenerateNoteID() string {
-	result := make([]byte, 7)
+	result := make([]byte, 8)
 	for i := range result {
 		result[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
@@ -144,7 +149,24 @@ func ReadNoteContent() ([]byte, error) {
 	return b, nil
 }
 
-// GetNote reads and parses the dnote
+// GetDnote reads and parses the dnote
+func GetDnote() (Dnote, error) {
+	ret := Dnote{}
+
+	b, err := ReadNoteContent()
+	if err != nil {
+		return ret, err
+	}
+
+	err = json.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, nil
+}
+
+// Deprecated. See upgrade/upgrade.go
 func GetNote() (YAMLDnote, error) {
 	ret := YAMLDnote{}
 
@@ -159,4 +181,68 @@ func GetNote() (YAMLDnote, error) {
 	}
 
 	return ret, nil
+}
+func WriteConfig(config Config) error {
+	d, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configPath, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadConfig() (Config, error) {
+	var ret Config
+
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return ret, err
+	}
+
+	b, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return ret, err
+	}
+
+	err = yaml.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, nil
+}
+
+func GetCurrentBook() (string, error) {
+	config, err := ReadConfig()
+	if err != nil {
+		return "", err
+	}
+
+	return config.Book, nil
+}
+
+func GetBooks() ([]string, error) {
+	dnote, err := GetDnote()
+	if err != nil {
+		return nil, err
+	}
+
+	books := make([]string, 0, len(dnote))
+	for k := range dnote {
+		books = append(books, k)
+	}
+
+	sort.Strings(books)
+
+	return books, nil
 }

@@ -20,7 +20,7 @@ func Migrate() error {
 
 // v0.0.4
 // file format of .dnote changed to JSON from YAML
-// Remove YAML support in v0.1.0, and remove this method
+// Remove YAML support in v0.1.1, and archive this method
 func migrateYAMLToJSON() error {
 	usingYAML, err := isDnoteUsingYAML()
 	if err != nil {
@@ -35,16 +35,16 @@ func migrateYAMLToJSON() error {
 		return err
 	}
 
-	jsonDnote := utils.JSONDnote{}
+	jsonDnote := utils.Dnote{}
 
 	for bookName, notes := range dnote {
 		book := []utils.Note{}
 
 		for _, note := range notes {
 			note := utils.Note{
-				ID:        utils.GenerateNoteID(),
-				Content:   note,
-				CreatedAt: time.Now().Unix(),
+				UID:     utils.GenerateNoteID(),
+				Content: note,
+				AddedOn: time.Now().Unix(),
 			}
 
 			book = append(book, note)

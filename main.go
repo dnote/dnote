@@ -6,6 +6,9 @@ import (
 	"os"
 	"sort"
 
+	"github.com/dnote-io/cli/cmd/books"
+	"github.com/dnote-io/cli/cmd/new"
+	"github.com/dnote-io/cli/cmd/notes"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/dnote-io/cli/utils"
 
@@ -127,40 +130,7 @@ func changeBook(bookName string) error {
 		return err
 	}
 
-	return nil
-}
-
-func writeNote(content string) error {
-	note, err := utils.GetNote()
-	if err != nil {
-		return err
-	}
-
-	book, err := getCurrentBook()
-	if err != nil {
-		return err
-	}
-
-	if _, ok := note[book]; ok {
-		note[book] = append(note[book], content)
-	} else {
-		note[book] = []string{content}
-	}
-
-	d, err := yaml.Marshal(note)
-	if err != nil {
-		return err
-	}
-
-	notePath, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(notePath, d, 0644)
-	if err != nil {
-		return err
-	}
+	fmt.Printf("Using: %s\n", bookName)
 
 	return nil
 }
@@ -241,53 +211,19 @@ func main() {
 		check(err)
 	case "new", "n":
 		note := os.Args[2]
-		currentBook, err := getCurrentBook()
-		check(err)
-		fmt.Printf("[+] Added to: %s\n", currentBook)
-		err = writeNote(note)
+		err := new.Run(note)
 		check(err)
 	case "books", "b":
-		currentBook, err := getCurrentBook()
+		err := books.Run()
 		check(err)
-		books, err := getBooks()
-		check(err)
-
-		for _, book := range books {
-			if book == currentBook {
-				fmt.Printf("* %v\n", book)
-			} else {
-				fmt.Printf("  %v\n", book)
-			}
-		}
 	case "upgrade":
 		err := upgrade.Upgrade()
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
 	case "notes":
-		defaultBookName, err := getCurrentBook()
-
+		err := notes.Run()
 		check(err)
-
-		var bookName string
-
-		if len(os.Args) == 2 {
-			bookName = defaultBookName
-		} else if len(os.Args) == 4 && os.Args[2] == "-b" {
-			bookName = os.Args[3]
-		} else {
-			fmt.Println("Invalid argument passed to notes")
-			os.Exit(1)
-		}
-
-		notes, err := getNotesInBook(bookName)
-		check(err)
-
-		fmt.Printf("Notes in book %s:\n", bookName)
-
-		for _, note := range notes {
-			fmt.Printf("%s\n", note)
-		}
 	case "sync":
 		//err := sync.Sync()
 		//check(err)

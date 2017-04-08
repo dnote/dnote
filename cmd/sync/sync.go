@@ -30,22 +30,24 @@ func getRequestPayload() (*bytes.Buffer, error) {
 }
 
 func Sync() error {
+	fmt.Println("Compressing dnote...")
 	payload, err := getRequestPayload()
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("Syncing...")
 	req, err := http.NewRequest("POST", "http://127.0.0.1:3030/sync", payload)
 	if err != nil {
 		return err
 	}
 
 	client := http.Client{}
-	resp, err := client.Do(req)
+	_, err = client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(resp)
+	fmt.Println("Successfully synced all notes")
 	return nil
 }
