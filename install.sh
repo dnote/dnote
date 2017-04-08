@@ -1,16 +1,21 @@
 #!/bin/sh
+#
+# This script downloads the latest Dnote release from github
+# into /usr/bin/local.
+#
+
+set -eu
 
 not_supported() {
-  echo "Sorry, OS is not supported: ${UNAME}. Please compile manually from https://github.com/dnote-io/cli"
+  echo "OS not supported: ${UNAME}"
+  echo "Please compile manually from https://github.com/dnote-io/cli"
   exit 1
 }
 
 install() {
-  set -eu
-
   UNAME=$(uname)
 
-  if [ "$UNAME" != "Linux" -a "$UNAME" != "Darwin" ] ; then
+  if [ "$UNAME" != "Linux" -a "$UNAME" != "Darwin" -a "$UNAME" != "OpenBSD" ] ; then
     not_supported
   fi
 
@@ -25,6 +30,17 @@ install() {
     LINUX_ARCH=$(uname -m)
     if [ "${LINUX_ARCH}" = "x86_64" ]; then
       PLATFORM="linux_amd64"
+    elif [ "${LINUX_ARCH}" = "i686" ]; then
+      PLATFORM="linux_386"
+    else
+      not_supported
+    fi
+  elif [ "$UNAME" = "OpenBSD" ]; then
+    OPENBSD_ARCH=$(uname -m)
+    if [ "${OPENBSD_ARCH}" = "x86_64" ]; then
+      PLATFORM="openbsd_amd64"
+    elif [ "${OPENBSD_ARCH}" = "i686" ]; then
+      PLATFORM="openbsd_386"
     else
       not_supported
     fi
@@ -35,16 +51,16 @@ install() {
   DEST=${DEST:-/usr/local/bin/dnote}
 
   if [ -z $LATEST ]; then
-    echo "Error fetching. Please try again."
+    echo "Error fetching latest version. Please try again."
     exit 1
+  fi
+
+  echo "Downloading Dnote binary from $URL to $DEST"
+  if curl -L --progress-bar $URL -o $DEST; then
+    chmod +x $DEST
+    echo "Successfully installed Dnote"
   else
-    echo "Download Dnote binary from curl https://github.com/dnote-io/cli/releases/download/$LATEST/dnote_$PLATFORM to $DEST"
-    if curl -sL https://github.com/dnote-io/cli/releases/download/$LATEST/dnote_$PLATFORM -o $DEST; then
-      chmod +x $DEST
-      echo "Dnote installation was successful"
-    else
-      echo "Installation failed"
-    fi
+    echo "Installation failed. You might need elevated permission."
   fi
 }
 

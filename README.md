@@ -8,7 +8,11 @@ A command line interface for spontaneously capturing the things you learn while 
 
 On macOS, or Linux, run:
 
-    curl https://raw.githubusercontent.com/dnote-io/cli/master/install.sh | sh
+    curl -s https://raw.githubusercontent.com/dnote-io/cli/master/install.sh | sh
+
+In some cases, you might need `sudo`. Feel free to inspect [install.sh](https://github.com/dnote-io/cli/blob/master/install.sh):
+
+    curl -s https://raw.githubusercontent.com/dnote-io/cli/master/install.sh | sudo sh
 
 On Windows, download [binary](https://github.com/dnote-io/cli/releases)
 
