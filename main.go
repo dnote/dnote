@@ -6,6 +6,9 @@ import (
 	"os"
 	"sort"
 
+	"github.com/dnote-io/cli/cmd/books"
+	"github.com/dnote-io/cli/cmd/new"
+	"github.com/dnote-io/cli/cmd/notes"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/dnote-io/cli/utils"
 
@@ -16,9 +19,6 @@ type Config struct {
 	Book string
 }
 
-type Note map[string][]string
-
-// initDnote creates a config file if one does not exist
 func initDnote() error {
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
@@ -51,7 +51,14 @@ func initDnote() error {
 			return err
 		}
 	}
+
+	err = upgrade.Migrate()
+	if err != nil {
+		return err
+	}
+
 	return nil
+
 }
 
 func check(e error) {
@@ -123,67 +130,13 @@ func changeBook(bookName string) error {
 		return err
 	}
 
-	return nil
-}
-
-func readNote() (Note, error) {
-	ret := Note{}
-
-	notePath, err := utils.GetDnotePath()
-	if err != nil {
-		return ret, err
-	}
-
-	b, err := ioutil.ReadFile(notePath)
-	if err != nil {
-		return ret, nil
-	}
-
-	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
-}
-
-func writeNote(content string) error {
-	note, err := readNote()
-	if err != nil {
-		return err
-	}
-
-	book, err := getCurrentBook()
-	if err != nil {
-		return err
-	}
-
-	if _, ok := note[book]; ok {
-		note[book] = append(note[book], content)
-	} else {
-		note[book] = []string{content}
-	}
-
-	d, err := yaml.Marshal(note)
-	if err != nil {
-		return err
-	}
-
-	notePath, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(notePath, d, 0644)
-	if err != nil {
-		return err
-	}
+	fmt.Printf("Using: %s\n", bookName)
 
 	return nil
 }
 
 func getBooks() ([]string, error) {
-	note, err := readNote()
+	note, err := utils.GetNote()
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +152,7 @@ func getBooks() ([]string, error) {
 }
 
 func getNotesInBook(bookName string) ([]string, error) {
-	note, err := readNote()
+	note, err := utils.GetNote()
 	if err != nil {
 		return nil, err
 	}
@@ -258,53 +211,22 @@ func main() {
 		check(err)
 	case "new", "n":
 		note := os.Args[2]
-		currentBook, err := getCurrentBook()
-		check(err)
-		fmt.Printf("[+] Added to: %s\n", currentBook)
-		err = writeNote(note)
+		err := new.Run(note)
 		check(err)
 	case "books", "b":
-		currentBook, err := getCurrentBook()
+		err := books.Run()
 		check(err)
-		books, err := getBooks()
-		check(err)
-
-		for _, book := range books {
-			if book == currentBook {
-				fmt.Printf("* %v\n", book)
-			} else {
-				fmt.Printf("  %v\n", book)
-			}
-		}
 	case "upgrade":
 		err := upgrade.Upgrade()
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
 	case "notes":
-		defaultBookName, err := getCurrentBook()
-
+		err := notes.Run()
 		check(err)
-
-		var bookName string
-
-		if len(os.Args) == 2 {
-			bookName = defaultBookName
-		} else if len(os.Args) == 4 && os.Args[2] == "-b" {
-			bookName = os.Args[3]
-		} else {
-			fmt.Println("Invalid argument passed to notes")
-			os.Exit(1)
-		}
-
-		notes, err := getNotesInBook(bookName)
-		check(err)
-
-		fmt.Printf("Notes in book %s:\n", bookName)
-
-		for _, note := range notes {
-			fmt.Printf("%s\n", note)
-		}
+	case "sync":
+		//err := sync.Sync()
+		//check(err)
 	default:
 		break
 	}
