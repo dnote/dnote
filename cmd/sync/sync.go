@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/dnote-io/cli/utils"
 )
 
-func getRequestPayload() (*bytes.Buffer, error) {
+func compressDnote() (*bytes.Buffer, error) {
 	b, err := utils.ReadNoteContent()
 	if err != nil {
 		return nil, err
@@ -27,11 +28,22 @@ func getRequestPayload() (*bytes.Buffer, error) {
 	}
 
 	return &buf, nil
+
 }
 
 func Sync() error {
+	config, err := utils.ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	if config.APIKey == "" {
+		fmt.Println("Login required. Please run `dnote login`")
+		return nil
+	}
+
 	fmt.Println("Compressing dnote...")
-	payload, err := getRequestPayload()
+	payload, err := compressDnote()
 	if err != nil {
 		return err
 	}
@@ -41,13 +53,25 @@ func Sync() error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Authorization", config.APIKey)
 
 	client := http.Client{}
-	_, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Successfully synced all notes")
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		bodyStr := string(body)
+
+		fmt.Printf("Failed to sync: %s", bodyStr)
+	} else {
+		fmt.Println("Successfully synced all notes")
+	}
+
 	return nil
 }

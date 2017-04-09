@@ -16,7 +16,8 @@ import (
 )
 
 type Config struct {
-	Book string
+	Book   string
+	APIKey string
 }
 
 // Deprecated. See upgrade/migrate.go
