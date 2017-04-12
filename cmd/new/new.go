@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/dnote-io/cli/utils"
+	"../../utils"
 )
 
 func Run(notename string, content string) error {
