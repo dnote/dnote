@@ -24,8 +24,10 @@ type YAMLDnote map[string][]string
 
 type Dnote map[string]Book
 type Book []Note
+
 type Note struct {
 	UID     string
+	Name 	string
 	Content string
 	AddedOn int64
 }
@@ -182,6 +184,7 @@ func GetNote() (YAMLDnote, error) {
 
 	return ret, nil
 }
+
 func WriteConfig(config Config) error {
 	d, err := yaml.Marshal(config)
 	if err != nil {

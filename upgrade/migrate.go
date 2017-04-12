@@ -79,3 +79,7 @@ func migrateYAMLToJSON() error {
 
 	return nil
 }
+
+func migrateNoNameToDefaultName () error {
+	
+}
