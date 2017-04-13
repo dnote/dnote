@@ -1,14 +1,13 @@
 package edit
 
 import (
-	"fmt"
-
+	"io/ioutil"
 	"encoding/json"
+
 	"../../utils"
 )
 
 func Edit(notename string, newcontent string) error {
-	// Get the current book.
 	book, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
@@ -19,20 +18,24 @@ func Edit(notename string, newcontent string) error {
 		return err
 	}
 
-	for _, note := range json_data[book] {
-
+	for i, note := range json_data[book] {
 		if note.Name == notename {
 			note.Content = newcontent
-			out, err := json.Marshal(line)
-			if err != nil {
-				return err
-			}
-		
-			note_data := "[" + string(out) + "]"
-			json_data[book] = note_data // Assigns a new data to json map, does nto work (error: cannot use note_data (type string) as type utils.Book in assignment)
-			fmt.Println(json_data[book])
+			json_data[book][i] = note
 		}
 	}
+
+	dnote_path, err := utils.GetDnotePath()
+	if err != nil {
+		return err
+	}
+
+	new_data, err := json.MarshalIndent(json_data, "", "	")
+	if err != nil {
+		return err
+	}
+
+	ioutil.WriteFile(dnote_path, new_data, 0644)
 
 	return nil 
 }
