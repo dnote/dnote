@@ -1,6 +1,7 @@
 package edit
 
 import (
+	"fmt"
 	"io/ioutil"
 	"encoding/json"
 
@@ -36,6 +37,7 @@ func Edit(note_nu string, newcontent string) error {
 	}
 
 	ioutil.WriteFile(dnote_path, new_data, 0644)
+	fmt.Printf("[+] Edited %s", book)
 
 	return nil 
 }

@@ -1,6 +1,7 @@
 package delete
 
 import (
+	"fmt"
 	"io/ioutil"
 	"encoding/json"
 	"../../utils"
@@ -19,7 +20,8 @@ func DeleteNote(note_nu string) error {
 
 	for i, note := range json_data[book] {
 		if note.Name == note_nu || note.UID == note_nu {
-			// Delete the element in the slice here.
+            json_data[book][i] = json_data[book][len(json_data[book]) - 1]
+            json_data[book] = json_data[book][:len(json_data) - 1] // Currently this function deletes all the notes in a book.
 		}
 	}
 
@@ -34,6 +36,7 @@ func DeleteNote(note_nu string) error {
 	}
 
 	ioutil.WriteFile(dnote_path, new_data, 0644)
+	fmt.Printf("[+] Deleted note.")
 
 	return nil
 }
