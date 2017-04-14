@@ -1,13 +1,12 @@
-package edit
+package delete
 
 import (
 	"io/ioutil"
 	"encoding/json"
-
 	"../../utils"
 )
 
-func Edit(note_nu string, newcontent string) error {
+func DeleteNote(note_nu string) error {
 	book, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
@@ -20,8 +19,7 @@ func Edit(note_nu string, newcontent string) error {
 
 	for i, note := range json_data[book] {
 		if note.Name == note_nu || note.UID == note_nu {
-			note.Content = newcontent
-			json_data[book][i] = note
+			// Delete the element in the slice here.
 		}
 	}
 
@@ -37,5 +35,5 @@ func Edit(note_nu string, newcontent string) error {
 
 	ioutil.WriteFile(dnote_path, new_data, 0644)
 
-	return nil 
+	return nil
 }

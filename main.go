@@ -9,9 +9,10 @@ import (
 	"github.com/dnote-io/cli/cmd/books"
 	"./cmd/new"
 	"./cmd/edit"
+	"./cmd/delete"
 	"github.com/dnote-io/cli/cmd/notes"
-	"github.com/dnote-io/cli/upgrade"
-	"github.com/dnote-io/cli/utils"
+	"./upgrade"
+	"./utils"
 
 	"gopkg.in/yaml.v2"
 )
@@ -211,15 +212,27 @@ func main() {
 		err := changeBook(book)
 		check(err)
 	case "new", "n":
-		notename := os.Args[2]
-		note := os.Args[3]
-		err := new.Run(notename, note)
+		var notename string
+		var note string
+
+		if os.Args[2] != "-t" {
+			notename, err = utils.GenerateNoteName()
+			note = os.Args[2]
+		}else if os.Args[2] == "-t" {
+			notename = os.Args[3]
+			note = os.Args[4]
+		}
+
+		err = new.Run(notename, note)
 		check(err)
 	case "edit", "e":
 		notename := os.Args[2]
 		newcontent := os.Args[3]
 		err := edit.Edit(notename, newcontent)
 		check(err)
+	case "delete", "d":
+		note_nu := os.Args[2]
+		delete.DeleteNote(note_nu)
 	case "books", "b":
 		err := books.Run()
 		check(err)
