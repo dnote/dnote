@@ -44,7 +44,8 @@ e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
 
-**dnote new -t "[note name or UID]" "[note content]"**
+**dnote new -t "[note name]" "[note content]"**
+*alias: n*
 
 Write a new note under the current book with custom note names.
 
@@ -60,15 +61,24 @@ e.g
 
     dnote edit "note_001" "chdir changes working directory"
 
-**dnote delete "[note name or UID]"**
+**dnote delete -b "[book name]"**
 
-Delete a note using it's name or UID.
+Delete a book using it's name.
 
 e.g
 
-    dnote delete "note_001"
+    dnote delete -b "book_001"
 
-**dnote books**
+**dnote delete -n "[note name]"**
+
+Delete a note using it's name.
+
+e.g
+
+    dnote delete -n "note_001"
+
+### dnote books
+*alias: b*
 
 List all the books that you created
 

@@ -5,10 +5,15 @@ import (
 	"io/ioutil"
 	"encoding/json"
 
-	"../../utils"
+	// For testing purposes.
+	//"../../utils"
+
+	// For GitHub.
+	"github.com/dnote-io/cli/utils"
+	
 )
 
-func Edit(note_nu string, newcontent string) error {
+func Edit(note_name_uid string, newcontent string) error {
 	book, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
@@ -19,11 +24,20 @@ func Edit(note_nu string, newcontent string) error {
 		return err
 	}
 
+	var noteFound bool
 	for i, note := range json_data[book] {
-		if note.Name == note_nu || note.UID == note_nu {
+		if note.Name == note_name_uid || note.UID == note_name_uid {
 			note.Content = newcontent
 			json_data[book][i] = note
+			noteFound = true
+			break
+		}else{
+			noteFound = false
 		}
+	}
+
+	if noteFound != true{
+		fmt.Println("[+] The note with that name / UID is not found.")
 	}
 
 	dnote_path, err := utils.GetDnotePath()

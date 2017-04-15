@@ -5,9 +5,14 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
-	//"fmt"
 
+	// For testing purposes.
+	//"../utils"
+
+	// For GitHub.
+	
 	"github.com/dnote-io/cli/utils"
+	
 )
 
 func Migrate() error {
@@ -15,12 +20,12 @@ func Migrate() error {
 	if err != nil {
 		return err
 	}
-/*
+
 	err = migrateNoNameToName()
 	if err != nil{
 		return err
 	}
-*/
+
 	return nil
 }
 
@@ -85,7 +90,7 @@ func migrateYAMLToJSON() error {
 
 	return nil
 }
-/*
+
 func migrateNoNameToName() error {
 	json_data, err := utils.GetDnote()
 	if err != nil {
@@ -99,12 +104,15 @@ func migrateNoNameToName() error {
 		new_note = json_data
 		
 		for i, note := range new_note[book] {
-			if note.Name == nil {
-				fmt.Println("No Name")
-			}else{
-				fmt.Println("Named")
-			}
+			if note.Name == "" {
+				note_name, err := utils.GenerateNoteName()
+				if err != nil {
+					return err
+				}
 
+				note.Name = note_name
+				json_data[book][i] = note
+			}
 		}
 	}
 
@@ -122,4 +130,3 @@ func migrateNoNameToName() error {
 
 	return nil 
 }
-*/

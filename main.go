@@ -4,15 +4,29 @@ import (
 	"fmt"
 	"os"
 
-	"../cli/cmd/books"
-	"../cli/cmd/new"
-	"../cli/cmd/edit"
-	"../cli/cmd/delete"
-	"../cli/cmd/notes"
-	"../cli/upgrade"
-	"../cli/utils"
+	// For testing purposes.
+	"./cmd/books"
+	"./cmd/login"
+	"./cmd/new"
+	"./cmd/edit"
+	"./cmd/delete"
+	"./cmd/notes"
+	"./cmd/sync"
+	"./upgrade"
+	"./utils"
 
-	"gopkg.in/yaml.v2"
+	// For GitHub.
+	/*
+	"github.com/dnote-io/cli/cmd/books"
+	"github.com/dnote-io/cli/cmd/delete"
+	"github.com/dnote-io/cli/cmd/edit"
+	"github.com/dnote-io/cli/cmd/login"
+	"github.com/dnote-io/cli/cmd/new"
+	"github.com/dnote-io/cli/cmd/notes"
+	"github.com/dnote-io/cli/cmd/sync"
+	"github.com/dnote-io/cli/upgrade"
+	"github.com/dnote-io/cli/utils"
+	*/
 )
 
 func initDnote() error {
@@ -131,11 +145,13 @@ func main() {
 	case "new", "n":
 		var notename string
 		var note string
+		var err error
 
 		if os.Args[2] != "-t" {
 			notename, err = utils.GenerateNoteName()
 			note = os.Args[2]
-		}else if os.Args[2] == "-t" {
+			check(err)
+		} else if os.Args[2] == "-t" {
 			notename = os.Args[3]
 			note = os.Args[4]
 		}
@@ -151,7 +167,7 @@ func main() {
 		if os.Args[2] == "-b" {
 			err := delete.DeleteBook(os.Args[3])
 			check(err)
-		}else if os.Args[2] == "-n" {
+		} else if os.Args[2] == "-n" {
 			err := delete.DeleteNote(os.Args[3])
 			check(err)
 		}

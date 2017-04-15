@@ -3,7 +3,7 @@ package books
 import (
 	"fmt"
 
-	"../../utils"
+	"github.com/dnote-io/cli/utils"
 )
 
 func Run() error {
