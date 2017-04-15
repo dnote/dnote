@@ -21,7 +21,7 @@ func DeleteNote(note_nu string) error {
 	for i, note := range json_data[book] {
 		if note.Name == note_nu || note.UID == note_nu {
             json_data[book][i] = json_data[book][len(json_data[book]) - 1]
-            json_data[book] = json_data[book][:len(json_data)] // Currently this function deletes all the notes in a book.
+            json_data[book] = json_data[book][:len(json_data)]
 		}
 	}
 
