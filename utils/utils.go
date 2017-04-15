@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -24,8 +25,10 @@ type YAMLDnote map[string][]string
 
 type Dnote map[string]Book
 type Book []Note
+
 type Note struct {
 	UID     string
+	Name 	string
 	Content string
 	AddedOn int64
 }
@@ -48,6 +51,58 @@ func GenerateNoteID() string {
 	}
 
 	return string(result)
+}
+
+func GenerateNoteName() (string, error) {
+	var result string
+	result = ""
+
+	book, err := GetCurrentBook()
+	if err != nil {
+		return result, err
+	}
+
+	json_data, err := GetDnote()
+	if err != nil {
+		return result, err
+	}
+
+	var note_names []string
+	for _, note := range json_data[book] {
+		if strings.Contains(note.Name, "_note_") {
+			note_names = append(note_names, note.Name)
+		}
+	}
+
+	var note_num_slice []int
+	if note_names != nil {
+		for _, note_name := range note_names {
+			note_num, err := strconv.Atoi(strings.TrimPrefix(note_name, book + "_note_"))
+			if err != nil {
+				return result, err
+			}
+
+			note_num_slice = append(note_num_slice, note_num)
+		}
+
+		smallest, biggest := note_num_slice[0], note_num_slice[0]
+		for _, v := range note_num_slice {
+			if v > biggest {
+				biggest = v
+			}
+			if v < smallest {
+				smallest = v
+			}
+		}
+
+		desired_number := biggest + 1
+		final_number := strconv.Itoa(desired_number)
+		result = book + "_note_" + final_number
+	}else{
+		result = book + "_note_1"
+	}
+
+	return result, nil
 }
 
 func GetConfigPath() (string, error) {
@@ -182,6 +237,7 @@ func GetNote() (YAMLDnote, error) {
 
 	return ret, nil
 }
+
 func WriteConfig(config Config) error {
 	d, err := yaml.Marshal(config)
 	if err != nil {
