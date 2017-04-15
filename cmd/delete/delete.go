@@ -20,8 +20,12 @@ func DeleteNote(note_nu string) error {
 
 	for i, note := range json_data[book] {
 		if note.Name == note_nu || note.UID == note_nu {
-            json_data[book][i] = json_data[book][len(json_data[book]) - 1]
-            json_data[book] = json_data[book][:len(json_data)]
+			if len(json_data[book]) == 1 {
+				json_data[book] = json_data[book][:0]
+			}else if len(json_data[book]) > 1{
+				json_data[book][i] = json_data[book][len(json_data[book]) - 1]
+				json_data[book] = json_data[book][:len(json_data)]
+			}
 		}
 	}
 
@@ -36,7 +40,7 @@ func DeleteNote(note_nu string) error {
 	}
 
 	ioutil.WriteFile(dnote_path, new_data, 0644)
-	fmt.Printf("[+] Deleted note.")
+	fmt.Println("[+] Deleted note.")
 
 	return nil
 }
