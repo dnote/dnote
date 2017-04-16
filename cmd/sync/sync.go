@@ -49,7 +49,9 @@ func Sync() error {
 	}
 
 	fmt.Println("Syncing...")
-	req, err := http.NewRequest("POST", "http://127.0.0.1:3030/sync", payload)
+	endpoint := "http://api.dnote.io/sync"
+	//endpoint := "http://127.0.0.1:3030/sync"
+	req, err := http.NewRequest("POST", endpoint, payload)
 	if err != nil {
 		return err
 	}
