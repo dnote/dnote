@@ -2,22 +2,16 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"sort"
 
 	"github.com/dnote-io/cli/cmd/books"
+	"github.com/dnote-io/cli/cmd/login"
 	"github.com/dnote-io/cli/cmd/new"
 	"github.com/dnote-io/cli/cmd/notes"
+	"github.com/dnote-io/cli/cmd/sync"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/dnote-io/cli/utils"
-
-	"gopkg.in/yaml.v2"
 )
-
-type Config struct {
-	Book string
-}
 
 func initDnote() error {
 	configPath, err := utils.GetConfigPath()
@@ -67,117 +61,23 @@ func check(e error) {
 	}
 }
 
-func readConfig() (Config, error) {
-	var ret Config
-
-	configPath, err := utils.GetConfigPath()
-	if err != nil {
-		return ret, err
-	}
-
-	b, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		return ret, err
-	}
-
-	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
-}
-
-func getCurrentBook() (string, error) {
-	config, err := readConfig()
-	if err != nil {
-		return "", err
-	}
-
-	return config.Book, nil
-}
-
-func writeConfig(config Config) error {
-	d, err := yaml.Marshal(config)
-	if err != nil {
-		return err
-	}
-
-	configPath, err := utils.GetConfigPath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(configPath, d, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // changeBook replaces the book name in the dnote config file
 func changeBook(bookName string) error {
-	config, err := readConfig()
+	config, err := utils.ReadConfig()
 	if err != nil {
 		return err
 	}
 
 	config.Book = bookName
 
-	err = writeConfig(config)
+	err = utils.WriteConfig(config)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Using: %s\n", bookName)
+	fmt.Printf("Now using %s\n", bookName)
 
 	return nil
-}
-
-func getBooks() ([]string, error) {
-	note, err := utils.GetNote()
-	if err != nil {
-		return nil, err
-	}
-
-	books := make([]string, 0, len(note))
-	for k := range note {
-		books = append(books, k)
-	}
-
-	sort.Strings(books)
-
-	return books, nil
-}
-
-func getNotesInBook(bookName string) ([]string, error) {
-	note, err := utils.GetNote()
-	if err != nil {
-		return nil, err
-	}
-
-	notes := make([]string, 0, len(note))
-	for k, v := range note {
-		if k == bookName {
-			for _, noteContent := range v {
-				notes = append(notes, noteContent)
-			}
-		}
-	}
-
-	sort.Strings(notes)
-
-	return notes, nil
-}
-
-func getNotesInCurrentBook() ([]string, error) {
-	currentBook, err := getCurrentBook()
-	if err != nil {
-		return nil, err
-	}
-
-	return getNotesInBook(currentBook)
 }
 
 func checkFileExists(filepath string) bool {
@@ -185,10 +85,12 @@ func checkFileExists(filepath string) bool {
 	return !os.IsNotExist(err)
 }
 
-func main() {
+func init() {
 	err := initDnote()
 	check(err)
+}
 
+func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Dnote - Spontaneously capture new engineering lessons\n")
 		fmt.Println("Main commands:")
@@ -225,13 +127,16 @@ func main() {
 		err := notes.Run()
 		check(err)
 	case "sync":
-		//err := sync.Sync()
-		//check(err)
+		err := sync.Sync()
+		check(err)
+	case "login":
+		err := login.Run()
+		check(err)
 	default:
 		break
 	}
 
-	err = upgrade.AutoUpgrade()
+	err := upgrade.AutoUpgrade()
 	if err != nil {
 		fmt.Println("Warning - Failed to check for update:", err)
 	}
