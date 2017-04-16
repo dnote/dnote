@@ -3,7 +3,7 @@ release:
 	@echo "** Building..."
 	@$(MAKE) build
 	@echo "** Tagging and pushing..."
-	@git tag add $(VERSION)
+	@git tag -a $(VERSION)
 	@git push --tags
 .PHONY: release
 

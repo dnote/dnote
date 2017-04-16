@@ -16,17 +16,18 @@ In some cases, you might need `sudo`. Feel free to inspect [install.sh](https://
 
 On Windows, download [binary](https://github.com/dnote-io/cli/releases)
 
-## Usage
+## Overview
 
 Dnote categorizes your **notes** by **books**.
 
-All your books and notes are stored in `$HOME/.dnote` as a YAML file.
+All your books and notes are stored in `$HOME/.dnote` as a JSON file.
 
-In the future, you can sync your note with the Dnote server and set up digest notifications to reinforce your learning.
+You can optionally sync your note with Dnote server. Syncing will allow you to interact with your notes using the web frontend at https://dnote.io, and set up digest notifications.
 
-### Commands
+## Commands
 
-**dnote use [book name]**
+### dnote use [book name]
+*alias: u*
 
 Change the book to write your note in.
 
@@ -34,7 +35,8 @@ e.g.
 
     dnote use linux
 
-**dnote new "[note]"**
+### dnote new "[note]"
+*alias: n*
 
 Write a new note under the current book.
 
@@ -42,7 +44,8 @@ e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
 
-**dnote books**
+### dnote books
+*alias: b*
 
 List all the books that you created
 
@@ -53,6 +56,32 @@ e.g.
     * linux
       tmux
       css
+
+### dnote notes
+
+List all notes in the current book
+
+#### Options
+
+* `-b [book name]`
+
+Specify the name of the book to read from
+
+e.g.
+
+    $ dnote notes
+    On note JS
+    * .bind() creates a new function
+    * arrow function uses less memory than function with .bind()
+    * the time passed to setTimeout is minimum, no guaranteed time
+
+### dnote sync
+
+Sync notes with Dnote server
+
+### dnote login
+
+Start a login procedure which will store the APIKey to communicate with the server
 
 
 ## Links
