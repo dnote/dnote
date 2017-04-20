@@ -5,6 +5,7 @@ import (
 	"os"
 
 	// For testing purposes.
+	/*
 	"./cmd/books"
 	"./cmd/login"
 	"./cmd/new"
@@ -14,9 +15,9 @@ import (
 	"./cmd/sync"
 	"./upgrade"
 	"./utils"
+	*/
 
 	// For GitHub.
-	/*
 	"github.com/dnote-io/cli/cmd/books"
 	"github.com/dnote-io/cli/cmd/delete"
 	"github.com/dnote-io/cli/cmd/edit"
@@ -26,7 +27,6 @@ import (
 	"github.com/dnote-io/cli/cmd/sync"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/dnote-io/cli/utils"
-	*/
 )
 
 func initDnote() error {
