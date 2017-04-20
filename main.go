@@ -75,6 +75,21 @@ func changeBook(bookName string) error {
 		return err
 	}
 
+	// Now add this book to the .dnote file, for issue #2
+	dnote, err := utils.GetDnote()
+	if err != nil {
+		return err
+	}
+
+	_, exists := dnote[bookName]
+	if exists == false {
+		dnote[bookName] = make([]utils.Note, 0)
+		err := utils.WriteDnote(dnote)
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Printf("Now using %s\n", bookName)
 
 	return nil

@@ -1,9 +1,7 @@
 package new
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	"github.com/dnote-io/cli/utils"
@@ -50,17 +48,7 @@ func writeNote(note utils.Note) error {
 		dnote[book] = []utils.Note{note}
 	}
 
-	d, err := json.MarshalIndent(dnote, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	notePath, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(notePath, d, 0644)
+	err := utils.WriteDnote(dnote)
 	if err != nil {
 		return err
 	}

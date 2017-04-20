@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dnote-io/cli/utils"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -165,6 +167,26 @@ func GetDnote() (Dnote, error) {
 	}
 
 	return ret, nil
+}
+
+// WriteDnote persists the state of Dnote into the dnote file
+func WriteDnote(dnote Dnote) error {
+	d, err := json.MarshalIndent(dnote, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	notePath, err := utils.GetDnotePath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(notePath, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Deprecated. See upgrade/upgrade.go
