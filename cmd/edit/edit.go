@@ -38,6 +38,7 @@ func Edit(note_name_uid string, newcontent string) error {
 
 	if noteFound != true{
 		fmt.Println("[+] The note with that name / UID is not found.")
+		return nil
 	}
 
 	dnote_path, err := utils.GetDnotePath()
