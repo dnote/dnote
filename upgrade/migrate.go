@@ -6,12 +6,7 @@ import (
 	"os"
 	"time"
 
-	// For testing purposes.
-	//"../utils"
-
-	// For GitHub.
 	"github.com/dnote-io/cli/utils"
-	
 )
 
 func Migrate() error {
@@ -21,7 +16,7 @@ func Migrate() error {
 	}
 
 	err = migrateNoNameToName()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -91,41 +86,29 @@ func migrateYAMLToJSON() error {
 }
 
 func migrateNoNameToName() error {
-	json_data, err := utils.GetDnote()
+	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	new_note := utils.Dnote{}
 	books, err := utils.GetBooks()
-
 	for _, book := range books {
-		new_note = json_data
-		
-		for i, note := range new_note[book] {
+		for i, note := range dnote[book] {
 			if note.Name == "" {
-				note_name, err := utils.GenerateNoteName()
+				noteName, err := utils.GenerateNoteName()
 				if err != nil {
 					return err
 				}
 
-				note.Name = note_name
-				json_data[book][i] = note
+				note.Name = noteName
+				dnote[book][i] = note
+				err := utils.WriteDnote(dnote)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
-	dnote_path, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-
-	new_data, err := json.MarshalIndent(json_data, "", "	")
-	if err != nil {
-		return err
-	}
-
-	ioutil.WriteFile(dnote_path, new_data, 0644)
-
-	return nil 
+	return nil
 }

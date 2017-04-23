@@ -4,20 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	// For testing purposes.
-	/*
-	"./cmd/books"
-	"./cmd/login"
-	"./cmd/new"
-	"./cmd/edit"
-	"./cmd/delete"
-	"./cmd/notes"
-	"./cmd/sync"
-	"./upgrade"
-	"./utils"
-	*/
-
-	// For GitHub.
 	"github.com/dnote-io/cli/cmd/books"
 	"github.com/dnote-io/cli/cmd/delete"
 	"github.com/dnote-io/cli/cmd/edit"
@@ -165,10 +151,10 @@ func main() {
 		check(err)
 	case "delete", "d":
 		if os.Args[2] == "-b" {
-			err := delete.DeleteBook(os.Args[3])
+			err := delete.Book(os.Args[3])
 			check(err)
 		} else if os.Args[2] == "-n" {
-			err := delete.DeleteNote(os.Args[3])
+			err := delete.Note(os.Args[3])
 			check(err)
 		}
 	case "books", "b":

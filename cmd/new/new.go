@@ -4,21 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	// For testing purposes.
-	//"../../utils"
-
-	// For GitHub.
 	"github.com/dnote-io/cli/utils"
-	
 )
 
-func Run(notename string, content string) error {
+// Run makes a new note
+func Run(noteName string, content string) error {
 	currentBook, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
 	}
 
-	note, err:= makeNote(notename, content)
+	note, err := makeNote(noteName, content)
 	if err != nil {
 		return err
 	}
@@ -32,28 +28,23 @@ func Run(notename string, content string) error {
 	return nil
 }
 
-func makeNote(notename string, content string) (utils.Note, error) {
+func makeNote(noteName string, content string) (utils.Note, error) {
 	var note utils.Note
-    if notename == "" {
-        auto_gen_name, err := utils.GenerateNoteName()
-        if err != nil {
-            return note, err
-        }
+	if noteName == "" {
+		newName, err := utils.GenerateNoteName()
+		if err != nil {
+			return note, err
+		}
 
-        note = utils.Note {
-            UID: utils.GenerateNoteID(),
-            Name: auto_gen_name,
-            Content: content,
-            AddedOn: time.Now().Unix(),
-        }
-    } else {
-        note = utils.Note {
-            UID: utils.GenerateNoteID(),
-            Name: notename,
-            Content: content,
-            AddedOn: time.Now().Unix(),
-        }
-    }
+		noteName = newName
+	}
+
+	note = utils.Note{
+		UID:     utils.GenerateNoteID(),
+		Name:    noteName,
+		Content: content,
+		AddedOn: time.Now().Unix(),
+	}
 
 	return note, nil
 }
@@ -75,7 +66,7 @@ func writeNote(note utils.Note) error {
 		dnote[book] = []utils.Note{note}
 	}
 
-	err := utils.WriteDnote(dnote)
+	err = utils.WriteDnote(dnote)
 	if err != nil {
 		return err
 	}

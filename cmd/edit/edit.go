@@ -2,57 +2,33 @@ package edit
 
 import (
 	"fmt"
-	"io/ioutil"
-	"encoding/json"
 
-	// For testing purposes.
-	//"../../utils"
-
-	// For GitHub.
 	"github.com/dnote-io/cli/utils"
-	
 )
 
-func Edit(note_name_uid string, newcontent string) error {
+// Edit edits dnote with the given name or uid
+func Edit(nameOrUID string, content string) error {
 	book, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
 	}
 
-	json_data, err := utils.GetDnote()
+	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	var noteFound bool
-	for i, note := range json_data[book] {
-		if note.Name == note_name_uid || note.UID == note_name_uid {
-			note.Content = newcontent
-			json_data[book][i] = note
-			noteFound = true
-			break
-		}else{
-			noteFound = false
+	for i, note := range dnote[book] {
+		if note.Name == nameOrUID || note.UID == nameOrUID {
+			note.Content = content
+			dnote[book][i] = note
+
+			err := utils.WriteDnote(dnote)
+			return err
 		}
 	}
 
-	if noteFound != true{
-		fmt.Println("[+] The note with that name / UID is not found.")
-		return nil
-	}
-
-	dnote_path, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-
-	new_data, err := json.MarshalIndent(json_data, "", "	")
-	if err != nil {
-		return err
-	}
-
-	ioutil.WriteFile(dnote_path, new_data, 0644)
-	fmt.Printf("[+] Edited %s", book)
-
-	return nil 
+	// If loop finishes without returning, note did not exist
+	fmt.Println("[+] The note with that name / UID is not found.")
+	return nil
 }
