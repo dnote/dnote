@@ -9,11 +9,6 @@ import (
 )
 
 func Edit() error {
-	current_book, err := utils.GetCurrentBook()
-	if err != nil {
-		return err
-	}
-
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
@@ -24,10 +19,13 @@ func Edit() error {
 	var content string
 
 	if len(os.Args) == 4 {
-		target_book = current_book
+		target_book, err = utils.GetCurrentBook()
+		if err != nil {
+			return err
+		}
 		index, err = strconv.Atoi(os.Args[2])
 		if err != nil {
-			return nil
+			return err
 		}
 		content = os.Args[3]
 	}else if len(os.Args) == 5 {
