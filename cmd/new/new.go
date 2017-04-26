@@ -48,7 +48,7 @@ func writeNote(note utils.Note) error {
 		dnote[book] = []utils.Note{note}
 	}
 
-	err := utils.WriteDnote(dnote)
+	err = utils.WriteDnote(dnote)
 	if err != nil {
 		return err
 	}

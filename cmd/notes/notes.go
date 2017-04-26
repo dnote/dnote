@@ -33,8 +33,8 @@ func Run() error {
 
 	for k, v := range dnote {
 		if k == bookName {
-			for _, note := range v {
-				fmt.Printf("* %s\n", note.Content)
+			for i, note := range v {
+				fmt.Printf("* [%d] [%s]\n", i, note.Content)
 			}
 		}
 	}
