@@ -8,61 +8,59 @@ import (
 	"github.com/dnote-io/cli/utils"
 )
 
+// Bind the rest to one function for easier maintainance.
 func Delete() error {
-	if os.Args[2] == "-b" {
+	if os.Args[2] == "-n" && len(os.Args) == 4{
+		note_index, err := strconv.Atoi(os.Args[3])
+		if err != nil {
+			return err
+		}
+
+		target_book, err := utils.GetCurrentBook()
+		if err != nil {
+			return err
+		}
+
+		note(note_index, target_book)
+	
+	}else if os.Args[2] == "-n" && len(os.Args) == 5{
+		note_index, err:= strconv.Atoi(os.Args[4])
+		if err != nil {
+			return err
+		}
+
+		target_book := os.Args[3]
+		note(note_index, target_book)
+	}else if os.Args[2] == "-b" {
 		book(os.Args[3])
-	}else if os.Args[2] == "-n" {
-		note()
 	}else{
-		fmt.Println("Invalid command.")
+		fmt.Println("Error : Invalid argument passed to delete.")
 	}
 
 	return nil
 }
 
-// Note deletes the book
-func note() error {
-	book, err := utils.GetCurrentBook()
-	if err != nil {
-		return err
-	}
-
+// Note deletes the note in a certain index.
+func note(index int, book string) error {
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	var target_book string
-	var index int
-
-	if len(os.Args) == 4 {
-		target_book = book
-		index, err = strconv.Atoi(os.Args[3])
-		if err != nil {
-			return nil
-		}
-	}else if len(os.Args) == 5 {
-		target_book = os.Args[3]
-		index, err = strconv.Atoi(os.Args[4])
-		if err != nil {
-			return err
-		}
-	}
-
-	for i, _ := range dnote[target_book] {
+	for i, _ := range dnote[book] {
 		if i == index{
-			dnote[target_book] = append(dnote[target_book][:i], dnote[target_book][i+1:]...)
+			dnote[book] = append(dnote[book][:i], dnote[book][i+1:]...)
 			err = utils.WriteDnote(dnote)
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("[-] Deleted %d \n", index)
+			fmt.Printf("[-] Deleted : %d | Content : %s\n", index, dnote[book][index].Content)
 			return nil
 		}
 	}
 
-	fmt.Println("The note with that index is not found.")
+	fmt.Println("Error : The note with that index is not found.")
 	return nil
 }
 
@@ -86,11 +84,11 @@ func book(bookName string) error {
 				return err
 			}
 
-			fmt.Printf("[-] Deleted the book %s", bookName)
+			fmt.Printf("[-] Deleted book : %s \n", bookName)
 			return nil
 		}
 	}
 
-	fmt.Println("[+] The book with that name is not found.")
+	fmt.Println("Error : The book with that name is not found.")
 	return nil
 }

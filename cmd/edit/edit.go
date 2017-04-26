@@ -45,12 +45,12 @@ func Edit() error {
 			dnote[target_book][i] = note
 
 			err := utils.WriteDnote(dnote)
-			fmt.Printf("[+] Note with index %d successfully edited. \n", index)
+			fmt.Printf("[+] Edited Note : %d \n", index)
 			return err
 		}
 	}
 
 	// If loop finishes without returning, note did not exist
-	fmt.Println("[+] The note with that name / UID is not found.")
+	fmt.Println("Error : The note with that index is not found.")
 	return nil
 }
