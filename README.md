@@ -26,7 +26,7 @@ You can optionally sync your note with Dnote server. Syncing will allow you to i
 
 ## Commands
 
-### dnote use [book name]
+### dnote use "[book name]"
 *alias: u*
 
 Change the book to write your note in.
@@ -50,7 +50,7 @@ e.g.
 Overwrite a note under the current book
 
 #### Option
-*`-b [book]`
+*`-b [book name]`
 
 Specify the name of the book to edit from
 
@@ -75,15 +75,18 @@ e.g
 Delete a note under the current book
 
 #### Option
-*`-n [note]`
+*`-n [note index]`
 
 Specify the index of the note to be deleted
 
-*`-b [book]`
+*`-b [book name]`
 
 Specify the name of the book to be deleted from
 
-e.g 
+*`--book [book name]`
+
+e.g.
+
     $ dnote delete -n [note index]
     $ dnote delete -b [book name] [note index]
 
