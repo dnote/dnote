@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dnote-io/cli/utils"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -176,7 +174,7 @@ func WriteDnote(dnote Dnote) error {
 		return err
 	}
 
-	notePath, err := utils.GetDnotePath()
+	notePath, err := GetDnotePath()
 	if err != nil {
 		return err
 	}
