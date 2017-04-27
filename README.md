@@ -44,6 +44,50 @@ e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
 
+### dnote edit "[note]" "[content]"
+*alias: e*
+
+Overwrite a note under the current book
+
+#### Option
+*`-b [book]`
+
+Specify the name of the book to edit from
+
+e.g
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - Content index 1.
+    * [2] - Content index 2.
+
+    $ dnote edit 1 "New content"
+    [+] Edited Note : 1 
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - New content.
+    * [2] - Content index 2.
+
+### dnote delete "[note]"
+*alias: d*
+
+Delete a note under the current book
+
+#### Option
+*`-n [note]`
+
+Specify the index of the note to be deleted
+
+*`-b [book]`
+
+Specify the name of the book to be deleted
+
+e.g 
+    $ dnote delete -n 1
+    $ dnote delete -b foo
+
+ 
 ### dnote books
 *alias: b*
 
