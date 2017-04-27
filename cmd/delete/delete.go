@@ -8,40 +8,40 @@ import (
 	"github.com/dnote-io/cli/utils"
 )
 
-// Bind the rest to one function for easier maintainance.
 func Delete() error {
-	if os.Args[2] == "-n" && len(os.Args) == 4{
-		note_index, err := strconv.Atoi(os.Args[3])
+	if len(os.Args) == 3 {
+		current_book, err := utils.GetCurrentBook()
 		if err != nil {
 			return err
 		}
 
-		target_book, err := utils.GetCurrentBook()
+		note_index, err := strconv.Atoi(os.Args[2])
 		if err != nil {
 			return err
 		}
 
-		note(note_index, target_book)
-	
-	}else if os.Args[2] == "-n" && len(os.Args) == 5{
-		note_index, err:= strconv.Atoi(os.Args[4])
-		if err != nil {
-			return err
-		}
+		deleteNote(note_index, current_book)
+	} else if len(os.Args) == 5 {
+		if os.Args[2] == "-b" {
+			note_index, err := strconv.Atoi(os.Args[4])
+			if err != nil {
+				return err
+			}
 
-		target_book := os.Args[3]
-		note(note_index, target_book)
-	}else if os.Args[2] == "-b" {
-		book(os.Args[3])
-	}else{
-		fmt.Println("Error : Invalid argument passed to delete.")
+			deleteNote(note_index, os.Args[3])
+		}
+	} else if len(os.Args) == 4 {		
+		if os.Args[2] == "--book" {
+			deleteBook(os.Args[3])
+		}
+	} else {
+		fmt.Println("Invalid arguments passed to Delete.")
 	}
 
 	return nil
 }
 
-// Note deletes the note in a certain index.
-func note(index int, book string) error {
+func deleteNote(index int, book string) error {
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func note(index int, book string) error {
 				return err
 			}
 
-			fmt.Printf("[-] Deleted : %d | Content : %s\n", index, dnote[book][index].Content)
+			fmt.Printf("[-] Deleted : %d", index)
 			return nil
 		}
 	}
@@ -64,8 +64,7 @@ func note(index int, book string) error {
 	return nil
 }
 
-// Book deletes a book with the given name
-func book(bookName string) error {
+func deleteBook(bookName string) error {
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err

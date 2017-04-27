@@ -44,7 +44,7 @@ e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
 
-### dnote edit "[note]" "[content]"
+### dnote edit "[note index]" "[content]"
 *alias: e*
 
 Overwrite a note under the current book
@@ -81,11 +81,11 @@ Specify the index of the note to be deleted
 
 *`-b [book]`
 
-Specify the name of the book to be deleted
+Specify the name of the book to be deleted from
 
 e.g 
-    $ dnote delete -n 1
-    $ dnote delete -b foo
+    $ dnote delete -n [note index]
+    $ dnote delete -b [book name] [note index]
 
  
 ### dnote books
@@ -127,6 +127,9 @@ Sync notes with Dnote server
 
 Start a login procedure which will store the APIKey to communicate with the server
 
+### dnote help
+
+Print a list of commands and what they do
 
 ## Links
 
