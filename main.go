@@ -11,6 +11,9 @@ import (
 	"github.com/dnote-io/cli/cmd/sync"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/dnote-io/cli/utils"
+
+	"github.com/dnote-io/cli/cmd/delete"
+	"github.com/dnote-io/cli/cmd/edit"
 )
 
 func initDnote() error {
@@ -129,6 +132,12 @@ func main() {
 	case "new", "n":
 		note := os.Args[2]
 		err := new.Run(note)
+		check(err)
+	case "edit", "e":
+		err := edit.Edit()
+		check(err)
+	case "delete", "d":
+		err := delete.Delete()
 		check(err)
 	case "books", "b":
 		err := books.Run()
