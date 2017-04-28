@@ -115,10 +115,16 @@ func main() {
 		fmt.Println("  use [u] - choose the book")
 		fmt.Println("  new [n] - write a new note")
 		fmt.Println("  books [b] - show books")
+		fmt.Println("  edit [e] - edit a notes or a book")
+		fmt.Println("  delete [d] - delete a notes or a book")
 		fmt.Println("  notes - show notes for book")
 		fmt.Println("")
 		fmt.Println("Other commands:")
 		fmt.Println("  upgrade - upgrade dnote")
+		fmt.Println("  login - login with your API key")
+		fmt.Println("  sync - sync with the server")
+		fmt.Println("")
+		fmt.Println("Full documentation: https://github.com/dnote-io/cli#commands")
 		os.Exit(0)
 	}
 
