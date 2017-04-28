@@ -22,32 +22,32 @@ install() {
   if [ "$UNAME" = "Darwin" ]; then
     OSX_ARCH=$(uname -m)
     if [ "${OSX_ARCH}" = "x86_64" ]; then
-      PLATFORM="darwin_amd64"
+      PLATFORM="darwin-amd64"
     else
       not_supported
     fi
   elif [ "$UNAME" = "Linux" ]; then
     LINUX_ARCH=$(uname -m)
     if [ "${LINUX_ARCH}" = "x86_64" ]; then
-      PLATFORM="linux_amd64"
+      PLATFORM="linux-amd64"
     elif [ "${LINUX_ARCH}" = "i686" ]; then
-      PLATFORM="linux_386"
+      PLATFORM="linux-386"
     else
       not_supported
     fi
   elif [ "$UNAME" = "OpenBSD" ]; then
     OPENBSD_ARCH=$(uname -m)
     if [ "${OPENBSD_ARCH}" = "x86_64" ]; then
-      PLATFORM="openbsd_amd64"
+      PLATFORM="openbsd-amd64"
     elif [ "${OPENBSD_ARCH}" = "i686" ]; then
-      PLATFORM="openbsd_386"
+      PLATFORM="openbsd-386"
     else
       not_supported
     fi
   fi
 
   LATEST=$(curl -s https://api.github.com/repos/dnote-io/cli/tags | grep -Eo '"name":.*[^\\]",'  | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
-  URL="https://github.com/dnote-io/cli/releases/download/$LATEST/dnote_$PLATFORM"
+  URL="https://github.com/dnote-io/cli/releases/download/$LATEST/dnote-$PLATFORM"
   DEST=${DEST:-/usr/local/bin/dnote}
 
   if [ -z $LATEST ]; then
