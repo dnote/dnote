@@ -59,7 +59,7 @@ e.g.
 ### dnote edit
 *alias: e*
 
-Edit a note under the current book
+Edit a note
 
 #### Usage
 
@@ -182,6 +182,7 @@ Start a login procedure which will store the APIKey to communicate with the serv
 
 * [Website](https://dnote.io)
 * [Making Dnote (blog article)](https://sungwoncho.io/making-dnote/)
+* [Pitching Dnote (pitch to live audience and panelists)](https://sungwoncho.io/pitching-dnote/)
 
 ## License
 
