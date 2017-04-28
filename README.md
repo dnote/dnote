@@ -35,14 +35,26 @@ e.g.
 
     dnote use linux
 
-### dnote new [note]
+### dnote new
 *alias: n*
 
-Write a new note under the current book.
+Write a new note.
+
+#### Usage
+
+* `dnote new "content"`
+
+Writes a new note with `content` to the current book.
+
+* `dnote new [book name] "content"`
+
+Writes a new note with `content` to the book with the name `[book name]`.
+
 
 e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
+    dnote new linux "Use find - recursively walk the directly."
 
 ### dnote edit
 *alias: e*

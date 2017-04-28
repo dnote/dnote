@@ -7,19 +7,14 @@ import (
 	"github.com/dnote-io/cli/utils"
 )
 
-func Run(content string) error {
-	currentBook, err := utils.GetCurrentBook()
-	if err != nil {
-		return err
-	}
-
+func Run(bookName string, content string) error {
 	note := makeNote(content)
-	err = writeNote(note)
+	err := writeNote(bookName, note)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("[+] Added to %s\n", currentBook)
+	fmt.Printf("[+] Added to %s\n", bookName)
 	return nil
 }
 
@@ -31,21 +26,16 @@ func makeNote(content string) utils.Note {
 	}
 }
 
-func writeNote(note utils.Note) error {
+func writeNote(bookName string, note utils.Note) error {
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	book, err := utils.GetCurrentBook()
-	if err != nil {
-		return err
-	}
-
-	if _, ok := dnote[book]; ok {
-		dnote[book] = append(dnote[book], note)
+	if _, ok := dnote[bookName]; ok {
+		dnote[bookName] = append(dnote[bookName], note)
 	} else {
-		dnote[book] = []utils.Note{note}
+		dnote[bookName] = []utils.Note{note}
 	}
 
 	err = utils.WriteDnote(dnote)

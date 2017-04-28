@@ -130,8 +130,21 @@ func main() {
 		err := changeBook(book)
 		check(err)
 	case "new", "n":
-		note := os.Args[2]
-		err := new.Run(note)
+		var note string
+		var book string
+
+		if len(os.Args) == 3 {
+			currentBook, err := utils.GetCurrentBook()
+			if err != nil {
+				check(err)
+			}
+			note = os.Args[2]
+			book = currentBook
+		} else if len(os.Args) == 4 {
+			book = os.Args[2]
+			note = os.Args[3]
+		}
+		err := new.Run(book, note)
 		check(err)
 	case "edit", "e":
 		err := edit.Edit()
