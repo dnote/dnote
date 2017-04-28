@@ -59,7 +59,7 @@ e.g.
 ### dnote edit
 *alias: e*
 
-Edit a note under the current book
+Edit a note
 
 #### Usage
 
