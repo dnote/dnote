@@ -26,7 +26,7 @@ You can optionally sync your note with Dnote server. Syncing will allow you to i
 
 ## Commands
 
-### dnote use "[book name]"
+### dnote use [book name]
 *alias: u*
 
 Change the book to write your note in.
@@ -35,7 +35,7 @@ e.g.
 
     dnote use linux
 
-### dnote new "[note]"
+### dnote new [note]
 *alias: n*
 
 Write a new note under the current book.
@@ -44,15 +44,20 @@ e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
 
-### dnote edit "[note index]" "[content]"
+### dnote edit
 *alias: e*
 
-Overwrite a note under the current book
+Edit a note under the current book
 
-#### Option
-*`-b [book name]`
+#### Usage
 
-Specify the name of the book to edit from
+* `dnote edit [note index] "[note content]"`
+
+Edits the note with `note index` in the current book.
+
+* `dnote edit [book name] [note index] "[note content]"`
+
+Edits the note with `note index` in the specified book.
 
 e.g
 
@@ -62,35 +67,66 @@ e.g
     * [2] - Content index 2.
 
     $ dnote edit 1 "New content"
-    [+] Edited Note : 1 
+    [+] Edited Note : 1
 
     $ dnote notes
     * [0] - Content index 0.
     * [1] - New content.
     * [2] - Content index 2.
 
-### dnote delete "[note]"
+    $ dnote notes linux
+    * [0] - Linux Content 0
+    * [1] - Linux Content 1
+    * [2] - Linux Content 2
+
+    $ dnote edit linux 1 "New Content"
+    [+] Edited Note : 1
+
+    $ dnote notes linux
+    * [0] - Linux Content 0
+    * [1] - New Content
+    * [2] - Linux Content 2
+
+### dnote delete
 *alias: d*
 
-Delete a note under the current book
+Delete either a note or a book
 
-#### Option
-*`-n [note index]`
+#### Usage
 
-Specify the index of the note to be deleted
+* `dnote delete [book name] [index]`
 
-*`-b [book name]`
+Deletes the note with `index` in the specified book.
 
-Specify the name of the book to be deleted from
+* `dnote delete -b [book name]`
 
-*`--book [book name]`
+Deletes the book with the `book name`.
 
-e.g.
+e.g
 
-    $ dnote delete -n [note index]
-    $ dnote delete -b [book name] [note index]
+    $ dnote notes JS
+    * [0] - Content 0.
+    * [1] - Content 1.
+    * [2] - Content 2.
 
- 
+    $ dnote delete JS 1
+    [+] Edited Note : 1
+
+    $ dnote notes
+    * [0] - Content 0.
+    * [1] - Content 2.
+
+    $ dnote books
+      JS
+      linux
+      Go
+
+    $ dnote delete -b JS
+    $ dnote books
+      linux
+      Go
+
+
 ### dnote books
 *alias: b*
 
