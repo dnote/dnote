@@ -38,11 +38,44 @@ e.g.
 ### dnote new "[note]"
 *alias: n*
 
-Write a new note under the current book.
+Write a new note under the current book with auto-generated note names.
 
 e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
+
+**dnote new -t "[note name]" "[note content]"**
+*alias: n*
+
+Write a new note under the current book with custom note names.
+
+e.g
+
+    dnote new -t "note_001" "set -e instructs bash to exit immediately if any command has non-zero exit status"
+
+**dnote edit "[note name or UID]" "[note content]"**
+
+Edit a note using it's note name or UID.
+
+e.g
+
+    dnote edit "note_001" "chdir changes working directory"
+
+**dnote delete -b "[book name]"**
+
+Delete a book using it's name.
+
+e.g
+
+    dnote delete -b "book_001"
+
+**dnote delete -n "[note name]"**
+
+Delete a note using it's name.
+
+e.g
+
+    dnote delete -n "note_001"
 
 ### dnote books
 *alias: b*

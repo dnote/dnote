@@ -7,13 +7,18 @@ import (
 	"github.com/dnote-io/cli/utils"
 )
 
-func Run(content string) error {
+// Run makes a new note
+func Run(noteName string, content string) error {
 	currentBook, err := utils.GetCurrentBook()
 	if err != nil {
 		return err
 	}
 
-	note := makeNote(content)
+	note, err := makeNote(noteName, content)
+	if err != nil {
+		return err
+	}
+
 	err = writeNote(note)
 	if err != nil {
 		return err
@@ -23,12 +28,25 @@ func Run(content string) error {
 	return nil
 }
 
-func makeNote(content string) utils.Note {
-	return utils.Note{
+func makeNote(noteName string, content string) (utils.Note, error) {
+	var note utils.Note
+	if noteName == "" {
+		newName, err := utils.GenerateNoteName()
+		if err != nil {
+			return note, err
+		}
+
+		noteName = newName
+	}
+
+	note = utils.Note{
 		UID:     utils.GenerateNoteID(),
+		Name:    noteName,
 		Content: content,
 		AddedOn: time.Now().Unix(),
 	}
+
+	return note, nil
 }
 
 func writeNote(note utils.Note) error {

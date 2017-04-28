@@ -15,6 +15,11 @@ func Migrate() error {
 		return err
 	}
 
+	err = migrateNoNameToName()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -75,6 +80,34 @@ func migrateYAMLToJSON() error {
 	err = ioutil.WriteFile(dnotePath, migratedContent, 0644)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func migrateNoNameToName() error {
+	dnote, err := utils.GetDnote()
+	if err != nil {
+		return err
+	}
+
+	books, err := utils.GetBooks()
+	for _, book := range books {
+		for i, note := range dnote[book] {
+			if note.Name == "" {
+				noteName, err := utils.GenerateNoteName()
+				if err != nil {
+					return err
+				}
+
+				note.Name = noteName
+				dnote[book][i] = note
+				err := utils.WriteDnote(dnote)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

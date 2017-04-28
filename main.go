@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/dnote-io/cli/cmd/books"
+	"github.com/dnote-io/cli/cmd/delete"
+	"github.com/dnote-io/cli/cmd/edit"
 	"github.com/dnote-io/cli/cmd/login"
 	"github.com/dnote-io/cli/cmd/new"
 	"github.com/dnote-io/cli/cmd/notes"
@@ -127,9 +129,34 @@ func main() {
 		err := changeBook(book)
 		check(err)
 	case "new", "n":
-		note := os.Args[2]
-		err := new.Run(note)
+		var notename string
+		var note string
+		var err error
+
+		if os.Args[2] != "-t" {
+			notename, err = utils.GenerateNoteName()
+			note = os.Args[2]
+			check(err)
+		} else if os.Args[2] == "-t" {
+			notename = os.Args[3]
+			note = os.Args[4]
+		}
+
+		err = new.Run(notename, note)
 		check(err)
+	case "edit", "e":
+		notename := os.Args[2]
+		newcontent := os.Args[3]
+		err := edit.Edit(notename, newcontent)
+		check(err)
+	case "delete", "d":
+		if os.Args[2] == "-b" {
+			err := delete.Book(os.Args[3])
+			check(err)
+		} else if os.Args[2] == "-n" {
+			err := delete.Note(os.Args[3])
+			check(err)
+		}
 	case "books", "b":
 		err := books.Run()
 		check(err)
