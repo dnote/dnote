@@ -2,69 +2,74 @@ package delete
 
 import (
 	"fmt"
-	"strconv"
 	"os"
+	"strconv"
 
 	"github.com/dnote-io/cli/utils"
 )
 
+
+// Delete is a facade for deleting either note or book
 func Delete() error {
-	if len(os.Args) == 3 {
-		current_book, err := utils.GetCurrentBook()
+	if os.Args[2] == "-b" {
+		book(os.Args[3])
+	} else if len(os.Args) == 4 {
+		targetBook := os.Args[2]
+		noteIndex, err := strconv.Atoi(os.Args[3])
 		if err != nil {
 			return err
 		}
 
-		note_index, err := strconv.Atoi(os.Args[2])
-		if err != nil {
-			return err
-		}
-
-		deleteNote(note_index, current_book)
-	} else if len(os.Args) == 5 {
-		if os.Args[2] == "-b" {
-			note_index, err := strconv.Atoi(os.Args[4])
-			if err != nil {
-				return err
-			}
-
-			deleteNote(note_index, os.Args[3])
-		}
-	} else if len(os.Args) == 4 {		
-		if os.Args[2] == "--book" {
-			deleteBook(os.Args[3])
-		}
+		note(noteIndex, targetBook)
 	} else {
-		fmt.Println("Invalid arguments passed to Delete.")
+		fmt.Println("Error : Invalid argument passed to delete.")
 	}
 
 	return nil
 }
 
-func deleteNote(index int, book string) error {
+// note deletes the note in a certain index.
+func note(index int, book string) error {
+	ok, err := utils.AskConfirmation("Are you sure?")
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	for i, _ := range dnote[book] {
-		if i == index{
-			dnote[book] = append(dnote[book][:i], dnote[book][i+1:]...)
-			err = utils.WriteDnote(dnote)
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("[-] Deleted : %d", index)
-			return nil
-		}
+	if len(dnote[book])-1 < index {
+		fmt.Println("Error : The note with that index is not found.")
+		return nil
 	}
 
-	fmt.Println("Error : The note with that index is not found.")
+	content := dnote[book][index].Content
+	dnote[book] = append(dnote[book][:index], dnote[book][index+1:]...)
+	err = utils.WriteDnote(dnote)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("[-] Deleted : %d | Content : %s\n", index, content)
 	return nil
+
 }
 
-func deleteBook(bookName string) error {
+// book deletes a book with the given name
+func book(bookName string) error {
+	ok, err := utils.AskConfirmation("Are you sure?")
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err

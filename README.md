@@ -35,14 +35,109 @@ e.g.
 
     dnote use linux
 
-### dnote new "[note]"
+### dnote new
 *alias: n*
 
-Write a new note under the current book.
+Write a new note.
+
+#### Usage
+
+* `dnote new "content"`
+
+Writes a new note with `content` to the current book.
+
+* `dnote new [book name] "content"`
+
+Writes a new note with `content` to the book with the name `[book name]`.
+
 
 e.g.
 
     dnote new "set -e instructs bash to exit immediately if any command has non-zero exit status"
+    dnote new linux "Use find - recursively walk the directly."
+
+### dnote edit
+*alias: e*
+
+Edit a note
+
+#### Usage
+
+* `dnote edit [note index] "[note content]"`
+
+Edits the note with `note index` in the current book.
+
+* `dnote edit [book name] [note index] "[note content]"`
+
+Edits the note with `note index` in the specified book.
+
+e.g
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - Content index 1.
+    * [2] - Content index 2.
+
+    $ dnote edit 1 "New content"
+    [+] Edited Note : 1
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - New content.
+    * [2] - Content index 2.
+
+    $ dnote notes linux
+    * [0] - Linux Content 0
+    * [1] - Linux Content 1
+    * [2] - Linux Content 2
+
+    $ dnote edit linux 1 "New Content"
+    [+] Edited Note : 1
+
+    $ dnote notes linux
+    * [0] - Linux Content 0
+    * [1] - New Content
+    * [2] - Linux Content 2
+
+### dnote delete
+*alias: d*
+
+Delete either a note or a book
+
+#### Usage
+
+* `dnote delete [book name] [index]`
+
+Deletes the note with `index` in the specified book.
+
+* `dnote delete -b [book name]`
+
+Deletes the book with the `book name`.
+
+e.g
+
+    $ dnote notes JS
+    * [0] - Content 0.
+    * [1] - Content 1.
+    * [2] - Content 2.
+
+    $ dnote delete JS 1
+    [+] Edited Note : 1
+
+    $ dnote notes
+    * [0] - Content 0.
+    * [1] - Content 2.
+
+    $ dnote books
+      JS
+      linux
+      Go
+
+    $ dnote delete -b JS
+    $ dnote books
+      linux
+      Go
+
 
 ### dnote edit "[note index]" "[content]"
 *alias: e*
@@ -129,6 +224,7 @@ Sync notes with Dnote server
 ### dnote login
 
 Start a login procedure which will store the APIKey to communicate with the server
+
 
 ### dnote help
 
