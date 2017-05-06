@@ -92,6 +92,7 @@ func AutoUpgrade() error {
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
+		utils.TouchDnoteUpgradeFile()
 		if err != nil {
 			return err
 		}
