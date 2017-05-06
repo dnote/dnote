@@ -166,7 +166,7 @@ func main() {
 		check(err)
 	case "--version":
 		fmt.Println(utils.Version)
-	case "notes":
+	case "notes", "ls":
 		err := notes.Run()
 		check(err)
 	case "sync":

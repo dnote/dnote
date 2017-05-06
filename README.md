@@ -153,6 +153,7 @@ e.g.
       css
 
 ### dnote notes
+*alias: ls*
 
 List all notes in the current book
 
