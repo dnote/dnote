@@ -34,7 +34,7 @@ type Note struct {
 const configFilename = ".dnoterc"
 const DnoteUpdateFilename = ".dnote-upgrade"
 const dnoteFilename = ".dnote"
-const Version = "0.1.0-beta.3"
+const Version = "0.1.0"
 
 const letterRunes = "abcdefghipqrstuvwxyz0123456789"
 
