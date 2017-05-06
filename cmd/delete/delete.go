@@ -8,6 +8,7 @@ import (
 	"github.com/dnote-io/cli/utils"
 )
 
+
 // Delete is a facade for deleting either note or book
 func Delete() error {
 	if os.Args[2] == "-b" {

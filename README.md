@@ -26,7 +26,7 @@ You can optionally sync your note with Dnote server. Syncing will allow you to i
 
 ## Commands
 
-### dnote use [book name]
+### dnote use "[book name]"
 *alias: u*
 
 Change the book to write your note in.
@@ -139,6 +139,53 @@ e.g
       Go
 
 
+### dnote edit "[note index]" "[content]"
+*alias: e*
+
+Overwrite a note under the current book
+
+#### Option
+*`-b [book name]`
+
+Specify the name of the book to edit from
+
+e.g
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - Content index 1.
+    * [2] - Content index 2.
+
+    $ dnote edit 1 "New content"
+    [+] Edited Note : 1 
+
+    $ dnote notes
+    * [0] - Content index 0.
+    * [1] - New content.
+    * [2] - Content index 2.
+
+### dnote delete "[note]"
+*alias: d*
+
+Delete a note under the current book
+
+#### Option
+*`-n [note index]`
+
+Specify the index of the note to be deleted
+
+*`-b [book name]`
+
+Specify the name of the book to be deleted from
+
+*`--book [book name]`
+
+e.g.
+
+    $ dnote delete -n [note index]
+    $ dnote delete -b [book name] [note index]
+
+ 
 ### dnote books
 *alias: b*
 
@@ -178,6 +225,11 @@ Sync notes with Dnote server
 ### dnote login
 
 Start a login procedure which will store the APIKey to communicate with the server
+
+
+### dnote help
+
+Print a list of commands and what they do
 
 ## Links
 
