@@ -3,10 +3,27 @@ package books
 import (
 	"fmt"
 
+	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/utils"
+	"github.com/spf13/cobra"
 )
 
-func Run() error {
+var example = `
+ dnote books`
+
+var cmd = &cobra.Command{
+	Use:     "books",
+	Short:   "List books",
+	Aliases: []string{"b"},
+	Example: example,
+	RunE:    run,
+}
+
+func init() {
+	root.Register(cmd)
+}
+
+func run(cmd *cobra.Command, args []string) error {
 	currentBook, err := utils.GetCurrentBook()
 	if err != nil {
 		return err

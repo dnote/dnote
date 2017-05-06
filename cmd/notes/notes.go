@@ -2,26 +2,44 @@ package notes
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/utils"
+	"github.com/spf13/cobra"
 )
 
-func Run() error {
-	defaultBookName, err := utils.GetCurrentBook()
-	if err != nil {
-		return err
-	}
+var example = `
+ * List notes in the current book
+ dnote notes
+ dnote ls
 
+ * List notes in a certain book
+ dnote ls javascript
+ `
+
+var cmd = &cobra.Command{
+	Use:     "notes <book name?>",
+	Aliases: []string{"ls"},
+	Short:   "List all notes",
+	Example: example,
+	RunE:    run,
+}
+
+func init() {
+	root.Register(cmd)
+}
+
+func run(cmd *cobra.Command, args []string) error {
 	var bookName string
 
-	if len(os.Args) == 2 {
-		bookName = defaultBookName
-	} else if len(os.Args) == 4 && os.Args[2] == "-b" {
-		bookName = os.Args[3]
+	if len(args) == 1 {
+		bookName = args[0]
 	} else {
-		fmt.Println("Invalid argument passed to notes")
-		os.Exit(1)
+		var err error
+		bookName, err = utils.GetCurrentBook()
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("On note %s\n", bookName)
@@ -38,8 +56,6 @@ func Run() error {
 			}
 		}
 	}
-
-	//sort.Strings(notes)
 
 	return nil
 }
