@@ -1,27 +1,54 @@
 package delete
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"strconv"
 
+	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/utils"
+	"github.com/spf13/cobra"
 )
 
-// Delete is a facade for deleting either note or book
-func Delete() error {
-	if os.Args[2] == "-b" {
-		book(os.Args[3])
-	} else if len(os.Args) == 4 {
-		targetBook := os.Args[2]
-		noteIndex, err := strconv.Atoi(os.Args[3])
+var targetBookName string
+
+var example = `
+  * Delete a note by its index from a book
+  dnote delete js 2
+
+  * Delete a book
+  dnote delete -b js`
+
+var cmd = &cobra.Command{
+	Use:     "delete",
+	Short:   "Delete a note or a book",
+	Aliases: []string{"d"},
+	Example: example,
+	RunE:    run,
+}
+
+func init() {
+	root.Register(cmd)
+
+	f := cmd.Flags()
+	f.StringVarP(&targetBookName, "book", "b", "", "The book name to delete")
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	if targetBookName != "" {
+		book(targetBookName)
+	} else {
+		if len(args) < 2 {
+			return errors.New("Missing argument")
+		}
+
+		targetBook := args[0]
+		noteIndex, err := strconv.Atoi(args[1])
 		if err != nil {
 			return err
 		}
 
 		note(noteIndex, targetBook)
-	} else {
-		fmt.Println("Error : Invalid argument passed to delete.")
 	}
 
 	return nil

@@ -7,8 +7,24 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/utils"
+	"github.com/spf13/cobra"
 )
+
+var example = `
+  dnote sync`
+
+var cmd = &cobra.Command{
+	Use:     "sync",
+	Short:   "Sync dnote with the dnote server",
+	Example: example,
+	RunE:    run,
+}
+
+func init() {
+	root.Register(cmd)
+}
 
 func compressDnote() (*bytes.Buffer, error) {
 	b, err := utils.ReadNoteContent()
@@ -31,7 +47,7 @@ func compressDnote() (*bytes.Buffer, error) {
 
 }
 
-func Sync() error {
+func run(cmd *cobra.Command, args []string) error {
 	config, err := utils.ReadConfig()
 	if err != nil {
 		return err

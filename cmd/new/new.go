@@ -1,13 +1,60 @@
 package new
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/utils"
+	"github.com/spf13/cobra"
 )
 
-func Run(bookName string, content string) error {
+var example = `
+ * Write a note in the current book
+ dnote new "time is a part of the commit hash"
+
+ * Specify the book name
+ dnote new git "time is a part of the commit hash"`
+
+var cmd = &cobra.Command{
+	Use:     "new <content>",
+	Short:   "Add a new note",
+	Aliases: []string{"n"},
+	Example: example,
+	PreRunE: preRun,
+	RunE:    run,
+}
+
+func init() {
+	root.Register(cmd)
+}
+
+func preRun(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return errors.New("Missing argument")
+	}
+
+	return nil
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	var bookName string
+	var content string
+
+	if len(args) == 1 {
+		var err error
+		bookName, err = utils.GetCurrentBook()
+		if err != nil {
+			return err
+		}
+
+		content = args[0]
+	} else {
+		bookName = args[0]
+		content = args[1]
+	}
+
 	note := makeNote(content)
 	err := writeNote(bookName, note)
 	if err != nil {

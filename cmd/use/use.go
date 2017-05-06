@@ -1,4 +1,4 @@
-package login
+package use
 
 import (
 	"fmt"
@@ -9,11 +9,12 @@ import (
 )
 
 var example = `
-  dnote login`
+  dnote use JS`
 
 var cmd = &cobra.Command{
-	Use:     "login",
-	Short:   "Login to dnote server",
+	Use:     "use",
+	Short:   "Change the current book",
+	Aliases: []string{"u"},
 	Example: example,
 	RunE:    run,
 }
@@ -23,21 +24,13 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	fmt.Print("Please enter your APIKey: ")
+	targetBookName := args[0]
 
-	var apiKey string
-	fmt.Scanln(&apiKey)
-
-	config, err := utils.ReadConfig()
+	err := utils.ChangeBook(targetBookName)
 	if err != nil {
 		return err
 	}
 
-	config.APIKey = apiKey
-	err = utils.WriteConfig(config)
-	if err != nil {
-		return err
-	}
-
+	fmt.Printf("Now using %s\n", targetBookName)
 	return nil
 }

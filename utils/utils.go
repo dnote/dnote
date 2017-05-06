@@ -267,3 +267,41 @@ func GetBooks() ([]string, error) {
 
 	return books, nil
 }
+
+// CheckFileExists checks if the file exists at the given path
+func CheckFileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !os.IsNotExist(err)
+}
+
+// ChangeBook replaces the book name in the dnote config file
+func ChangeBook(bookName string) error {
+	config, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	config.Book = bookName
+
+	err = WriteConfig(config)
+	if err != nil {
+		return err
+	}
+
+	// Now add this book to the .dnote file, for issue #2
+	dnote, err := GetDnote()
+	if err != nil {
+		return err
+	}
+
+	_, exists := dnote[bookName]
+	if exists == false {
+		dnote[bookName] = make([]Note, 0)
+		err := WriteDnote(dnote)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
