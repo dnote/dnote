@@ -31,7 +31,7 @@ func GetDnoteUpdatePath() (string, error) {
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
-	filename := fmt.Sprintf("dnote-%s-%s", runtime.GOOS, runtime.GOARCH)
+	filename := fmt.Sprintf("dnote_%s_%s", runtime.GOOS, runtime.GOARCH)
 
 	for _, asset := range release.Assets {
 		if *asset.Name == filename {
