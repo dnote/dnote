@@ -1,0 +1,10 @@
+language: go
+
+go:
+  - 1.x
+  - 1.6
+  - 1.7.x
+  - master
+
+install: make get-deps
+script: make build
