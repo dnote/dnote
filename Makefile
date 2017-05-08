@@ -14,6 +14,7 @@ build: get-deps install-gox
 get-deps:
 	@echo "** Downloading dependencies... **"
 	@go get -t ./...
+	@go get github.com/inconshreveable/mousetrap
 .PHONY: get-deps
 
 install-gox:
