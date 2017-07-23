@@ -56,14 +56,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 // note deletes the note in a certain index.
 func note(index int, book string) error {
-	ok, err := utils.AskConfirmation("Are you sure?")
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return nil
-	}
-
 	dnote, err := utils.GetDnote()
 	if err != nil {
 		return err
@@ -73,17 +65,26 @@ func note(index int, book string) error {
 		fmt.Println("Error : The note with that index is not found.")
 		return nil
 	}
-
+	
 	content := dnote[book][index].Content
+	fmt.Printf("Deleting note: %s\n", content)
+	
+	ok, err := utils.AskConfirmation("Are you sure?")
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return nil
+	}
+
 	dnote[book] = append(dnote[book][:index], dnote[book][index+1:]...)
 	err = utils.WriteDnote(dnote)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("[-] Deleted : %d | Content : %s\n", index, content)
+	fmt.Printf("Deleted!\n")
 	return nil
-
 }
 
 // book deletes a book with the given name
