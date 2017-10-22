@@ -36,7 +36,7 @@ e.g.
     dnote use linux
 
 ### dnote new
-*alias: n*
+*alias: n, add*
 
 Write a new note.
 
