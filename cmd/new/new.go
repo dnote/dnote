@@ -20,7 +20,7 @@ var example = `
 var cmd = &cobra.Command{
 	Use:     "new <content>",
 	Short:   "Add a new note",
-	Aliases: []string{"n"},
+	Aliases: []string{"n", "add"},
 	Example: example,
 	PreRunE: preRun,
 	RunE:    run,
