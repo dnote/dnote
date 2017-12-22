@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func init() {
 func run(cmd *cobra.Command, args []string) error {
 	targetBookName := args[0]
 
-	err := utils.ChangeBook(targetBookName)
+	err := infra.ChangeBook(targetBookName)
 	if err != nil {
 		return err
 	}

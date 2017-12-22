@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ func run(cmd *cobra.Command, args []string) error {
 		bookName = args[0]
 	} else {
 		var err error
-		bookName, err = utils.GetCurrentBook()
+		bookName, err = infra.GetCurrentBook()
 		if err != nil {
 			return err
 		}
@@ -44,14 +44,14 @@ func run(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("On note %s\n", bookName)
 
-	dnote, err := utils.GetDnote()
+	dnote, err := infra.GetDnote()
 	if err != nil {
 		return err
 	}
 
 	for k, v := range dnote {
 		if k == bookName {
-			for i, note := range v {
+			for i, note := range v.Notes {
 				fmt.Printf("* [%d] - %s\n", i, note.Content)
 			}
 		}

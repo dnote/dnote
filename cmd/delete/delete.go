@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/dnote-io/cli/cmd/root"
+	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/spf13/cobra"
 )
@@ -56,19 +57,20 @@ func run(cmd *cobra.Command, args []string) error {
 
 // note deletes the note in a certain index.
 func note(index int, book string) error {
-	dnote, err := utils.GetDnote()
+	dnote, err := infra.GetDnote()
 	if err != nil {
 		return err
 	}
+	notes := dnote[book].Notes
 
-	if len(dnote[book])-1 < index {
+	if len(notes)-1 < index {
 		fmt.Println("Error : The note with that index is not found.")
 		return nil
 	}
-	
-	content := dnote[book][index].Content
+
+	content := notes[index].Content
 	fmt.Printf("Deleting note: %s\n", content)
-	
+
 	ok, err := utils.AskConfirmation("Are you sure?")
 	if err != nil {
 		return err
@@ -77,8 +79,8 @@ func note(index int, book string) error {
 		return nil
 	}
 
-	dnote[book] = append(dnote[book][:index], dnote[book][index+1:]...)
-	err = utils.WriteDnote(dnote)
+	dnote[book] = infra.GetUpdatedBook(dnote[book], append(notes[:index], notes[index+1:]...))
+	err = infra.WriteDnote(dnote)
 	if err != nil {
 		return err
 	}
@@ -97,12 +99,12 @@ func book(bookName string) error {
 		return nil
 	}
 
-	dnote, err := utils.GetDnote()
+	dnote, err := infra.GetDnote()
 	if err != nil {
 		return err
 	}
 
-	books, err := utils.GetBooks()
+	books, err := infra.GetBooks()
 	if err != nil {
 		return err
 	}
@@ -110,7 +112,7 @@ func book(bookName string) error {
 	for _, book := range books {
 		if book == bookName {
 			delete(dnote, bookName)
-			err := utils.WriteDnote(dnote)
+			err := infra.WriteDnote(dnote)
 			if err != nil {
 				return err
 			}

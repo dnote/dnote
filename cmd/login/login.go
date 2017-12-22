@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
 
@@ -28,13 +28,13 @@ func run(cmd *cobra.Command, args []string) error {
 	var apiKey string
 	fmt.Scanln(&apiKey)
 
-	config, err := utils.ReadConfig()
+	config, err := infra.ReadConfig()
 	if err != nil {
 		return err
 	}
 
 	config.APIKey = apiKey
-	err = utils.WriteConfig(config)
+	err = infra.WriteConfig(config)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +39,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	dnote, err := utils.GetDnote()
+	dnote, err := infra.GetDnote()
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func run(cmd *cobra.Command, args []string) error {
 	var content string
 
 	if len(args) == 2 {
-		targetBook, err = utils.GetCurrentBook()
+		targetBook, err = infra.GetCurrentBook()
 		if err != nil {
 			return err
 		}
@@ -67,12 +67,12 @@ func run(cmd *cobra.Command, args []string) error {
 		content = args[2]
 	}
 
-	for i, note := range dnote[targetBook] {
+	for i, note := range dnote[targetBook].Notes {
 		if i == index {
 			note.Content = content
-			dnote[targetBook][i] = note
+			dnote[targetBook].Notes[i] = note
 
-			err := utils.WriteDnote(dnote)
+			err := infra.WriteDnote(dnote)
 			fmt.Printf("Edited Note : %d \n", index)
 			return err
 		}

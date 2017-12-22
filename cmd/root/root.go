@@ -1,8 +1,9 @@
 package root
 
 import (
-	"github.com/dnote-io/cli/upgrade"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/migrate"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -23,41 +24,40 @@ func Execute() error {
 
 // Prepare initializes necessary files
 func Prepare() error {
-	configPath, err := utils.GetConfigPath()
+	err := infra.MigrateToDnoteDir()
 	if err != nil {
-		return err
-	}
-	dnotePath, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-	dnoteUpdatePath, err := utils.GetDnoteUpdatePath()
-	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to initialize dnote dir")
 	}
 
-	if !utils.CheckFileExists(configPath) {
-		err := utils.GenerateConfigFile()
-		if err != nil {
-			return err
-		}
-	}
-	if !utils.CheckFileExists(dnotePath) {
-		err := utils.TouchDnoteFile()
-		if err != nil {
-			return err
-		}
-	}
-	if !utils.CheckFileExists(dnoteUpdatePath) {
-		err := utils.TouchDnoteUpgradeFile()
-		if err != nil {
-			return err
-		}
+	fresh, err := infra.IsFreshInstall()
+	if err != nil {
+		return errors.Wrap(err, "Failed to check if fresh install")
 	}
 
-	err = upgrade.Migrate()
+	err = infra.InitDnoteDir()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to create dnote dir")
+	}
+	err = infra.InitConfigFile()
+	if err != nil {
+		return errors.Wrap(err, "Failed to generate config file")
+	}
+	err = infra.InitDnoteFile()
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote file")
+	}
+	err = infra.InitTimestampFile()
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote upgrade file")
+	}
+	err = migrate.InitSchemaFile(fresh)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create migration file")
+	}
+
+	err = migrate.Migrate()
+	if err != nil {
+		return errors.Wrap(err, "Failed to perform migration")
 	}
 
 	return nil

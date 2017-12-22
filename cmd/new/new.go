@@ -1,12 +1,11 @@
 package new
 
 import (
-	"errors"
 	"fmt"
-	"time"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +43,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if len(args) == 1 {
 		var err error
-		bookName, err = utils.GetCurrentBook()
+		bookName, err = infra.GetCurrentBook()
 		if err != nil {
 			return err
 		}
@@ -55,39 +54,34 @@ func run(cmd *cobra.Command, args []string) error {
 		content = args[1]
 	}
 
-	note := makeNote(content)
+	note := infra.MakeNote(content)
 	err := writeNote(bookName, note)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to write note")
 	}
 
 	fmt.Printf("[+] Added to %s\n", bookName)
 	return nil
 }
 
-func makeNote(content string) utils.Note {
-	return utils.Note{
-		UID:     utils.GenerateNoteID(),
-		Content: content,
-		AddedOn: time.Now().Unix(),
-	}
-}
-
-func writeNote(bookName string, note utils.Note) error {
-	dnote, err := utils.GetDnote()
+func writeNote(bookName string, note infra.Note) error {
+	dnote, err := infra.GetDnote()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to get dnote")
 	}
 
 	if _, ok := dnote[bookName]; ok {
-		dnote[bookName] = append(dnote[bookName], note)
+		notes := append(dnote[bookName].Notes, note)
+		dnote[bookName] = infra.GetUpdatedBook(dnote[bookName], notes)
 	} else {
-		dnote[bookName] = []utils.Note{note}
+		book := infra.MakeBook()
+		book.Notes = []infra.Note{note}
+		dnote[bookName] = book
 	}
 
-	err = utils.WriteDnote(dnote)
+	err = infra.WriteDnote(dnote)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to write to dnote file")
 	}
 
 	return nil

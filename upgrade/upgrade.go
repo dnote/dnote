@@ -9,25 +9,16 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"os/user"
 	"path"
 	"regexp"
 	"runtime"
 	"strconv"
 	"time"
 
+	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
 )
-
-func GetDnoteUpdatePath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, utils.DnoteUpdateFilename), nil
-}
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
@@ -44,7 +35,7 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 
 // getLastUpdateEpoch reads and parses the last update epoch
 func getLastUpdateEpoch() (int64, error) {
-	updatePath, err := utils.GetDnoteUpdatePath()
+	updatePath, err := infra.GetTimestampPath()
 	if err != nil {
 		return 0, err
 	}
@@ -58,7 +49,7 @@ func getLastUpdateEpoch() (int64, error) {
 	match := re.FindStringSubmatch(string(b))
 
 	if len(match) != 2 {
-		msg := fmt.Sprintf("Error parsing %s", utils.DnoteUpdateFilename)
+		msg := fmt.Sprintf("Error parsing %s", infra.TimestampFilename)
 		return 0, errors.New(msg)
 	}
 
@@ -92,7 +83,7 @@ func AutoUpgrade() error {
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
-		utils.TouchDnoteUpgradeFile()
+		infra.InitTimestampFile()
 		if err != nil {
 			return err
 		}
@@ -125,15 +116,15 @@ func Upgrade() error {
 	}
 
 	// Check if up to date
-	if latestVersion == utils.Version {
-		fmt.Printf("Up-to-date: %s\n", utils.Version)
-		utils.TouchDnoteUpgradeFile()
+	if latestVersion == infra.Version {
+		fmt.Printf("Up-to-date: %s\n", infra.Version)
+		infra.InitTimestampFile()
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
-		utils.TouchDnoteUpgradeFile()
+		infra.InitTimestampFile()
 		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 		return nil
 	}
@@ -176,9 +167,9 @@ func Upgrade() error {
 		return err
 	}
 
-	utils.TouchDnoteUpgradeFile()
+	infra.InitTimestampFile()
 
-	fmt.Printf("Updated: v%s -> v%s\n", utils.Version, latestVersion)
+	fmt.Printf("Updated: v%s -> v%s\n", infra.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }

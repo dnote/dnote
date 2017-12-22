@@ -8,7 +8,8 @@ import (
 	"net/http"
 
 	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote-io/cli/infra"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -27,28 +28,28 @@ func init() {
 }
 
 func compressDnote() (*bytes.Buffer, error) {
-	b, err := utils.ReadNoteContent()
+	b, err := infra.ReadNoteContent()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to read note content")
 	}
 
 	var buf bytes.Buffer
 	g := gzip.NewWriter(&buf)
 
-	if _, err := g.Write(b); err != nil {
-		return nil, err
+	_, err = g.Write(b)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to write note to gzip writer")
 	}
 
 	if err = g.Close(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to close gzip writer")
 	}
 
 	return &buf, nil
-
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	config, err := utils.ReadConfig()
+	config, err := infra.ReadConfig()
 	if err != nil {
 		return err
 	}
@@ -61,35 +62,37 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Println("Compressing dnote...")
 	payload, err := compressDnote()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to compress dnote")
 	}
 
 	fmt.Println("Syncing...")
-	endpoint := "http://api.dnote.io/sync"
-	//endpoint := "http://127.0.0.1:3030/sync"
+	//endpoint := "http://api.dnote.io/v1/sync"
+	endpoint := "http://127.0.0.1:3030/v1/sync"
 	req, err := http.NewRequest("POST", endpoint, payload)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to construct HTTP request")
 	}
 	req.Header.Set("Authorization", config.APIKey)
+	req.Header.Set("CLI-Version", infra.Version)
 
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to make request")
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to read failed response body")
 		}
 		bodyStr := string(body)
 
 		fmt.Printf("Failed to sync: %s", bodyStr)
-	} else {
-		fmt.Println("Successfully synced all notes")
+		return errors.New(bodyStr)
 	}
+
+	fmt.Println("Successfully synced all notes")
 
 	return nil
 }
