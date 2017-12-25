@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/spf13/cobra"
@@ -20,44 +19,46 @@ var example = `
   * Delete a book
   dnote delete -b js`
 
-var cmd = &cobra.Command{
-	Use:     "delete",
-	Short:   "Delete a note or a book",
-	Aliases: []string{"d"},
-	Example: example,
-	RunE:    run,
-}
-
-func init() {
-	root.Register(cmd)
+func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "delete",
+		Short:   "Delete a note or a book",
+		Aliases: []string{"d"},
+		Example: example,
+		RunE:    newRun(ctx),
+	}
 
 	f := cmd.Flags()
 	f.StringVarP(&targetBookName, "book", "b", "", "The book name to delete")
+
+	return cmd
 }
 
-func run(cmd *cobra.Command, args []string) error {
-	if targetBookName != "" {
-		book(targetBookName)
-	} else {
-		if len(args) < 2 {
-			return errors.New("Missing argument")
+func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		if targetBookName != "" {
+			book(ctx, targetBookName)
+		} else {
+			if len(args) < 2 {
+				return errors.New("Missing argument")
+			}
+
+			targetBook := args[0]
+			noteIndex, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+
+			note(ctx, noteIndex, targetBook)
 		}
 
-		targetBook := args[0]
-		noteIndex, err := strconv.Atoi(args[1])
-		if err != nil {
-			return err
-		}
-
-		note(noteIndex, targetBook)
+		return nil
 	}
-
-	return nil
 }
 
 // note deletes the note in a certain index.
-func note(index int, book string) error {
-	dnote, err := infra.GetDnote()
+func note(ctx infra.DnoteCtx, index int, book string) error {
+	dnote, err := infra.GetDnote(ctx)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func note(index int, book string) error {
 	}
 
 	dnote[book] = infra.GetUpdatedBook(dnote[book], append(notes[:index], notes[index+1:]...))
-	err = infra.WriteDnote(dnote)
+	err = infra.WriteDnote(ctx, dnote)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func note(index int, book string) error {
 }
 
 // book deletes a book with the given name
-func book(bookName string) error {
+func book(ctx infra.DnoteCtx, bookName string) error {
 	ok, err := utils.AskConfirmation("Are you sure?")
 	if err != nil {
 		return err
@@ -99,12 +100,12 @@ func book(bookName string) error {
 		return nil
 	}
 
-	dnote, err := infra.GetDnote()
+	dnote, err := infra.GetDnote(ctx)
 	if err != nil {
 		return err
 	}
 
-	books, err := infra.GetBooks()
+	books, err := infra.GetBooks(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,7 +113,7 @@ func book(bookName string) error {
 	for _, book := range books {
 		if book == bookName {
 			delete(dnote, bookName)
-			err := infra.WriteDnote(dnote)
+			err := infra.WriteDnote(ctx, dnote)
 			if err != nil {
 				return err
 			}

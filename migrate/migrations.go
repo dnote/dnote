@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 
+	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 )
 
-func deleteDnoteYAMLArchive() error {
-	yamlPath, err := getYAMLDnoteArchivePath()
+func deleteDnoteYAMLArchive(ctx infra.DnoteCtx) error {
+	yamlPath, err := getYAMLDnoteArchivePath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get YAML path")
 	}
@@ -28,13 +28,8 @@ func deleteDnoteYAMLArchive() error {
 	return nil
 }
 
-func generateBookMetadata() error {
-	usr, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get current os user")
-	}
-
-	notePath := fmt.Sprintf("%s/.dnote/dnote", usr.HomeDir)
+func generateBookMetadata(ctx infra.DnoteCtx) error {
+	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
 	b, err := ioutil.ReadFile(notePath)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the note file")

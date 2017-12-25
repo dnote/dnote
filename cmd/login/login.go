@@ -3,7 +3,6 @@ package login
 import (
 	"fmt"
 
-	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -11,33 +10,36 @@ import (
 var example = `
   dnote login`
 
-var cmd = &cobra.Command{
-	Use:     "login",
-	Short:   "Login to dnote server",
-	Example: example,
-	RunE:    run,
-}
-
-func init() {
-	root.Register(cmd)
-}
-
-func run(cmd *cobra.Command, args []string) error {
-	fmt.Print("Please enter your APIKey: ")
-
-	var apiKey string
-	fmt.Scanln(&apiKey)
-
-	config, err := infra.ReadConfig()
-	if err != nil {
-		return err
+func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "login",
+		Short:   "Login to dnote server",
+		Example: example,
+		RunE:    newRun(ctx),
 	}
 
-	config.APIKey = apiKey
-	err = infra.WriteConfig(config)
-	if err != nil {
-		return err
+	return cmd
+}
+
+func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		fmt.Print("Please enter your APIKey: ")
+
+		var apiKey string
+		fmt.Scanln(&apiKey)
+
+		config, err := infra.ReadConfig(ctx)
+		if err != nil {
+			return err
+		}
+
+		config.APIKey = apiKey
+		err = infra.WriteConfig(ctx, config)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	return nil
 }

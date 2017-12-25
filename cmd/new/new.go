@@ -2,8 +2,6 @@ package new
 
 import (
 	"fmt"
-
-	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -16,19 +14,6 @@ var example = `
  * Specify the book name
  dnote new git "time is a part of the commit hash"`
 
-var cmd = &cobra.Command{
-	Use:     "new <content>",
-	Short:   "Add a new note",
-	Aliases: []string{"n", "add"},
-	Example: example,
-	PreRunE: preRun,
-	RunE:    run,
-}
-
-func init() {
-	root.Register(cmd)
-}
-
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return errors.New("Missing argument")
@@ -37,35 +22,50 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func run(cmd *cobra.Command, args []string) error {
-	var bookName string
-	var content string
-
-	if len(args) == 1 {
-		var err error
-		bookName, err = infra.GetCurrentBook()
-		if err != nil {
-			return err
-		}
-
-		content = args[0]
-	} else {
-		bookName = args[0]
-		content = args[1]
+func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "new <content>",
+		Short:   "Add a new note",
+		Aliases: []string{"n", "add"},
+		Example: example,
+		PreRunE: preRun,
+		RunE:    newRun(ctx),
 	}
 
-	note := infra.MakeNote(content)
-	err := writeNote(bookName, note)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write note")
-	}
-
-	fmt.Printf("[+] Added to %s\n", bookName)
-	return nil
+	return cmd
 }
 
-func writeNote(bookName string, note infra.Note) error {
-	dnote, err := infra.GetDnote()
+func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		var bookName string
+		var content string
+
+		if len(args) == 1 {
+			var err error
+			bookName, err = infra.GetCurrentBook(ctx)
+			if err != nil {
+				return err
+			}
+
+			content = args[0]
+		} else {
+			bookName = args[0]
+			content = args[1]
+		}
+
+		note := infra.MakeNote(content)
+		err := writeNote(ctx, bookName, note)
+		if err != nil {
+			return errors.Wrap(err, "Failed to write note")
+		}
+
+		fmt.Printf("[+] Added to %s\n", bookName)
+		return nil
+	}
+}
+
+func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
+	dnote, err := infra.GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
@@ -79,7 +79,7 @@ func writeNote(bookName string, note infra.Note) error {
 		dnote[bookName] = book
 	}
 
-	err = infra.WriteDnote(dnote)
+	err = infra.WriteDnote(ctx, dnote)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write to dnote file")
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -17,17 +16,17 @@ var example = `
   * Edit the note by index in a certain book
   dnote edit JS 3 "new content"`
 
-var cmd = &cobra.Command{
-	Use:     "edit",
-	Short:   "Edit a note or a book",
-	Aliases: []string{"e"},
-	Example: example,
-	PreRunE: preRun,
-	RunE:    run,
-}
+func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "edit",
+		Short:   "Edit a note or a book",
+		Aliases: []string{"e"},
+		Example: example,
+		PreRunE: preRun,
+		RunE:    newRun(ctx),
+	}
 
-func init() {
-	root.Register(cmd)
+	return cmd
 }
 
 func preRun(cmd *cobra.Command, args []string) error {
@@ -38,47 +37,49 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func run(cmd *cobra.Command, args []string) error {
-	dnote, err := infra.GetDnote()
-	if err != nil {
-		return err
-	}
-
-	var targetBook string
-	var index int
-	var content string
-
-	if len(args) == 2 {
-		targetBook, err = infra.GetCurrentBook()
+func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		dnote, err := infra.GetDnote(ctx)
 		if err != nil {
 			return err
 		}
-		index, err = strconv.Atoi(args[0])
-		if err != nil {
-			return err
+
+		var targetBook string
+		var index int
+		var content string
+
+		if len(args) == 2 {
+			targetBook, err = infra.GetCurrentBook(ctx)
+			if err != nil {
+				return err
+			}
+			index, err = strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+			content = args[1]
+		} else if len(args) == 3 {
+			targetBook = args[0]
+			index, err = strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+			content = args[2]
 		}
-		content = args[1]
-	} else if len(args) == 3 {
-		targetBook = args[0]
-		index, err = strconv.Atoi(args[1])
-		if err != nil {
-			return err
+
+		for i, note := range dnote[targetBook].Notes {
+			if i == index {
+				note.Content = content
+				dnote[targetBook].Notes[i] = note
+
+				err := infra.WriteDnote(ctx, dnote)
+				fmt.Printf("Edited Note : %d \n", index)
+				return err
+			}
 		}
-		content = args[2]
+
+		// If loop finishes without returning, note did not exist
+		fmt.Println("Error : The note with that index is not found.")
+		return nil
 	}
-
-	for i, note := range dnote[targetBook].Notes {
-		if i == index {
-			note.Content = content
-			dnote[targetBook].Notes[i] = note
-
-			err := infra.WriteDnote(dnote)
-			fmt.Printf("Edited Note : %d \n", index)
-			return err
-		}
-	}
-
-	// If loop finishes without returning, note did not exist
-	fmt.Println("Error : The note with that index is not found.")
-	return nil
 }

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"sort"
 	"strconv"
 	"time"
 
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,9 +21,10 @@ const (
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
-	dnoteDirName      = ".dnote"
-	configFilename    = "dnoterc"
-	dnoteFilename     = "dnote"
+	// TimestampFilename is the name of the directory containing dnote files
+	DnoteDirName   = ".dnote"
+	configFilename = "dnoterc"
+	dnoteFilename  = "dnote"
 )
 
 // Config holds dnote configuration
@@ -49,51 +50,33 @@ type Note struct {
 	AddedOn int64
 }
 
-// GetDnoteDirPath returns the path to the directory containing dnote files
-// for the current user
-func GetDnoteDirPath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get current os user")
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteDirName), nil
+// DnoteCtx is a context holding the information of the current runtime
+type DnoteCtx struct {
+	HomeDir  string
+	DnoteDir string
 }
 
-// GetConfigPath returns the path to the dnote config file
-func GetConfigPath() (string, error) {
-	dnoteDirPath, err := GetDnoteDirPath()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get dnote dir path")
-	}
+type RunEFunc func(*cobra.Command, []string) error
 
-	return fmt.Sprintf("%s/%s", dnoteDirPath, configFilename), nil
+// GetConfigPath returns the path to the dnote config file
+func GetConfigPath(ctx DnoteCtx) (string, error) {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, configFilename), nil
 }
 
 // GetDnotePath returns the path to the dnote file
-func GetDnotePath() (string, error) {
-	dnoteDirPath, err := GetDnoteDirPath()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get dnote dir path")
-	}
-
-	return fmt.Sprintf("%s/%s", dnoteDirPath, dnoteFilename), nil
+func GetDnotePath(ctx DnoteCtx) (string, error) {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, dnoteFilename), nil
 }
 
 // GetTimestampPath returns the path to the file containing dnote upgrade
 // information
-func GetTimestampPath() (string, error) {
-	dnoteDirPath, err := GetDnoteDirPath()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get dnote dir path")
-	}
-
-	return fmt.Sprintf("%s/%s", dnoteDirPath, TimestampFilename), nil
+func GetTimestampPath(ctx DnoteCtx) (string, error) {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TimestampFilename), nil
 }
 
-func InitConfigFile() error {
+func InitConfigFile(ctx DnoteCtx) error {
 	content := []byte("book: general\n")
-	path, err := GetConfigPath()
+	path, err := GetConfigPath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get config path")
 	}
@@ -107,11 +90,8 @@ func InitConfigFile() error {
 }
 
 // InitDnoteDir initializes dnote directory
-func InitDnoteDir() error {
-	path, err := GetDnoteDirPath()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get dnote dir path")
-	}
+func InitDnoteDir(ctx DnoteCtx) error {
+	path := ctx.DnoteDir
 
 	if utils.FileExists(path) {
 		return nil
@@ -125,8 +105,8 @@ func InitDnoteDir() error {
 }
 
 // InitDnoteFile creates an empty dnote file
-func InitDnoteFile() error {
-	path, err := GetDnotePath()
+func InitDnoteFile(ctx DnoteCtx) error {
+	path, err := GetDnotePath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote path")
 	}
@@ -145,8 +125,8 @@ func InitDnoteFile() error {
 }
 
 // InitTimestampFile creates an empty dnote upgrade file
-func InitTimestampFile() error {
-	path, err := GetTimestampPath()
+func InitTimestampFile(ctx DnoteCtx) error {
+	path, err := GetTimestampPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -163,8 +143,8 @@ func InitTimestampFile() error {
 }
 
 // ReadNoteContent reads the content of dnote
-func ReadNoteContent() ([]byte, error) {
-	notePath, err := GetDnotePath()
+func ReadNoteContent(ctx DnoteCtx) ([]byte, error) {
+	notePath, err := GetDnotePath(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,10 +158,10 @@ func ReadNoteContent() ([]byte, error) {
 }
 
 // GetDnote reads and parses the dnote
-func GetDnote() (Dnote, error) {
+func GetDnote(ctx DnoteCtx) (Dnote, error) {
 	ret := Dnote{}
 
-	b, err := ReadNoteContent()
+	b, err := ReadNoteContent(ctx)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to read note content")
 	}
@@ -195,13 +175,13 @@ func GetDnote() (Dnote, error) {
 }
 
 // WriteDnote persists the state of Dnote into the dnote file
-func WriteDnote(dnote Dnote) error {
+func WriteDnote(ctx DnoteCtx, dnote Dnote) error {
 	d, err := json.MarshalIndent(dnote, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	notePath, err := GetDnotePath()
+	notePath, err := GetDnotePath(ctx)
 	if err != nil {
 		return err
 	}
@@ -214,13 +194,13 @@ func WriteDnote(dnote Dnote) error {
 	return nil
 }
 
-func WriteConfig(config Config) error {
+func WriteConfig(ctx DnoteCtx, config Config) error {
 	d, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	configPath, err := GetConfigPath()
+	configPath, err := GetConfigPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -233,10 +213,10 @@ func WriteConfig(config Config) error {
 	return nil
 }
 
-func ReadConfig() (Config, error) {
+func ReadConfig(ctx DnoteCtx) (Config, error) {
 	var ret Config
 
-	configPath, err := GetConfigPath()
+	configPath, err := GetConfigPath(ctx)
 	if err != nil {
 		return ret, err
 	}
@@ -254,8 +234,8 @@ func ReadConfig() (Config, error) {
 	return ret, nil
 }
 
-func GetCurrentBook() (string, error) {
-	config, err := ReadConfig()
+func GetCurrentBook(ctx DnoteCtx) (string, error) {
+	config, err := ReadConfig(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -263,8 +243,8 @@ func GetCurrentBook() (string, error) {
 	return config.Book, nil
 }
 
-func GetBooks() ([]string, error) {
-	dnote, err := GetDnote()
+func GetBooks(ctx DnoteCtx) ([]string, error) {
+	dnote, err := GetDnote(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -280,21 +260,21 @@ func GetBooks() ([]string, error) {
 }
 
 // ChangeBook replaces the book name in the dnote config file
-func ChangeBook(bookName string) error {
-	config, err := ReadConfig()
+func ChangeBook(ctx DnoteCtx, bookName string) error {
+	config, err := ReadConfig(ctx)
 	if err != nil {
 		return err
 	}
 
 	config.Book = bookName
 
-	err = WriteConfig(config)
+	err = WriteConfig(ctx, config)
 	if err != nil {
 		return err
 	}
 
 	// Now add this book to the .dnote file, for issue #2
-	dnote, err := GetDnote()
+	dnote, err := GetDnote(ctx)
 	if err != nil {
 		return err
 	}
@@ -302,7 +282,7 @@ func ChangeBook(bookName string) error {
 	_, exists := dnote[bookName]
 	if !exists {
 		dnote[bookName] = MakeBook()
-		err := WriteDnote(dnote)
+		err := WriteDnote(ctx, dnote)
 		if err != nil {
 			return err
 		}
@@ -339,16 +319,13 @@ func GetUpdatedBook(book Book, notes []Note) Book {
 
 // MigrateToDnoteDir creates dnote directory if artifacts from the previous version
 // of dnote are present, and moves the artifacts to the directory.
-func MigrateToDnoteDir() error {
-	usr, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get current os user")
-	}
+func MigrateToDnoteDir(ctx DnoteCtx) error {
+	homeDir := ctx.HomeDir
 
-	temporaryDirPath := fmt.Sprintf("%s/.dnote-tmp", usr.HomeDir)
-	oldDnotePath := fmt.Sprintf("%s/.dnote", usr.HomeDir)
-	oldDnotercPath := fmt.Sprintf("%s/.dnoterc", usr.HomeDir)
-	oldDnoteUpgradePath := fmt.Sprintf("%s/.dnote-upgrade", usr.HomeDir)
+	temporaryDirPath := fmt.Sprintf("%s/.dnote-tmp", homeDir)
+	oldDnotePath := fmt.Sprintf("%s/.dnote", homeDir)
+	oldDnotercPath := fmt.Sprintf("%s/.dnoterc", homeDir)
+	oldDnoteUpgradePath := fmt.Sprintf("%s/.dnote-upgrade", homeDir)
 
 	// Check if a dnote file exists. Return early if it does not exist,
 	// or exists but already a directory.
@@ -379,7 +356,7 @@ func MigrateToDnoteDir() error {
 	}
 
 	// Now that all files are moved to the temporary dir, rename the dir to .dnote
-	if err := os.Rename(temporaryDirPath, fmt.Sprintf("%s/.dnote", usr.HomeDir)); err != nil {
+	if err := os.Rename(temporaryDirPath, fmt.Sprintf("%s/.dnote", homeDir)); err != nil {
 		return errors.Wrap(err, "Failed to rename temporary dir to .dnote")
 	}
 
@@ -387,13 +364,10 @@ func MigrateToDnoteDir() error {
 }
 
 // IsFreshInstall checks if the dnote files have been initialized
-func IsFreshInstall() (bool, error) {
-	path, err := GetDnoteDirPath()
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to get dnote directory path")
-	}
+func IsFreshInstall(ctx DnoteCtx) (bool, error) {
+	path := ctx.DnoteDir
 
-	_, err = os.Stat(path)
+	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		return true, nil
 	}

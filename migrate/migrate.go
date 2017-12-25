@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
@@ -48,14 +47,14 @@ func makeSchema(complete bool) schema {
 }
 
 // Migrate determines migrations to be run and performs them
-func Migrate() error {
-	unrunMigrations, err := getUnrunMigrations()
+func Migrate(ctx infra.DnoteCtx) error {
+	unrunMigrations, err := getUnrunMigrations(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get unrun migrations")
 	}
 
 	for _, mid := range unrunMigrations {
-		if err := performMigration(mid); err != nil {
+		if err := performMigration(ctx, mid); err != nil {
 			return errors.Wrapf(err, "Failed to run migration #%d", mid)
 		}
 	}
@@ -65,8 +64,8 @@ func Migrate() error {
 
 // performMigration backs up current .dnote data, performs migration, and
 // restores or cleans backups depending on if there is an error
-func performMigration(migrationID int) error {
-	if err := backupDnoteDir(); err != nil {
+func performMigration(ctx infra.DnoteCtx, migrationID int) error {
+	if err := backupDnoteDir(ctx); err != nil {
 		return errors.Wrap(err, "Failed to back up dnote directory")
 	}
 
@@ -74,26 +73,26 @@ func performMigration(migrationID int) error {
 
 	switch migrationID {
 	case migrationDeleteYAMLArchive:
-		migrationError = deleteDnoteYAMLArchive()
+		migrationError = deleteDnoteYAMLArchive(ctx)
 	case migrationAddBookMetadata:
-		migrationError = generateBookMetadata()
+		migrationError = generateBookMetadata(ctx)
 	default:
 		return errors.Errorf("Unrecognized migration id %d", migrationID)
 	}
 
 	if migrationError != nil {
-		if err := restoreBackup(); err != nil {
+		if err := restoreBackup(ctx); err != nil {
 			panic(errors.Wrap(err, "Failed to restore backup for a failed migration"))
 		}
 
 		return errors.Wrapf(migrationError, "Failed to perform migration #%d", migrationID)
 	}
 
-	if err := clearBackup(); err != nil {
+	if err := clearBackup(ctx); err != nil {
 		return errors.Wrap(err, "Failed to clear backup")
 	}
 
-	if err := updateSchemaVersion(migrationID); err != nil {
+	if err := updateSchemaVersion(ctx, migrationID); err != nil {
 		return errors.Wrap(err, "Failed to update schema version")
 	}
 
@@ -101,14 +100,9 @@ func performMigration(migrationID int) error {
 }
 
 // backupDnoteDir backs up the dnote directory to a temporary backup directory
-func backupDnoteDir() error {
-	usr, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get current os user")
-	}
-
-	srcPath := fmt.Sprintf("%s/.dnote", usr.HomeDir)
-	tmpPath := fmt.Sprintf("%s/%s", usr.HomeDir, backupDirName)
+func backupDnoteDir(ctx infra.DnoteCtx) error {
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
+	tmpPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
 
 	if err := utils.CopyDir(srcPath, tmpPath); err != nil {
 		return errors.Wrap(err, "Failed to copy the .dnote directory")
@@ -117,7 +111,7 @@ func backupDnoteDir() error {
 	return nil
 }
 
-func restoreBackup() error {
+func restoreBackup(ctx infra.DnoteCtx) error {
 	var err error
 
 	defer func() {
@@ -128,13 +122,8 @@ func restoreBackup() error {
 		}
 	}()
 
-	usr, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get current os user")
-	}
-
-	srcPath := fmt.Sprintf("%s/.dnote", usr.HomeDir)
-	backupPath := fmt.Sprintf("%s/%s", usr.HomeDir, backupDirName)
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
+	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
 
 	if err = os.RemoveAll(srcPath); err != nil {
 		return errors.Wrapf(err, "Failed to clear current dnote data at %s", backupPath)
@@ -147,13 +136,8 @@ func restoreBackup() error {
 	return nil
 }
 
-func clearBackup() error {
-	usr, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "Failed to get current os user")
-	}
-
-	backupPath := fmt.Sprintf("%s/%s", usr.HomeDir, backupDirName)
+func clearBackup(ctx infra.DnoteCtx) error {
+	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
 
 	if err := os.RemoveAll(backupPath); err != nil {
 		return errors.Wrapf(err, "Failed to remove backup at %s", backupPath)
@@ -163,18 +147,13 @@ func clearBackup() error {
 }
 
 // getSchemaPath returns the path to the file containing schema info
-func getSchemaPath() (string, error) {
-	dnoteDirPath, err := infra.GetDnoteDirPath()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get dnote dir path")
-	}
-
-	return fmt.Sprintf("%s/%s", dnoteDirPath, schemaFilename), nil
+func getSchemaPath(ctx infra.DnoteCtx) (string, error) {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename), nil
 }
 
 // InitSchemaFile creates a migration file
-func InitSchemaFile(pristine bool) error {
-	path, err := getSchemaPath()
+func InitSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
+	path, err := getSchemaPath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get migration file path")
 	}
@@ -184,7 +163,7 @@ func InitSchemaFile(pristine bool) error {
 	}
 
 	s := makeSchema(pristine)
-	err = writeSchema(s)
+	err = writeSchema(ctx, s)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write schema")
 	}
@@ -192,10 +171,10 @@ func InitSchemaFile(pristine bool) error {
 	return nil
 }
 
-func readSchema() (schema, error) {
+func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	var ret schema
 
-	path, err := getSchemaPath()
+	path, err := getSchemaPath(ctx)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to get schema file path")
 	}
@@ -213,8 +192,8 @@ func readSchema() (schema, error) {
 	return ret, nil
 }
 
-func writeSchema(s schema) error {
-	path, err := getSchemaPath()
+func writeSchema(ctx infra.DnoteCtx, s schema) error {
+	path, err := getSchemaPath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get migration file path")
 	}
@@ -231,10 +210,10 @@ func writeSchema(s schema) error {
 	return nil
 }
 
-func getUnrunMigrations() ([]int, error) {
+func getUnrunMigrations(ctx infra.DnoteCtx) ([]int, error) {
 	var ret []int
 
-	schema, err := readSchema()
+	schema, err := readSchema(ctx)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to read schema")
 	}
@@ -249,15 +228,15 @@ func getUnrunMigrations() ([]int, error) {
 	return ret, nil
 }
 
-func updateSchemaVersion(mID int) error {
-	s, err := readSchema()
+func updateSchemaVersion(ctx infra.DnoteCtx, mID int) error {
+	s, err := readSchema(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read schema")
 	}
 
 	s.CurrentVersion = mID
 
-	err = writeSchema(s)
+	err = writeSchema(ctx, s)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write schema")
 	}
@@ -265,11 +244,6 @@ func updateSchemaVersion(mID int) error {
 	return nil
 }
 
-func getYAMLDnoteArchivePath() (string, error) {
-	usr, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", usr.HomeDir, ".dnote-yaml-archived"), nil
+func getYAMLDnoteArchivePath(ctx infra.DnoteCtx) (string, error) {
+	return fmt.Sprintf("%s/%s", ctx.HomeDir, ".dnote-yaml-archived"), nil
 }

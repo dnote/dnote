@@ -3,7 +3,6 @@ package notes
 import (
 	"fmt"
 
-	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -17,45 +16,48 @@ var example = `
  dnote ls javascript
  `
 
-var cmd = &cobra.Command{
-	Use:     "notes <book name?>",
-	Aliases: []string{"ls"},
-	Short:   "List all notes",
-	Example: example,
-	RunE:    run,
+func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "notes <book name?>",
+		Aliases: []string{"ls"},
+		Short:   "List all notes",
+		Example: example,
+		RunE:    newRun(ctx),
+	}
+
+	return cmd
 }
 
-func init() {
-	root.Register(cmd)
-}
+func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		var bookName string
 
-func run(cmd *cobra.Command, args []string) error {
-	var bookName string
+		if len(args) == 1 {
+			bookName = args[0]
+		} else {
+			var err error
+			bookName, err = infra.GetCurrentBook(ctx)
+			if err != nil {
+				return err
+			}
+		}
 
-	if len(args) == 1 {
-		bookName = args[0]
-	} else {
-		var err error
-		bookName, err = infra.GetCurrentBook()
+		fmt.Printf("On note %s\n", bookName)
+
+		dnote, err := infra.GetDnote(ctx)
 		if err != nil {
 			return err
 		}
-	}
 
-	fmt.Printf("On note %s\n", bookName)
-
-	dnote, err := infra.GetDnote()
-	if err != nil {
-		return err
-	}
-
-	for k, v := range dnote {
-		if k == bookName {
-			for i, note := range v.Notes {
-				fmt.Printf("* [%d] - %s\n", i, note.Content)
+		for k, v := range dnote {
+			if k == bookName {
+				for i, note := range v.Notes {
+					fmt.Printf("* [%d] - %s\n", i, note.Content)
+				}
 			}
 		}
+
+		return nil
 	}
 
-	return nil
 }

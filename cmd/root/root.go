@@ -23,39 +23,39 @@ func Execute() error {
 }
 
 // Prepare initializes necessary files
-func Prepare() error {
-	err := infra.MigrateToDnoteDir()
+func Prepare(ctx infra.DnoteCtx) error {
+	err := infra.MigrateToDnoteDir(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to initialize dnote dir")
 	}
 
-	fresh, err := infra.IsFreshInstall()
+	fresh, err := infra.IsFreshInstall(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to check if fresh install")
 	}
 
-	err = infra.InitDnoteDir()
+	err = infra.InitDnoteDir(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote dir")
 	}
-	err = infra.InitConfigFile()
+	err = infra.InitConfigFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to generate config file")
 	}
-	err = infra.InitDnoteFile()
+	err = infra.InitDnoteFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote file")
 	}
-	err = infra.InitTimestampFile()
+	err = infra.InitTimestampFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote upgrade file")
 	}
-	err = migrate.InitSchemaFile(fresh)
+	err = migrate.InitSchemaFile(ctx, fresh)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create migration file")
 	}
 
-	err = migrate.Migrate()
+	err = migrate.Migrate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to perform migration")
 	}
