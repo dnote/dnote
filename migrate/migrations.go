@@ -28,6 +28,19 @@ func deleteDnoteYAMLArchive(ctx infra.DnoteCtx) error {
 	return nil
 }
 
+type generateBookMetadataNote struct {
+	UID     string
+	Content string
+	AddedOn int64
+}
+type generateBookMetadataPreBook []generateBookMetadataNote
+type generateBookMetadataPostBook struct {
+	UID   string
+	Notes []generateBookMetadataNote
+}
+type generateBookMetadataPreDnote map[string]generateBookMetadataPreBook
+type generateBookMetadataPostDnote map[string]generateBookMetadataPostBook
+
 func generateBookMetadata(ctx infra.DnoteCtx) error {
 	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
 	b, err := ioutil.ReadFile(notePath)
@@ -35,22 +48,8 @@ func generateBookMetadata(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to read the note file")
 	}
 
-	type Note struct {
-		UID     string
-		Content string
-		AddedOn int64
-	}
-	type PreBook []Note
-	type PostBook struct {
-		UID   string
-		Notes []Note
-	}
-
-	type PreDnote map[string]PreBook
-	type PostDnote map[string]PostBook
-
-	var preDnote PreDnote
-	postDnote := PostDnote{}
+	var preDnote generateBookMetadataPreDnote
+	postDnote := generateBookMetadataPostDnote{}
 
 	err = json.Unmarshal(b, &preDnote)
 	if err != nil {
@@ -58,7 +57,7 @@ func generateBookMetadata(ctx infra.DnoteCtx) error {
 	}
 
 	for bookName, book := range preDnote {
-		b := PostBook{
+		b := generateBookMetadataPostBook{
 			UID:   utils.GenerateUID(),
 			Notes: book,
 		}

@@ -5,19 +5,19 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/dnote-io/cli/infra"
-
 	"github.com/dnote-io/cli/cmd/root"
-
+	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
+
 	// commands
+	"github.com/dnote-io/cli/cmd/add"
 	"github.com/dnote-io/cli/cmd/books"
-	"github.com/dnote-io/cli/cmd/delete"
 	"github.com/dnote-io/cli/cmd/edit"
 	"github.com/dnote-io/cli/cmd/login"
-	"github.com/dnote-io/cli/cmd/new"
-	"github.com/dnote-io/cli/cmd/notes"
+	"github.com/dnote-io/cli/cmd/ls"
+	"github.com/dnote-io/cli/cmd/remove"
 	"github.com/dnote-io/cli/cmd/sync"
+	"github.com/dnote-io/cli/cmd/upgrade"
 	"github.com/dnote-io/cli/cmd/use"
 	"github.com/dnote-io/cli/cmd/version"
 )
@@ -40,14 +40,15 @@ func init() {
 
 func main() {
 	root.Register(books.NewCmd(ctx))
-	root.Register(delete.NewCmd(ctx))
+	root.Register(remove.NewCmd(ctx))
 	root.Register(edit.NewCmd(ctx))
 	root.Register(login.NewCmd(ctx))
-	root.Register(new.NewCmd(ctx))
-	root.Register(notes.NewCmd(ctx))
+	root.Register(add.NewCmd(ctx))
+	root.Register(ls.NewCmd(ctx))
 	root.Register(sync.NewCmd(ctx))
 	root.Register(use.NewCmd(ctx))
 	root.Register(version.NewCmd(ctx))
+	root.Register(upgrade.NewCmd(ctx))
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
@@ -75,7 +76,6 @@ func getDnoteDir(homeDir string) string {
 	var ret string
 
 	dnoteDirEnv := os.Getenv("DNOTE_DIR")
-	fmt.Println("env is ", dnoteDirEnv)
 	if dnoteDirEnv == "" {
 		ret = fmt.Sprintf("%s/%s", homeDir, infra.DnoteDirName)
 	} else {

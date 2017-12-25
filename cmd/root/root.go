@@ -3,6 +3,7 @@ package root
 import (
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/migrate"
+	"github.com/dnote-io/cli/upgrade"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -58,6 +59,11 @@ func Prepare(ctx infra.DnoteCtx) error {
 	err = migrate.Migrate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to perform migration")
+	}
+
+	err = upgrade.AutoUpgrade(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to auto upgrade")
 	}
 
 	return nil

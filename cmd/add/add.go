@@ -1,4 +1,4 @@
-package new
+package add
 
 import (
 	"fmt"
@@ -24,9 +24,9 @@ func preRun(cmd *cobra.Command, args []string) error {
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "new <content>",
-		Short:   "Add a new note",
-		Aliases: []string{"n", "add"},
+		Use:     "add <content>",
+		Short:   "Add a add note",
+		Aliases: []string{"a", "n", "new"},
 		Example: example,
 		PreRunE: preRun,
 		RunE:    newRun(ctx),

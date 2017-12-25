@@ -34,8 +34,8 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 }
 
 // getLastUpdateEpoch reads and parses the last update epoch
-func getLastUpdateEpoch() (int64, error) {
-	updatePath, err := infra.GetTimestampPath()
+func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
+	updatePath, err := infra.GetTimestampPath(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -62,11 +62,11 @@ func getLastUpdateEpoch() (int64, error) {
 }
 
 // shouldCheckUpdate checks if update should be checked
-func shouldCheckUpdate() (bool, error) {
+func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
 	var updatePeriod int64 = 86400 * 7
 
 	now := time.Now().Unix()
-	lastEpoch, err := getLastUpdateEpoch()
+	lastEpoch, err := getLastUpdateEpoch(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -75,21 +75,21 @@ func shouldCheckUpdate() (bool, error) {
 }
 
 // AutoUpgrade triggers update if needed
-func AutoUpgrade() error {
-	shouldCheck, err := shouldCheckUpdate()
+func AutoUpgrade(ctx infra.DnoteCtx) error {
+	shouldCheck, err := shouldCheckUpdate(ctx)
 	if err != nil {
 		return err
 	}
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
-		infra.InitTimestampFile()
+		infra.InitTimestampFile(ctx)
 		if err != nil {
 			return err
 		}
 
 		if willCheck {
-			err := Upgrade()
+			err := Upgrade(ctx)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func AutoUpgrade() error {
 	return nil
 }
 
-func Upgrade() error {
+func Upgrade(ctx infra.DnoteCtx) error {
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
@@ -118,13 +118,13 @@ func Upgrade() error {
 	// Check if up to date
 	if latestVersion == infra.Version {
 		fmt.Printf("Up-to-date: %s\n", infra.Version)
-		infra.InitTimestampFile()
+		infra.InitTimestampFile(ctx)
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
-		infra.InitTimestampFile()
+		infra.InitTimestampFile(ctx)
 		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 		return nil
 	}
@@ -167,7 +167,7 @@ func Upgrade() error {
 		return err
 	}
 
-	infra.InitTimestampFile()
+	infra.InitTimestampFile(ctx)
 
 	fmt.Printf("Updated: v%s -> v%s\n", infra.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")

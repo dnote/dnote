@@ -1,4 +1,4 @@
-package delete
+package remove
 
 import (
 	"errors"
@@ -21,9 +21,9 @@ var example = `
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "delete",
-		Short:   "Delete a note or a book",
-		Aliases: []string{"d"},
+		Use:     "remove",
+		Short:   "Remove a note or a book",
+		Aliases: []string{"rm", "d", "delete"},
 		Example: example,
 		RunE:    newRun(ctx),
 	}

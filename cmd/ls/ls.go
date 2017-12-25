@@ -1,4 +1,4 @@
-package notes
+package ls
 
 import (
 	"fmt"
@@ -18,8 +18,8 @@ var example = `
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "notes <book name?>",
-		Aliases: []string{"ls"},
+		Use:     "ls <book name?>",
+		Aliases: []string{"notes"},
 		Short:   "List all notes",
 		Example: example,
 		RunE:    newRun(ctx),

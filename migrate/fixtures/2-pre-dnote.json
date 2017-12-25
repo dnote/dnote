@@ -1,0 +1,22 @@
+{
+  "algorithm": [
+    {
+      "UID": "z68z88g7",
+      "Content": "in-place means no extra space required. it mutates the input",
+      "AddedOn": 1506148290
+    }
+  ],
+  "linux": [],
+  "react": [
+    {
+      "UID": "94i3zquv",
+      "Content": "React Element is an object representation of a DOM node",
+      "AddedOn": 1499835562
+    },
+    {
+      "UID": "c24bbcd6",
+      "Content": "React Component is a function or a class which accepts input and returns React Element",
+      "AddedOn": 1499835860
+    }
+  ]
+}

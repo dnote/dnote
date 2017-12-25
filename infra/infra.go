@@ -17,11 +17,11 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "1.0.0"
+	Version = "0.2.0"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
-	// TimestampFilename is the name of the directory containing dnote files
+	// DnoteDirName is the name of the directory containing dnote files
 	DnoteDirName   = ".dnote"
 	configFilename = "dnoterc"
 	dnoteFilename  = "dnote"
