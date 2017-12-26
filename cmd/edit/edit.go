@@ -1,11 +1,11 @@
 package edit
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/dnote-io/cli/infra"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -72,7 +72,13 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 				note.Content = content
 				dnote[targetBook].Notes[i] = note
 
-				err := infra.WriteDnote(ctx, dnote)
+				action := infra.NewActionEditNote(note.UUID, note.Content)
+				err := infra.LogAction(ctx, action)
+				if err != nil {
+					return errors.Wrap(err, "Failed to log action")
+				}
+
+				err = infra.WriteDnote(ctx, dnote)
 				fmt.Printf("Edited Note : %d \n", index)
 				return err
 			}

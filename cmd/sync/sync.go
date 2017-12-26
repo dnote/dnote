@@ -39,7 +39,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 		}
 
 		fmt.Println("Compressing dnote...")
-		payload, err := compressDnote(ctx)
+		payload, err := compressActions(ctx)
 		if err != nil {
 			return errors.Wrap(err, "Failed to compress dnote")
 		}
@@ -67,7 +67,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			}
 			bodyStr := string(body)
 
-			fmt.Printf("Failed to sync: %s", bodyStr)
+			fmt.Printf("Failed to sync on the server: %s", bodyStr)
 			return errors.New(bodyStr)
 		}
 
@@ -78,10 +78,10 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 
 }
 
-func compressDnote(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
-	b, err := infra.ReadNoteContent(ctx)
+func compressActions(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
+	b, err := infra.ReadActionLogContent(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to read note content")
+		return nil, errors.Wrap(err, "Failed to read the action log content")
 	}
 
 	var buf bytes.Buffer
@@ -89,7 +89,7 @@ func compressDnote(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
 
 	_, err = g.Write(b)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to write note to gzip writer")
+		return nil, errors.Wrap(err, "Failed to write to gzip writer")
 	}
 
 	if err = g.Close(); err != nil {

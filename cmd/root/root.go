@@ -51,6 +51,10 @@ func Prepare(ctx infra.DnoteCtx) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote upgrade file")
 	}
+	err = infra.InitActionFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create action file")
+	}
 	err = migrate.InitSchemaFile(ctx, fresh)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create migration file")

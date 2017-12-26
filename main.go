@@ -22,12 +22,8 @@ import (
 	"github.com/dnote-io/cli/cmd/version"
 )
 
-var ctx infra.DnoteCtx
-
-// initialize the dnote context and prepare dir structure
-func init() {
-	var err error
-	ctx, err = newCtx()
+func main() {
+	ctx, err := newCtx()
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to initialize the dnote context"))
 	}
@@ -36,9 +32,7 @@ func init() {
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to prepare dnote run"))
 	}
-}
 
-func main() {
 	root.Register(books.NewCmd(ctx))
 	root.Register(remove.NewCmd(ctx))
 	root.Register(edit.NewCmd(ctx))
@@ -56,12 +50,10 @@ func main() {
 }
 
 func newCtx() (infra.DnoteCtx, error) {
-	usr, err := user.Current()
+	homeDir, err := getHomeDir()
 	if err != nil {
-		return infra.DnoteCtx{}, errors.Wrap(err, "Failed to get current user")
+		return infra.DnoteCtx{}, errors.Wrap(err, "Failed to get home dir")
 	}
-
-	homeDir := usr.HomeDir
 	dnoteDir := getDnoteDir(homeDir)
 
 	ret := infra.DnoteCtx{
@@ -83,4 +75,18 @@ func getDnoteDir(homeDir string) string {
 	}
 
 	return ret
+}
+
+func getHomeDir() (string, error) {
+	homeDirEnv := os.Getenv("DNOTE_HOME_DIR")
+	if homeDirEnv != "" {
+		return homeDirEnv, nil
+	}
+
+	usr, err := user.Current()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to get current user")
+	}
+
+	return usr.HomeDir, nil
 }

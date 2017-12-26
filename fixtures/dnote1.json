@@ -1,12 +1,10 @@
 {
   "js": {
-    "UID": "wwfivy41",
+    "UUID": "3e6c9401-833b-485f-bcda-c2525a5dc389",
     "Notes": [
       {
-        "UID": "hy07v63d",
-        "Content": "Booleans have toString()",
-        "Dirty": false,
-        "AddedOn": 1514262165
+        "UUID": "43827b9a-c2b0-4c06-a290-97991c896653",
+        "Content": "Booleans have toString()"
       }
     ]
   }

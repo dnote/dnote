@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -23,12 +24,7 @@ func init() {
 
 // GenerateUID returns a uid
 func GenerateUID() string {
-	result := make([]byte, 8)
-	for i := range result {
-		result[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-
-	return string(result)
+	return uuid.NewV4().String()
 }
 
 func AskConfirmation(question string) (bool, error) {

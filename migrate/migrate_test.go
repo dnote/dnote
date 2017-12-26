@@ -10,7 +10,38 @@ import (
 	"testing"
 )
 
-func TestDeleteDnoteYAMLArchive(t *testing.T) {
+func TestMigrateAll(t *testing.T) {
+	ctx := test.InitCtx("../tmp")
+
+	// set up
+	test.SetupTmp(ctx)
+	test.WriteFile(ctx, "./fixtures/2-pre-dnote.json", "dnote")
+	if err := InitSchemaFile(ctx, false); err != nil {
+		panic(errors.Wrap(err, "Failed to initialize schema file"))
+	}
+	defer test.ClearTmp(ctx)
+
+	// Execute
+	if err := Migrate(ctx); err != nil {
+		t.Fatalf("Failed to migrate %s", err.Error())
+	}
+
+	// Test
+	schema, err := readSchema(ctx)
+	if err != nil {
+		panic(errors.Wrap(err, "Failed to read the schema"))
+	}
+
+	b := test.ReadFile(ctx, "dnote")
+	var dnote migrateToV3PostDnote
+	if err := json.Unmarshal(b, &dnote); err != nil {
+		t.Error(errors.Wrap(err, "Failed to unmarshal result into dnote").Error())
+	}
+
+	test.AssertEqual(t, schema.CurrentVersion, len(migrationSequence), "current schema version mismatch")
+}
+
+func TestMigrateToV1(t *testing.T) {
 	ctx := test.InitCtx("../tmp")
 
 	t.Run("yaml exists", func(t *testing.T) {
@@ -57,7 +88,7 @@ func TestDeleteDnoteYAMLArchive(t *testing.T) {
 	})
 }
 
-func TestGenerateBookMetadata(t *testing.T) {
+func TestMigrateToV2(t *testing.T) {
 	ctx := test.InitCtx("../tmp")
 
 	// set up
@@ -66,21 +97,54 @@ func TestGenerateBookMetadata(t *testing.T) {
 	defer test.ClearTmp(ctx)
 
 	// execute
-	if err := generateBookMetadata(ctx); err != nil {
+	if err := migrateToV2(ctx); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to migrate").Error())
 	}
 
 	// test
 	b := test.ReadFile(ctx, "dnote")
 
-	var postDnote generateBookMetadataPostDnote
+	var postDnote migrateToV2PostDnote
 	if err := json.Unmarshal(b, &postDnote); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
 	}
 
 	for _, book := range postDnote {
-		if book.UID == "" {
-			t.Error("UID has not been generated")
+		test.AssertNotEqual(t, len(book.UUID), 8, "UUID was not generated")
+
+		for _, note := range book.Notes {
+			if len(note.UUID) == 8 {
+				t.Errorf("Note UUID was not migrated. It has length of %d", len(note.UUID))
+			}
 		}
 	}
+}
+
+func TestMigrateToV3(t *testing.T) {
+	ctx := test.InitCtx("../tmp")
+
+	// set up
+	test.SetupTmp(ctx)
+	test.WriteFile(ctx, "./fixtures/3-pre-dnote.json", "dnote")
+	defer test.ClearTmp(ctx)
+
+	// execute
+	if err := migrateToV3(ctx); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to migrate").Error())
+	}
+
+	// test
+	b := test.ReadFile(ctx, "dnote")
+	var postDnote migrateToV3PostDnote
+	if err := json.Unmarshal(b, &postDnote); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
+	}
+
+	b = test.ReadFile(ctx, "actions")
+	var actions []migrateToV3Action
+	if err := json.Unmarshal(b, &actions); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to unmarshal the actions").Error())
+	}
+
+	test.AssertEqual(t, len(actions), 6, "actions length mismatch")
 }

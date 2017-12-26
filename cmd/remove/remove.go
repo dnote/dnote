@@ -1,12 +1,12 @@
 package remove
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +49,10 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 				return err
 			}
 
-			note(ctx, noteIndex, targetBook)
+			err = note(ctx, noteIndex, targetBook)
+			if err != nil {
+				return errors.Wrap(err, "Failed to delete the note")
+			}
 		}
 
 		return nil
@@ -60,7 +63,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 func note(ctx infra.DnoteCtx, index int, book string) error {
 	dnote, err := infra.GetDnote(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to get dnote")
 	}
 	notes := dnote[book].Notes
 
@@ -74,16 +77,24 @@ func note(ctx infra.DnoteCtx, index int, book string) error {
 
 	ok, err := utils.AskConfirmation("Are you sure?")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to get confirmation")
 	}
 	if !ok {
 		return nil
 	}
 
 	dnote[book] = infra.GetUpdatedBook(dnote[book], append(notes[:index], notes[index+1:]...))
+
+	note := notes[index]
+	action := infra.NewActionRemoveNote(note.UUID)
+	err = infra.LogAction(ctx, action)
+	if err != nil {
+		return errors.Wrap(err, "Failed to log action")
+	}
+
 	err = infra.WriteDnote(ctx, dnote)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to write dnote")
 	}
 
 	fmt.Printf("Deleted!\n")
@@ -105,14 +116,15 @@ func book(ctx infra.DnoteCtx, bookName string) error {
 		return err
 	}
 
-	books, err := infra.GetBooks(ctx)
-	if err != nil {
-		return err
-	}
+	for n, book := range dnote {
+		if n == bookName {
+			delete(dnote, n)
 
-	for _, book := range books {
-		if book == bookName {
-			delete(dnote, bookName)
+			action := infra.NewActionRemoveBook(book.UUID)
+			err = infra.LogAction(ctx, action)
+			if err != nil {
+				return errors.Wrap(err, "Failed to log action")
+			}
 			err := infra.WriteDnote(ctx, dnote)
 			if err != nil {
 				return err

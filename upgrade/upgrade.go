@@ -35,10 +35,7 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 
 // getLastUpdateEpoch reads and parses the last update epoch
 func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
-	updatePath, err := infra.GetTimestampPath(ctx)
-	if err != nil {
-		return 0, err
-	}
+	updatePath := infra.GetTimestampPath(ctx)
 
 	b, err := ioutil.ReadFile(updatePath)
 	if err != nil {
@@ -49,7 +46,7 @@ func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
 	match := re.FindStringSubmatch(string(b))
 
 	if len(match) != 2 {
-		msg := fmt.Sprintf("Error parsing %s", infra.TimestampFilename)
+		msg := fmt.Sprintf("Error parsing %s: %s", infra.TimestampFilename, string(b))
 		return 0, errors.New(msg)
 	}
 

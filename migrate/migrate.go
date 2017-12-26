@@ -20,13 +20,15 @@ var (
 // migration IDs
 const (
 	_ = iota
-	migrationDeleteYAMLArchive
-	migrationAddBookMetadata
+	migrationV1
+	migrationV2
+	migrationV3
 )
 
 var migrationSequence = []int{
-	migrationDeleteYAMLArchive,
-	migrationAddBookMetadata,
+	migrationV1,
+	migrationV2,
+	migrationV3,
 }
 
 type schema struct {
@@ -72,10 +74,12 @@ func performMigration(ctx infra.DnoteCtx, migrationID int) error {
 	var migrationError error
 
 	switch migrationID {
-	case migrationDeleteYAMLArchive:
+	case migrationV1:
 		migrationError = deleteDnoteYAMLArchive(ctx)
-	case migrationAddBookMetadata:
-		migrationError = generateBookMetadata(ctx)
+	case migrationV2:
+		migrationError = migrateToV2(ctx)
+	case migrationV3:
+		migrationError = migrateToV3(ctx)
 	default:
 		return errors.Errorf("Unrecognized migration id %d", migrationID)
 	}
@@ -147,23 +151,19 @@ func clearBackup(ctx infra.DnoteCtx) error {
 }
 
 // getSchemaPath returns the path to the file containing schema info
-func getSchemaPath(ctx infra.DnoteCtx) (string, error) {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename), nil
+func getSchemaPath(ctx infra.DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename)
 }
 
 // InitSchemaFile creates a migration file
 func InitSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
-	path, err := getSchemaPath(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get migration file path")
-	}
-
+	path := getSchemaPath(ctx)
 	if utils.FileExists(path) {
 		return nil
 	}
 
 	s := makeSchema(pristine)
-	err = writeSchema(ctx, s)
+	err := writeSchema(ctx, s)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write schema")
 	}
@@ -174,11 +174,7 @@ func InitSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
 func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	var ret schema
 
-	path, err := getSchemaPath(ctx)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to get schema file path")
-	}
-
+	path := getSchemaPath(ctx)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to read schema file")
@@ -193,11 +189,7 @@ func readSchema(ctx infra.DnoteCtx) (schema, error) {
 }
 
 func writeSchema(ctx infra.DnoteCtx, s schema) error {
-	path, err := getSchemaPath(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get migration file path")
-	}
-
+	path := getSchemaPath(ctx)
 	d, err := yaml.Marshal(&s)
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal schema into yaml")

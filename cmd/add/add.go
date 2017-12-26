@@ -77,8 +77,19 @@ func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
 		book := infra.MakeBook()
 		book.Notes = []infra.Note{note}
 		dnote[bookName] = book
+
+		action := infra.NewActionAddBook(book.UUID, bookName)
+		err := infra.LogAction(ctx, action)
+		if err != nil {
+			return errors.Wrap(err, "Failed to log action")
+		}
 	}
 
+	action := infra.NewActionAddNote(note.UUID, note.Content)
+	err = infra.LogAction(ctx, action)
+	if err != nil {
+		return errors.Wrap(err, "Failed to log action")
+	}
 	err = infra.WriteDnote(ctx, dnote)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write to dnote file")

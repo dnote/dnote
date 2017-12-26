@@ -23,8 +23,9 @@ const (
 	TimestampFilename = "timestamps"
 	// DnoteDirName is the name of the directory containing dnote files
 	DnoteDirName   = ".dnote"
-	configFilename = "dnoterc"
-	dnoteFilename  = "dnote"
+	ConfigFilename = "dnoterc"
+	DnoteFilename  = "dnote"
+	ActionFilename = "actions"
 )
 
 // Config holds dnote configuration
@@ -38,16 +39,14 @@ type Dnote map[string]Book
 
 // Book holds a metadata and its notes
 type Book struct {
-	UID   string
+	UUID  string
 	Notes []Note
 }
 
 // Note represents a single microlesson
 type Note struct {
-	UID     string
+	UUID    string
 	Content string
-	Dirty   bool
-	AddedOn int64
 }
 
 // DnoteCtx is a context holding the information of the current runtime
@@ -59,37 +58,57 @@ type DnoteCtx struct {
 type RunEFunc func(*cobra.Command, []string) error
 
 // GetConfigPath returns the path to the dnote config file
-func GetConfigPath(ctx DnoteCtx) (string, error) {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, configFilename), nil
+func GetConfigPath(ctx DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ConfigFilename)
 }
 
 // GetDnotePath returns the path to the dnote file
-func GetDnotePath(ctx DnoteCtx) (string, error) {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, dnoteFilename), nil
+func GetDnotePath(ctx DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, DnoteFilename)
 }
 
 // GetTimestampPath returns the path to the file containing dnote upgrade
 // information
-func GetTimestampPath(ctx DnoteCtx) (string, error) {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TimestampFilename), nil
+func GetTimestampPath(ctx DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TimestampFilename)
 }
 
-func InitConfigFile(ctx DnoteCtx) error {
-	content := []byte("book: general\n")
-	path, err := GetConfigPath(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get config path")
-	}
+// GetActionPath returns the path to the file containing user actions
+func GetActionPath(ctx DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ActionFilename)
+}
+
+// InitActionFile populates action file if it does not exist
+func InitActionFile(ctx DnoteCtx) error {
+	path := GetActionPath(ctx)
 
 	if utils.FileExists(path) {
 		return nil
 	}
 
-	err = ioutil.WriteFile(path, content, 0644)
+	b, err := json.Marshal(&[]Action{})
+	if err != nil {
+		return errors.Wrap(err, "Failed to get initial action content")
+	}
+
+	err = ioutil.WriteFile(path, b, 0644)
+	return err
+}
+
+// InitConfigFile populates a new config file if it does not exist yet
+func InitConfigFile(ctx DnoteCtx) error {
+	content := []byte("book: general\n")
+	path := GetConfigPath(ctx)
+
+	if utils.FileExists(path) {
+		return nil
+	}
+
+	err := ioutil.WriteFile(path, content, 0644)
 	return errors.Wrapf(err, "Failed to write the config file at '%s'", path)
 }
 
-// InitDnoteDir initializes dnote directory
+// InitDnoteDir initializes dnote directory if it does not exist yet
 func InitDnoteDir(ctx DnoteCtx) error {
 	path := ctx.DnoteDir
 
@@ -106,10 +125,7 @@ func InitDnoteDir(ctx DnoteCtx) error {
 
 // InitDnoteFile creates an empty dnote file
 func InitDnoteFile(ctx DnoteCtx) error {
-	path, err := GetDnotePath(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get dnote path")
-	}
+	path := GetDnotePath(ctx)
 
 	if utils.FileExists(path) {
 		return nil
@@ -126,10 +142,7 @@ func InitDnoteFile(ctx DnoteCtx) error {
 
 // InitTimestampFile creates an empty dnote upgrade file
 func InitTimestampFile(ctx DnoteCtx) error {
-	path, err := GetTimestampPath(ctx)
-	if err != nil {
-		return err
-	}
+	path := GetTimestampPath(ctx)
 
 	if utils.FileExists(path) {
 		return nil
@@ -138,16 +151,13 @@ func InitTimestampFile(ctx DnoteCtx) error {
 	epoch := strconv.FormatInt(time.Now().Unix(), 10)
 	content := []byte(fmt.Sprintf("LAST_UPGRADE_EPOCH: %s\n", epoch))
 
-	err = ioutil.WriteFile(path, content, 0644)
+	err := ioutil.WriteFile(path, content, 0644)
 	return err
 }
 
 // ReadNoteContent reads the content of dnote
 func ReadNoteContent(ctx DnoteCtx) ([]byte, error) {
-	notePath, err := GetDnotePath(ctx)
-	if err != nil {
-		return nil, err
-	}
+	notePath := GetDnotePath(ctx)
 
 	b, err := ioutil.ReadFile(notePath)
 	if err != nil {
@@ -181,10 +191,7 @@ func WriteDnote(ctx DnoteCtx, dnote Dnote) error {
 		return err
 	}
 
-	notePath, err := GetDnotePath(ctx)
-	if err != nil {
-		return err
-	}
+	notePath := GetDnotePath(ctx)
 
 	err = ioutil.WriteFile(notePath, d, 0644)
 	if err != nil {
@@ -200,10 +207,7 @@ func WriteConfig(ctx DnoteCtx, config Config) error {
 		return err
 	}
 
-	configPath, err := GetConfigPath(ctx)
-	if err != nil {
-		return err
-	}
+	configPath := GetConfigPath(ctx)
 
 	err = ioutil.WriteFile(configPath, d, 0644)
 	if err != nil {
@@ -213,14 +217,60 @@ func WriteConfig(ctx DnoteCtx, config Config) error {
 	return nil
 }
 
-func ReadConfig(ctx DnoteCtx) (Config, error) {
-	var ret Config
+// LogAction appends the action to the action log
+func LogAction(ctx DnoteCtx, a Action) error {
+	actions, err := ReadActionLog(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read the action log")
+	}
 
-	configPath, err := GetConfigPath(ctx)
+	actions = append(actions, a)
+	d, err := json.Marshal(actions)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal newly generated actions to JSON")
+	}
+
+	path := GetActionPath(ctx)
+	err = ioutil.WriteFile(path, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadActionLogContent(ctx DnoteCtx) ([]byte, error) {
+	path := GetActionPath(ctx)
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "Failed to read the action file")
+	}
+
+	return b, nil
+}
+
+// ReadActionLog returns the action log content
+func ReadActionLog(ctx DnoteCtx) ([]Action, error) {
+	var ret []Action
+
+	b, err := ReadActionLogContent(ctx)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to read the action log content")
+	}
+
+	err = json.Unmarshal(b, &ret)
 	if err != nil {
 		return ret, err
 	}
 
+	return ret, nil
+}
+
+func ReadConfig(ctx DnoteCtx) (Config, error) {
+	var ret Config
+
+	configPath := GetConfigPath(ctx)
 	b, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return ret, err
@@ -294,16 +344,15 @@ func ChangeBook(ctx DnoteCtx, bookName string) error {
 // MakeNote returns a note
 func MakeNote(content string) Note {
 	return Note{
-		UID:     utils.GenerateUID(),
+		UUID:    utils.GenerateUID(),
 		Content: content,
-		AddedOn: time.Now().Unix(),
 	}
 }
 
 // MakeBook returns a book
 func MakeBook() Book {
 	return Book{
-		UID:   utils.GenerateUID(),
+		UUID:  utils.GenerateUID(),
 		Notes: make([]Note, 0),
 	}
 }
@@ -311,7 +360,7 @@ func MakeBook() Book {
 func GetUpdatedBook(book Book, notes []Note) Book {
 	b := MakeBook()
 
-	b.UID = book.UID
+	b.UUID = book.UUID
 	b.Notes = notes
 
 	return b
