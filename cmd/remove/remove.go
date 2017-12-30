@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
@@ -34,7 +35,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if targetBookName != "" {
 			book(ctx, targetBookName)
@@ -60,12 +61,17 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 }
 
 // note deletes the note in a certain index.
-func note(ctx infra.DnoteCtx, index int, book string) error {
-	dnote, err := infra.GetDnote(ctx)
+func note(ctx infra.DnoteCtx, index int, bookName string) error {
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	notes := dnote[book].Notes
+
+	book, exists := dnote[bookName]
+	if !exists {
+		return errors.Errorf("Book with the name '%s' does not exist", bookName)
+	}
+	notes := book.Notes
 
 	if len(notes)-1 < index {
 		fmt.Println("Error : The note with that index is not found.")
@@ -83,16 +89,15 @@ func note(ctx infra.DnoteCtx, index int, book string) error {
 		return nil
 	}
 
-	dnote[book] = infra.GetUpdatedBook(dnote[book], append(notes[:index], notes[index+1:]...))
+	dnote[bookName] = core.GetUpdatedBook(dnote[bookName], append(notes[:index], notes[index+1:]...))
 
 	note := notes[index]
-	action := infra.NewActionRemoveNote(note.UUID)
-	err = infra.LogAction(ctx, action)
+	err = core.LogActionRemoveNote(ctx, note.UUID, book.UUID)
 	if err != nil {
 		return errors.Wrap(err, "Failed to log action")
 	}
 
-	err = infra.WriteDnote(ctx, dnote)
+	err = core.WriteDnote(ctx, dnote)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write dnote")
 	}
@@ -111,7 +116,7 @@ func book(ctx infra.DnoteCtx, bookName string) error {
 		return nil
 	}
 
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		return err
 	}
@@ -120,12 +125,11 @@ func book(ctx infra.DnoteCtx, bookName string) error {
 		if n == bookName {
 			delete(dnote, n)
 
-			action := infra.NewActionRemoveBook(book.UUID)
-			err = infra.LogAction(ctx, action)
+			err = core.LogActionRemoveBook(ctx, book.UUID)
 			if err != nil {
 				return errors.Wrap(err, "Failed to log action")
 			}
-			err := infra.WriteDnote(ctx, dnote)
+			err := core.WriteDnote(ctx, dnote)
 			if err != nil {
 				return err
 			}

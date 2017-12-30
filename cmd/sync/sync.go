@@ -3,10 +3,12 @@ package sync
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,9 +28,13 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+type responseData struct {
+	Actions []core.Action `json:"actions"`
+}
+
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		config, err := infra.ReadConfig(ctx)
+		config, err := core.ReadConfig(ctx)
 		if err != nil {
 			return err
 		}
@@ -52,7 +58,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			return errors.Wrap(err, "Failed to construct HTTP request")
 		}
 		req.Header.Set("Authorization", config.APIKey)
-		req.Header.Set("CLI-Version", infra.Version)
+		req.Header.Set("CLI-Version", core.Version)
 
 		client := http.Client{}
 		resp, err := client.Do(req)
@@ -60,26 +66,44 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			return errors.Wrap(err, "Failed to make request")
 		}
 
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrap(err, "Failed to read failed response body")
+		}
+
 		if resp.StatusCode != http.StatusOK {
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return errors.Wrap(err, "Failed to read failed response body")
-			}
 			bodyStr := string(body)
 
 			fmt.Printf("Failed to sync on the server: %s", bodyStr)
 			return errors.New(bodyStr)
 		}
 
+		fmt.Println("resp body", string(body))
+
+		var respData responseData
+		if err := json.Unmarshal(body, &respData); err != nil {
+			fmt.Println(err.Error())
+			return errors.Wrap(err, "Failed to unmarshal payload")
+		}
+
+		// TODO: transaction
+		for _, action := range respData.Actions {
+			if err := core.Reduce(ctx, action); err != nil {
+				return errors.Wrap(err, "Failed to reduce action")
+			}
+		}
+
 		fmt.Println("Successfully synced all notes")
+		if err := core.ClearActionLog(ctx); err != nil {
+			return errors.Wrap(err, "Failed to clear the action log")
+		}
 
 		return nil
 	}
-
 }
 
 func compressActions(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
-	b, err := infra.ReadActionLogContent(ctx)
+	b, err := core.ReadActionLogContent(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read the action log content")
 	}

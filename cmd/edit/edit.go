@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -37,19 +38,19 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		dnote, err := infra.GetDnote(ctx)
+		dnote, err := core.GetDnote(ctx)
 		if err != nil {
 			return err
 		}
 
-		var targetBook string
+		var targetBookName string
 		var index int
 		var content string
 
 		if len(args) == 2 {
-			targetBook, err = infra.GetCurrentBook(ctx)
+			targetBookName, err = core.GetCurrentBook(ctx)
 			if err != nil {
 				return err
 			}
@@ -59,7 +60,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			}
 			content = args[1]
 		} else if len(args) == 3 {
-			targetBook = args[0]
+			targetBookName = args[0]
 			index, err = strconv.Atoi(args[1])
 			if err != nil {
 				return err
@@ -67,18 +68,22 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			content = args[2]
 		}
 
-		for i, note := range dnote[targetBook].Notes {
+		targetBook, exists := dnote[targetBookName]
+		if !exists {
+			return errors.Errorf("Book with the name '%s' does not exist", targetBookName)
+		}
+
+		for i, note := range dnote[targetBookName].Notes {
 			if i == index {
 				note.Content = content
-				dnote[targetBook].Notes[i] = note
+				dnote[targetBookName].Notes[i] = note
 
-				action := infra.NewActionEditNote(note.UUID, note.Content)
-				err := infra.LogAction(ctx, action)
+				err := core.LogActionEditNote(ctx, note.UUID, targetBook.UUID, note.Content)
 				if err != nil {
 					return errors.Wrap(err, "Failed to log action")
 				}
 
-				err = infra.WriteDnote(ctx, dnote)
+				err = core.WriteDnote(ctx, dnote)
 				fmt.Printf("Edited Note : %d \n", index)
 				return err
 			}

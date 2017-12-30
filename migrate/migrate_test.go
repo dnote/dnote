@@ -33,7 +33,7 @@ func TestMigrateAll(t *testing.T) {
 	}
 
 	b := test.ReadFile(ctx, "dnote")
-	var dnote migrateToV3PostDnote
+	var dnote migrateToV3Dnote
 	if err := json.Unmarshal(b, &dnote); err != nil {
 		t.Error(errors.Wrap(err, "Failed to unmarshal result into dnote").Error())
 	}
@@ -111,6 +111,7 @@ func TestMigrateToV2(t *testing.T) {
 
 	for _, book := range postDnote {
 		test.AssertNotEqual(t, len(book.UUID), 8, "UUID was not generated")
+		test.AssertNotEqual(t, book.Name, "", "Book name was not populated")
 
 		for _, note := range book.Notes {
 			if len(note.UUID) == 8 {
@@ -135,7 +136,7 @@ func TestMigrateToV3(t *testing.T) {
 
 	// test
 	b := test.ReadFile(ctx, "dnote")
-	var postDnote migrateToV3PostDnote
+	var postDnote migrateToV3Dnote
 	if err := json.Unmarshal(b, &postDnote); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
 	}

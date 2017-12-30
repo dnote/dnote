@@ -1,6 +1,7 @@
 package upgrade
 
 import (
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/upgrade"
 	"github.com/pkg/errors"
@@ -21,7 +22,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := upgrade.Upgrade(ctx); err != nil {
 			return errors.Wrap(err, "Failed to upgrade dnote")

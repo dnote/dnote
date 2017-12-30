@@ -3,6 +3,7 @@ package ls
 import (
 	"fmt"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +29,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		var bookName string
 
@@ -36,7 +37,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 			bookName = args[0]
 		} else {
 			var err error
-			bookName, err = infra.GetCurrentBook(ctx)
+			bookName, err = core.GetCurrentBook(ctx)
 			if err != nil {
 				return err
 			}
@@ -44,7 +45,7 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 
 		fmt.Printf("On note %s\n", bookName)
 
-		dnote, err := infra.GetDnote(ctx)
+		dnote, err := core.GetDnote(ctx)
 		if err != nil {
 			return err
 		}

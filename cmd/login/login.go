@@ -3,6 +3,7 @@ package login
 import (
 	"fmt"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -21,20 +22,20 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		fmt.Print("Please enter your APIKey: ")
 
 		var apiKey string
 		fmt.Scanln(&apiKey)
 
-		config, err := infra.ReadConfig(ctx)
+		config, err := core.ReadConfig(ctx)
 		if err != nil {
 			return err
 		}
 
 		config.APIKey = apiKey
-		err = infra.WriteConfig(ctx, config)
+		err = core.WriteConfig(ctx, config)
 		if err != nil {
 			return err
 		}

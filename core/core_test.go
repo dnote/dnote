@@ -1,7 +1,7 @@
-package infra
+package core
 
 import (
-	"fmt"
+	"github.com/dnote-io/cli/test"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -10,71 +10,8 @@ import (
 	"testing"
 )
 
-func initCtx(relPath string) DnoteCtx {
-	path, err := filepath.Abs(relPath)
-	if err != nil {
-		panic(err)
-	}
-
-	ctx := DnoteCtx{
-		HomeDir:  path,
-		DnoteDir: fmt.Sprintf("%s/.dnote", path),
-	}
-
-	return ctx
-}
-
-func writeFile(ctx DnoteCtx, fixturePath string, filename string) {
-	fp, err := filepath.Abs(fixturePath)
-	if err != nil {
-		panic(err)
-	}
-	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
-	if err != nil {
-		panic(err)
-	}
-
-	err = utils.CopyFile(fp, dp)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func readFile(ctx DnoteCtx, filename string) []byte {
-	path := filepath.Join(ctx.DnoteDir, filename)
-
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-
-	return b
-}
-
-func setupTmp(ctx DnoteCtx) {
-	if err := os.MkdirAll(ctx.DnoteDir, 0755); err != nil {
-		panic(err)
-	}
-}
-
-func clearTmp(ctx DnoteCtx) {
-	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
-		panic(err)
-	}
-}
-
-func touchFile(ctx DnoteCtx, relPath string, content []byte) {
-	path, err := filepath.Abs(filepath.Join(ctx.HomeDir, relPath))
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to get absolute YAML path").Error())
-	}
-	if err = ioutil.WriteFile(path, content, 0644); err != nil {
-		panic(err)
-	}
-}
-
 func TestMigrateToDnoteDir(t *testing.T) {
-	ctx := initCtx("../tmp")
+	ctx := test.InitCtx("../tmp")
 
 	t.Run("pre v1 files exist", func(t *testing.T) {
 		// set up

@@ -2,6 +2,7 @@ package add
 
 import (
 	"fmt"
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -35,26 +36,31 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		var bookName string
-		var content string
-
-		if len(args) == 1 {
-			var err error
-			bookName, err = infra.GetCurrentBook(ctx)
-			if err != nil {
-				return err
-			}
-
-			content = args[0]
-		} else {
-			bookName = args[0]
-			content = args[1]
+func parseArgs(ctx infra.DnoteCtx, args []string) (bookName string, content string, err error) {
+	if len(args) == 1 {
+		bookName, err = core.GetCurrentBook(ctx)
+		if err != nil {
+			return
 		}
 
-		note := infra.MakeNote(content)
-		err := writeNote(ctx, bookName, note)
+		content = args[0]
+	} else {
+		bookName = args[0]
+		content = args[1]
+	}
+
+	return
+}
+
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		bookName, content, err := parseArgs(ctx, args)
+		if err != nil {
+			return errors.Wrap(err, "Failed to parse args")
+		}
+
+		note := core.NewNote(content)
+		err = writeNote(ctx, bookName, note)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
@@ -65,32 +71,34 @@ func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
 }
 
 func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
 
-	if _, ok := dnote[bookName]; ok {
+	var book infra.Book
+
+	book, ok := dnote[bookName]
+	if ok {
 		notes := append(dnote[bookName].Notes, note)
-		dnote[bookName] = infra.GetUpdatedBook(dnote[bookName], notes)
+		dnote[bookName] = core.GetUpdatedBook(dnote[bookName], notes)
 	} else {
-		book := infra.MakeBook()
+		book = core.NewBook(bookName)
 		book.Notes = []infra.Note{note}
 		dnote[bookName] = book
 
-		action := infra.NewActionAddBook(book.UUID, bookName)
-		err := infra.LogAction(ctx, action)
+		err = core.LogActionAddBook(ctx, book.UUID, bookName)
 		if err != nil {
 			return errors.Wrap(err, "Failed to log action")
 		}
 	}
 
-	action := infra.NewActionAddNote(note.UUID, note.Content)
-	err = infra.LogAction(ctx, action)
+	err = core.LogActionAddNote(ctx, note.UUID, book.UUID, note.Content)
 	if err != nil {
 		return errors.Wrap(err, "Failed to log action")
 	}
-	err = infra.WriteDnote(ctx, dnote)
+
+	err = core.WriteDnote(ctx, dnote)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write to dnote file")
 	}

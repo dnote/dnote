@@ -1,6 +1,7 @@
 package root
 
 import (
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/migrate"
 	"github.com/dnote-io/cli/upgrade"
@@ -25,33 +26,33 @@ func Execute() error {
 
 // Prepare initializes necessary files
 func Prepare(ctx infra.DnoteCtx) error {
-	err := infra.MigrateToDnoteDir(ctx)
+	err := core.MigrateToDnoteDir(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to initialize dnote dir")
 	}
 
-	fresh, err := infra.IsFreshInstall(ctx)
+	fresh, err := core.IsFreshInstall(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to check if fresh install")
 	}
 
-	err = infra.InitDnoteDir(ctx)
+	err = core.InitDnoteDir(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote dir")
 	}
-	err = infra.InitConfigFile(ctx)
+	err = core.InitConfigFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to generate config file")
 	}
-	err = infra.InitDnoteFile(ctx)
+	err = core.InitDnoteFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote file")
 	}
-	err = infra.InitTimestampFile(ctx)
+	err = core.InitTimestampFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create dnote upgrade file")
 	}
-	err = infra.InitActionFile(ctx)
+	err = core.InitActionFile(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create action file")
 	}

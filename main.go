@@ -6,6 +6,7 @@ import (
 	"os/user"
 
 	"github.com/dnote-io/cli/cmd/root"
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 
@@ -69,7 +70,7 @@ func getDnoteDir(homeDir string) string {
 
 	dnoteDirEnv := os.Getenv("DNOTE_DIR")
 	if dnoteDirEnv == "" {
-		ret = fmt.Sprintf("%s/%s", homeDir, infra.DnoteDirName)
+		ret = fmt.Sprintf("%s/%s", homeDir, core.DnoteDirName)
 	} else {
 		ret = dnoteDirEnv
 	}

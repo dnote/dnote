@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/test"
 	"github.com/dnote-io/cli/utils"
@@ -66,16 +67,16 @@ func TestInit(t *testing.T) {
 	if !utils.FileExists(fmt.Sprintf("%s", ctx.DnoteDir)) {
 		t.Errorf("dnote directory was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, infra.DnoteFilename)) {
+	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.DnoteFilename)) {
 		t.Errorf("dnote file was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, infra.ConfigFilename)) {
+	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.ConfigFilename)) {
 		t.Errorf("config file was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, infra.TimestampFilename)) {
+	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.TimestampFilename)) {
 		t.Errorf("timestamp file was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, infra.ActionFilename)) {
+	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.ActionFilename)) {
 		t.Errorf("action file was not initialized")
 	}
 }
@@ -90,11 +91,11 @@ func TestAdd_NewBook(t *testing.T) {
 	runDnoteCmd(ctx, "add", "js", "foo")
 
 	// Test
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := infra.ReadActionLog(ctx)
+	actions, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
@@ -108,12 +109,13 @@ func TestAdd_NewBook(t *testing.T) {
 	bookAction := actions[0]
 	noteAction := actions[1]
 
-	test.AssertEqual(t, bookAction.Type, infra.ActionAddBook, "bookAction type mismatch")
-	test.AssertNotEqual(t, bookAction.Data["UUID"], "", "bookAction data UUID mismatch")
+	test.AssertEqual(t, bookAction.Type, core.ActionAddBook, "bookAction type mismatch")
+	test.AssertNotEqual(t, bookAction.Data["uuid"], nil, "bookAction data note_uuid mismatch")
 	test.AssertNotEqual(t, bookAction.Timestamp, 0, "bookAction timestamp mismatch")
-	test.AssertEqual(t, noteAction.Type, infra.ActionAddNote, "noteAction type mismatch")
-	test.AssertEqual(t, noteAction.Data["Content"], "foo", "noteAction data name mismatch")
-	test.AssertNotEqual(t, noteAction.Data["UUID"], "", "noteAction data UUID mismatch")
+	test.AssertEqual(t, noteAction.Type, core.ActionAddNote, "noteAction type mismatch")
+	test.AssertEqual(t, noteAction.Data["content"], "foo", "noteAction data name mismatch")
+	test.AssertNotEqual(t, noteAction.Data["note_uuid"], nil, "noteAction data note_uuid mismatch")
+	test.AssertNotEqual(t, noteAction.Data["book_uuid"], nil, "noteAction data note_uuid mismatch")
 	test.AssertNotEqual(t, noteAction.Timestamp, 0, "noteAction timestamp mismatch")
 	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 1, "Book should have one note")
@@ -135,11 +137,11 @@ func TestAdd_ExistingBook(t *testing.T) {
 	runDnoteCmd(ctx, "add", "js", "foo")
 
 	// Test
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := infra.ReadActionLog(ctx)
+	actions, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
@@ -148,9 +150,10 @@ func TestAdd_ExistingBook(t *testing.T) {
 	action := actions[0]
 
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	test.AssertEqual(t, action.Type, infra.ActionAddNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["Content"], "foo", "action data name mismatch")
-	test.AssertNotEqual(t, action.Data["UUID"], "", "action data UUID mismatch")
+	test.AssertEqual(t, action.Type, core.ActionAddNote, "action type mismatch")
+	test.AssertEqual(t, action.Data["content"], "foo", "action data name mismatch")
+	test.AssertNotEqual(t, action.Data["note_uuid"], nil, "action data note_uuid mismatch")
+	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data note_uuid mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
@@ -174,11 +177,11 @@ func TestEdit(t *testing.T) {
 	runDnoteCmd(ctx, "edit", "js", "1", "foo bar")
 
 	// Test
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := infra.ReadActionLog(ctx)
+	actions, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
@@ -187,9 +190,10 @@ func TestEdit(t *testing.T) {
 	action := actions[0]
 
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	test.AssertEqual(t, action.Type, infra.ActionEditNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["Content"], "foo bar", "action data name mismatch")
-	test.AssertEqual(t, action.Data["UUID"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data UUID mismatch")
+	test.AssertEqual(t, action.Type, core.ActionEditNote, "action type mismatch")
+	test.AssertEqual(t, action.Data["content"], "foo bar", "action data name mismatch")
+	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data book_uuid mismatch")
+	test.AssertEqual(t, action.Data["note_uuid"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
@@ -238,11 +242,11 @@ func TestRemoveNote(t *testing.T) {
 	}
 
 	// Test
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := infra.ReadActionLog(ctx)
+	actions, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
@@ -256,8 +260,9 @@ func TestRemoveNote(t *testing.T) {
 	action := actions[0]
 
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	test.AssertEqual(t, action.Type, infra.ActionRemoveNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["UUID"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data UUID mismatch")
+	test.AssertEqual(t, action.Type, core.ActionRemoveNote, "action type mismatch")
+	test.AssertEqual(t, action.Data["note_uuid"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
+	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data book_uuid mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 1, "Book should have one note")
@@ -305,11 +310,11 @@ func TestRemoveBook(t *testing.T) {
 	}
 
 	// Test
-	dnote, err := infra.GetDnote(ctx)
+	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := infra.ReadActionLog(ctx)
+	actions, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
@@ -322,8 +327,8 @@ func TestRemoveBook(t *testing.T) {
 	action := actions[0]
 
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	test.AssertEqual(t, action.Type, infra.ActionRemoveBook, "action type mismatch")
-	test.AssertEqual(t, action.Data["UUID"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data UUID mismatch")
+	test.AssertEqual(t, action.Type, core.ActionRemoveBook, "action type mismatch")
+	test.AssertEqual(t, action.Data["uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data UUID mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	test.AssertEqual(t, len(dnote), 1, "There should be 1 book")
 	test.AssertEqual(t, book.UUID, "94b829e6-fec8-4e65-95db-7ad2ab0d3a39", "Remaining book uid mismatch")

@@ -3,6 +3,7 @@ package books
 import (
 	"fmt"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/spf13/cobra"
 )
@@ -22,14 +23,14 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) infra.RunEFunc {
+func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		currentBook, err := infra.GetCurrentBook(ctx)
+		currentBook, err := core.GetCurrentBook(ctx)
 		if err != nil {
 			return err
 		}
 
-		books, err := infra.GetBooks(ctx)
+		books, err := core.GetBookNames(ctx)
 		if err != nil {
 			return err
 		}

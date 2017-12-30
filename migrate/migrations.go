@@ -52,7 +52,6 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 			newNote := migrateToV2PostNote{
 				UUID:    uuid.NewV4().String(),
 				Content: note.Content,
-				AddedOn: note.AddedOn,
 			}
 
 			notes = append(notes, newNote)
@@ -60,6 +59,7 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 
 		b := migrateToV2PostBook{
 			UUID:  uuid.NewV4().String(),
+			Name:  bookName,
 			Notes: notes,
 		}
 
@@ -79,6 +79,7 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 	return nil
 }
 
+// migrateToV3 generates actions for existing dnote
 func migrateToV3(ctx infra.DnoteCtx) error {
 	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
 	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
@@ -88,57 +89,39 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to read the note file")
 	}
 
-	var preDnote migrateToV3PreDnote
-	postDnote := migrateToV3PostDnote{}
+	var dnote migrateToV3Dnote
 
-	err = json.Unmarshal(b, &preDnote)
+	err = json.Unmarshal(b, &dnote)
 	if err != nil {
 		return errors.Wrap(err, "Failed to unmarshal existing dnote into JSON")
 	}
 
 	actions := []migrateToV3Action{}
 
-	for bookName, book := range preDnote {
+	for bookName, book := range dnote {
 		action := migrateToV3Action{
 			Type: migrateToV3ActionAddBook,
 			Data: map[string]interface{}{
-				"UUID": book.UUID,
-				"Name": bookName,
+				"uuid": book.UUID,
+				"name": bookName,
 			},
 			Timestamp: time.Now().Unix(),
 		}
 		actions = append(actions, action)
 
-		notes := []migrateToV3PostNote{}
 		for _, note := range book.Notes {
-			newNote := migrateToV3PostNote{
-				UUID:    note.UUID,
-				Content: note.Content,
-			}
 			action := migrateToV3Action{
 				Type: migrateToV3ActionAddNote,
 				Data: map[string]interface{}{
-					"UUID":    note.UUID,
-					"Content": note.Content,
+					"note_uuid": note.UUID,
+					"book_uuid": book.UUID,
+					"content":   note.Content,
 				},
 				Timestamp: time.Now().Unix(),
 			}
 			actions = append(actions, action)
 
-			notes = append(notes, newNote)
 		}
-
-		b := migrateToV3PostBook{
-			UUID:  book.UUID,
-			Notes: notes,
-		}
-
-		postDnote[bookName] = b
-	}
-
-	d, err := json.MarshalIndent(postDnote, "", "  ")
-	if err != nil {
-		return errors.Wrap(err, "Failed to marshal new dnote into JSON")
 	}
 
 	a, err := json.Marshal(actions)
@@ -146,10 +129,6 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to marshal actions into JSON")
 	}
 
-	err = ioutil.WriteFile(notePath, d, 0644)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write the new dnote into the file")
-	}
 	err = ioutil.WriteFile(actionsPath, a, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the actions into a file")

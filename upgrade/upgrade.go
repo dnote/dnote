@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
@@ -35,7 +36,7 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 
 // getLastUpdateEpoch reads and parses the last update epoch
 func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
-	updatePath := infra.GetTimestampPath(ctx)
+	updatePath := core.GetTimestampPath(ctx)
 
 	b, err := ioutil.ReadFile(updatePath)
 	if err != nil {
@@ -46,7 +47,7 @@ func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
 	match := re.FindStringSubmatch(string(b))
 
 	if len(match) != 2 {
-		msg := fmt.Sprintf("Error parsing %s: %s", infra.TimestampFilename, string(b))
+		msg := fmt.Sprintf("Error parsing %s: %s", core.TimestampFilename, string(b))
 		return 0, errors.New(msg)
 	}
 
@@ -80,7 +81,7 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
-		infra.InitTimestampFile(ctx)
+		core.InitTimestampFile(ctx)
 		if err != nil {
 			return err
 		}
@@ -113,15 +114,15 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	// Check if up to date
-	if latestVersion == infra.Version {
-		fmt.Printf("Up-to-date: %s\n", infra.Version)
-		infra.InitTimestampFile(ctx)
+	if latestVersion == core.Version {
+		fmt.Printf("Up-to-date: %s\n", core.Version)
+		core.InitTimestampFile(ctx)
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
-		infra.InitTimestampFile(ctx)
+		core.InitTimestampFile(ctx)
 		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 		return nil
 	}
@@ -164,9 +165,9 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return err
 	}
 
-	infra.InitTimestampFile(ctx)
+	core.InitTimestampFile(ctx)
 
-	fmt.Printf("Updated: v%s -> v%s\n", infra.Version, latestVersion)
+	fmt.Printf("Updated: v%s -> v%s\n", core.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }
