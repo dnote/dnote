@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/dnote-io/cli/infra"
@@ -18,7 +17,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.2.0"
+	Version = "0.2.0-beta"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
@@ -122,11 +121,51 @@ func InitTimestampFile(ctx infra.DnoteCtx) error {
 		return nil
 	}
 
-	epoch := strconv.FormatInt(time.Now().Unix(), 10)
-	content := []byte(fmt.Sprintf("LAST_UPGRADE_EPOCH: %s\n", epoch))
+	now := time.Now().Unix()
+	ts := infra.Timestamp{
+		LastUpgrade: now,
+	}
 
-	err := ioutil.WriteFile(path, content, 0644)
+	b, err := yaml.Marshal(&ts)
+	if err != nil {
+		return errors.Wrap(err, "Failed to get initial timestamp content")
+	}
+
+	err = ioutil.WriteFile(path, b, 0644)
 	return err
+}
+
+// ReadTimestamp gets the content of the timestamp file
+func ReadTimestamp(ctx infra.DnoteCtx) (infra.Timestamp, error) {
+	var ret infra.Timestamp
+
+	path := GetTimestampPath(ctx)
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ret, err
+	}
+
+	err = yaml.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to unmarshal timestamp content")
+	}
+
+	return ret, nil
+}
+
+func WriteTimestamp(ctx infra.DnoteCtx, timestamp infra.Timestamp) error {
+	d, err := yaml.Marshal(timestamp)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal timestamp into YAML")
+	}
+
+	path := GetTimestampPath(ctx)
+	err = ioutil.WriteFile(path, d, 0644)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write timestamp to the file")
+	}
+
+	return nil
 }
 
 // ReadNoteContent reads the content of dnote
@@ -191,16 +230,24 @@ func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 	return nil
 }
 
-// LogAction appends the action to the action log
-func LogAction(ctx infra.DnoteCtx, a Action) error {
+// LogAction appends the action to the action log and updates the last_action
+// timestamp
+func LogAction(ctx infra.DnoteCtx, action Action) error {
 	actions, err := ReadActionLog(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the action log")
 	}
 
-	actions = append(actions, a)
-	if err := WriteActionLog(ctx, actions); err != nil {
+	actions = append(actions, action)
+
+	err = WriteActionLog(ctx, actions)
+	if err != nil {
 		return errors.Wrap(err, "Failed to write action log")
+	}
+
+	err = UpdateLastActionTimestamp(ctx, action.Timestamp)
+	if err != nil {
+		return errors.Wrap(err, "Failed to update the last_action timestamp")
 	}
 
 	return nil
@@ -275,6 +322,22 @@ func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
 	}
 
 	return ret, nil
+}
+
+func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
+	ts, err := ReadTimestamp(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read the timestamp file")
+	}
+
+	ts.LastAction = val
+
+	err = WriteTimestamp(ctx, ts)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write the timestamp to the file")
+	}
+
+	return nil
 }
 
 func GetCurrentBook(ctx infra.DnoteCtx) (string, error) {
@@ -394,8 +457,8 @@ func MigrateToDnoteDir(ctx infra.DnoteCtx) error {
 	if err := os.Rename(oldDnotercPath, fmt.Sprintf("%s/dnoterc", temporaryDirPath)); err != nil {
 		return errors.Wrap(err, "Failed to move .dnoterc file")
 	}
-	if err := os.Rename(oldDnoteUpgradePath, fmt.Sprintf("%s/timestamps", temporaryDirPath)); err != nil {
-		return errors.Wrap(err, "Failed to move .dnote-upgrade file")
+	if err := os.Remove(oldDnoteUpgradePath); err != nil {
+		return errors.Wrap(err, "Failed to delete the old upgrade file")
 	}
 
 	// Now that all files are moved to the temporary dir, rename the dir to .dnote

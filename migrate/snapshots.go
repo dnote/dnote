@@ -7,8 +7,10 @@ type migrateToV2PreNote struct {
 	AddedOn int64
 }
 type migrateToV2PostNote struct {
-	UUID    string `json:"uuid"`
-	Content string `json:"content"`
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"editd_on"`
 }
 type migrateToV2PreBook []migrateToV2PreNote
 type migrateToV2PostBook struct {
@@ -26,13 +28,15 @@ var (
 )
 
 type migrateToV3Note struct {
-	UUID    string
-	Content string
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
 }
 type migrateToV3Book struct {
-	UUID  string
-	Name  string
-	Notes []migrateToV3Note
+	UUID  string            `json:"uuid"`
+	Name  string            `json:"name"`
+	Notes []migrateToV3Note `json:"notes"`
 }
 type migrateToV3Dnote map[string]migrateToV3Book
 type migrateToV3Action struct {

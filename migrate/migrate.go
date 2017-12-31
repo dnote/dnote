@@ -75,7 +75,7 @@ func performMigration(ctx infra.DnoteCtx, migrationID int) error {
 
 	switch migrationID {
 	case migrationV1:
-		migrationError = deleteDnoteYAMLArchive(ctx)
+		migrationError = migrateToV1(ctx)
 	case migrationV2:
 		migrationError = migrateToV2(ctx)
 	case migrationV3:
@@ -234,8 +234,4 @@ func updateSchemaVersion(ctx infra.DnoteCtx, mID int) error {
 	}
 
 	return nil
-}
-
-func getYAMLDnoteArchivePath(ctx infra.DnoteCtx) (string, error) {
-	return fmt.Sprintf("%s/%s", ctx.HomeDir, ".dnote-yaml-archived"), nil
 }

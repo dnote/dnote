@@ -32,11 +32,20 @@ type responseData struct {
 	Actions []core.Action `json:"actions"`
 }
 
+type syncPayload struct {
+	Bookmark int64  `json:"bookmark"`
+	Actions  []byte `json:"actions"` // gziped
+}
+
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		config, err := core.ReadConfig(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to read the config")
+		}
+		timestamp, err := core.ReadTimestamp(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Failed to read the timestamp")
 		}
 
 		if config.APIKey == "" {
@@ -45,25 +54,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		fmt.Println("Compressing dnote...")
-		payload, err := compressActions(ctx)
+		payload, err := getPayload(ctx, timestamp)
 		if err != nil {
-			return errors.Wrap(err, "Failed to compress dnote")
+			return errors.Wrap(err, "Failed to get dnote payload")
 		}
 
-		fmt.Println("Syncing...")
-		//endpoint := "http://api.dnote.io/v1/sync"
-		endpoint := "http://127.0.0.1:3030/v1/sync"
-		req, err := http.NewRequest("POST", endpoint, payload)
+		fmt.Println("Syncing with the server...")
+		resp, err := postActions(ctx, config.APIKey, payload)
 		if err != nil {
-			return errors.Wrap(err, "Failed to construct HTTP request")
-		}
-		req.Header.Set("Authorization", config.APIKey)
-		req.Header.Set("CLI-Version", core.Version)
-
-		client := http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return errors.Wrap(err, "Failed to make request")
+			return errors.Wrap(err, "Failed to post to the server ")
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
@@ -78,19 +77,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.New(bodyStr)
 		}
 
-		fmt.Println("resp body", string(body))
-
 		var respData responseData
-		if err := json.Unmarshal(body, &respData); err != nil {
-			fmt.Println(err.Error())
+		err = json.Unmarshal(body, &respData)
+		if err != nil {
 			return errors.Wrap(err, "Failed to unmarshal payload")
 		}
 
-		// TODO: transaction
-		for _, action := range respData.Actions {
-			if err := core.Reduce(ctx, action); err != nil {
-				return errors.Wrap(err, "Failed to reduce action")
-			}
+		err = core.ReduceAll(ctx, respData.Actions)
+		if err != nil {
+			return errors.Wrap(err, "Failed to reduce returned actions")
 		}
 
 		fmt.Println("Successfully synced all notes")
@@ -102,7 +97,27 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func compressActions(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
+func getPayload(ctx infra.DnoteCtx, timestamp infra.Timestamp) (*bytes.Buffer, error) {
+	actions, err := compressActions(ctx)
+	if err != nil {
+		return &bytes.Buffer{}, errors.Wrap(err, "Failed to compress actions")
+	}
+
+	payload := syncPayload{
+		Bookmark: timestamp.Bookmark,
+		Actions:  actions,
+	}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return &bytes.Buffer{}, errors.Wrap(err, "Failed to marshal paylaod into JSON")
+	}
+
+	ret := bytes.NewBuffer(b)
+	return ret, nil
+}
+
+func compressActions(ctx infra.DnoteCtx) ([]byte, error) {
 	b, err := core.ReadActionLogContent(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read the action log content")
@@ -120,5 +135,24 @@ func compressActions(ctx infra.DnoteCtx) (*bytes.Buffer, error) {
 		return nil, errors.Wrap(err, "Failed to close gzip writer")
 	}
 
-	return &buf, nil
+	return buf.Bytes(), nil
+}
+
+func postActions(ctx infra.DnoteCtx, APIKey string, payload *bytes.Buffer) (*http.Response, error) {
+	endpoint := fmt.Sprintf("%s/v1/sync", ctx.APIEndpoint)
+	req, err := http.NewRequest("POST", endpoint, payload)
+	if err != nil {
+		return &http.Response{}, errors.Wrap(err, "Failed to construct HTTP request")
+	}
+
+	req.Header.Set("Authorization", APIKey)
+	req.Header.Set("CLI-Version", core.Version)
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return &http.Response{}, errors.Wrap(err, "Failed to make request")
+	}
+
+	return resp, nil
 }

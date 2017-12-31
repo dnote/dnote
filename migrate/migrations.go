@@ -13,12 +13,9 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func deleteDnoteYAMLArchive(ctx infra.DnoteCtx) error {
-	yamlPath, err := getYAMLDnoteArchivePath(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get YAML path")
-	}
-
+// migrateToV1 deletes YAML archive if exists
+func migrateToV1(ctx infra.DnoteCtx) error {
+	yamlPath := fmt.Sprintf("%s/%s", ctx.HomeDir, ".dnote-yaml-archived")
 	if !utils.FileExists(yamlPath) {
 		return nil
 	}
@@ -50,8 +47,10 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 		notes := []migrateToV2PostNote{}
 		for _, note := range book {
 			newNote := migrateToV2PostNote{
-				UUID:    uuid.NewV4().String(),
-				Content: note.Content,
+				UUID:     uuid.NewV4().String(),
+				Content:  note.Content,
+				AddedOn:  note.AddedOn,
+				EditedOn: 0,
 			}
 
 			notes = append(notes, newNote)

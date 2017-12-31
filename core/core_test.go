@@ -62,10 +62,6 @@ func TestMigrateToDnoteDir(t *testing.T) {
 		if err != nil {
 			panic(errors.Wrap(err, "Failed get new dnoterc path").Error())
 		}
-		newTimestampPath, err := filepath.Abs(filepath.Join(ctx.DnoteDir, "timestamps"))
-		if err != nil {
-			panic(errors.Wrap(err, "Failed get new timestamp path").Error())
-		}
 
 		fi, err := os.Stat(dnotePath)
 		if err != nil {
@@ -86,9 +82,6 @@ func TestMigrateToDnoteDir(t *testing.T) {
 		}
 		if !utils.FileExists(newDnotercPath) {
 			t.Error("dnoterc must exist")
-		}
-		if !utils.FileExists(newTimestampPath) {
-			t.Error("timestamp must exist")
 		}
 	})
 }

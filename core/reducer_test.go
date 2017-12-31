@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/test"
 	"github.com/pkg/errors"
 	"testing"
@@ -13,6 +14,11 @@ func TestReduceAddNote(t *testing.T) {
 	test.SetupTmp(ctx)
 	defer test.ClearTmp(ctx)
 	test.WriteFile(ctx, "../fixtures/dnote4.json", "dnote")
+
+	ts := infra.Timestamp{Bookmark: 1517629804}
+	if err := WriteTimestamp(ctx, ts); err != nil {
+		panic(errors.Wrap(err, "Failed to prepare timestamp"))
+	}
 
 	// Execute
 	action := Action{
@@ -33,6 +39,10 @@ func TestReduceAddNote(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
+	ts, err = ReadTimestamp(ctx)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to read timestamp"))
+	}
 
 	book := dnote["js"]
 	otherBook := dnote["linux"]
@@ -43,6 +53,7 @@ func TestReduceAddNote(t *testing.T) {
 	test.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "existing note content mismatch")
 	test.AssertEqual(t, book.Notes[1].UUID, "06896551-8a06-4996-89cc-0d866308b0f6", "new note uuid mismatch")
 	test.AssertEqual(t, book.Notes[1].Content, "new content", "new note content mismatch")
+	test.AssertEqual(t, ts.Bookmark, int64(1517629805), "bookmark was not updated")
 }
 
 func TestReduceRemoveNote(t *testing.T) {
@@ -53,8 +64,12 @@ func TestReduceRemoveNote(t *testing.T) {
 	defer test.ClearTmp(ctx)
 	test.WriteFile(ctx, "../fixtures/dnote3.json", "dnote")
 
-	// Execute
+	ts := infra.Timestamp{Bookmark: 1517629806}
+	if err := WriteTimestamp(ctx, ts); err != nil {
+		panic(errors.Wrap(err, "Failed to prepare timestamp"))
+	}
 
+	// Execute
 	action := Action{
 		Type: ActionRemoveNote,
 		Data: map[string]interface{}{
@@ -72,6 +87,10 @@ func TestReduceRemoveNote(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
+	ts, err = ReadTimestamp(ctx)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to read timestamp"))
+	}
 
 	targetBook := dnote["js"]
 	otherBook := dnote["linux"]
@@ -83,6 +102,7 @@ func TestReduceRemoveNote(t *testing.T) {
 	test.AssertEqual(t, len(otherBook.Notes), 1, "other book notes length mismatch")
 	test.AssertEqual(t, otherBook.Notes[0].UUID, "3e065d55-6d47-42f2-a6bf-f5844130b2d2", "other book remaining note uuid mismatch")
 	test.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
+	test.AssertEqual(t, ts.Bookmark, int64(1517629806), "bookmark was updated")
 }
 
 func TestReduceEditNote(t *testing.T) {

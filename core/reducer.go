@@ -126,6 +126,29 @@ func parseEditNoteData(raw map[string]interface{}) (editNoteData, error) {
 	return ret, nil
 }
 
+// ReduceAll reduces all actions
+func ReduceAll(ctx infra.DnoteCtx, actions []Action) error {
+	for _, action := range actions {
+		if err := Reduce(ctx, action); err != nil {
+			return errors.Wrap(err, "Failed to reduce action")
+		}
+	}
+
+	// After having consumed all actions, if bookmark is less than last_action,
+	// bring it forward to be in sync with the server
+	ts, err := ReadTimestamp(ctx)
+	if ts.Bookmark < ts.LastAction {
+		ts.Bookmark = ts.LastAction
+
+		err = WriteTimestamp(ctx, ts)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update last_sync")
+		}
+	}
+
+	return nil
+}
+
 // Reduce transitions the local dnote state by consuming the action returned
 // from the server
 func Reduce(ctx infra.DnoteCtx, action Action) error {
@@ -148,6 +171,17 @@ func Reduce(ctx infra.DnoteCtx, action Action) error {
 
 	if err != nil {
 		return errors.Wrap(err, "Failed to process the action")
+	}
+
+	// Update timestamp
+	ts, err := ReadTimestamp(ctx)
+	if ts.Bookmark < action.Timestamp {
+		ts.Bookmark = action.Timestamp
+
+		err = WriteTimestamp(ctx, ts)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update last_sync")
+		}
 	}
 
 	return nil

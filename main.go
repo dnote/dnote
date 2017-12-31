@@ -23,6 +23,9 @@ import (
 	"github.com/dnote-io/cli/cmd/version"
 )
 
+// apiEndpoint is populated during link time
+var apiEndpoint string
+
 func main() {
 	ctx, err := newCtx()
 	if err != nil {
@@ -58,8 +61,9 @@ func newCtx() (infra.DnoteCtx, error) {
 	dnoteDir := getDnoteDir(homeDir)
 
 	ret := infra.DnoteCtx{
-		HomeDir:  homeDir,
-		DnoteDir: dnoteDir,
+		HomeDir:     homeDir,
+		DnoteDir:    dnoteDir,
+		APIEndpoint: apiEndpoint,
 	}
 
 	return ret, nil

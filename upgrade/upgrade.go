@@ -2,24 +2,23 @@ package upgrade
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
+	"github.com/pkg/errors"
 )
+
+var upgradeInterval int64 = 86400 * 7
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
@@ -34,42 +33,32 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 	return nil
 }
 
-// getLastUpdateEpoch reads and parses the last update epoch
-func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
-	updatePath := core.GetTimestampPath(ctx)
-
-	b, err := ioutil.ReadFile(updatePath)
-	if err != nil {
-		return 0, err
-	}
-
-	re := regexp.MustCompile(`LAST_UPGRADE_EPOCH: (\d+)`)
-	match := re.FindStringSubmatch(string(b))
-
-	if len(match) != 2 {
-		msg := fmt.Sprintf("Error parsing %s: %s", core.TimestampFilename, string(b))
-		return 0, errors.New(msg)
-	}
-
-	lastEpoch, err := strconv.ParseInt(match[1], 10, 64)
-	if err != nil {
-		return 0, err
-	}
-
-	return lastEpoch, nil
-}
-
 // shouldCheckUpdate checks if update should be checked
 func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
-	var updatePeriod int64 = 86400 * 7
-
-	now := time.Now().Unix()
-	lastEpoch, err := getLastUpdateEpoch(ctx)
+	timestamp, err := core.ReadTimestamp(ctx)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "Failed to get timestamp content")
 	}
 
-	return now-lastEpoch > updatePeriod, nil
+	now := time.Now().Unix()
+
+	return now-timestamp.LastUpgrade > upgradeInterval, nil
+}
+
+func touchLastUpgrade(ctx infra.DnoteCtx) error {
+	timestamp, err := core.ReadTimestamp(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to get timestamp content")
+	}
+
+	now := time.Now().Unix()
+	timestamp.LastUpgrade = now
+
+	if err := core.WriteTimestamp(ctx, timestamp); err != nil {
+		return errors.Wrap(err, "Failed to write the updated timestamp to the file")
+	}
+
+	return nil
 }
 
 // AutoUpgrade triggers update if needed
@@ -81,7 +70,6 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
-		core.InitTimestampFile(ctx)
 		if err != nil {
 			return err
 		}
@@ -165,7 +153,10 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return err
 	}
 
-	core.InitTimestampFile(ctx)
+	err = touchLastUpgrade(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Upgrade is done, but failed to update the last_upgrade timestamp.")
+	}
 
 	fmt.Printf("Updated: v%s -> v%s\n", core.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")

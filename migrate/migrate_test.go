@@ -16,6 +16,7 @@ func TestMigrateAll(t *testing.T) {
 	// set up
 	test.SetupTmp(ctx)
 	test.WriteFile(ctx, "./fixtures/2-pre-dnote.json", "dnote")
+	test.WriteFile(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
 	if err := InitSchemaFile(ctx, false); err != nil {
 		panic(errors.Wrap(err, "Failed to initialize schema file"))
 	}
@@ -39,6 +40,12 @@ func TestMigrateAll(t *testing.T) {
 	}
 
 	test.AssertEqual(t, schema.CurrentVersion, len(migrationSequence), "current schema version mismatch")
+
+	note := dnote["algorithm"].Notes[0]
+	test.AssertEqual(t, note.Content, "in-place means no extra space required. it mutates the input", "content was not carried over")
+	test.AssertNotEqual(t, note.UUID, "", "note uuid was not generated")
+	test.AssertNotEqual(t, note.AddedOn, int64(0), "note added_on was not generated")
+	test.AssertEqual(t, note.EditedOn, int64(0), "note edited_on was not propertly generated")
 }
 
 func TestMigrateToV1(t *testing.T) {
@@ -56,7 +63,7 @@ func TestMigrateToV1(t *testing.T) {
 		ioutil.WriteFile(yamlPath, []byte{}, 0644)
 
 		// execute
-		if err := deleteDnoteYAMLArchive(ctx); err != nil {
+		if err := migrateToV1(ctx); err != nil {
 			t.Fatal(errors.Wrapf(err, "Failed to migrate").Error())
 		}
 
@@ -77,7 +84,7 @@ func TestMigrateToV1(t *testing.T) {
 		}
 
 		// execute
-		if err := deleteDnoteYAMLArchive(ctx); err != nil {
+		if err := migrateToV1(ctx); err != nil {
 			t.Fatal(errors.Wrapf(err, "Failed to migrate").Error())
 		}
 
@@ -117,6 +124,9 @@ func TestMigrateToV2(t *testing.T) {
 			if len(note.UUID) == 8 {
 				t.Errorf("Note UUID was not migrated. It has length of %d", len(note.UUID))
 			}
+
+			test.AssertNotEqual(t, note.AddedOn, int64(0), "AddedOn was not carried over")
+			test.AssertEqual(t, note.EditedOn, int64(0), "EditedOn was not created properly")
 		}
 	}
 }
@@ -148,4 +158,10 @@ func TestMigrateToV3(t *testing.T) {
 	}
 
 	test.AssertEqual(t, len(actions), 6, "actions length mismatch")
+
+	for _, book := range postDnote {
+		for _, note := range book.Notes {
+			test.AssertNotEqual(t, note.AddedOn, int64(0), "AddedOn was not carried over")
+		}
+	}
 }
