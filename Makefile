@@ -8,7 +8,7 @@ release:
 .PHONY: release
 
 build: install-gox
-	@$(GOPATH)/bin/gox -osarch="darwin/386 darwin/amd64 linux/386 linux/amd64 openbsd/386 openbsd/amd64 window/386 windows/amd64" -output="dnote-{{.OS}}-{{.Arch}}" ./...
+	@$(GOPATH)/bin/gox -ldflags "-X main.apiEndpoint=https://api.dnote.io" -osarch="darwin/386 darwin/amd64 linux/386 linux/amd64 openbsd/386 openbsd/amd64 window/386 windows/amd64" -output="dnote-{{.OS}}-{{.Arch}}" ./...
 .PHONY: build
 
 install-gox:

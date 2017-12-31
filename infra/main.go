@@ -3,8 +3,9 @@ package infra
 
 // DnoteCtx is a context holding the information of the current runtime
 type DnoteCtx struct {
-	HomeDir  string
-	DnoteDir string
+	HomeDir     string
+	DnoteDir    string
+	APIEndpoint string
 }
 
 // Config holds dnote configuration

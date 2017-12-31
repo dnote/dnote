@@ -51,8 +51,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		fmt.Println("Syncing...")
-		//endpoint := "http://api.dnote.io/v1/sync"
-		endpoint := "http://127.0.0.1:3030/v1/sync"
+
+		endpoint := fmt.Sprintf("%s/v1/sync", ctx.APIEndpoint)
 		req, err := http.NewRequest("POST", endpoint, payload)
 		if err != nil {
 			return errors.Wrap(err, "Failed to construct HTTP request")
