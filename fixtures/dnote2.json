@@ -1,0 +1,16 @@
+{
+  "js": {
+    "name": "js",
+    "uuid": "3e6c9401-833b-485f-bcda-c2525a5dc389",
+    "notes": [
+      {
+        "uuid": "43827b9a-c2b0-4c06-a290-97991c896653",
+        "content": "Booleans have toString()"
+      },
+      {
+        "uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
+        "content": "Date object implements mathematical comparisons"
+      }
+    ]
+  }
+}
