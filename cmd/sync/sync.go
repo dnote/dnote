@@ -78,8 +78,6 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.New(bodyStr)
 		}
 
-		fmt.Println("resp body", string(body))
-
 		var respData responseData
 		if err := json.Unmarshal(body, &respData); err != nil {
 			fmt.Println(err.Error())
