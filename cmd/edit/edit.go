@@ -78,7 +78,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 				note.Content = content
 				dnote[targetBookName].Notes[i] = note
 
-				err := core.LogActionEditNote(ctx, note.UUID, targetBook.UUID, note.Content)
+				err := core.LogActionEditNote(ctx, note.UUID, targetBook.Name, note.Content)
 				if err != nil {
 					return errors.Wrap(err, "Failed to log action")
 				}

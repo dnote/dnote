@@ -1,10 +1,12 @@
 package core
 
 import (
+	"encoding/json"
+	"testing"
+
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/test"
 	"github.com/pkg/errors"
-	"testing"
 )
 
 func TestReduceAddNote(t *testing.T) {
@@ -21,13 +23,14 @@ func TestReduceAddNote(t *testing.T) {
 	}
 
 	// Execute
+	b, err := json.Marshal(&AddNoteData{
+		Content:  "new content",
+		BookName: "js",
+		NoteUUID: "06896551-8a06-4996-89cc-0d866308b0f6",
+	})
 	action := Action{
-		Type: ActionAddNote,
-		Data: map[string]interface{}{
-			"content":   "new content",
-			"book_uuid": "3e6c9401-833b-485f-bcda-c2525a5dc389",
-			"note_uuid": "06896551-8a06-4996-89cc-0d866308b0f6",
-		},
+		Type:      ActionAddNote,
+		Data:      b,
 		Timestamp: 1517629805,
 	}
 	if err := Reduce(ctx, action); err != nil {
@@ -70,12 +73,13 @@ func TestReduceRemoveNote(t *testing.T) {
 	}
 
 	// Execute
+	b, err := json.Marshal(&RemoveNoteData{
+		BookName: "js",
+		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
+	})
 	action := Action{
-		Type: ActionRemoveNote,
-		Data: map[string]interface{}{
-			"book_uuid": "3e6c9401-833b-485f-bcda-c2525a5dc389",
-			"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
-		},
+		Type:      ActionRemoveNote,
+		Data:      b,
 		Timestamp: 1517629805,
 	}
 	if err := Reduce(ctx, action); err != nil {
@@ -114,14 +118,14 @@ func TestReduceEditNote(t *testing.T) {
 	test.WriteFile(ctx, "../fixtures/dnote3.json", "dnote")
 
 	// Execute
-
+	b, err := json.Marshal(&EditNoteData{
+		BookName: "js",
+		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
+		Content:  "updated content",
+	})
 	action := Action{
-		Type: ActionEditNote,
-		Data: map[string]interface{}{
-			"book_uuid": "3e6c9401-833b-485f-bcda-c2525a5dc389",
-			"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
-			"content":   "updated content",
-		},
+		Type:      ActionEditNote,
+		Data:      b,
 		Timestamp: 1517629805,
 	}
 	if err := Reduce(ctx, action); err != nil {
@@ -157,12 +161,10 @@ func TestReduceAddBook(t *testing.T) {
 	test.WriteFile(ctx, "../fixtures/dnote4.json", "dnote")
 
 	// Execute
+	b, err := json.Marshal(&AddBookData{Name: "new_book"})
 	action := Action{
-		Type: ActionAddBook,
-		Data: map[string]interface{}{
-			"name": "new_book",
-			"uuid": "4e6c9401-833b-485f-bcda-c2525aadc389",
-		},
+		Type:      ActionAddBook,
+		Data:      b,
 		Timestamp: 1517629805,
 	}
 	if err := Reduce(ctx, action); err != nil {
@@ -179,7 +181,6 @@ func TestReduceAddBook(t *testing.T) {
 
 	test.AssertEqual(t, len(dnote), 3, "number of books mismatch")
 	test.AssertEqual(t, newBook.Name, "new_book", "new book name mismatch")
-	test.AssertEqual(t, newBook.UUID, "4e6c9401-833b-485f-bcda-c2525aadc389", "new book uuid mismatch")
 	test.AssertEqual(t, len(newBook.Notes), 0, "new book number of notes mismatch")
 }
 
@@ -192,11 +193,10 @@ func TestReduceRemoveBook(t *testing.T) {
 	test.WriteFile(ctx, "../fixtures/dnote3.json", "dnote")
 
 	// Execute
+	b, err := json.Marshal(&RemoveBookData{Name: "linux"})
 	action := Action{
-		Type: ActionRemoveBook,
-		Data: map[string]interface{}{
-			"uuid": "94b829e6-fec8-4e65-95db-7ad2ab0d3a39",
-		},
+		Type:      ActionRemoveBook,
+		Data:      b,
 		Timestamp: 1517629805,
 	}
 	if err := Reduce(ctx, action); err != nil {
@@ -213,7 +213,6 @@ func TestReduceRemoveBook(t *testing.T) {
 
 	test.AssertEqual(t, len(dnote), 1, "number of books mismatch")
 	test.AssertEqual(t, remainingBook.Name, "js", "remaining book name mismatch")
-	test.AssertEqual(t, remainingBook.UUID, "3e6c9401-833b-485f-bcda-c2525a5dc389", "remaining book uuid mismatch")
 	test.AssertEqual(t, len(remainingBook.Notes), 2, "remaining book number of notes mismatch")
 	test.AssertEqual(t, remainingBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
 	test.AssertEqual(t, remainingBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")

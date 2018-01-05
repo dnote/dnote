@@ -408,7 +408,6 @@ func NewNote(content string) infra.Note {
 // NewBook returns a book
 func NewBook(name string) infra.Book {
 	return infra.Book{
-		UUID:  utils.GenerateUID(),
 		Name:  name,
 		Notes: make([]infra.Note, 0),
 	}
@@ -417,7 +416,6 @@ func NewBook(name string) infra.Book {
 func GetUpdatedBook(book infra.Book, notes []infra.Note) infra.Book {
 	b := NewBook(book.Name)
 
-	b.UUID = book.UUID
 	b.Notes = notes
 
 	return b
@@ -482,16 +480,6 @@ func IsFreshInstall(ctx infra.DnoteCtx) (bool, error) {
 	}
 
 	return false, nil
-}
-
-func GetBookByUUID(dnote infra.Dnote, uuid string) (infra.Book, error) {
-	for _, book := range dnote {
-		if book.UUID == uuid {
-			return book, nil
-		}
-	}
-
-	return infra.Book{}, errors.Errorf("Book with uuid %s does not exist", uuid)
 }
 
 func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Note {

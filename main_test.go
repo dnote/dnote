@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
@@ -109,15 +110,25 @@ func TestAdd_NewBook(t *testing.T) {
 	bookAction := actions[0]
 	noteAction := actions[1]
 
+	var noteActionData core.AddNoteData
+	var bookActionData core.AddBookData
+	err = json.Unmarshal(bookAction.Data, &bookActionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+	err = json.Unmarshal(noteAction.Data, &noteActionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+
 	test.AssertEqual(t, bookAction.Type, core.ActionAddBook, "bookAction type mismatch")
-	test.AssertNotEqual(t, bookAction.Data["uuid"], nil, "bookAction data note_uuid mismatch")
+	test.AssertNotEqual(t, bookActionData.Name, "", "bookAction data note_uuid mismatch")
 	test.AssertNotEqual(t, bookAction.Timestamp, 0, "bookAction timestamp mismatch")
 	test.AssertEqual(t, noteAction.Type, core.ActionAddNote, "noteAction type mismatch")
-	test.AssertEqual(t, noteAction.Data["content"], "foo", "noteAction data name mismatch")
-	test.AssertNotEqual(t, noteAction.Data["note_uuid"], nil, "noteAction data note_uuid mismatch")
-	test.AssertNotEqual(t, noteAction.Data["book_uuid"], nil, "noteAction data note_uuid mismatch")
+	test.AssertEqual(t, noteActionData.Content, "foo", "noteAction data name mismatch")
+	test.AssertNotEqual(t, noteActionData.NoteUUID, nil, "noteAction data note_uuid mismatch")
+	test.AssertNotEqual(t, noteActionData.BookName, "", "noteAction data note_uuid mismatch")
 	test.AssertNotEqual(t, noteAction.Timestamp, 0, "noteAction timestamp mismatch")
-	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 1, "Book should have one note")
 	test.AssertNotEqual(t, note.UUID, "", "Note should have UUID")
 	test.AssertEqual(t, note.Content, "foo", "Note content mismatch")
@@ -149,13 +160,18 @@ func TestAdd_ExistingBook(t *testing.T) {
 	book := dnote["js"]
 	action := actions[0]
 
+	var actionData core.AddNoteData
+	err = json.Unmarshal(action.Data, &actionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
 	test.AssertEqual(t, action.Type, core.ActionAddNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["content"], "foo", "action data name mismatch")
-	test.AssertNotEqual(t, action.Data["note_uuid"], nil, "action data note_uuid mismatch")
-	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data note_uuid mismatch")
+	test.AssertEqual(t, actionData.Content, "foo", "action data name mismatch")
+	test.AssertNotEqual(t, actionData.NoteUUID, "", "action data note_uuid mismatch")
+	test.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
-	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
 	test.AssertNotEqual(t, book.Notes[0].UUID, "", "Note should have UUID")
 	test.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "Note content mismatch")
@@ -189,13 +205,18 @@ func TestEdit(t *testing.T) {
 	book := dnote["js"]
 	action := actions[0]
 
+	var actionData core.EditNoteData
+	err = json.Unmarshal(action.Data, &actionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
 	test.AssertEqual(t, action.Type, core.ActionEditNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["content"], "foo bar", "action data name mismatch")
-	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data book_uuid mismatch")
-	test.AssertEqual(t, action.Data["note_uuid"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
+	test.AssertEqual(t, actionData.Content, "foo bar", "action data name mismatch")
+	test.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
+	test.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
-	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
 	test.AssertEqual(t, book.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
 	test.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "Note content mismatch")
@@ -259,12 +280,17 @@ func TestRemoveNote(t *testing.T) {
 	otherBook := dnote["linux"]
 	action := actions[0]
 
+	var actionData core.RemoveNoteData
+	err = json.Unmarshal(action.Data, &actionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
 	test.AssertEqual(t, action.Type, core.ActionRemoveNote, "action type mismatch")
-	test.AssertEqual(t, action.Data["note_uuid"], "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
-	test.AssertEqual(t, action.Data["book_uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data book_uuid mismatch")
+	test.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
+	test.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
-	test.AssertNotEqual(t, book.UUID, "", "Book should have UUID")
 	test.AssertEqual(t, len(book.Notes), 1, "Book should have one note")
 	test.AssertEqual(t, len(otherBook.Notes), 1, "Other book should have one note")
 	test.AssertEqual(t, book.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
@@ -326,11 +352,17 @@ func TestRemoveBook(t *testing.T) {
 	book := dnote["linux"]
 	action := actions[0]
 
+	var actionData core.RemoveBookData
+	err = json.Unmarshal(action.Data, &actionData)
+	if err != nil {
+		log.Fatalln("Failed to unmarshal the action data: %s", err)
+	}
+
 	test.AssertEqual(t, len(actions), 1, "There should be 1 action")
 	test.AssertEqual(t, action.Type, core.ActionRemoveBook, "action type mismatch")
-	test.AssertEqual(t, action.Data["uuid"], "3e6c9401-833b-485f-bcda-c2525a5dc389", "action data UUID mismatch")
+	test.AssertEqual(t, actionData.Name, "js", "action data name mismatch")
 	test.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	test.AssertEqual(t, len(dnote), 1, "There should be 1 book")
-	test.AssertEqual(t, book.UUID, "94b829e6-fec8-4e65-95db-7ad2ab0d3a39", "Remaining book uid mismatch")
+	test.AssertEqual(t, book.Name, "linux", "Remaining book name mismatch")
 	test.AssertEqual(t, len(book.Notes), 1, "Remaining book should have one note")
 }

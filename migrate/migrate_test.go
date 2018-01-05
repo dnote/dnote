@@ -117,7 +117,6 @@ func TestMigrateToV2(t *testing.T) {
 	}
 
 	for _, book := range postDnote {
-		test.AssertNotEqual(t, len(book.UUID), 8, "UUID was not generated")
 		test.AssertNotEqual(t, book.Name, "", "Book name was not populated")
 
 		for _, note := range book.Notes {

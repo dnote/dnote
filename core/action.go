@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/dnote-io/cli/infra"
@@ -16,19 +17,24 @@ var (
 )
 
 type Action struct {
-	Type      string                 `json:"type"`
-	Data      map[string]interface{} `json:"data"`
-	Timestamp int64                  `json:"timestamp"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
 }
 
-func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookUUID, content string) error {
+func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) error {
+	b, err := json.Marshal(AddNoteData{
+		NoteUUID: noteUUID,
+		BookName: bookName,
+		Content:  content,
+	})
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal data into JSON")
+	}
+
 	action := Action{
-		Type: ActionAddNote,
-		Data: map[string]interface{}{
-			"note_uuid": noteUUID,
-			"book_uuid": bookUUID,
-			"content":   content,
-		},
+		Type:      ActionAddNote,
+		Data:      b,
 		Timestamp: time.Now().Unix(),
 	}
 
@@ -39,13 +45,18 @@ func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookUUID, content string) er
 	return nil
 }
 
-func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookUUID string) error {
+func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
+	b, err := json.Marshal(RemoveNoteData{
+		NoteUUID: noteUUID,
+		BookName: bookName,
+	})
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal data into JSON")
+	}
+
 	action := Action{
-		Type: ActionRemoveNote,
-		Data: map[string]interface{}{
-			"note_uuid": noteUUID,
-			"book_uuid": bookUUID,
-		},
+		Type:      ActionRemoveNote,
+		Data:      b,
 		Timestamp: time.Now().Unix(),
 	}
 
@@ -56,14 +67,19 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookUUID string) error {
 	return nil
 }
 
-func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookUUID, content string) error {
+func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) error {
+	b, err := json.Marshal(EditNoteData{
+		NoteUUID: noteUUID,
+		BookName: bookName,
+		Content:  content,
+	})
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal data into JSON")
+	}
+
 	action := Action{
-		Type: ActionEditNote,
-		Data: map[string]interface{}{
-			"book_uuid": bookUUID,
-			"note_uuid": noteUUID,
-			"content":   content,
-		},
+		Type:      ActionEditNote,
+		Data:      b,
 		Timestamp: time.Now().Unix(),
 	}
 
@@ -74,13 +90,17 @@ func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookUUID, content string) e
 	return nil
 }
 
-func LogActionAddBook(ctx infra.DnoteCtx, uuid, name string) error {
+func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
+	b, err := json.Marshal(AddBookData{
+		Name: name,
+	})
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal data into JSON")
+	}
+
 	action := Action{
-		Type: ActionAddBook,
-		Data: map[string]interface{}{
-			"uuid": uuid,
-			"name": name,
-		},
+		Type:      ActionAddBook,
+		Data:      b,
 		Timestamp: time.Now().Unix(),
 	}
 
@@ -91,12 +111,15 @@ func LogActionAddBook(ctx infra.DnoteCtx, uuid, name string) error {
 	return nil
 }
 
-func LogActionRemoveBook(ctx infra.DnoteCtx, uuid string) error {
+func LogActionRemoveBook(ctx infra.DnoteCtx, name string) error {
+	b, err := json.Marshal(RemoveBookData{Name: name})
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal data into JSON")
+	}
+
 	action := Action{
-		Type: ActionRemoveBook,
-		Data: map[string]interface{}{
-			"uuid": uuid,
-		},
+		Type:      ActionRemoveBook,
+		Data:      b,
 		Timestamp: time.Now().Unix(),
 	}
 

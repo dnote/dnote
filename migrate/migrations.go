@@ -57,7 +57,6 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 		}
 
 		b := migrateToV2PostBook{
-			UUID:  uuid.NewV4().String(),
 			Name:  bookName,
 			Notes: notes,
 		}
@@ -119,7 +118,6 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 				Timestamp: time.Now().Unix(),
 			}
 			actions = append(actions, action)
-
 		}
 	}
 

@@ -19,7 +19,6 @@ type Dnote map[string]Book
 
 // Book holds a metadata and its notes
 type Book struct {
-	UUID  string `json:"uuid"`
 	Name  string `json:"name"`
 	Notes []Note `json:"notes"`
 }

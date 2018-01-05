@@ -87,13 +87,13 @@ func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
 		book.Notes = []infra.Note{note}
 		dnote[bookName] = book
 
-		err = core.LogActionAddBook(ctx, book.UUID, bookName)
+		err = core.LogActionAddBook(ctx, bookName)
 		if err != nil {
 			return errors.Wrap(err, "Failed to log action")
 		}
 	}
 
-	err = core.LogActionAddNote(ctx, note.UUID, book.UUID, note.Content)
+	err = core.LogActionAddNote(ctx, note.UUID, book.Name, note.Content)
 	if err != nil {
 		return errors.Wrap(err, "Failed to log action")
 	}

@@ -1,129 +1,35 @@
 package core
 
 import (
+	"encoding/json"
+
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
 )
 
-type addNoteData struct {
+type AddNoteData struct {
 	NoteUUID string `json:"note_uuid"`
-	BookUUID string `json:"book_uuid"`
+	BookName string `json:"book_name"`
 	Content  string `json:"content"`
 }
 
-type editNoteData struct {
+type EditNoteData struct {
 	NoteUUID string `json:"note_uuid"`
-	BookUUID string `json:"book_uuid"`
+	BookName string `json:"book_name"`
 	Content  string `json:"content"`
 }
 
-type removeNoteData struct {
+type RemoveNoteData struct {
 	NoteUUID string `json:"note_uuid"`
-	BookUUID string `json:"book_uuid"`
+	BookName string `json:"book_name"`
 }
 
-type addBookData struct {
-	UUID string `json:"uuid"`
+type AddBookData struct {
 	Name string `json:"name"`
 }
 
-type removeBookData struct {
-	UUID string `json:"uuid"`
-}
-
-func parseAddNoteData(raw map[string]interface{}) (addNoteData, error) {
-	ret := addNoteData{}
-
-	noteUUID, ok := raw["note_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid note_uuid for action %s. Got %s", ActionAddNote, noteUUID)
-	}
-	bookUUID, ok := raw["book_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid book_uuid for action %s. Got %s", ActionAddNote, bookUUID)
-	}
-	content, ok := raw["content"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid content for action %s. Got %s", ActionAddNote, content)
-	}
-
-	ret.NoteUUID = noteUUID
-	ret.BookUUID = bookUUID
-	ret.Content = content
-
-	return ret, nil
-}
-
-func parseAddBookData(raw map[string]interface{}) (addBookData, error) {
-	ret := addBookData{}
-
-	uuid, ok := raw["uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid uuid for action %s. Got %s", ActionAddBook, uuid)
-	}
-	name, ok := raw["name"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid name for action %s. Got %s", ActionAddBook, name)
-	}
-
-	ret.UUID = uuid
-	ret.Name = name
-
-	return ret, nil
-}
-
-func parseRemoveNoteData(raw map[string]interface{}) (removeNoteData, error) {
-	ret := removeNoteData{}
-
-	noteUUID, ok := raw["note_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid note_uuid for action %s. Got %s", ActionRemoveNote, noteUUID)
-	}
-	bookUUID, ok := raw["book_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid book_uuid for action %s. Got %s", ActionRemoveNote, bookUUID)
-	}
-
-	ret.NoteUUID = noteUUID
-	ret.BookUUID = bookUUID
-
-	return ret, nil
-}
-
-func parseRemoveBookData(raw map[string]interface{}) (removeBookData, error) {
-	ret := removeBookData{}
-
-	uuid, ok := raw["uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid uuid for action %s. Got %s", ActionRemoveBook, uuid)
-	}
-
-	ret.UUID = uuid
-
-	return ret, nil
-}
-
-func parseEditNoteData(raw map[string]interface{}) (editNoteData, error) {
-	ret := editNoteData{}
-
-	noteUUID, ok := raw["note_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid note_uuid for action %s. Got %s", ActionEditNote, noteUUID)
-	}
-	bookUUID, ok := raw["book_uuid"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid book_uuid for action %s. Got %s", ActionEditNote, bookUUID)
-	}
-	content, ok := raw["content"].(string)
-	if !ok {
-		return ret, errors.Errorf("invalid content for action %s. Got %s", ActionEditNote, content)
-	}
-
-	ret.NoteUUID = noteUUID
-	ret.BookUUID = bookUUID
-	ret.Content = content
-
-	return ret, nil
+type RemoveBookData struct {
+	Name string `json:"name"`
 }
 
 // ReduceAll reduces all actions
@@ -188,7 +94,8 @@ func Reduce(ctx infra.DnoteCtx, action Action) error {
 }
 
 func handleAddNote(ctx infra.DnoteCtx, action Action) error {
-	data, err := parseAddNoteData(action.Data)
+	var data AddNoteData
+	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
@@ -202,9 +109,9 @@ func handleAddNote(ctx infra.DnoteCtx, action Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	book, err := GetBookByUUID(dnote, data.BookUUID)
-	if err != nil {
-		return errors.Wrap(err, "Failed to find the book by uuid")
+	book, ok := dnote[data.BookName]
+	if !ok {
+		return errors.Errorf("Book with a name %s is not found", data.BookName)
 	}
 
 	// Check duplicate
@@ -226,7 +133,8 @@ func handleAddNote(ctx infra.DnoteCtx, action Action) error {
 }
 
 func handleRemoveNote(ctx infra.DnoteCtx, action Action) error {
-	data, err := parseRemoveNoteData(action.Data)
+	var data RemoveNoteData
+	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
@@ -235,9 +143,9 @@ func handleRemoveNote(ctx infra.DnoteCtx, action Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	book, err := GetBookByUUID(dnote, data.BookUUID)
-	if err != nil {
-		return errors.Wrap(err, "Failed to find the book by uuid")
+	book, ok := dnote[data.BookName]
+	if !ok {
+		return errors.Errorf("Book with a name %s is not found", data.BookName)
 	}
 
 	notes := FilterNotes(book.Notes, func(note infra.Note) bool {
@@ -254,7 +162,8 @@ func handleRemoveNote(ctx infra.DnoteCtx, action Action) error {
 }
 
 func handleEditNote(ctx infra.DnoteCtx, action Action) error {
-	data, err := parseEditNoteData(action.Data)
+	var data EditNoteData
+	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
@@ -263,9 +172,9 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	book, err := GetBookByUUID(dnote, data.BookUUID)
-	if err != nil {
-		return errors.Wrap(err, "Failed to find the book by uuid")
+	book, ok := dnote[data.BookName]
+	if !ok {
+		return errors.Errorf("Book with a name %s is not found", data.BookName)
 	}
 
 	for idx, note := range book.Notes {
@@ -284,7 +193,8 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 }
 
 func handleAddBook(ctx infra.DnoteCtx, action Action) error {
-	data, err := parseAddBookData(action.Data)
+	var data AddBookData
+	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
@@ -295,7 +205,6 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 	}
 
 	book := infra.Book{
-		UUID:  data.UUID,
 		Name:  data.Name,
 		Notes: []infra.Note{},
 	}
@@ -310,7 +219,8 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 }
 
 func handleRemoveBook(ctx infra.DnoteCtx, action Action) error {
-	data, err := parseRemoveBookData(action.Data)
+	var data RemoveBookData
+	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
@@ -320,8 +230,8 @@ func handleRemoveBook(ctx infra.DnoteCtx, action Action) error {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
 
-	for bookName, book := range dnote {
-		if book.UUID == data.UUID {
+	for bookName, _ := range dnote {
+		if bookName == data.Name {
 			delete(dnote, bookName)
 		}
 	}

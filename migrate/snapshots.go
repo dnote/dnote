@@ -14,7 +14,6 @@ type migrateToV2PostNote struct {
 }
 type migrateToV2PreBook []migrateToV2PreNote
 type migrateToV2PostBook struct {
-	UUID  string                `json:"uuid"`
 	Name  string                `json:"name"`
 	Notes []migrateToV2PostNote `json:"notes"`
 }
