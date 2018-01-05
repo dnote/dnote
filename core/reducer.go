@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
@@ -40,18 +41,6 @@ func ReduceAll(ctx infra.DnoteCtx, actions []Action) error {
 		}
 	}
 
-	// After having consumed all actions, if bookmark is less than last_action,
-	// bring it forward to be in sync with the server
-	ts, err := ReadTimestamp(ctx)
-	if ts.Bookmark < ts.LastAction {
-		ts.Bookmark = ts.LastAction
-
-		err = WriteTimestamp(ctx, ts)
-		if err != nil {
-			return errors.Wrap(err, "Failed to update last_sync")
-		}
-	}
-
 	return nil
 }
 
@@ -79,17 +68,6 @@ func Reduce(ctx infra.DnoteCtx, action Action) error {
 		return errors.Wrap(err, "Failed to process the action")
 	}
 
-	// Update timestamp
-	ts, err := ReadTimestamp(ctx)
-	if ts.Bookmark < action.Timestamp {
-		ts.Bookmark = action.Timestamp
-
-		err = WriteTimestamp(ctx, ts)
-		if err != nil {
-			return errors.Wrap(err, "Failed to update last_sync")
-		}
-	}
-
 	return nil
 }
 
@@ -103,6 +81,7 @@ func handleAddNote(ctx infra.DnoteCtx, action Action) error {
 	note := infra.Note{
 		UUID:    data.NoteUUID,
 		Content: data.Content,
+		AddedOn: action.Timestamp,
 	}
 
 	dnote, err := GetDnote(ctx)
@@ -122,6 +101,11 @@ func handleAddNote(ctx infra.DnoteCtx, action Action) error {
 	}
 
 	notes := append(dnote[book.Name].Notes, note)
+
+	sort.SliceStable(notes, func(i, j int) bool {
+		return notes[i].AddedOn < notes[j].AddedOn
+	})
+
 	dnote[book.Name] = GetUpdatedBook(dnote[book.Name], notes)
 
 	err = WriteDnote(ctx, dnote)
@@ -180,6 +164,7 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 	for idx, note := range book.Notes {
 		if note.UUID == data.NoteUUID {
 			note.Content = data.Content
+			note.EditedOn = action.Timestamp
 			dnote[book.Name].Notes[idx] = note
 		}
 	}
@@ -202,6 +187,13 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 	dnote, err := GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
+	}
+
+	_, exists := dnote[data.Name]
+	if exists {
+		// If book already exists, another machine added a book with the same name.
+		// noop
+		return nil
 	}
 
 	book := infra.Book{

@@ -17,12 +17,13 @@ var (
 )
 
 type Action struct {
+	ID        int             `json:"id"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data"`
 	Timestamp int64           `json:"timestamp"`
 }
 
-func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) error {
+func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, timestamp int64) error {
 	b, err := json.Marshal(AddNoteData{
 		NoteUUID: noteUUID,
 		BookName: bookName,
@@ -35,7 +36,7 @@ func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) er
 	action := Action{
 		Type:      ActionAddNote,
 		Data:      b,
-		Timestamp: time.Now().Unix(),
+		Timestamp: timestamp,
 	}
 
 	if err := LogAction(ctx, action); err != nil {
@@ -67,7 +68,7 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
 	return nil
 }
 
-func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) error {
+func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ts int64) error {
 	b, err := json.Marshal(EditNoteData{
 		NoteUUID: noteUUID,
 		BookName: bookName,
@@ -80,7 +81,7 @@ func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string) e
 	action := Action{
 		Type:      ActionEditNote,
 		Data:      b,
-		Timestamp: time.Now().Unix(),
+		Timestamp: ts,
 	}
 
 	if err := LogAction(ctx, action); err != nil {

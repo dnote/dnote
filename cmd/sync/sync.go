@@ -29,11 +29,12 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 type responseData struct {
-	Actions []core.Action `json:"actions"`
+	Actions  []core.Action `json:"actions"`
+	Bookmark int           `json:"bookmark"`
 }
 
 type syncPayload struct {
-	Bookmark int64  `json:"bookmark"`
+	Bookmark int    `json:"bookmark"`
 	Actions  []byte `json:"actions"` // gziped
 }
 
@@ -86,6 +87,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		err = core.ReduceAll(ctx, respData.Actions)
 		if err != nil {
 			return errors.Wrap(err, "Failed to reduce returned actions")
+		}
+
+		// Update bookmark
+		ts, err := core.ReadTimestamp(ctx)
+		ts.Bookmark = respData.Bookmark
+
+		err = core.WriteTimestamp(ctx, ts)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update bookmark")
 		}
 
 		fmt.Println("Successfully synced all notes")

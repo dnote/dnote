@@ -398,10 +398,11 @@ func ChangeBook(ctx infra.DnoteCtx, bookName string) error {
 }
 
 // NewNote returns a note
-func NewNote(content string) infra.Note {
+func NewNote(content string, ts int64) infra.Note {
 	return infra.Note{
 		UUID:    utils.GenerateUID(),
 		Content: content,
+		AddedOn: ts,
 	}
 }
 

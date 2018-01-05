@@ -1,5 +1,5 @@
-// Package test provides utilities used in tests
-package test
+// Package testutils provides utilities used in tests
+package testutils
 
 import (
 	"encoding/json"

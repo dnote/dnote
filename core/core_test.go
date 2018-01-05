@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/dnote-io/cli/test"
+	"github.com/dnote-io/cli/testutils"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestMigrateToDnoteDir(t *testing.T) {
-	ctx := test.InitCtx("../tmp")
+	ctx := testutils.InitCtx("../tmp")
 
 	t.Run("pre v1 files exist", func(t *testing.T) {
 		// set up

@@ -3,6 +3,7 @@ package edit
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
@@ -73,12 +74,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Errorf("Book with the name '%s' does not exist", targetBookName)
 		}
 
+		ts := time.Now().Unix()
+
 		for i, note := range dnote[targetBookName].Notes {
 			if i == index {
 				note.Content = content
+				note.EditedOn = ts
 				dnote[targetBookName].Notes[i] = note
 
-				err := core.LogActionEditNote(ctx, note.UUID, targetBook.Name, note.Content)
+				err := core.LogActionEditNote(ctx, note.UUID, targetBook.Name, note.Content, ts)
 				if err != nil {
 					return errors.Wrap(err, "Failed to log action")
 				}

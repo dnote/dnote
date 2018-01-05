@@ -34,8 +34,8 @@ type Note struct {
 // Timestamp holds time information
 type Timestamp struct {
 	LastUpgrade int64 `yaml:"last_upgrade"`
-	// timestamp of the most recent action including those synced from the server
-	Bookmark int64 `yaml:"bookmark"`
+	// id of the most recent action synced from the server
+	Bookmark int `yaml:"bookmark"`
 	// timestamp of the most recent action performed by the cli
 	LastAction int64 `yaml:"last_action"`
 }

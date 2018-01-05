@@ -2,6 +2,8 @@ package add
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
@@ -59,8 +61,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to parse args")
 		}
 
-		note := core.NewNote(content)
-		err = writeNote(ctx, bookName, note)
+		ts := time.Now().Unix()
+
+		note := core.NewNote(content, ts)
+		err = writeNote(ctx, bookName, note, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
@@ -70,7 +74,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
+func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note, ts int64) error {
 	dnote, err := core.GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
@@ -93,7 +97,7 @@ func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note) error {
 		}
 	}
 
-	err = core.LogActionAddNote(ctx, note.UUID, book.Name, note.Content)
+	err = core.LogActionAddNote(ctx, note.UUID, book.Name, note.Content, ts)
 	if err != nil {
 		return errors.Wrap(err, "Failed to log action")
 	}
