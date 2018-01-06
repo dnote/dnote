@@ -97,13 +97,23 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 	actions := []migrateToV3Action{}
 
 	for bookName, book := range dnote {
+		// Find the minimum added_on timestamp from the notes that belong to the book
+		// to give timstamp to the add_book action.
+		// Logically add_book must have happened no later than the first add_note
+		// to the book in order for sync to work.
+		minTs := time.Now().Unix()
+		for _, note := range book.Notes {
+			if note.AddedOn < minTs {
+				minTs = note.AddedOn
+			}
+		}
+
 		action := migrateToV3Action{
 			Type: migrateToV3ActionAddBook,
 			Data: map[string]interface{}{
-				"uuid": book.UUID,
-				"name": bookName,
+				"book_name": bookName,
 			},
-			Timestamp: time.Now().Unix(),
+			Timestamp: minTs,
 		}
 		actions = append(actions, action)
 
@@ -112,10 +122,10 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 				Type: migrateToV3ActionAddNote,
 				Data: map[string]interface{}{
 					"note_uuid": note.UUID,
-					"book_uuid": book.UUID,
+					"book_name": book.Name,
 					"content":   note.Content,
 				},
-				Timestamp: time.Now().Unix(),
+				Timestamp: note.AddedOn,
 			}
 			actions = append(actions, action)
 		}

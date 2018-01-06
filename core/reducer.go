@@ -65,7 +65,7 @@ func Reduce(ctx infra.DnoteCtx, action Action) error {
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "Failed to process the action")
+		return errors.Wrapf(err, "Failed to process the action %s", action.Type)
 	}
 
 	return nil
