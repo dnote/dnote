@@ -1,0 +1,30 @@
+{
+  "js": {
+    "name": "js",
+    "notes": [
+      {
+        "uuid": "43827b9a-c2b0-4c06-a290-97991c896653",
+        "content": "Booleans have toString()",
+        "added_on": 1515199943,
+        "edited_on": 0
+      },
+      {
+        "uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
+        "content": "Date object implements mathematical comparisons",
+        "added_on": 1515199951,
+        "edited_on": 0
+      }
+    ]
+  },
+  "linux": {
+    "name": "linux",
+    "notes": [
+      {
+        "uuid": "3e065d55-6d47-42f2-a6bf-f5844130b2d2",
+        "content": "wc -l to count words",
+        "added_on": 1515199961,
+        "edited_on": 0
+      }
+    ]
+  }
+}

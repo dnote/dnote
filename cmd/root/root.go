@@ -1,8 +1,11 @@
 package root
 
 import (
+	"github.com/dnote-io/cli/core"
+	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/migrate"
 	"github.com/dnote-io/cli/upgrade"
-	"github.com/dnote-io/cli/utils"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -22,42 +25,50 @@ func Execute() error {
 }
 
 // Prepare initializes necessary files
-func Prepare() error {
-	configPath, err := utils.GetConfigPath()
+func Prepare(ctx infra.DnoteCtx) error {
+	err := core.MigrateToDnoteDir(ctx)
 	if err != nil {
-		return err
-	}
-	dnotePath, err := utils.GetDnotePath()
-	if err != nil {
-		return err
-	}
-	dnoteUpdatePath, err := utils.GetDnoteUpdatePath()
-	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to initialize dnote dir")
 	}
 
-	if !utils.CheckFileExists(configPath) {
-		err := utils.GenerateConfigFile()
-		if err != nil {
-			return err
-		}
-	}
-	if !utils.CheckFileExists(dnotePath) {
-		err := utils.TouchDnoteFile()
-		if err != nil {
-			return err
-		}
-	}
-	if !utils.CheckFileExists(dnoteUpdatePath) {
-		err := utils.TouchDnoteUpgradeFile()
-		if err != nil {
-			return err
-		}
+	fresh, err := core.IsFreshInstall(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to check if fresh install")
 	}
 
-	err = upgrade.Migrate()
+	err = core.InitDnoteDir(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to create dnote dir")
+	}
+	err = core.InitConfigFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to generate config file")
+	}
+	err = core.InitDnoteFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote file")
+	}
+	err = core.InitTimestampFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote upgrade file")
+	}
+	err = core.InitActionFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create action file")
+	}
+	err = migrate.InitSchemaFile(ctx, fresh)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create migration file")
+	}
+
+	err = migrate.Migrate(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to perform migration")
+	}
+
+	err = upgrade.AutoUpgrade(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to auto upgrade")
 	}
 
 	return nil

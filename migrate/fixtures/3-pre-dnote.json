@@ -1,0 +1,37 @@
+{
+  "algorithm": {
+    "uuid": "37862a94-8239-47c0-89f6-fddf816004ca",
+    "name": "algorithm",
+    "notes": [
+      {
+        "uuid": "59a2b93b-5f04-4091-a932-91849612fd69",
+        "content": "in-place means no extra space required. it mutates the input",
+        "added_on": 1506148290,
+        "editd_on": 0
+      }
+    ]
+  },
+  "linux": {
+    "uuid": "8075754f-6cac-47ab-96b0-2a00e731441a",
+    "name": "linux",
+    "notes": []
+  },
+  "react": {
+    "uuid": "ba4d16d4-60c7-4b57-97a1-7a73f42e99d2",
+    "name": "react",
+    "notes": [
+      {
+        "uuid": "15dbb608-7a32-48a1-8004-e54fab90a50a",
+        "content": "React Element is an object representation of a DOM node",
+        "added_on": 1499835562,
+        "editd_on": 0
+      },
+      {
+        "uuid": "0c5f07b1-c452-4338-9e0c-5568f053e511",
+        "content": "React Component is a function or a class which accepts input and returns React Element",
+        "added_on": 1499835860,
+        "editd_on": 0
+      }
+    ]
+  }
+}

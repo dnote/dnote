@@ -1,9 +1,10 @@
 language: go
 
 go:
-  - 1.x
-  - 1.7.x
-  - master
+  - 1.9.x
 
-install: make get-deps
-script: make build
+install:
+  - curl -L https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64 -o ./dep && chmod +x ./dep
+  - ./dep ensure
+script:
+  - ./scripts/test.sh

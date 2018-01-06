@@ -1,21 +1,20 @@
-package use
+package upgrade
 
 import (
-	"fmt"
-
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/upgrade"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 var example = `
-  dnote use JS`
+ dnote upgrade`
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "use",
-		Short:   "Change the current book",
-		Aliases: []string{"u"},
+		Use:     "upgrade",
+		Short:   "Upgrades dnote",
 		Example: example,
 		RunE:    newRun(ctx),
 	}
@@ -25,15 +24,10 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		targetBookName := args[0]
-
-		err := core.ChangeBook(ctx, targetBookName)
-		if err != nil {
-			return err
+		if err := upgrade.Upgrade(ctx); err != nil {
+			return errors.Wrap(err, "Failed to upgrade dnote")
 		}
 
-		fmt.Printf("Now using %s\n", targetBookName)
 		return nil
 	}
-
 }

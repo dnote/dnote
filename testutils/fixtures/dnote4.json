@@ -1,0 +1,17 @@
+{
+  "js": {
+    "name": "js",
+    "notes": [
+      {
+        "uuid": "43827b9a-c2b0-4c06-a290-97991c896653",
+        "content": "Booleans have toString()",
+        "added_on": 1515199943,
+        "edited_on": 0
+      }
+    ]
+  },
+  "linux": {
+    "name": "linux",
+    "notes": []
+  }
+}
