@@ -122,7 +122,7 @@ func TestAdd_NewBook(t *testing.T) {
 	}
 
 	testutils.AssertEqual(t, bookAction.Type, core.ActionAddBook, "bookAction type mismatch")
-	testutils.AssertNotEqual(t, bookActionData.Name, "", "bookAction data note_uuid mismatch")
+	testutils.AssertNotEqual(t, bookActionData.BookName, "", "bookAction data note_uuid mismatch")
 	testutils.AssertNotEqual(t, bookAction.Timestamp, 0, "bookAction timestamp mismatch")
 	testutils.AssertEqual(t, noteAction.Type, core.ActionAddNote, "noteAction type mismatch")
 	testutils.AssertEqual(t, noteActionData.Content, "foo", "noteAction data name mismatch")
@@ -362,7 +362,7 @@ func TestRemoveBook(t *testing.T) {
 
 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
 	testutils.AssertEqual(t, action.Type, core.ActionRemoveBook, "action type mismatch")
-	testutils.AssertEqual(t, actionData.Name, "js", "action data name mismatch")
+	testutils.AssertEqual(t, actionData.BookName, "js", "action data name mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, len(dnote), 1, "There should be 1 book")
 	testutils.AssertEqual(t, book.Name, "linux", "Remaining book name mismatch")

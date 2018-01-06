@@ -191,7 +191,7 @@ func TestReduceAddBook(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote4.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&AddBookData{Name: "new_book"})
+	b, err := json.Marshal(&AddBookData{BookName: "new_book"})
 	action := Action{
 		Type:      ActionAddBook,
 		Data:      b,
@@ -223,7 +223,7 @@ func TestReduceRemoveBook(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&RemoveBookData{Name: "linux"})
+	b, err := json.Marshal(&RemoveBookData{BookName: "linux"})
 	action := Action{
 		Type:      ActionRemoveBook,
 		Data:      b,

@@ -26,11 +26,11 @@ type RemoveNoteData struct {
 }
 
 type AddBookData struct {
-	Name string `json:"name"`
+	BookName string `json:"book_name"`
 }
 
 type RemoveBookData struct {
-	Name string `json:"name"`
+	BookName string `json:"book_name"`
 }
 
 // ReduceAll reduces all actions
@@ -189,7 +189,7 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
 
-	_, exists := dnote[data.Name]
+	_, exists := dnote[data.BookName]
 	if exists {
 		// If book already exists, another machine added a book with the same name.
 		// noop
@@ -197,10 +197,10 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 	}
 
 	book := infra.Book{
-		Name:  data.Name,
+		Name:  data.BookName,
 		Notes: []infra.Note{},
 	}
-	dnote[data.Name] = book
+	dnote[data.BookName] = book
 
 	err = WriteDnote(ctx, dnote)
 	if err != nil {
@@ -223,7 +223,7 @@ func handleRemoveBook(ctx infra.DnoteCtx, action Action) error {
 	}
 
 	for bookName, _ := range dnote {
-		if bookName == data.Name {
+		if bookName == data.BookName {
 			delete(dnote, bookName)
 		}
 	}

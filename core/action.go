@@ -93,7 +93,7 @@ func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, t
 
 func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
 	b, err := json.Marshal(AddBookData{
-		Name: name,
+		BookName: name,
 	})
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal data into JSON")
@@ -113,7 +113,7 @@ func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
 }
 
 func LogActionRemoveBook(ctx infra.DnoteCtx, name string) error {
-	b, err := json.Marshal(RemoveBookData{Name: name})
+	b, err := json.Marshal(RemoveBookData{BookName: name})
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal data into JSON")
 	}
