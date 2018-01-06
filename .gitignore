@@ -1,5 +1,2 @@
 main
 *.swo
-tmp/
-/vendor
-test-dnote

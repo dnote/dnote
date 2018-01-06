@@ -2,29 +2,123 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path/filepath"
+	"os/user"
+	"sort"
+	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	"gopkg.in/yaml.v2"
 )
 
-const (
-	letterRunes = "abcdefghipqrstuvwxyz0123456789"
-)
+type Config struct {
+	Book   string
+	APIKey string
+}
+
+// Deprecated. See upgrade/migrate.go
+type YAMLDnote map[string][]string
+
+type Dnote map[string]Book
+type Book []Note
+type Note struct {
+	UID     string
+	Content string
+	AddedOn int64
+}
+
+const configFilename = ".dnoterc"
+const DnoteUpdateFilename = ".dnote-upgrade"
+const dnoteFilename = ".dnote"
+const Version = "0.1.0"
+
+const letterRunes = "abcdefghipqrstuvwxyz0123456789"
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// GenerateUID returns a uid
-func GenerateUID() string {
-	return uuid.NewV4().String()
+func GenerateNoteID() string {
+	result := make([]byte, 8)
+	for i := range result {
+		result[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+
+	return string(result)
+}
+
+func GetConfigPath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, configFilename), nil
+}
+
+func GetDnotePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, dnoteFilename), nil
+}
+
+func GetYAMLDnoteArchivePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, ".dnote-yaml-archived"), nil
+}
+
+func GenerateConfigFile() error {
+	content := []byte("book: general\n")
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(configPath, content, 0644)
+	return err
+}
+
+func TouchDnoteFile() error {
+	dnotePath, err := GetDnotePath()
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(dnotePath, []byte{}, 0644)
+	return err
+}
+
+func TouchDnoteUpgradeFile() error {
+	dnoteUpdatePath, err := GetDnoteUpdatePath()
+	if err != nil {
+		return err
+	}
+
+	epoch := strconv.FormatInt(time.Now().Unix(), 10)
+	content := []byte(fmt.Sprintf("LAST_UPGRADE_EPOCH: %s\n", epoch))
+
+	err = ioutil.WriteFile(dnoteUpdatePath, content, 0644)
+	return err
+}
+
+func GetDnoteUpdatePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, DnoteUpdateFilename), nil
 }
 
 func AskConfirmation(question string) (bool, error) {
@@ -41,104 +135,171 @@ func AskConfirmation(question string) (bool, error) {
 	return ok, nil
 }
 
-// FileExists checks if the file exists at the given path
-func FileExists(filepath string) bool {
-	_, err := os.Stat(filepath)
-	return !os.IsNotExist(err)
+// ReadNoteContent reads the content of dnote
+func ReadNoteContent() ([]byte, error) {
+	notePath, err := GetDnotePath()
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadFile(notePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
-func IsDir(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
+// GetDnote reads and parses the dnote
+func GetDnote() (Dnote, error) {
+	ret := Dnote{}
 
-		return false, errors.Wrapf(err, "Failed to check if '%s' is directory", path)
+	b, err := ReadNoteContent()
+	if err != nil {
+		return ret, err
 	}
 
-	return fileInfo.IsDir(), nil
+	err = json.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, nil
 }
 
-// CopyFile copies a file from the src to dest
-func CopyFile(src, dest string) error {
-	in, err := os.Open(src)
+// WriteDnote persists the state of Dnote into the dnote file
+func WriteDnote(dnote Dnote) error {
+	d, err := json.MarshalIndent(dnote, "", "  ")
 	if err != nil {
-		return errors.Wrap(err, "Failed to open the input file")
+		return err
 	}
-	defer in.Close()
 
-	out, err := os.Create(dest)
+	notePath, err := GetDnotePath()
 	if err != nil {
-		return errors.Wrap(err, "Failed to create the output file")
+		return err
 	}
 
-	if _, err = io.Copy(out, in); err != nil {
-		return errors.Wrap(err, "Failed to copy the file content")
-	}
-
-	if err := out.Sync(); err != nil {
-		return errors.Wrap(err, "Failed to flush the output file to disk")
-	}
-
-	fi, err := os.Stat(src)
+	err = ioutil.WriteFile(notePath, d, 0644)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get file info for the input file")
-	}
-
-	if err := os.Chmod(dest, fi.Mode()); err != nil {
-		return errors.Wrap(err, "Failed to copy permission to the output file")
-	}
-
-	// Close the output file
-	if err := out.Close(); err != nil {
-		return errors.Wrap(err, "Failed to close the output file")
+		return err
 	}
 
 	return nil
 }
 
-// CopyDir copies a directory from src to dest, recursively copying nested
-// directories
-func CopyDir(src, dest string) error {
-	srcPath := filepath.Clean(src)
-	destPath := filepath.Clean(dest)
+// Deprecated. See upgrade/upgrade.go
+func GetNote() (YAMLDnote, error) {
+	ret := YAMLDnote{}
 
-	fi, err := os.Stat(srcPath)
+	b, err := ReadNoteContent()
 	if err != nil {
-		return errors.Wrap(err, "Failed to get file info for the input")
-	}
-	if !fi.IsDir() {
-		return errors.Wrap(err, "Source is not a directory")
+		return nil, err
 	}
 
-	_, err = os.Stat(dest)
-	if err != nil && !os.IsNotExist(err) {
-		return errors.Wrap(err, "Failed to look up the destination")
-	}
-
-	err = os.MkdirAll(dest, fi.Mode())
+	err = yaml.Unmarshal(b, &ret)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create destination")
+		return ret, err
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	return ret, nil
+}
+func WriteConfig(config Config) error {
+	d, err := yaml.Marshal(config)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read directory listing for the input")
+		return err
 	}
 
-	for _, entry := range entries {
-		srcEntryPath := filepath.Join(srcPath, entry.Name())
-		destEntryPath := filepath.Join(destPath, entry.Name())
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return err
+	}
 
-		if entry.IsDir() {
-			if err = CopyDir(srcEntryPath, destEntryPath); err != nil {
-				return errors.Wrapf(err, "Failed to copy %s", entry.Name())
-			}
-		} else {
-			if err = CopyFile(srcEntryPath, destEntryPath); err != nil {
-				return errors.Wrapf(err, "Failed to copy %s", entry.Name())
-			}
+	err = ioutil.WriteFile(configPath, d, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReadConfig() (Config, error) {
+	var ret Config
+
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return ret, err
+	}
+
+	b, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return ret, err
+	}
+
+	err = yaml.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, nil
+}
+
+func GetCurrentBook() (string, error) {
+	config, err := ReadConfig()
+	if err != nil {
+		return "", err
+	}
+
+	return config.Book, nil
+}
+
+func GetBooks() ([]string, error) {
+	dnote, err := GetDnote()
+	if err != nil {
+		return nil, err
+	}
+
+	books := make([]string, 0, len(dnote))
+	for k := range dnote {
+		books = append(books, k)
+	}
+
+	sort.Strings(books)
+
+	return books, nil
+}
+
+// CheckFileExists checks if the file exists at the given path
+func CheckFileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !os.IsNotExist(err)
+}
+
+// ChangeBook replaces the book name in the dnote config file
+func ChangeBook(bookName string) error {
+	config, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	config.Book = bookName
+
+	err = WriteConfig(config)
+	if err != nil {
+		return err
+	}
+
+	// Now add this book to the .dnote file, for issue #2
+	dnote, err := GetDnote()
+	if err != nil {
+		return err
+	}
+
+	_, exists := dnote[bookName]
+	if exists == false {
+		dnote[bookName] = make([]Note, 0)
+		err := WriteDnote(dnote)
+		if err != nil {
+			return err
 		}
 	}
 

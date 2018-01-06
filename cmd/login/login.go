@@ -3,44 +3,41 @@ package login
 import (
 	"fmt"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/cmd/root"
+	"github.com/dnote-io/cli/utils"
 	"github.com/spf13/cobra"
 )
 
 var example = `
   dnote login`
 
-func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "login",
-		Short:   "Login to dnote server",
-		Example: example,
-		RunE:    newRun(ctx),
-	}
-
-	return cmd
+var cmd = &cobra.Command{
+	Use:     "login",
+	Short:   "Login to dnote server",
+	Example: example,
+	RunE:    run,
 }
 
-func newRun(ctx infra.DnoteCtx) core.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		fmt.Print("Please enter your APIKey: ")
+func init() {
+	root.Register(cmd)
+}
 
-		var apiKey string
-		fmt.Scanln(&apiKey)
+func run(cmd *cobra.Command, args []string) error {
+	fmt.Print("Please enter your APIKey: ")
 
-		config, err := core.ReadConfig(ctx)
-		if err != nil {
-			return err
-		}
+	var apiKey string
+	fmt.Scanln(&apiKey)
 
-		config.APIKey = apiKey
-		err = core.WriteConfig(ctx, config)
-		if err != nil {
-			return err
-		}
-
-		return nil
+	config, err := utils.ReadConfig()
+	if err != nil {
+		return err
 	}
 
+	config.APIKey = apiKey
+	err = utils.WriteConfig(config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

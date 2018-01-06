@@ -179,10 +179,6 @@ Sync notes with Dnote server
 
 Start a login procedure which will store the APIKey to communicate with the server
 
-### dnote upgrade
-
-Upgrades the Dnote if newer release is available
-
 ## Links
 
 * [Website](https://dnote.io)
@@ -192,8 +188,6 @@ Upgrades the Dnote if newer release is available
 ## License
 
 MIT
-
-[![Build Status](https://travis-ci.org/dnote-io/cli.svg?branch=master)](https://travis-ci.org/dnote-io/cli)
 
 -------
 

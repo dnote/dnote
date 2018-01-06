@@ -9,17 +9,25 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"regexp"
 	"runtime"
 	"strconv"
 	"time"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
 )
+
+func GetDnoteUpdatePath() (string, error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", usr.HomeDir, utils.DnoteUpdateFilename), nil
+}
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
@@ -35,8 +43,11 @@ func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
 }
 
 // getLastUpdateEpoch reads and parses the last update epoch
-func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
-	updatePath := core.GetTimestampPath(ctx)
+func getLastUpdateEpoch() (int64, error) {
+	updatePath, err := utils.GetDnoteUpdatePath()
+	if err != nil {
+		return 0, err
+	}
 
 	b, err := ioutil.ReadFile(updatePath)
 	if err != nil {
@@ -47,7 +58,7 @@ func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
 	match := re.FindStringSubmatch(string(b))
 
 	if len(match) != 2 {
-		msg := fmt.Sprintf("Error parsing %s: %s", core.TimestampFilename, string(b))
+		msg := fmt.Sprintf("Error parsing %s", utils.DnoteUpdateFilename)
 		return 0, errors.New(msg)
 	}
 
@@ -60,11 +71,11 @@ func getLastUpdateEpoch(ctx infra.DnoteCtx) (int64, error) {
 }
 
 // shouldCheckUpdate checks if update should be checked
-func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
+func shouldCheckUpdate() (bool, error) {
 	var updatePeriod int64 = 86400 * 7
 
 	now := time.Now().Unix()
-	lastEpoch, err := getLastUpdateEpoch(ctx)
+	lastEpoch, err := getLastUpdateEpoch()
 	if err != nil {
 		return false, err
 	}
@@ -73,21 +84,21 @@ func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
 }
 
 // AutoUpgrade triggers update if needed
-func AutoUpgrade(ctx infra.DnoteCtx) error {
-	shouldCheck, err := shouldCheckUpdate(ctx)
+func AutoUpgrade() error {
+	shouldCheck, err := shouldCheckUpdate()
 	if err != nil {
 		return err
 	}
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
-		core.InitTimestampFile(ctx)
+		utils.TouchDnoteUpgradeFile()
 		if err != nil {
 			return err
 		}
 
 		if willCheck {
-			err := Upgrade(ctx)
+			err := Upgrade()
 			if err != nil {
 				return err
 			}
@@ -97,7 +108,7 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-func Upgrade(ctx infra.DnoteCtx) error {
+func Upgrade() error {
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
@@ -114,15 +125,15 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	// Check if up to date
-	if latestVersion == core.Version {
-		fmt.Printf("Up-to-date: %s\n", core.Version)
-		core.InitTimestampFile(ctx)
+	if latestVersion == utils.Version {
+		fmt.Printf("Up-to-date: %s\n", utils.Version)
+		utils.TouchDnoteUpgradeFile()
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
-		core.InitTimestampFile(ctx)
+		utils.TouchDnoteUpgradeFile()
 		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 		return nil
 	}
@@ -165,9 +176,9 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return err
 	}
 
-	core.InitTimestampFile(ctx)
+	utils.TouchDnoteUpgradeFile()
 
-	fmt.Printf("Updated: v%s -> v%s\n", core.Version, latestVersion)
+	fmt.Printf("Updated: v%s -> v%s\n", utils.Version, latestVersion)
 	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }

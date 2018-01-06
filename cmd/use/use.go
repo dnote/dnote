@@ -3,37 +3,34 @@ package use
 import (
 	"fmt"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/cmd/root"
+	"github.com/dnote-io/cli/utils"
 	"github.com/spf13/cobra"
 )
 
 var example = `
   dnote use JS`
 
-func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "use",
-		Short:   "Change the current book",
-		Aliases: []string{"u"},
-		Example: example,
-		RunE:    newRun(ctx),
-	}
-
-	return cmd
+var cmd = &cobra.Command{
+	Use:     "use",
+	Short:   "Change the current book",
+	Aliases: []string{"u"},
+	Example: example,
+	RunE:    run,
 }
 
-func newRun(ctx infra.DnoteCtx) core.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		targetBookName := args[0]
+func init() {
+	root.Register(cmd)
+}
 
-		err := core.ChangeBook(ctx, targetBookName)
-		if err != nil {
-			return err
-		}
+func run(cmd *cobra.Command, args []string) error {
+	targetBookName := args[0]
 
-		fmt.Printf("Now using %s\n", targetBookName)
-		return nil
+	err := utils.ChangeBook(targetBookName)
+	if err != nil {
+		return err
 	}
 
+	fmt.Printf("Now using %s\n", targetBookName)
+	return nil
 }
