@@ -10,8 +10,10 @@ import (
 )
 
 var root = &cobra.Command{
-	Use:   "dnote",
-	Short: "Dnote - Instantly capture what you learn while coding",
+	Use:           "dnote",
+	Short:         "Dnote - Instantly capture what you learn while coding",
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // Register adds a new command

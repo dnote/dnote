@@ -2,9 +2,9 @@ package ls
 
 import (
 	"fmt"
-
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			}
 		}
 
-		fmt.Printf("On note %s\n", bookName)
+		log.Infof("on book %s\n", bookName)
 
 		dnote, err := core.GetDnote(ctx)
 		if err != nil {
@@ -53,7 +53,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		for k, v := range dnote {
 			if k == bookName {
 				for i, note := range v.Notes {
-					fmt.Printf("* [%d] - %s\n", i, note.Content)
+					fmt.Printf("  \033[%dm(%d)\033[0m %s\n", log.ColorYellow, i, note.Content)
 				}
 			}
 		}

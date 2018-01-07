@@ -1,11 +1,11 @@
 package add
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -69,7 +69,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
-		fmt.Printf("[+] Added to %s\n", bookName)
+		log.Infof("added to %s\n", bookName)
 		return nil
 	}
 }

@@ -1,10 +1,9 @@
 package use
 
 import (
-	"fmt"
-
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/spf13/cobra"
 )
 
@@ -32,8 +31,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return err
 		}
 
-		fmt.Printf("Now using %s\n", targetBookName)
+		log.Infof("now on book '%s'\n", targetBookName)
 		return nil
 	}
-
 }

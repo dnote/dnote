@@ -6,6 +6,7 @@ import (
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -38,7 +39,10 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if targetBookName != "" {
-			book(ctx, targetBookName)
+			err := book(ctx, targetBookName)
+			if err != nil {
+				return errors.Wrap(err, "Failed to delete the book")
+			}
 		} else {
 			if len(args) < 2 {
 				return errors.New("Missing argument")
@@ -79,13 +83,14 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 	}
 
 	content := notes[index].Content
-	fmt.Printf("Deleting note: %s\n", content)
+	log.Printf("content: \"%s\"\n", content)
 
-	ok, err := utils.AskConfirmation("Are you sure?")
+	ok, err := utils.AskConfirmation("remove this note?")
 	if err != nil {
 		return errors.Wrap(err, "Failed to get confirmation")
 	}
 	if !ok {
+		log.Warnf("aborted by user\n")
 		return nil
 	}
 
@@ -102,17 +107,18 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 		return errors.Wrap(err, "Failed to write dnote")
 	}
 
-	fmt.Printf("Deleted!\n")
+	log.Infof("removed from %s\n", bookName)
 	return nil
 }
 
 // book deletes a book with the given name
 func book(ctx infra.DnoteCtx, bookName string) error {
-	ok, err := utils.AskConfirmation("Are you sure?")
+	ok, err := utils.AskConfirmation(fmt.Sprintf("delete book '%s' and all its notes?", bookName))
 	if err != nil {
 		return err
 	}
 	if !ok {
+		log.Warnf("aborted by user\n")
 		return nil
 	}
 
@@ -134,11 +140,10 @@ func book(ctx infra.DnoteCtx, bookName string) error {
 				return err
 			}
 
-			fmt.Printf("[-] Deleted book : %s \n", bookName)
+			log.Info("removed book\n")
 			return nil
 		}
 	}
 
-	fmt.Println("Error : The book with that name is not found.")
-	return nil
+	return errors.Errorf("Book '%s' was not found", bookName)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,9 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		fmt.Print("Please enter your APIKey: ")
+		log.Printf("welcome to the dnote cloud :)\n")
+		log.Printf("you can get the api key from https://dnote.io\n")
+		log.Infof("api key: ")
 
 		var apiKey string
 		fmt.Scanln(&apiKey)
@@ -39,6 +42,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if err != nil {
 			return err
 		}
+
+		log.Infof("credential configured\n")
 
 		return nil
 	}

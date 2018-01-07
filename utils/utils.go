@@ -2,14 +2,15 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/dnote-io/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
@@ -27,18 +28,25 @@ func GenerateUID() string {
 	return uuid.NewV4().String()
 }
 
-func AskConfirmation(question string) (bool, error) {
-	fmt.Printf("%s [Y/n]: ", question)
-
+func GetInput() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	res, err := reader.ReadString('\n')
+	input, err := reader.ReadString('\n')
 	if err != nil {
-		return false, err
+		return "", errors.Wrap(err, "Failed to read stdin")
 	}
 
-	ok := res == "y\n" || res == "Y\n" || res == "\n"
+	return input, nil
+}
 
-	return ok, nil
+func AskConfirmation(question string) (bool, error) {
+	log.Printf("%s (y/N): ", question)
+
+	res, err := GetInput()
+	if err != nil {
+		return false, errors.Wrap(err, "Failed to get user input")
+	}
+
+	return res == "y\n", nil
 }
 
 // FileExists checks if the file exists at the given path
@@ -143,4 +151,13 @@ func CopyDir(src, dest string) error {
 	}
 
 	return nil
+}
+
+func SanitizeContent(s string) string {
+	var ret string
+
+	ret = strings.Replace(s, "\n", "", -1)
+	ret = strings.Replace(ret, "\r\n", "", -1)
+
+	return ret
 }
