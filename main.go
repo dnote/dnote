@@ -8,6 +8,7 @@ import (
 	"github.com/dnote-io/cli/cmd/root"
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/pkg/errors"
 
 	// commands
@@ -49,6 +50,7 @@ func main() {
 	root.Register(upgrade.NewCmd(ctx))
 
 	if err := root.Execute(); err != nil {
+		log.Error(err.Error())
 		os.Exit(1)
 	}
 }

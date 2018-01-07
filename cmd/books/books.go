@@ -5,6 +5,7 @@ import (
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/spf13/cobra"
 )
 
@@ -37,13 +38,12 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		for _, book := range books {
 			if book == currentBook {
-				fmt.Printf("* %v\n", book)
+				fmt.Printf("  %s\033[%dm%s\033[0m\n", "* ", log.ColorBlue, book)
 			} else {
-				fmt.Printf("  %v\n", book)
+				fmt.Printf("  %s%s\n", "  ", book)
 			}
 		}
 
 		return nil
 	}
-
 }

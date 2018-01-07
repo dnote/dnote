@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -10,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dnote-io/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
@@ -28,7 +28,7 @@ func GenerateUID() string {
 }
 
 func AskConfirmation(question string) (bool, error) {
-	fmt.Printf("%s [Y/n]: ", question)
+	log.Printf("%s (y/N): ", question)
 
 	reader := bufio.NewReader(os.Stdin)
 	res, err := reader.ReadString('\n')
@@ -36,9 +36,7 @@ func AskConfirmation(question string) (bool, error) {
 		return false, err
 	}
 
-	ok := res == "y\n" || res == "Y\n" || res == "\n"
-
-	return ok, nil
+	return res == "y\n", nil
 }
 
 // FileExists checks if the file exists at the given path

@@ -10,6 +10,7 @@ import (
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -48,23 +49,27 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if err != nil {
 			return errors.Wrap(err, "Failed to read the timestamp")
 		}
+		actions, err := core.ReadActionLog(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Failed to read the action log")
+		}
 
 		if config.APIKey == "" {
 			fmt.Println("Login required. Please run `dnote login`")
 			return nil
 		}
 
-		fmt.Println("Compressing dnote...")
-		payload, err := getPayload(ctx, timestamp)
+		payload, err := getPayload(actions, timestamp)
 		if err != nil {
 			return errors.Wrap(err, "Failed to get dnote payload")
 		}
 
-		fmt.Println("Syncing with the server...")
+		log.Infof("writing changes (total %d).", len(actions))
 		resp, err := postActions(ctx, config.APIKey, payload)
 		if err != nil {
 			return errors.Wrap(err, "Failed to post to the server ")
 		}
+		fmt.Println(" done.")
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -84,10 +89,12 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to unmarshal payload")
 		}
 
+		log.Infof("resolving delta (total %d).", len(respData.Actions))
 		err = core.ReduceAll(ctx, respData.Actions)
 		if err != nil {
 			return errors.Wrap(err, "Failed to reduce returned actions")
 		}
+		fmt.Println(" done.")
 
 		// Update bookmark
 		ts, err := core.ReadTimestamp(ctx)
@@ -98,7 +105,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to update bookmark")
 		}
 
-		fmt.Println("Successfully synced all notes")
+		log.Infof("synced\n")
 		if err := core.ClearActionLog(ctx); err != nil {
 			return errors.Wrap(err, "Failed to clear the action log")
 		}
@@ -107,15 +114,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func getPayload(ctx infra.DnoteCtx, timestamp infra.Timestamp) (*bytes.Buffer, error) {
-	actions, err := compressActions(ctx)
+func getPayload(actions []core.Action, timestamp infra.Timestamp) (*bytes.Buffer, error) {
+	compressedActions, err := compressActions(actions)
 	if err != nil {
 		return &bytes.Buffer{}, errors.Wrap(err, "Failed to compress actions")
 	}
 
 	payload := syncPayload{
 		Bookmark: timestamp.Bookmark,
-		Actions:  actions,
+		Actions:  compressedActions,
 	}
 
 	b, err := json.Marshal(payload)
@@ -127,10 +134,10 @@ func getPayload(ctx infra.DnoteCtx, timestamp infra.Timestamp) (*bytes.Buffer, e
 	return ret, nil
 }
 
-func compressActions(ctx infra.DnoteCtx) ([]byte, error) {
-	b, err := core.ReadActionLogContent(ctx)
+func compressActions(actions []core.Action) ([]byte, error) {
+	b, err := json.Marshal(&actions)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to read the action log content")
+		return nil, errors.Wrap(err, "failed to marshal actions into JSON")
 	}
 
 	var buf bytes.Buffer

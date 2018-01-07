@@ -253,8 +253,8 @@ func TestRemoveNote(t *testing.T) {
 		panic(errors.Wrap(err, "Failed to start command"))
 	}
 
-	// Hit return to confirm
-	_, err = io.WriteString(stdin, "\n")
+	// confirm
+	_, err = io.WriteString(stdin, "y\n")
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to write to stdin"))
 	}
@@ -326,8 +326,8 @@ func TestRemoveBook(t *testing.T) {
 		panic(errors.Wrap(err, "Failed to start command"))
 	}
 
-	// Hit return to confirm
-	_, err = io.WriteString(stdin, "\n")
+	// confirm
+	_, err = io.WriteString(stdin, "y\n")
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to write to stdin"))
 	}

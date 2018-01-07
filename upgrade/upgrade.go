@@ -13,6 +13,7 @@ import (
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
+	"github.com/dnote-io/cli/log"
 	"github.com/dnote-io/cli/utils"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
@@ -69,7 +70,7 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 	}
 
 	if shouldCheck {
-		willCheck, err := utils.AskConfirmation("Would you like to check for an update?")
+		willCheck, err := utils.AskConfirmation("check for upgrade?")
 		if err != nil {
 			return err
 		}
@@ -86,6 +87,8 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 }
 
 func Upgrade(ctx infra.DnoteCtx) error {
+	log.Infof("current version is %s\n", core.Version)
+
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
@@ -101,22 +104,31 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return err
 	}
 
+	log.Infof("latest version is %s\n", latestVersion)
+
 	// Check if up to date
 	if latestVersion == core.Version {
-		fmt.Printf("Up-to-date: %s\n", core.Version)
-		core.InitTimestampFile(ctx)
+		log.Info("you are up-to-date")
+		err = touchLastUpgrade(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update the upgrade timestamp")
+		}
+
 		return nil
 	}
 
 	asset := getAsset(latest)
 	if asset == nil {
-		core.InitTimestampFile(ctx)
-		fmt.Printf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
-		return nil
+		err = touchLastUpgrade(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update the upgrade timestamp")
+		}
+
+		return errors.Errorf("Could not find the release for %s %s", runtime.GOOS, runtime.GOARCH)
 	}
 
 	// Download temporary file
-	fmt.Printf("Downloading: %s\n", latestVersion)
+	log.Infof("Downloading: %s\n", latestVersion)
 	tmpPath := path.Join(os.TempDir(), "dnote_update")
 
 	out, err := os.Create(tmpPath)
@@ -158,7 +170,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Upgrade is done, but failed to update the last_upgrade timestamp.")
 	}
 
-	fmt.Printf("Updated: v%s -> v%s\n", core.Version, latestVersion)
-	fmt.Println("Changelog: https://github.com/dnote-io/cli/releases")
+	log.Infof("Updated: v%s -> v%s\n", core.Version, latestVersion)
+	log.Infof("Changelog: https://github.com/dnote-io/cli/releases")
 	return nil
 }
