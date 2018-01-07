@@ -43,7 +43,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			}
 		}
 
-		log.Infof("On book %s\n", bookName)
+		log.Infof("on book %s\n", bookName)
 
 		dnote, err := core.GetDnote(ctx)
 		if err != nil {

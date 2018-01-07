@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dnote-io/cli/log"
@@ -27,13 +28,22 @@ func GenerateUID() string {
 	return uuid.NewV4().String()
 }
 
+func GetInput() (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to read stdin")
+	}
+
+	return input, nil
+}
+
 func AskConfirmation(question string) (bool, error) {
 	log.Printf("%s (y/N): ", question)
 
-	reader := bufio.NewReader(os.Stdin)
-	res, err := reader.ReadString('\n')
+	res, err := GetInput()
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "Failed to get user input")
 	}
 
 	return res == "y\n", nil
@@ -141,4 +151,13 @@ func CopyDir(src, dest string) error {
 	}
 
 	return nil
+}
+
+func SanitizeContent(s string) string {
+	var ret string
+
+	ret = strings.Replace(s, "\n", "", -1)
+	ret = strings.Replace(ret, "\r\n", "", -1)
+
+	return ret
 }
