@@ -11,6 +11,7 @@ type DnoteCtx struct {
 // Config holds dnote configuration
 type Config struct {
 	Book   string
+	Editor string
 	APIKey string
 }
 

@@ -1,13 +1,13 @@
 package edit
 
 import (
+	"io/ioutil"
 	"strconv"
 	"time"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/log"
-	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -85,18 +85,24 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		targetNote := targetBook.Notes[targetIdx]
 
 		if newContent == "" {
-			log.Printf("content: %s\n", targetNote.Content)
-			log.Printf("new content: ")
+			fpath := core.GetDnoteTmpContentPath(ctx)
 
-			newContent, err = utils.GetInput()
+			e := ioutil.WriteFile(fpath, []byte(targetNote.Content), 0644)
 			if err != nil {
-				return errors.Wrap(err, "Failed to get new content")
+				return errors.Wrap(err, "Failed to prepare editor content")
 			}
+
+			input, e := core.GetEditorInput(ctx, fpath)
+			if e != nil {
+				return errors.Wrap(err, "Failed to get editor input")
+			}
+
+			newContent = input
 		}
 
 		ts := time.Now().Unix()
 
-		targetNote.Content = utils.SanitizeContent(newContent)
+		targetNote.Content = core.SanitizeContent(newContent)
 		targetNote.EditedOn = ts
 		targetBook.Notes[targetIdx] = targetNote
 		dnote[targetBookName] = targetBook

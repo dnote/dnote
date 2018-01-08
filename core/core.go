@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/dnote-io/cli/infra"
@@ -22,10 +24,11 @@ const (
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
 	// DnoteDirName is the name of the directory containing dnote files
-	DnoteDirName   = ".dnote"
-	ConfigFilename = "dnoterc"
-	DnoteFilename  = "dnote"
-	ActionFilename = "actions"
+	DnoteDirName       = ".dnote"
+	ConfigFilename     = "dnoterc"
+	DnoteFilename      = "dnote"
+	ActionFilename     = "actions"
+	TmpContentFilename = "DNOTE_TMPCONTENT"
 )
 
 type RunEFunc func(*cobra.Command, []string) error
@@ -51,6 +54,12 @@ func GetActionPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ActionFilename)
 }
 
+// GetDnoteTmpContentPath returns the path to the temporary file containing
+// content being added or edited
+func GetDnoteTmpContentPath(ctx infra.DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TmpContentFilename)
+}
+
 // InitActionFile populates action file if it does not exist
 func InitActionFile(ctx infra.DnoteCtx) error {
 	path := GetActionPath(ctx)
@@ -68,17 +77,46 @@ func InitActionFile(ctx infra.DnoteCtx) error {
 	return err
 }
 
+func getEditorCommand() string {
+	editor := os.Getenv("EDITOR")
+
+	if editor == "atom" {
+		return "atom -w"
+	} else if editor == "subl" {
+		return "subl -n -w"
+	} else if editor == "mate" {
+		return "mate -w"
+	}
+
+	return "vim"
+}
+
 // InitConfigFile populates a new config file if it does not exist yet
 func InitConfigFile(ctx infra.DnoteCtx) error {
-	content := []byte("book: general\n")
 	path := GetConfigPath(ctx)
 
 	if utils.FileExists(path) {
 		return nil
 	}
 
-	err := ioutil.WriteFile(path, content, 0644)
-	return errors.Wrapf(err, "Failed to write the config file at '%s'", path)
+	editor := getEditorCommand()
+
+	config := infra.Config{
+		Editor: editor,
+		Book:   "general",
+	}
+
+	b, err := yaml.Marshal(config)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal config into YAML")
+	}
+
+	err = ioutil.WriteFile(path, b, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to write the config file at '%s'", path)
+	}
+
+	return nil
 }
 
 // InitDnoteDir initializes dnote directory if it does not exist yet
@@ -498,4 +536,73 @@ func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Not
 	}
 
 	return ret
+}
+
+func SanitizeContent(s string) string {
+	var ret string
+
+	ret = strings.Replace(s, "\n", "", -1)
+	ret = strings.Replace(ret, "\r\n", "", -1)
+	ret = strings.Trim(ret, " ")
+
+	return ret
+}
+
+func getEditorCmd(ctx infra.DnoteCtx, fpath string) (*exec.Cmd, error) {
+	config, err := ReadConfig(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to read the config")
+	}
+
+	args := strings.Fields(config.Editor)
+	args = append(args, fpath)
+
+	return exec.Command(args[0], args[1:]...), nil
+}
+
+func GetEditorInput(ctx infra.DnoteCtx, fpath string) (string, error) {
+	if !utils.FileExists(fpath) {
+		f, err := os.Create(fpath)
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to create a temporary file for content")
+		}
+		err = f.Close()
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to close the temporary file for content")
+		}
+	}
+
+	cmd, err := getEditorCmd(ctx, fpath)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to create the editor command")
+	}
+
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Start()
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed to launch the editor")
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to wait for the editor")
+	}
+
+	b, err := ioutil.ReadFile(fpath)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to read the file")
+	}
+
+	raw := string(b)
+	c := SanitizeContent(raw)
+
+	err = os.Remove(fpath)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to remove the temporary content file")
+	}
+
+	return c, nil
 }

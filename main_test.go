@@ -82,14 +82,14 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func TestAdd_NewBook(t *testing.T) {
+func TestAdd_NewBook_ContentFlag(t *testing.T) {
 	// Setup
 	ctx := testutils.InitCtx("./tmp")
 	testutils.SetupTmp(ctx)
 	defer testutils.ClearTmp(ctx)
 
 	// Execute
-	runDnoteCmd(ctx, "add", "js", "foo")
+	runDnoteCmd(ctx, "add", "js", "-c", "foo")
 
 	// Test
 	dnote, err := core.GetDnote(ctx)
@@ -135,7 +135,7 @@ func TestAdd_NewBook(t *testing.T) {
 	testutils.AssertNotEqual(t, note.AddedOn, int64(0), "Note added_on mismatch")
 }
 
-func TestAdd_ExistingBook(t *testing.T) {
+func TestAdd_ExistingBook_ContentFlag(t *testing.T) {
 	// Setup
 	ctx := testutils.InitCtx("./tmp")
 	testutils.SetupTmp(ctx)
@@ -146,7 +146,7 @@ func TestAdd_ExistingBook(t *testing.T) {
 	testutils.WriteFile(ctx, "./testutils/fixtures/dnote1.json", "dnote")
 
 	// Execute
-	runDnoteCmd(ctx, "add", "js", "foo")
+	runDnoteCmd(ctx, "add", "js", "-c", "foo")
 
 	// Test
 	dnote, err := core.GetDnote(ctx)
@@ -180,76 +180,78 @@ func TestAdd_ExistingBook(t *testing.T) {
 	testutils.AssertEqual(t, book.Notes[1].Content, "foo", "Note content mismatch")
 }
 
-func TestEdit(t *testing.T) {
-	// Setup
-	ctx := testutils.InitCtx("./tmp")
-	testutils.SetupTmp(ctx)
-	defer testutils.ClearTmp(ctx)
+// TODO: find a way to test edit with editor (vim?)
+// func TestEdit(t *testing.T) {
+// 	// Setup
+// 	ctx := testutils.InitCtx("./tmp")
+// 	testutils.SetupTmp(ctx)
+// 	defer testutils.ClearTmp(ctx)
+//
+// 	// init files by running root command
+// 	runDnoteCmd(ctx)
+// 	testutils.WriteFile(ctx, "./testutils/fixtures/dnote2.json", "dnote")
+//
+// 	// Execute
+// 	cmd, stderr, err := newDnoteCmd(ctx, "edit", "js", "1")
+// 	if err != nil {
+// 		panic(errors.Wrap(err, "Failed to get command"))
+// 	}
+// 	stdin, err := cmd.StdinPipe()
+// 	if err != nil {
+// 		panic(errors.Wrap(err, "Failed to get stdin %s"))
+// 	}
+// 	defer stdin.Close()
+//
+// 	// Start the program
+// 	err = cmd.Start()
+// 	if err != nil {
+// 		panic(errors.Wrap(err, "Failed to start command"))
+// 	}
+//
+// 	// enter content
+// 	_, err = io.WriteString(stdin, "foo bar\n")
+// 	if err != nil {
+// 		panic(errors.Wrap(err, "Failed to write to stdin"))
+// 	}
+//
+// 	err = cmd.Wait()
+// 	if err != nil {
+// 		panic(errors.Wrapf(err, "Failed to run command %s", stderr.String()))
+// 	}
+//
+// 	// Test
+// 	dnote, err := core.GetDnote(ctx)
+// 	if err != nil {
+// 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
+// 	}
+// 	actions, err := core.ReadActionLog(ctx)
+// 	if err != nil {
+// 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
+// 	}
+//
+// 	book := dnote["js"]
+// 	action := actions[0]
+//
+// 	var actionData core.EditNoteData
+// 	err = json.Unmarshal(action.Data, &actionData)
+// 	if err != nil {
+// 		log.Fatalln("Failed to unmarshal the action data: %s", err)
+// 	}
+//
+// 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
+// 	testutils.AssertEqual(t, action.Type, core.ActionEditNote, "action type mismatch")
+// 	testutils.AssertEqual(t, actionData.Content, "foo bar", "action data name mismatch")
+// 	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
+// 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
+// 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
+// 	testutils.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
+// 	testutils.AssertEqual(t, book.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
+// 	testutils.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "Note content mismatch")
+// 	testutils.AssertEqual(t, book.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
+// 	testutils.AssertEqual(t, book.Notes[1].Content, "foo bar", "Note content mismatch")
+// 	testutils.AssertNotEqual(t, book.Notes[1].EditedOn, int64(0), "Note edited_on mismatch")
+// }
 
-	// init files by running root command
-	runDnoteCmd(ctx)
-	testutils.WriteFile(ctx, "./testutils/fixtures/dnote2.json", "dnote")
-
-	// Execute
-	cmd, stderr, err := newDnoteCmd(ctx, "edit", "js", "1")
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to get command"))
-	}
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to get stdin %s"))
-	}
-	defer stdin.Close()
-
-	// Start the program
-	err = cmd.Start()
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to start command"))
-	}
-
-	// enter content
-	_, err = io.WriteString(stdin, "foo bar\n")
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to write to stdin"))
-	}
-
-	err = cmd.Wait()
-	if err != nil {
-		panic(errors.Wrapf(err, "Failed to run command %s", stderr.String()))
-	}
-
-	// Test
-	dnote, err := core.GetDnote(ctx)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
-	}
-	actions, err := core.ReadActionLog(ctx)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "Failed to read actions"))
-	}
-
-	book := dnote["js"]
-	action := actions[0]
-
-	var actionData core.EditNoteData
-	err = json.Unmarshal(action.Data, &actionData)
-	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
-	}
-
-	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	testutils.AssertEqual(t, action.Type, core.ActionEditNote, "action type mismatch")
-	testutils.AssertEqual(t, actionData.Content, "foo bar", "action data name mismatch")
-	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
-	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
-	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
-	testutils.AssertEqual(t, len(book.Notes), 2, "Book should have one note")
-	testutils.AssertEqual(t, book.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
-	testutils.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "Note content mismatch")
-	testutils.AssertEqual(t, book.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
-	testutils.AssertEqual(t, book.Notes[1].Content, "foo bar", "Note content mismatch")
-	testutils.AssertNotEqual(t, book.Notes[1].EditedOn, int64(0), "Note edited_on mismatch")
-}
 func TestEdit_ContentFlag(t *testing.T) {
 	// Setup
 	ctx := testutils.InitCtx("./tmp")
