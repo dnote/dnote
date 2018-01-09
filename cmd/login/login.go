@@ -25,8 +25,12 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		log.Plain("\n")
+		log.Plain("   _(  )_( )_\n")
+		log.Plain("  (_   _    _)\n")
+		log.Plain("    (_) (__)\n\n")
 		log.Plain("Welcome to Dnote Cloud :)\n\n")
-		log.Plain("A home for your engineer microlessons\n")
+		log.Plain("A home for your engineering microlessons\n")
 		log.Plain("You can register at https://dnote.io\n\n")
 		log.Printf("API key: ")
 
