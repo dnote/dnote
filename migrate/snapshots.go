@@ -43,3 +43,13 @@ type migrateToV3Action struct {
 	Data      map[string]interface{} `json:"data"`
 	Timestamp int64                  `json:"timestamp"`
 }
+
+// v4
+type migrateToV4PreConfig struct {
+	Book   string
+	APIKey string
+}
+type migrateToV4PostConfig struct {
+	Editor string
+	APIKey string
+}
