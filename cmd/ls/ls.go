@@ -29,7 +29,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "ls <book name?>",
-		Aliases: []string{"notes"},
+		Aliases: []string{"l", "notes"},
 		Short:   "List all notes",
 		Example: example,
 		RunE:    newRun(ctx),

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"sort"
 	"strings"
 	"time"
 
@@ -377,22 +376,6 @@ func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
 	return nil
 }
 
-func GetBookNames(ctx infra.DnoteCtx) ([]string, error) {
-	dnote, err := GetDnote(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	books := make([]string, 0, len(dnote))
-	for k := range dnote {
-		books = append(books, k)
-	}
-
-	sort.Strings(books)
-
-	return books, nil
-}
-
 // NewNote returns a note
 func NewNote(content string, ts int64) infra.Note {
 	return infra.Note{
@@ -496,6 +479,7 @@ func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Not
 	return ret
 }
 
+// SanitizeContent sanitizes note content
 func SanitizeContent(s string) string {
 	var ret string
 
@@ -518,6 +502,8 @@ func getEditorCmd(ctx infra.DnoteCtx, fpath string) (*exec.Cmd, error) {
 	return exec.Command(args[0], args[1:]...), nil
 }
 
+// GetEditorInput gets the user input by launching a text editor and waiting for
+// it to exit
 func GetEditorInput(ctx infra.DnoteCtx, fpath string) (string, error) {
 	if !utils.FileExists(fpath) {
 		f, err := os.Create(fpath)

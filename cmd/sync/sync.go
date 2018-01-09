@@ -21,6 +21,7 @@ var example = `
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sync",
+		Aliases: []string{"s"},
 		Short:   "Sync dnote with the dnote server",
 		Example: example,
 		RunE:    newRun(ctx),
