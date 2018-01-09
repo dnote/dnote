@@ -18,7 +18,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.2.0-alpha.2"
+	Version = "0.2.0-alpha.3"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
