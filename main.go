@@ -20,7 +20,6 @@ import (
 	"github.com/dnote-io/cli/cmd/remove"
 	"github.com/dnote-io/cli/cmd/sync"
 	"github.com/dnote-io/cli/cmd/upgrade"
-	"github.com/dnote-io/cli/cmd/use"
 	"github.com/dnote-io/cli/cmd/version"
 )
 
@@ -45,7 +44,6 @@ func main() {
 	root.Register(add.NewCmd(ctx))
 	root.Register(ls.NewCmd(ctx))
 	root.Register(sync.NewCmd(ctx))
-	root.Register(use.NewCmd(ctx))
 	root.Register(version.NewCmd(ctx))
 	root.Register(upgrade.NewCmd(ctx))
 

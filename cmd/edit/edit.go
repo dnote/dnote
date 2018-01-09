@@ -41,8 +41,8 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("Missing argument")
+	if len(args) != 2 {
+		return errors.New("Incorrect number of argument")
 	}
 
 	return nil
@@ -55,24 +55,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return err
 		}
 
-		var targetBookName string
-		var targetIdx int
-
-		if len(args) == 1 {
-			targetBookName, err = core.GetCurrentBook(ctx)
-			if err != nil {
-				return err
-			}
-			targetIdx, err = strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-		} else if len(args) == 2 {
-			targetBookName = args[0]
-			targetIdx, err = strconv.Atoi(args[1])
-			if err != nil {
-				return err
-			}
+		targetBookName := args[0]
+		targetIdx, err := strconv.Atoi(args[1])
+		if err != nil {
+			return err
 		}
 
 		targetBook, exists := dnote[targetBookName]

@@ -103,7 +103,6 @@ func InitConfigFile(ctx infra.DnoteCtx) error {
 
 	config := infra.Config{
 		Editor: editor,
-		Book:   "general",
 	}
 
 	b, err := yaml.Marshal(config)
@@ -378,15 +377,6 @@ func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
 	return nil
 }
 
-func GetCurrentBook(ctx infra.DnoteCtx) (string, error) {
-	config, err := ReadConfig(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	return config.Book, nil
-}
-
 func GetBookNames(ctx infra.DnoteCtx) ([]string, error) {
 	dnote, err := GetDnote(ctx)
 	if err != nil {
@@ -401,38 +391,6 @@ func GetBookNames(ctx infra.DnoteCtx) ([]string, error) {
 	sort.Strings(books)
 
 	return books, nil
-}
-
-// ChangeBook replaces the book name in the dnote config file
-func ChangeBook(ctx infra.DnoteCtx, bookName string) error {
-	config, err := ReadConfig(ctx)
-	if err != nil {
-		return err
-	}
-
-	config.Book = bookName
-
-	err = WriteConfig(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	// Now add this book to the .dnote file, for issue #2
-	dnote, err := GetDnote(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, exists := dnote[bookName]
-	if !exists {
-		dnote[bookName] = NewBook(bookName)
-		err := WriteDnote(ctx, dnote)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // NewNote returns a note
