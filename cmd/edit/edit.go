@@ -52,13 +52,13 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		dnote, err := core.GetDnote(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to read dnote")
 		}
 
 		targetBookName := args[0]
 		targetIdx, err := strconv.Atoi(args[1])
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "Failed to parse the given index %+v", args[1])
 		}
 
 		targetBook, exists := dnote[targetBookName]
@@ -78,12 +78,11 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 				return errors.Wrap(err, "Failed to prepare editor content")
 			}
 
-			input, e := core.GetEditorInput(ctx, fpath)
+			e = core.GetEditorInput(ctx, fpath, &newContent)
 			if e != nil {
 				return errors.Wrap(err, "Failed to get editor input")
 			}
 
-			newContent = input
 		}
 
 		if targetNote.Content == newContent {

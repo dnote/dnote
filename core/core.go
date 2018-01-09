@@ -504,21 +504,21 @@ func getEditorCmd(ctx infra.DnoteCtx, fpath string) (*exec.Cmd, error) {
 
 // GetEditorInput gets the user input by launching a text editor and waiting for
 // it to exit
-func GetEditorInput(ctx infra.DnoteCtx, fpath string) (string, error) {
+func GetEditorInput(ctx infra.DnoteCtx, fpath string, content *string) error {
 	if !utils.FileExists(fpath) {
 		f, err := os.Create(fpath)
 		if err != nil {
-			return "", errors.Wrap(err, "Failed to create a temporary file for content")
+			return errors.Wrap(err, "Failed to create a temporary file for content")
 		}
 		err = f.Close()
 		if err != nil {
-			return "", errors.Wrap(err, "Failed to close the temporary file for content")
+			return errors.Wrap(err, "Failed to close the temporary file for content")
 		}
 	}
 
 	cmd, err := getEditorCmd(ctx, fpath)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to create the editor command")
+		return errors.Wrap(err, "Failed to create the editor command")
 	}
 
 	cmd.Stdin = os.Stdin
@@ -527,26 +527,28 @@ func GetEditorInput(ctx infra.DnoteCtx, fpath string) (string, error) {
 
 	err = cmd.Start()
 	if err != nil {
-		return "", errors.Wrapf(err, "Failed to launch the editor")
+		return errors.Wrapf(err, "Failed to launch the editor")
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to wait for the editor")
+		return errors.Wrap(err, "Failed to wait for the editor")
 	}
 
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to read the file")
+		return errors.Wrap(err, "Failed to read the file")
+	}
+
+	err = os.Remove(fpath)
+	if err != nil {
+		return errors.Wrap(err, "Failed to remove the temporary content file")
 	}
 
 	raw := string(b)
 	c := SanitizeContent(raw)
 
-	err = os.Remove(fpath)
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to remove the temporary content file")
-	}
+	*content = c
 
-	return c, nil
+	return nil
 }

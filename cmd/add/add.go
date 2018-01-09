@@ -49,12 +49,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		if content == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
-			input, err := core.GetEditorInput(ctx, fpath)
+			err := core.GetEditorInput(ctx, fpath, &content)
 			if err != nil {
 				return errors.Wrap(err, "Failed to get editor input")
 			}
-
-			content = input
 		}
 
 		if content == "" {
