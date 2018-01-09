@@ -1,11 +1,10 @@
 package books
 
 import (
-	"fmt"
-
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/log"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -26,22 +25,13 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		currentBook, err := core.GetCurrentBook(ctx)
+		dnote, err := core.GetDnote(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to read dnote")
 		}
 
-		books, err := core.GetBookNames(ctx)
-		if err != nil {
-			return err
-		}
-
-		for _, book := range books {
-			if book == currentBook {
-				fmt.Printf("  %s\033[%dm%s\033[0m\n", "* ", log.ColorBlue, book)
-			} else {
-				fmt.Printf("  %s%s\n", "  ", book)
-			}
+		for bookName, book := range dnote {
+			log.Printf("%s \033[%dm(%d)\033[0m\n", bookName, log.ColorYellow, len(book.Notes))
 		}
 
 		return nil

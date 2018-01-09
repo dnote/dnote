@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var content string
+
 var example = `
  * Write a note in the current book
  dnote new "time is a part of the commit hash"
@@ -18,8 +20,8 @@ var example = `
  dnote new git "time is a part of the commit hash"`
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("Missing argument")
+	if len(args) != 1 {
+		return errors.New("Incorrect number of argument")
 	}
 
 	return nil
@@ -35,41 +37,37 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 		RunE:    newRun(ctx),
 	}
 
+	f := cmd.Flags()
+	f.StringVarP(&content, "content", "c", "", "The new content for the note")
+
 	return cmd
-}
-
-func parseArgs(ctx infra.DnoteCtx, args []string) (bookName string, content string, err error) {
-	if len(args) == 1 {
-		bookName, err = core.GetCurrentBook(ctx)
-		if err != nil {
-			return
-		}
-
-		content = args[0]
-	} else {
-		bookName = args[0]
-		content = args[1]
-	}
-
-	return
 }
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		bookName, content, err := parseArgs(ctx, args)
-		if err != nil {
-			return errors.Wrap(err, "Failed to parse args")
+		bookName := args[0]
+
+		if content == "" {
+			fpath := core.GetDnoteTmpContentPath(ctx)
+			err := core.GetEditorInput(ctx, fpath, &content)
+			if err != nil {
+				return errors.Wrap(err, "Failed to get editor input")
+			}
+		}
+
+		if content == "" {
+			return errors.New("Empty content")
 		}
 
 		ts := time.Now().Unix()
-
 		note := core.NewNote(content, ts)
-		err = writeNote(ctx, bookName, note, ts)
+		err := writeNote(ctx, bookName, note, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
-		log.Infof("added to %s\n", bookName)
+		log.Printf("note: \"%s\"\n", content)
+		log.Successf("added to %s\n", bookName)
 		return nil
 	}
 }

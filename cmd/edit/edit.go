@@ -1,13 +1,13 @@
 package edit
 
 import (
+	"io/ioutil"
 	"strconv"
 	"time"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/log"
-	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -41,8 +41,8 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("Missing argument")
+	if len(args) != 2 {
+		return errors.New("Incorrect number of argument")
 	}
 
 	return nil
@@ -52,27 +52,13 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		dnote, err := core.GetDnote(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to read dnote")
 		}
 
-		var targetBookName string
-		var targetIdx int
-
-		if len(args) == 1 {
-			targetBookName, err = core.GetCurrentBook(ctx)
-			if err != nil {
-				return err
-			}
-			targetIdx, err = strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-		} else if len(args) == 2 {
-			targetBookName = args[0]
-			targetIdx, err = strconv.Atoi(args[1])
-			if err != nil {
-				return err
-			}
+		targetBookName := args[0]
+		targetIdx, err := strconv.Atoi(args[1])
+		if err != nil {
+			return errors.Wrapf(err, "Failed to parse the given index %+v", args[1])
 		}
 
 		targetBook, exists := dnote[targetBookName]
@@ -85,18 +71,27 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		targetNote := targetBook.Notes[targetIdx]
 
 		if newContent == "" {
-			log.Printf("content: %s\n", targetNote.Content)
-			log.Printf("new content: ")
+			fpath := core.GetDnoteTmpContentPath(ctx)
 
-			newContent, err = utils.GetInput()
+			e := ioutil.WriteFile(fpath, []byte(targetNote.Content), 0644)
 			if err != nil {
-				return errors.Wrap(err, "Failed to get new content")
+				return errors.Wrap(err, "Failed to prepare editor content")
 			}
+
+			e = core.GetEditorInput(ctx, fpath, &newContent)
+			if e != nil {
+				return errors.Wrap(err, "Failed to get editor input")
+			}
+
+		}
+
+		if targetNote.Content == newContent {
+			return errors.New("Nothing changed")
 		}
 
 		ts := time.Now().Unix()
 
-		targetNote.Content = utils.SanitizeContent(newContent)
+		targetNote.Content = core.SanitizeContent(newContent)
 		targetNote.EditedOn = ts
 		targetBook.Notes[targetIdx] = targetNote
 		dnote[targetBookName] = targetBook
@@ -111,7 +106,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to write dnote")
 		}
 
-		log.Info("edited the note")
+		log.Printf("new content: %s\n", newContent)
+		log.Success("edited the note\n")
 
 		return nil
 	}

@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/dnote-io/cli/log"
@@ -151,13 +150,4 @@ func CopyDir(src, dest string) error {
 	}
 
 	return nil
-}
-
-func SanitizeContent(s string) string {
-	var ret string
-
-	ret = strings.Replace(s, "\n", "", -1)
-	ret = strings.Replace(ret, "\r\n", "", -1)
-
-	return ret
 }

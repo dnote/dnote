@@ -107,7 +107,7 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 		return errors.Wrap(err, "Failed to write dnote")
 	}
 
-	log.Infof("removed from %s\n", bookName)
+	log.Successf("removed from %s\n", bookName)
 	return nil
 }
 
@@ -140,7 +140,7 @@ func book(ctx infra.DnoteCtx, bookName string) error {
 				return err
 			}
 
-			log.Info("removed book\n")
+			log.Success("removed book\n")
 			return nil
 		}
 	}

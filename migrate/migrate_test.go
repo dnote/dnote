@@ -5,7 +5,9 @@ import (
 	"github.com/dnote-io/cli/testutils"
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -163,4 +165,30 @@ func TestMigrateToV3(t *testing.T) {
 			testutils.AssertNotEqual(t, note.AddedOn, int64(0), "AddedOn was not carried over")
 		}
 	}
+}
+
+func TestMigrateToV4(t *testing.T) {
+	ctx := testutils.InitCtx("../tmp")
+
+	// set up
+	testutils.SetupTmp(ctx)
+	testutils.WriteFile(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
+	defer testutils.ClearTmp(ctx)
+	defer os.Setenv("EDITOR", "")
+
+	// execute
+	os.Setenv("EDITOR", "vim")
+	if err := migrateToV4(ctx); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to migrate").Error())
+	}
+
+	// test
+	b := testutils.ReadFile(ctx, "dnoterc")
+	var config migrateToV4PostConfig
+	if err := yaml.Unmarshal(b, &config); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
+	}
+
+	testutils.AssertEqual(t, config.APIKey, "Oev6e1082ORasdf9rjkfjkasdfjhgei", "api key mismatch")
+	testutils.AssertEqual(t, config.Editor, "vim", "editor mismatch")
 }

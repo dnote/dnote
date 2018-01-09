@@ -11,6 +11,7 @@ import (
 	"github.com/dnote-io/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"gopkg.in/yaml.v2"
 )
 
 // migrateToV1 deletes YAML archive if exists
@@ -139,6 +140,52 @@ func migrateToV3(ctx infra.DnoteCtx) error {
 	err = ioutil.WriteFile(actionsPath, a, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the actions into a file")
+	}
+
+	return nil
+}
+
+func getEditorCommand() string {
+	editor := os.Getenv("EDITOR")
+
+	if editor == "atom" {
+		return "atom -w"
+	} else if editor == "subl" {
+		return "subl -n -w"
+	} else if editor == "mate" {
+		return "mate -w"
+	}
+
+	return "vim"
+}
+
+func migrateToV4(ctx infra.DnoteCtx) error {
+	configPath := fmt.Sprintf("%s/dnoterc", ctx.DnoteDir)
+
+	b, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read the config file")
+	}
+
+	var preConfig migrateToV4PreConfig
+	err = yaml.Unmarshal(b, &preConfig)
+	if err != nil {
+		return errors.Wrap(err, "Failed to unmarshal existing config into JSON")
+	}
+
+	postConfig := migrateToV4PostConfig{
+		APIKey: preConfig.APIKey,
+		Editor: getEditorCommand(),
+	}
+
+	data, err := yaml.Marshal(postConfig)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal config into JSON")
+	}
+
+	err = ioutil.WriteFile(configPath, data, 0644)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write the config into a file")
 	}
 
 	return nil
