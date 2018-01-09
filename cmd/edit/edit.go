@@ -100,6 +100,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			newContent = input
 		}
 
+		if targetNote.Content == newContent {
+			return errors.New("Nothing changed")
+		}
+
 		ts := time.Now().Unix()
 
 		targetNote.Content = core.SanitizeContent(newContent)
@@ -117,6 +121,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to write dnote")
 		}
 
+		log.Printf("new content: %s\n", newContent)
 		log.Info("edited the note")
 
 		return nil
