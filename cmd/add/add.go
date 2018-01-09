@@ -68,8 +68,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
-		log.Infof("content: \"%s\"\n", content)
-		log.Infof("added to %s\n", bookName)
+		log.Printf("note: \"%s\"\n", content)
+		log.Successf("added to %s\n", bookName)
 		return nil
 	}
 }

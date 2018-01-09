@@ -25,9 +25,9 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		log.Printf("welcome to the dnote cloud :)\n")
-		log.Printf("you can get the api key from https://dnote.io\n")
-		log.Infof("api key: ")
+		log.Plain("welcome to the dnote cloud :)\n")
+		log.Plain("you can get the api key from https://dnote.io\n\n")
+		log.Printf("API key: ")
 
 		var apiKey string
 		fmt.Scanln(&apiKey)
@@ -43,7 +43,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return err
 		}
 
-		log.Infof("credential configured\n")
+		log.Success("success\n")
 
 		return nil
 	}

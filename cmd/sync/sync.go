@@ -69,7 +69,6 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if err != nil {
 			return errors.Wrap(err, "Failed to post to the server ")
 		}
-		fmt.Println(" done.")
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -79,9 +78,11 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if resp.StatusCode != http.StatusOK {
 			bodyStr := string(body)
 
-			fmt.Printf("Failed to sync on the server: %s", bodyStr)
-			return errors.New(bodyStr)
+			fmt.Println("")
+			return errors.Errorf("Server error: %s", bodyStr)
 		}
+
+		fmt.Println(" done.")
 
 		var respData responseData
 		err = json.Unmarshal(body, &respData)
@@ -105,7 +106,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to update bookmark")
 		}
 
-		log.Infof("synced\n")
+		log.Success("success\n")
 		if err := core.ClearActionLog(ctx); err != nil {
 			return errors.Wrap(err, "Failed to clear the action log")
 		}

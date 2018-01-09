@@ -22,6 +22,22 @@ func Infof(msg string, v ...interface{}) {
 	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorBlue, "•", fmt.Sprintf(msg, v...))
 }
 
+func Success(msg string) {
+	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorGreen, "✔", msg)
+}
+
+func Successf(msg string, v ...interface{}) {
+	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorGreen, "✔", fmt.Sprintf(msg, v...))
+}
+
+func Plain(msg string) {
+	fmt.Printf("%s%s", indent, msg)
+}
+
+func Plainf(msg string, v ...interface{}) {
+	fmt.Printf("%s%s", indent, fmt.Sprintf(msg, v...))
+}
+
 func Warnf(msg string, v ...interface{}) {
 	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorRed, "•", fmt.Sprintf(msg, v...))
 }

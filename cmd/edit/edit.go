@@ -122,7 +122,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		log.Printf("new content: %s\n", newContent)
-		log.Info("edited the note")
+		log.Success("edited the note\n")
 
 		return nil
 	}
