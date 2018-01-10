@@ -13,7 +13,6 @@ import (
 
 	// commands
 	"github.com/dnote-io/cli/cmd/add"
-	"github.com/dnote-io/cli/cmd/books"
 	"github.com/dnote-io/cli/cmd/edit"
 	"github.com/dnote-io/cli/cmd/login"
 	"github.com/dnote-io/cli/cmd/ls"
@@ -37,7 +36,6 @@ func main() {
 		panic(errors.Wrap(err, "Failed to prepare dnote run"))
 	}
 
-	root.Register(books.NewCmd(ctx))
 	root.Register(remove.NewCmd(ctx))
 	root.Register(edit.NewCmd(ctx))
 	root.Register(login.NewCmd(ctx))
