@@ -66,19 +66,23 @@ func touchLastUpgrade(ctx infra.DnoteCtx) error {
 func AutoUpgrade(ctx infra.DnoteCtx) error {
 	shouldCheck, err := shouldCheckUpdate(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to check if dnote should check update")
 	}
 
 	if shouldCheck {
 		willCheck, err := utils.AskConfirmation("check for upgrade?")
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to get user confirmation for checking upgrade")
+		}
+
+		err = touchLastUpgrade(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Failed to update last upgrade timestamp")
 		}
 
 		if willCheck {
-			err := Upgrade(ctx)
-			if err != nil {
-				return err
+			if err := Upgrade(ctx); err != nil {
+				return errors.Wrap(err, "Failed to upgrade")
 			}
 		}
 	}
