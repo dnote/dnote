@@ -13,11 +13,11 @@ import (
 var content string
 
 var example = `
- * Write a note in the current book
- dnote new "time is a part of the commit hash"
+ * Open an editor to write content
+ dnote add git
 
- * Specify the book name
- dnote new git "time is a part of the commit hash"`
+ * Skip the editor by providing content directly
+ dnote add git -c "time is a part of the commit hash"`
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {

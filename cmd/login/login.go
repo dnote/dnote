@@ -6,6 +6,7 @@ import (
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/log"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		var apiKey string
 		fmt.Scanln(&apiKey)
 
+		if apiKey == "" {
+			return errors.New("Empty API key")
+		}
+
 		config, err := core.ReadConfig(ctx)
 		if err != nil {
 			return err
@@ -48,7 +53,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return err
 		}
 
-		log.Success("success\n")
+		log.Success("configured\n")
 
 		return nil
 	}

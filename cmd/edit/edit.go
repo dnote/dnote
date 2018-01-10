@@ -15,14 +15,11 @@ import (
 var newContent string
 
 var example = `
-  * Edit the note by index in the current book
-  dnote edit 3
-
-  * Edit the note by index in a certain book
+  * Edit the note by index in a book
   dnote edit js 3
 
 	* Skip the prompt by providing new content directly
-	dntoe eidt js 3 -c "new content"`
+	dntoe edit js 3 -c "new content"`
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
