@@ -2,6 +2,8 @@ package ls
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/log"
@@ -62,9 +64,32 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func printBooks(dnote infra.Dnote) error {
+// bookInfo is an information about the book to be printed on screen
+type bookInfo struct {
+	BookName  string
+	NoteCount int
+}
+
+func getBookInfos(dnote infra.Dnote) []bookInfo {
+	var ret []bookInfo
+
 	for bookName, book := range dnote {
-		log.Printf("%s \033[%dm(%d)\033[0m\n", bookName, log.ColorYellow, len(book.Notes))
+		ret = append(ret, bookInfo{BookName: bookName, NoteCount: len(book.Notes)})
+	}
+
+	return ret
+}
+
+func printBooks(dnote infra.Dnote) error {
+	infos := getBookInfos(dnote)
+
+	// Show books with more notes first
+	sort.SliceStable(infos, func(i, j int) bool {
+		return infos[i].NoteCount > infos[j].NoteCount
+	})
+
+	for _, info := range infos {
+		log.Printf("%s \033[%dm(%d)\033[0m\n", info.BookName, log.ColorYellow, info.NoteCount)
 	}
 
 	return nil
