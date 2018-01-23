@@ -18,9 +18,9 @@ On Windows, download [binary](https://github.com/dnote-io/cli/releases).
 
 ## Overview
 
-We learn everyday while programming. And we forget most of them exponentially because don't write them down.
+We learn new things everyday while programming. And we forget most of them exponentially because don't write them down.
 
-Dnote is designed for writing technical notes without switching context from programming.
+Dnote is designed for writing technical notes without switching context from programming. You can capture your learning as they happen with no overhead.
 
 ## Commands
 
