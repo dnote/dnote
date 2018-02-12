@@ -24,7 +24,7 @@ Dnote is designed for writing technical notes without switching context from pro
 
 ## Commands
 
-Please refer to ![commands](/COMMANDS.md).
+Please refer to [commands](/COMMANDS.md).
 
 ## Links
 
