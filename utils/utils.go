@@ -45,7 +45,9 @@ func AskConfirmation(question string) (bool, error) {
 		return false, errors.Wrap(err, "Failed to get user input")
 	}
 
-	return res == "y\n", nil
+	confirmed := res == "y\n" || res == "y\r\n"
+
+	return confirmed, nil
 }
 
 // FileExists checks if the file exists at the given path
