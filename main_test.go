@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
@@ -114,11 +115,11 @@ func TestAdd_NewBook_ContentFlag(t *testing.T) {
 	var bookActionData core.AddBookData
 	err = json.Unmarshal(bookAction.Data, &bookActionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 	err = json.Unmarshal(noteAction.Data, &noteActionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, bookAction.Type, core.ActionAddBook, "bookAction type mismatch")
@@ -164,7 +165,7 @@ func TestAdd_ExistingBook_ContentFlag(t *testing.T) {
 	var actionData core.AddNoteData
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
@@ -209,7 +210,7 @@ func TestEdit_ContentFlag(t *testing.T) {
 	var actionData core.EditNoteData
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
@@ -285,7 +286,7 @@ func TestRemoveNote(t *testing.T) {
 	var actionData core.RemoveNoteData
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
@@ -357,7 +358,7 @@ func TestRemoveBook(t *testing.T) {
 	var actionData core.RemoveBookData
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
-		log.Fatalln("Failed to unmarshal the action data: %s", err)
+		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")

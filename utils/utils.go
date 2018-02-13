@@ -14,10 +14,6 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-const (
-	letterRunes = "abcdefghipqrstuvwxyz0123456789"
-)
-
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }

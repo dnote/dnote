@@ -306,7 +306,7 @@ func WriteActionLog(ctx infra.DnoteCtx, actions []Action) error {
 }
 
 func ClearActionLog(ctx infra.DnoteCtx) error {
-	content := []Action{}
+	var content []Action
 
 	if err := WriteActionLog(ctx, content); err != nil {
 		return errors.Wrap(err, "Failed to write action log")
