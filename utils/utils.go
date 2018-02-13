@@ -24,7 +24,7 @@ func init() {
 
 // GenerateUID returns a uid
 func GenerateUID() string {
-	return uuid.NewV4().String()
+	return uuid.Must(uuid.NewV4()).String()
 }
 
 func GetInput() (string, error) {
