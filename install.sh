@@ -46,7 +46,7 @@ install() {
     fi
   fi
 
-  LATEST=$(curl -s https://api.github.com/repos/dnote-io/cli/tags | grep -Eo '"name": "v\d*\.\d*\.\d*",'  | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
+  LATEST=$(curl -s https://api.github.com/repos/dnote-io/cli/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
   URL="https://github.com/dnote-io/cli/releases/download/$LATEST/dnote-$PLATFORM"
   DEST=${DEST:-/usr/local/bin/dnote}
 
