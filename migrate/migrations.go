@@ -48,7 +48,7 @@ func migrateToV2(ctx infra.DnoteCtx) error {
 		var notes = make([]migrateToV2PostNote, 0, len(book))
 		for _, note := range book {
 			newNote := migrateToV2PostNote{
-				UUID:     uuid.NewV4().String(),
+				UUID:     uuid.Must(uuid.NewV4()).String(),
 				Content:  note.Content,
 				AddedOn:  note.AddedOn,
 				EditedOn: 0,
