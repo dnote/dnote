@@ -222,7 +222,7 @@ func handleRemoveBook(ctx infra.DnoteCtx, action Action) error {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
 
-	for bookName, _ := range dnote {
+	for bookName := range dnote {
 		if bookName == data.BookName {
 			delete(dnote, bookName)
 		}

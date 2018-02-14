@@ -2,14 +2,15 @@ package migrate
 
 import (
 	"encoding/json"
-	"github.com/dnote-io/cli/testutils"
-	"github.com/dnote-io/cli/utils"
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/dnote-io/cli/testutils"
+	"github.com/dnote-io/cli/utils"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 func TestMigrateAll(t *testing.T) {

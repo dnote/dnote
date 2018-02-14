@@ -2,11 +2,12 @@ package migrate
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	"github.com/dnote-io/cli/infra"
 	"github.com/dnote-io/cli/utils"
