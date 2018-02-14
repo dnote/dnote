@@ -1,7 +1,6 @@
 package ls
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/dnote-io/cli/core"
@@ -89,7 +88,8 @@ func printBooks(dnote infra.Dnote) error {
 	})
 
 	for _, info := range infos {
-		log.Printf("%s \033[%dm(%d)\033[0m\n", info.BookName, log.ColorYellow, info.NoteCount)
+		//log.Printf("%s \033[%dm(%d)\033[0m\n", info.BookName, log.ColorYellow, info.NoteCount)
+		log.Printf("%s %s\n", info.BookName, log.SprintfYellow("(%d)", info.NoteCount))
 	}
 
 	return nil
@@ -101,7 +101,7 @@ func printNotes(dnote infra.Dnote, bookName string) error {
 	book := dnote[bookName]
 
 	for i, note := range book.Notes {
-		fmt.Printf("  \033[%dm(%d)\033[0m %s\n", log.ColorYellow, i, note.Content)
+		log.Plainf("%s %s\n", log.SprintfYellow("(%d)", i), note.Content)
 	}
 
 	return nil

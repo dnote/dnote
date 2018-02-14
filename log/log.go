@@ -2,6 +2,8 @@ package log
 
 import (
 	"fmt"
+
+	"github.com/fatih/color"
 )
 
 var (
@@ -12,22 +14,29 @@ var (
 	ColorGray   = 37
 )
 
+var (
+	SprintfGreen  = color.New(color.FgGreen).SprintfFunc()
+	SprintfYellow = color.New(color.FgYellow).SprintfFunc()
+	SprintfBlue   = color.New(color.FgBlue).SprintfFunc()
+	SprintfGray   = color.New(color.FgWhite).SprintfFunc()
+)
+
 var indent = "  "
 
 func Info(msg string) {
-	fmt.Printf("%s\033[%dm%s\033[0m %s\n", indent, ColorBlue, "•", msg)
+	fmt.Fprintf(color.Output, "%s %s %s\n", indent, SprintfBlue("•"), msg)
 }
 
 func Infof(msg string, v ...interface{}) {
-	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorBlue, "•", fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s %s %s", indent, SprintfBlue("•"), fmt.Sprintf(msg, v...))
 }
 
 func Success(msg string) {
-	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorGreen, "✔", msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfGreen("✔"), msg)
 }
 
 func Successf(msg string, v ...interface{}) {
-	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorGreen, "✔", fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfGreen("✔"), fmt.Sprintf(msg, v...))
 }
 
 func Plain(msg string) {
@@ -35,7 +44,7 @@ func Plain(msg string) {
 }
 
 func Plainf(msg string, v ...interface{}) {
-	fmt.Printf("%s%s", indent, fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s%s", indent, fmt.Sprintf(msg, v...))
 }
 
 func Warnf(msg string, v ...interface{}) {
@@ -47,7 +56,7 @@ func Error(msg string) {
 }
 
 func Printf(msg string, v ...interface{}) {
-	fmt.Printf("%s\033[%dm%s\033[0m %s", indent, ColorGray, "•", fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfGray("•"), fmt.Sprintf(msg, v...))
 }
 
 func WithPrefixf(prefixColor int, prefix, msg string, v ...interface{}) {
