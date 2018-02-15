@@ -82,7 +82,7 @@ func CopyFile(src, dest string) error {
 		return errors.Wrap(err, "Failed to copy the file content")
 	}
 
-	if err := out.Sync(); err != nil {
+	if err = out.Sync(); err != nil {
 		return errors.Wrap(err, "Failed to flush the output file to disk")
 	}
 
@@ -91,12 +91,12 @@ func CopyFile(src, dest string) error {
 		return errors.Wrap(err, "Failed to get file info for the input file")
 	}
 
-	if err := os.Chmod(dest, fi.Mode()); err != nil {
+	if err = os.Chmod(dest, fi.Mode()); err != nil {
 		return errors.Wrap(err, "Failed to copy permission to the output file")
 	}
 
 	// Close the output file
-	if err := out.Close(); err != nil {
+	if err = out.Close(); err != nil {
 		return errors.Wrap(err, "Failed to close the output file")
 	}
 

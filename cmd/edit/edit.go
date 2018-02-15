@@ -71,8 +71,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			fpath := core.GetDnoteTmpContentPath(ctx)
 
 			e := ioutil.WriteFile(fpath, []byte(targetNote.Content), 0644)
-			if err != nil {
-				return errors.Wrap(err, "Failed to prepare editor content")
+			if e != nil {
+				return errors.Wrap(e, "Failed to prepare editor content")
 			}
 
 			e = core.GetEditorInput(ctx, fpath, &newContent)
