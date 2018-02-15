@@ -88,7 +88,6 @@ func printBooks(dnote infra.Dnote) error {
 	})
 
 	for _, info := range infos {
-		//log.Printf("%s \033[%dm(%d)\033[0m\n", info.BookName, log.ColorYellow, info.NoteCount)
 		log.Printf("%s %s\n", info.BookName, log.SprintfYellow("(%d)", info.NoteCount))
 	}
 
