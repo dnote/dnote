@@ -132,7 +132,7 @@ func printBooks(ctx infra.DnoteCtx) error {
 	}
 
 	for _, info := range infos {
-		log.Printf("%s %s\n", info.BookLabel, log.SprintfYellow("(%d)", info.NoteCount))
+		log.Printf("%s %s\n", info.BookName, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
 	}
 
 	return nil
