@@ -17,7 +17,7 @@ var (
 var indent = "  "
 
 func Info(msg string) {
-	fmt.Fprintf(color.Output, "%s %s %s\n", indent, SprintfBlue("•"), msg)
+	fmt.Fprintf(color.Output, "%s %s %s", indent, SprintfBlue("•"), msg)
 }
 
 func Infof(msg string, v ...interface{}) {
@@ -45,7 +45,11 @@ func Warnf(msg string, v ...interface{}) {
 }
 
 func Error(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, SprintfRed("⨯"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfRed("⨯"), msg)
+}
+
+func Errorf(msg string, v ...interface{}) {
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfRed("⨯"), fmt.Sprintf(msg, v...))
 }
 
 func Printf(msg string, v ...interface{}) {

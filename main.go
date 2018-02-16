@@ -46,7 +46,7 @@ func main() {
 	root.Register(upgrade.NewCmd(ctx))
 
 	if err := root.Execute(); err != nil {
-		log.Error(err.Error())
+		log.Errorf("%s\n", err.Error())
 		os.Exit(1)
 	}
 }

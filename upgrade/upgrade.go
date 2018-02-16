@@ -112,7 +112,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 
 	// Check if up to date
 	if latestVersion == core.Version {
-		log.Success("you are up-to-date\n")
+		log.Success("you are up-to-date\n\n")
 		err = touchLastUpgrade(ctx)
 		if err != nil {
 			return errors.Wrap(err, "Failed to update the upgrade timestamp")
@@ -175,6 +175,6 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	log.Successf("Updated: v%s -> v%s\n", core.Version, latestVersion)
-	log.Info("Changelog: https://github.com/dnote-io/cli/releases\n")
+	log.Info("Changelog: https://github.com/dnote-io/cli/releases\n\n")
 	return nil
 }
