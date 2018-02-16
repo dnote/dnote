@@ -23,7 +23,7 @@ var binaryName = "test-dnote"
 
 func TestMain(m *testing.M) {
 	if err := exec.Command("go", "build", "-o", binaryName).Run(); err != nil {
-		log.Printf(errors.Wrap(err, "Failed to build a binary").Error())
+		log.Print(errors.Wrap(err, "Failed to build a binary").Error())
 		os.Exit(1)
 	}
 
@@ -66,7 +66,7 @@ func TestInit(t *testing.T) {
 	runDnoteCmd(ctx)
 
 	// Test
-	if !utils.FileExists(fmt.Sprintf("%s", ctx.DnoteDir)) {
+	if !utils.FileExists(ctx.DnoteDir) {
 		t.Errorf("dnote directory was not initialized")
 	}
 	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.DnoteFilename)) {

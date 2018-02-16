@@ -186,11 +186,7 @@ func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	}
 
 	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
+  return ret, err
 }
 
 func writeSchema(ctx infra.DnoteCtx, s schema) error {

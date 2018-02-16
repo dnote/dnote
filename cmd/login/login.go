@@ -36,7 +36,9 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		log.Printf("API key: ")
 
 		var apiKey string
-		fmt.Scanln(&apiKey)
+		if _, err := fmt.Scanln(&apiKey); err != nil {
+			return err
+		}
 
 		if apiKey == "" {
 			return errors.New("Empty API key")

@@ -27,7 +27,7 @@ func TestReduceAddNote(t *testing.T) {
 		Data:      b,
 		Timestamp: 1517629805,
 	}
-	if err := Reduce(ctx, action); err != nil {
+	if err = Reduce(ctx, action); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 
@@ -70,7 +70,7 @@ func TestReduceAddNote_SortByAddedOn(t *testing.T) {
 		Data:      b,
 		Timestamp: 1515199944,
 	}
-	if err := Reduce(ctx, action); err != nil {
+	if err = Reduce(ctx, action); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 
@@ -115,7 +115,7 @@ func TestReduceRemoveNote(t *testing.T) {
 		Data:      b,
 		Timestamp: 1517629805,
 	}
-	if err := Reduce(ctx, action); err != nil {
+	if err = Reduce(ctx, action); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 
@@ -197,7 +197,7 @@ func TestReduceAddBook(t *testing.T) {
 		Data:      b,
 		Timestamp: 1517629805,
 	}
-	if err := Reduce(ctx, action); err != nil {
+	if err = Reduce(ctx, action); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 
@@ -229,7 +229,7 @@ func TestReduceRemoveBook(t *testing.T) {
 		Data:      b,
 		Timestamp: 1517629805,
 	}
-	if err := Reduce(ctx, action); err != nil {
+	if err = Reduce(ctx, action); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 

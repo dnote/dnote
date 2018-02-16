@@ -242,12 +242,7 @@ func WriteDnote(ctx infra.DnoteCtx, dnote infra.Dnote) error {
 
 	notePath := GetDnotePath(ctx)
 
-	err = ioutil.WriteFile(notePath, d, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(notePath, d, 0644)
 }
 
 func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
@@ -258,12 +253,7 @@ func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 
 	configPath := GetConfigPath(ctx)
 
-	err = ioutil.WriteFile(configPath, d, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(configPath, d, 0644)
 }
 
 // LogAction appends the action to the action log and updates the last_action
@@ -297,12 +287,7 @@ func WriteActionLog(ctx infra.DnoteCtx, actions []Action) error {
 		return errors.Wrap(err, "Failed to marshal newly generated actions to JSON")
 	}
 
-	err = ioutil.WriteFile(path, d, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ioutil.WriteFile(path, d, 0644)
 }
 
 func ClearActionLog(ctx infra.DnoteCtx) error {
@@ -336,11 +321,7 @@ func ReadActionLog(ctx infra.DnoteCtx) ([]Action, error) {
 	}
 
 	err = json.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
+	return ret, err
 }
 
 func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
@@ -353,11 +334,7 @@ func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
 	}
 
 	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, err
-	}
-
-	return ret, nil
+	return ret, err
 }
 
 func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
