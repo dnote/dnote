@@ -38,5 +38,3 @@ Please refer to [commands](/COMMANDS.md).
 MIT
 
 [![Build Status](https://travis-ci.org/dnote-io/cli.svg?branch=master)](https://travis-ci.org/dnote-io/cli)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dnote-io/cli)](https://goreportcard.com/report/github.com/dnote-io/cli)
-[![GolangCI](https://golangci.com/badges/github.com/dnote-io/cli.svg)](https://golangci.com)

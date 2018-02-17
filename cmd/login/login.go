@@ -32,7 +32,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		log.Plain("    (_) (__)\n\n")
 		log.Plain("Welcome to Dnote Cloud :)\n\n")
 		log.Plain("A home for your engineering microlessons\n")
-		log.Plain("You can register at https://dnote.io\n\n")
+		log.Plain("You can register at https://dnote.io/cloud\n\n")
 		log.Printf("API key: ")
 
 		var apiKey string
@@ -52,7 +52,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		config.APIKey = apiKey
 		err = core.WriteConfig(ctx, config)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Failed to write to config file")
 		}
 
 		log.Success("configured\n")

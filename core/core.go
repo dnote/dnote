@@ -18,7 +18,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.2.0"
+	Version = "0.2.1"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
@@ -79,15 +79,22 @@ func InitActionFile(ctx infra.DnoteCtx) error {
 func getEditorCommand() string {
 	editor := os.Getenv("EDITOR")
 
-	if editor == "atom" {
+	switch editor {
+	case "atom":
 		return "atom -w"
-	} else if editor == "subl" {
+	case "subl":
 		return "subl -n -w"
-	} else if editor == "mate" {
+	case "mate":
 		return "mate -w"
+	case "vim":
+		return "vim"
+	case "nano":
+		return "nano"
+	case "emacs":
+		return "emacs"
+	default:
+		return "vi"
 	}
-
-	return "vim"
 }
 
 // InitConfigFile populates a new config file if it does not exist yet
@@ -242,7 +249,12 @@ func WriteDnote(ctx infra.DnoteCtx, dnote infra.Dnote) error {
 
 	notePath := GetDnotePath(ctx)
 
-	return ioutil.WriteFile(notePath, d, 0644)
+	err = ioutil.WriteFile(notePath, d, 0644)
+	if err != nil {
+		errors.Wrap(err, "Failed to write to the dnote file")
+	}
+
+	return nil
 }
 
 func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
@@ -253,7 +265,12 @@ func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 
 	configPath := GetConfigPath(ctx)
 
-	return ioutil.WriteFile(configPath, d, 0644)
+	err = ioutil.WriteFile(configPath, d, 0644)
+	if err != nil {
+		errors.Wrap(err, "Failed to write to the config file")
+	}
+
+	return nil
 }
 
 // LogAction appends the action to the action log and updates the last_action
@@ -287,7 +304,12 @@ func WriteActionLog(ctx infra.DnoteCtx, actions []Action) error {
 		return errors.Wrap(err, "Failed to marshal newly generated actions to JSON")
 	}
 
-	return ioutil.WriteFile(path, d, 0644)
+	err = ioutil.WriteFile(path, d, 0644)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write to the actions file")
+	}
+
+	return nil
 }
 
 func ClearActionLog(ctx infra.DnoteCtx) error {
@@ -321,7 +343,11 @@ func ReadActionLog(ctx infra.DnoteCtx) ([]Action, error) {
 	}
 
 	err = json.Unmarshal(b, &ret)
-	return ret, err
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to unmarshal action log JSON")
+	}
+
+	return ret, nil
 }
 
 func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
@@ -334,7 +360,11 @@ func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
 	}
 
 	err = yaml.Unmarshal(b, &ret)
-	return ret, err
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to unmarshal config YAML")
+	}
+
+	return ret, nil
 }
 
 func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
