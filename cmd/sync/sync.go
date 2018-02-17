@@ -57,7 +57,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		if config.APIKey == "" {
-			fmt.Println("Login required. Please run `dnote login`")
+			log.Error("login required. please run `dnote login`\n")
 			return nil
 		}
 
