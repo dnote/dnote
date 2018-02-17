@@ -22,9 +22,25 @@ import (
 // upgradeInterval is 7 days
 var upgradeInterval int64 = 86400 * 7
 
+func getAssetName() string {
+	var ret string
+
+	os := runtime.GOOS
+	arch := runtime.GOARCH
+	basename := fmt.Sprintf("dnote-%s-%s", os, arch)
+
+	if os == "windows" {
+		ret = fmt.Sprintf("%s.exe", basename)
+	} else {
+		ret = basename
+	}
+
+	return ret
+}
+
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
-	filename := fmt.Sprintf("dnote-%s-%s", runtime.GOOS, runtime.GOARCH)
+	filename := getAssetName()
 
 	for _, asset := range release.Assets {
 		if *asset.Name == filename {
@@ -91,23 +107,19 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 	return nil
 }
 
+// Upgrade upgrades Dnote by downloading and replacing the binary if not up-to-date
 func Upgrade(ctx infra.DnoteCtx) error {
 	log.Infof("current version is %s\n", core.Version)
 
 	// Fetch the latest version
 	gh := github.NewClient(nil)
 	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
-
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to fetch releases")
 	}
 
 	latest := releases[0]
 	latestVersion := (*latest.TagName)[1:]
-
-	if err != nil {
-		return err
-	}
 
 	log.Infof("latest version is %s\n", latestVersion)
 
@@ -138,36 +150,36 @@ func Upgrade(ctx infra.DnoteCtx) error {
 
 	out, err := os.Create(tmpPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to create a temprary directory")
 	}
 	defer out.Close()
 
 	resp, err := http.Get(*asset.BrowserDownloadURL)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to download binary")
 	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to copy payload to the temporary directory")
 	}
 
 	// Override the binary
 	cmdPath, err := exec.LookPath("dnote")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to look up the binary path")
 	}
 
 	err = os.Rename(tmpPath, cmdPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to copy binary from temporary path")
 	}
 
 	// Make it executable
 	err = os.Chmod(cmdPath, 0755)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Failed to make binary executable")
 	}
 
 	err = touchLastUpgrade(ctx)
