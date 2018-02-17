@@ -17,11 +17,11 @@ var (
 var indent = "  "
 
 func Info(msg string) {
-	fmt.Fprintf(color.Output, "%s %s %s", indent, SprintfBlue("•"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfBlue("•"), msg)
 }
 
 func Infof(msg string, v ...interface{}) {
-	fmt.Fprintf(color.Output, "%s %s %s", indent, SprintfBlue("•"), fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfBlue("•"), fmt.Sprintf(msg, v...))
 }
 
 func Success(msg string) {

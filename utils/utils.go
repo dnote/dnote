@@ -33,8 +33,15 @@ func GetInput() (string, error) {
 	return input, nil
 }
 
-func AskConfirmation(question string) (bool, error) {
-	log.Printf("%s (y/N): ", question)
+func AskConfirmation(question string, optimistic bool) (bool, error) {
+	var choices string
+	if optimistic {
+		choices = "(Y/n)"
+	} else {
+		choices = "(y/N)"
+	}
+
+	log.Printf("%s %s: ", question, choices)
 
 	res, err := GetInput()
 	if err != nil {
@@ -42,6 +49,10 @@ func AskConfirmation(question string) (bool, error) {
 	}
 
 	confirmed := res == "y\n" || res == "y\r\n"
+
+	if optimistic {
+		confirmed = confirmed || res == "\n" || res == "\r\n"
+	}
 
 	return confirmed, nil
 }

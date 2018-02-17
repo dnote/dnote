@@ -85,7 +85,7 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 	content := notes[index].Content
 	log.Printf("content: \"%s\"\n", content)
 
-	ok, err := utils.AskConfirmation("remove this note?")
+	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get confirmation")
 	}
@@ -113,7 +113,7 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 
 // book deletes a book with the given name
 func book(ctx infra.DnoteCtx, bookName string) error {
-	ok, err := utils.AskConfirmation(fmt.Sprintf("delete book '%s' and all its notes?", bookName))
+	ok, err := utils.AskConfirmation(fmt.Sprintf("delete book '%s' and all its notes?", bookName), false)
 	if err != nil {
 		return err
 	}

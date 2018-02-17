@@ -70,7 +70,7 @@ func AutoUpgrade(ctx infra.DnoteCtx) error {
 	}
 
 	if shouldCheck {
-		willCheck, err := utils.AskConfirmation("check for upgrade?")
+		willCheck, err := utils.AskConfirmation("check for upgrade?", true)
 		if err != nil {
 			return errors.Wrap(err, "Failed to get user confirmation for checking upgrade")
 		}
@@ -132,7 +132,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	// Download temporary file
-	log.Infof("Downloading: %s\n", latestVersion)
+	log.Infof("downloading: %s\n", latestVersion)
 	tmpPath := path.Join(os.TempDir(), "dnote_update")
 
 	out, err := os.Create(tmpPath)
@@ -174,7 +174,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Upgrade is done, but failed to update the last_upgrade timestamp.")
 	}
 
-	log.Successf("Updated: v%s -> v%s\n", core.Version, latestVersion)
-	log.Info("Changelog: https://github.com/dnote-io/cli/releases\n\n")
+	log.Successf("updated: v%s -> v%s\n", core.Version, latestVersion)
+	log.Plain("changelog: https://github.com/dnote-io/cli/releases\n\n")
 	return nil
 }
