@@ -79,15 +79,22 @@ func InitActionFile(ctx infra.DnoteCtx) error {
 func getEditorCommand() string {
 	editor := os.Getenv("EDITOR")
 
-	if editor == "atom" {
+	switch editor {
+	case "atom":
 		return "atom -w"
-	} else if editor == "subl" {
+	case "subl":
 		return "subl -n -w"
-	} else if editor == "mate" {
+	case "mate":
 		return "mate -w"
+	case "vim":
+		return "vim"
+	case "nano":
+		return "nano"
+	case "emacs":
+		return "emacs"
+	default:
+		return "vi"
 	}
-
-	return "vim"
 }
 
 // InitConfigFile populates a new config file if it does not exist yet
