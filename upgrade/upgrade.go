@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// upgradeInterval is 7 days
 var upgradeInterval int64 = 86400 * 7
 
 // getAsset finds the asset to download from the liast of assets in a release

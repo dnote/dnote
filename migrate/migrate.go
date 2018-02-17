@@ -186,7 +186,11 @@ func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	}
 
 	err = yaml.Unmarshal(b, &ret)
-  return ret, err
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to unmarshal the schema JSON")
+	}
+
+	return ret, nil
 }
 
 func writeSchema(ctx infra.DnoteCtx, s schema) error {
