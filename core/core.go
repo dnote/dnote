@@ -436,11 +436,6 @@ func MigrateToDnoteDir(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to make temporary .dnote directory")
 	}
 
-	// In the beta release for v0.2, backup user's .dnote
-	if err := utils.CopyFile(oldDnotePath, fmt.Sprintf("%s/dnote-bak-5cdde2e83", homeDir)); err != nil {
-		return errors.Wrap(err, "Failed to back up the old .dnote file")
-	}
-
 	if err := os.Rename(oldDnotePath, fmt.Sprintf("%s/dnote", temporaryDirPath)); err != nil {
 		return errors.Wrap(err, "Failed to move .dnote file")
 	}

@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -36,6 +36,23 @@ func getAssetName() string {
 	}
 
 	return ret
+}
+
+// getBinaryPath returns the path to the currently executing Dnote binary
+func getBinaryPath() (string, error) {
+	var ret string
+
+	ex, err := os.Executable()
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to look up the pathname for current process")
+	}
+
+	ret, err = filepath.EvalSymlinks(ex)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to follow any synlinks")
+	}
+
+	return ret, nil
 }
 
 // getAsset finds the asset to download from the liast of assets in a release
@@ -166,7 +183,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	// Override the binary
-	cmdPath, err := exec.LookPath("dnote")
+	cmdPath, err := getBinaryPath()
 	if err != nil {
 		return errors.Wrap(err, "Failed to look up the binary path")
 	}
