@@ -22,6 +22,22 @@ We learn new things everyday while programming. And we forget most of them expon
 
 Dnote is designed for writing technical notes without switching context from programming. You can capture your learning as they happen with no overhead.
 
+## Examples
+
+- If you want to add a note to a book named linux
+
+```
+$ dnote add linux -c "find - recursively walk the directory"
+```
+
+- If you want to see the note list of a book named linux
+
+```
+$ dnote ls linux
+• on book linux
+(0) find - recursively walk the directory
+```
+
 ## Commands
 
 Please refer to [commands](/COMMANDS.md).
