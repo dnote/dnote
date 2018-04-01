@@ -18,19 +18,20 @@ On Windows, download [binary](https://github.com/dnote-io/cli/releases).
 
 ## Overview
 
-We learn new things everyday while programming. And we forget most of them exponentially because don't write them down.
+Write technical notes without getting distracted from programming. The reasons are:
 
-Dnote is designed for writing technical notes without switching context from programming. You can capture your learning as they happen with no overhead.
+* We forget exponentially unless we write down what we learn and come back.
+* Ideas cannot be grokked unless we can put them down in clear words.
 
 ## Examples
 
-- If you want to add a note to a book named linux
+- Add a note to a book named `linux`
 
 ```
 $ dnote add linux -c "find - recursively walk the directory"
 ```
 
-- If you want to see the note list of a book named linux
+- See the notes in a book
 
 ```
 $ dnote ls linux
@@ -46,8 +47,7 @@ Please refer to [commands](/COMMANDS.md).
 
 * [Dnote](https://dnote.io)
 * [Dnote Cloud](https://dnote.io/cloud)
-* [Making Dnote](https://sung.io/making-dnote/)
-* [Pitching Dnote](https://sung.io/pitching-dnote/)
+* [Browser Extension](https://github.com/dnote-io/browser-extension)
 
 ## License
 
