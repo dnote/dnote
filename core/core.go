@@ -492,9 +492,7 @@ func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Not
 func SanitizeContent(s string) string {
 	var ret string
 
-	ret = strings.Replace(s, "\n", "", -1)
-	ret = strings.Replace(ret, "\r\n", "", -1)
-	ret = strings.Trim(ret, " ")
+	ret = strings.Trim(s, " ")
 
 	return ret
 }

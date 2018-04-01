@@ -1,7 +1,9 @@
 package ls
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/dnote-io/cli/core"
 	"github.com/dnote-io/cli/infra"
@@ -79,6 +81,33 @@ func getBookInfos(dnote infra.Dnote) []bookInfo {
 	return ret
 }
 
+// getNewlineIdx returns the index of newline character in a string
+func getNewlineIdx(str string) int {
+	var ret int
+
+	ret = strings.Index(str, "\n")
+
+	if ret == -1 {
+		ret = strings.Index(str, "\r\n")
+	}
+
+	return ret
+}
+
+// formatContent returns an excerpt of the given raw note content and a boolean
+// indicating if the returned string has been excertped
+func formatContent(noteContent string) (string, bool) {
+	newlineIdx := getNewlineIdx(noteContent)
+
+	if newlineIdx > -1 {
+		ret := strings.Trim(noteContent[0:newlineIdx], " ")
+
+		return ret, true
+	}
+
+	return strings.Trim(noteContent, " "), false
+}
+
 func printBooks(dnote infra.Dnote) error {
 	infos := getBookInfos(dnote)
 
@@ -100,7 +129,14 @@ func printNotes(dnote infra.Dnote, bookName string) error {
 	book := dnote[bookName]
 
 	for i, note := range book.Notes {
-		log.Plainf("%s %s\n", log.SprintfYellow("(%d)", i), note.Content)
+		content, isExcerpt := formatContent(note.Content)
+
+		index := log.SprintfYellow("(%d)", i)
+		if isExcerpt {
+			content = fmt.Sprintf("%s %s", content, log.SprintfYellow("[---More---]"))
+		}
+
+		log.Plainf("%s %s\n", index, content)
 	}
 
 	return nil
