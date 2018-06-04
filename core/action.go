@@ -6,6 +6,7 @@ import (
 
 	"github.com/dnote-io/cli/infra"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 )
 
 var (
@@ -17,7 +18,8 @@ var (
 )
 
 type Action struct {
-	ID        int             `json:"id"`
+	ID        string          `json:"id"`
+	Schema    int             `json:"schema"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data"`
 	Timestamp int64           `json:"timestamp"`
@@ -34,6 +36,8 @@ func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ti
 	}
 
 	action := Action{
+		ID:        uuid.NewV4().String(),
+		Schema:    1,
 		Type:      ActionAddNote,
 		Data:      b,
 		Timestamp: timestamp,
@@ -56,6 +60,8 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
 	}
 
 	action := Action{
+		ID:        uuid.NewV4().String(),
+		Schema:    1,
 		Type:      ActionRemoveNote,
 		Data:      b,
 		Timestamp: time.Now().Unix(),
@@ -71,7 +77,7 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
 func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ts int64) error {
 	b, err := json.Marshal(EditNoteData{
 		NoteUUID: noteUUID,
-		BookName: bookName,
+		FromBook: bookName,
 		Content:  content,
 	})
 	if err != nil {
@@ -79,6 +85,8 @@ func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, t
 	}
 
 	action := Action{
+		ID:        uuid.NewV4().String(),
+		Schema:    1,
 		Type:      ActionEditNote,
 		Data:      b,
 		Timestamp: ts,
@@ -100,6 +108,8 @@ func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
 	}
 
 	action := Action{
+		ID:        uuid.NewV4().String(),
+		Schema:    1,
 		Type:      ActionAddBook,
 		Data:      b,
 		Timestamp: time.Now().Unix(),
@@ -119,6 +129,8 @@ func LogActionRemoveBook(ctx infra.DnoteCtx, name string) error {
 	}
 
 	action := Action{
+		ID:        uuid.NewV4().String(),
+		Schema:    1,
 		Type:      ActionRemoveBook,
 		Data:      b,
 		Timestamp: time.Now().Unix(),

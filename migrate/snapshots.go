@@ -1,5 +1,7 @@
 package migrate
 
+import "encoding/json"
+
 // v2
 type migrateToV2PreNote struct {
 	UID     string
@@ -53,3 +55,52 @@ type migrateToV4PostConfig struct {
 	Editor string
 	APIKey string
 }
+
+// v5
+type migrateToV5AddNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+	Content  string `json:"content"`
+}
+type migrateToV5RemoveNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+}
+type migrateToV5AddBookData struct {
+	BookName string `json:"book_name"`
+}
+type migrateToV5RemoveBookData struct {
+	BookName string `json:"book_name"`
+}
+type migrateToV5PreEditNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+	Content  string `json:"content"`
+}
+type migrateToV5PostEditNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	FromBook string `json:"from_book"`
+	ToBook   string `json:"to_book"`
+	Content  string `json:"content"`
+}
+type migrateToV5PreAction struct {
+	ID        int             `json:"id"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV5PostAction struct {
+	ID        string          `json:"id"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+
+var (
+	migrateToV5ActionAddNote    = "add_note"
+	migrateToV5ActionRemoveNote = "remove_note"
+	migrateToV5ActionEditNote   = "edit_note"
+	migrateToV5ActionAddBook    = "add_book"
+	migrateToV5ActionRemoveBook = "remove_book"
+)

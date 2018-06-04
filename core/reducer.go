@@ -16,7 +16,8 @@ type AddNoteData struct {
 
 type EditNoteData struct {
 	NoteUUID string `json:"note_uuid"`
-	BookName string `json:"book_name"`
+	FromBook string `json:"from_book"`
+	ToBook   string `json:"to_book"`
 	Content  string `json:"content"`
 }
 
@@ -156,9 +157,9 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	book, ok := dnote[data.BookName]
+	book, ok := dnote[data.FromBook]
 	if !ok {
-		return errors.Errorf("Book with a name %s is not found", data.BookName)
+		return errors.Errorf("Book with a name %s is not found", data.FromBook)
 	}
 
 	for idx, note := range book.Notes {
