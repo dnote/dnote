@@ -157,17 +157,44 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
 	}
-	book, ok := dnote[data.FromBook]
+	fromBook, ok := dnote[data.FromBook]
 	if !ok {
-		return errors.Errorf("Book with a name %s is not found", data.FromBook)
+		return errors.Errorf("Origin book with a name %s is not found", data.FromBook)
 	}
 
-	for idx, note := range book.Notes {
-		if note.UUID == data.NoteUUID {
-			note.Content = data.Content
-			note.EditedOn = action.Timestamp
-			dnote[book.Name].Notes[idx] = note
+	if data.ToBook == "" {
+		for idx, note := range fromBook.Notes {
+			if note.UUID == data.NoteUUID {
+				note.Content = data.Content
+				note.EditedOn = action.Timestamp
+				dnote[fromBook.Name].Notes[idx] = note
+			}
 		}
+	} else {
+		// Change the book
+
+		toBook, ok := dnote[data.ToBook]
+		if !ok {
+			return errors.Errorf("Destination book with a name %s is not found", data.FromBook)
+		}
+
+		var index int
+		var note infra.Note
+
+		// Find the note
+		for idx := range fromBook.Notes {
+			note = fromBook.Notes[idx]
+
+			if note.UUID == data.NoteUUID {
+				index = idx
+			}
+		}
+
+		note.Content = data.Content
+		note.EditedOn = action.Timestamp
+
+		dnote[fromBook.Name] = GetUpdatedBook(dnote[fromBook.Name], append(fromBook.Notes[:index], fromBook.Notes[index+1:]...))
+		dnote[toBook.Name] = GetUpdatedBook(dnote[toBook.Name], append(toBook.Notes, note))
 	}
 
 	err = WriteDnote(ctx, dnote)

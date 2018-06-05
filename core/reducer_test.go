@@ -193,6 +193,7 @@ func TestReduceEditNote_changeBook(t *testing.T) {
 	// Execute
 	b, err := json.Marshal(&EditNoteData{
 		FromBook: "js",
+		ToBook:   "linux",
 		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 		Content:  "updated content",
 	})
@@ -215,16 +216,21 @@ func TestReduceEditNote_changeBook(t *testing.T) {
 	targetBook := dnote["js"]
 	otherBook := dnote["linux"]
 
+	if len(targetBook.Notes) != 1 {
+		t.Fatalf("target book length mismatch. Got %d", len(targetBook.Notes))
+	}
+	if len(otherBook.Notes) != 2 {
+		t.Fatalf("other book length mismatch. Got %d", len(targetBook.Notes))
+	}
+
 	testutils.AssertEqual(t, len(dnote), 2, "number of books mismatch")
-	testutils.AssertEqual(t, len(targetBook.Notes), 2, "target book notes length mismatch")
 	testutils.AssertEqual(t, targetBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
 	testutils.AssertEqual(t, targetBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")
-	testutils.AssertEqual(t, targetBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
-	testutils.AssertEqual(t, targetBook.Notes[1].Content, "updated content", "edited note content mismatch")
-	testutils.AssertEqual(t, targetBook.Notes[1].EditedOn, int64(1517629805), "edited note edited_on mismatch")
-	testutils.AssertEqual(t, len(otherBook.Notes), 1, "other book notes length mismatch")
 	testutils.AssertEqual(t, otherBook.Notes[0].UUID, "3e065d55-6d47-42f2-a6bf-f5844130b2d2", "other book remaining note uuid mismatch")
 	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].Content, "updated content", "edited note content mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].EditedOn, int64(1517629805), "edited note edited_on mismatch")
 }
 
 func TestReduceAddBook(t *testing.T) {
