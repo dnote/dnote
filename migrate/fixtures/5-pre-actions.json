@@ -1,0 +1,52 @@
+[
+  {
+    "id": 0,
+    "type": "add_book",
+    "data": { "book_name": "js" },
+    "timestamp": 1528111176
+  },
+  {
+    "id": 0,
+    "type": "add_note",
+    "data": {
+      "note_uuid": "557d6d5d-95c0-4dd3-8252-a8e187254f5c",
+      "book_name": "js",
+      "content": "some content"
+    },
+    "timestamp": 1528111176
+  },
+  {
+    "id": 0,
+    "type": "edit_note",
+    "data": {
+      "note_uuid": "557d6d5d-95c0-4dd3-8252-a8e187254f5c",
+      "book_name": "js",
+      "content": "some content edited"
+    },
+    "timestamp": 1528111193
+  },
+  {
+    "id": 0,
+    "type": "remove_note",
+    "data": {
+      "note_uuid": "753f8053-145d-46e9-a44b-bc7b0a47d9d5",
+      "book_name": "js"
+    },
+    "timestamp": 1528111232
+  },
+  {
+    "id": 0,
+    "type": "remove_note",
+    "data": {
+      "note_uuid": "753f8053-145d-46e9-a44b-bc7b0a47d9d5",
+      "book_name": "js"
+    },
+    "timestamp": 1528111235
+  },
+  {
+    "id": 0,
+    "type": "remove_book",
+    "data": { "book_name": "js" },
+    "timestamp": 1528111245
+  }
+]

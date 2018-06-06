@@ -197,3 +197,68 @@ func migrateToV4(ctx infra.DnoteCtx) error {
 
 	return nil
 }
+
+// migrateToV5 migrates actions
+func migrateToV5(ctx infra.DnoteCtx) error {
+	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+
+	b, err := ioutil.ReadFile(actionsPath)
+	if err != nil {
+		return errors.Wrap(err, "reading the actions file")
+	}
+
+	var actions []migrateToV5PreAction
+	err = json.Unmarshal(b, &actions)
+	if err != nil {
+		return errors.Wrap(err, "unmarshalling actions to JSON")
+	}
+
+	result := []migrateToV5PostAction{}
+
+	for _, action := range actions {
+		var data json.RawMessage
+
+		switch action.Type {
+		case migrateToV5ActionEditNote:
+			var oldData migrateToV5PreEditNoteData
+			if err = json.Unmarshal(action.Data, &oldData); err != nil {
+				return errors.Wrapf(err, "unmarshalling old data of an edit note action %s", action.ID)
+			}
+
+			migratedData := migrateToV5PostEditNoteData{
+				NoteUUID: oldData.NoteUUID,
+				FromBook: oldData.BookName,
+				Content:  oldData.Content,
+			}
+			b, err = json.Marshal(migratedData)
+			if err != nil {
+				return errors.Wrap(err, "marshalling data")
+			}
+
+			data = b
+		default:
+			data = action.Data
+		}
+
+		migrated := migrateToV5PostAction{
+			UUID:      uuid.NewV4().String(),
+			Schema:    1,
+			Type:      action.Type,
+			Data:      data,
+			Timestamp: action.Timestamp,
+		}
+
+		result = append(result, migrated)
+	}
+
+	a, err := json.Marshal(result)
+	if err != nil {
+		return errors.Wrap(err, "marshalling result into JSON")
+	}
+	err = ioutil.WriteFile(actionsPath, a, 0644)
+	if err != nil {
+		return errors.Wrap(err, "writing the result into a file")
+	}
+
+	return nil
+}

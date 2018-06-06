@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -192,4 +193,102 @@ func TestMigrateToV4(t *testing.T) {
 
 	testutils.AssertEqual(t, config.APIKey, "Oev6e1082ORasdf9rjkfjkasdfjhgei", "api key mismatch")
 	testutils.AssertEqual(t, config.Editor, "vim", "editor mismatch")
+}
+
+func TestMigrateToV5(t *testing.T) {
+	ctx := testutils.InitCtx("../tmp")
+
+	// set up
+	testutils.SetupTmp(ctx)
+	testutils.WriteFile(ctx, "./fixtures/5-pre-actions.json", "actions")
+	defer testutils.ClearTmp(ctx)
+
+	// execute
+	if err := migrateToV5(ctx); err != nil {
+		t.Fatal(errors.Wrap(err, "migrating").Error())
+	}
+
+	// test
+	var oldActions []migrateToV5PreAction
+	testutils.ReadJSON("./fixtures/5-pre-actions.json", &oldActions)
+
+	b := testutils.ReadFile(ctx, "actions")
+	var migratedActions []migrateToV5PostAction
+	if err := json.Unmarshal(b, &migratedActions); err != nil {
+		t.Fatal(errors.Wrap(err, "unmarhsalling migrated actions").Error())
+	}
+
+	if len(oldActions) != len(migratedActions) {
+		t.Fatalf("There were %d actions but after migration there were %d", len(oldActions), len(migratedActions))
+	}
+
+	for idx := range migratedActions {
+		migrated := migratedActions[idx]
+		old := oldActions[idx]
+
+		testutils.AssertNotEqual(t, migrated.UUID, "", fmt.Sprintf("uuid mismatch for migrated item with index %d", idx))
+		testutils.AssertEqual(t, migrated.Schema, 1, fmt.Sprintf("schema mismatch for migrated item with index %d", idx))
+		testutils.AssertEqual(t, migrated.Timestamp, old.Timestamp, fmt.Sprintf("timestamp mismatch for migrated item with index %d", idx))
+		testutils.AssertEqual(t, migrated.Type, old.Type, fmt.Sprintf("timestamp mismatch for migrated item with index %d", idx))
+
+		switch migrated.Type {
+		case migrateToV5ActionAddNote:
+			var oldData, migratedData migrateToV5AddNoteData
+			if err := json.Unmarshal(old.Data, &oldData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+			}
+			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+			}
+
+			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
+			testutils.AssertEqual(t, oldData.Content, migratedData.Content, fmt.Sprintf("data content mismatch for item idx %d", idx))
+			testutils.AssertEqual(t, oldData.NoteUUID, migratedData.NoteUUID, fmt.Sprintf("data note_uuid mismatch for item idx %d", idx))
+		case migrateToV5ActionRemoveNote:
+			var oldData, migratedData migrateToV5RemoveNoteData
+			if err := json.Unmarshal(old.Data, &oldData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+			}
+			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+			}
+
+			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
+			testutils.AssertEqual(t, oldData.NoteUUID, migratedData.NoteUUID, fmt.Sprintf("data note_uuid mismatch for item idx %d", idx))
+		case migrateToV5ActionAddBook:
+			var oldData, migratedData migrateToV5AddBookData
+			if err := json.Unmarshal(old.Data, &oldData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+			}
+			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+			}
+
+			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
+		case migrateToV5ActionRemoveBook:
+			var oldData, migratedData migrateToV5RemoveBookData
+			if err := json.Unmarshal(old.Data, &oldData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+			}
+			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+			}
+
+			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
+		case migrateToV5ActionEditNote:
+			var oldData migrateToV5PreEditNoteData
+			var migratedData migrateToV5PostEditNoteData
+			if err := json.Unmarshal(old.Data, &oldData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+			}
+			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
+				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+			}
+
+			testutils.AssertEqual(t, oldData.NoteUUID, migratedData.NoteUUID, fmt.Sprintf("data note_uuid mismatch for item idx %d", idx))
+			testutils.AssertEqual(t, oldData.Content, migratedData.Content, fmt.Sprintf("data content mismatch for item idx %d", idx))
+			testutils.AssertEqual(t, oldData.BookName, migratedData.FromBook, "book_name should have been renamed to from_book")
+			testutils.AssertEqual(t, migratedData.ToBook, "", "to_book should be empty")
+		}
+	}
 }
