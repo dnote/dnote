@@ -18,7 +18,7 @@ var (
 )
 
 type Action struct {
-	ID        string          `json:"id"`
+	UUID      string          `json:"uuid"`
 	Schema    int             `json:"schema"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data"`
@@ -36,7 +36,7 @@ func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ti
 	}
 
 	action := Action{
-		ID:        uuid.NewV4().String(),
+		UUID:      uuid.NewV4().String(),
 		Schema:    1,
 		Type:      ActionAddNote,
 		Data:      b,
@@ -60,7 +60,7 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
 	}
 
 	action := Action{
-		ID:        uuid.NewV4().String(),
+		UUID:      uuid.NewV4().String(),
 		Schema:    1,
 		Type:      ActionRemoveNote,
 		Data:      b,
@@ -85,7 +85,7 @@ func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, t
 	}
 
 	action := Action{
-		ID:        uuid.NewV4().String(),
+		UUID:      uuid.NewV4().String(),
 		Schema:    1,
 		Type:      ActionEditNote,
 		Data:      b,
@@ -108,7 +108,7 @@ func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
 	}
 
 	action := Action{
-		ID:        uuid.NewV4().String(),
+		UUID:      uuid.NewV4().String(),
 		Schema:    1,
 		Type:      ActionAddBook,
 		Data:      b,
@@ -129,7 +129,7 @@ func LogActionRemoveBook(ctx infra.DnoteCtx, name string) error {
 	}
 
 	action := Action{
-		ID:        uuid.NewV4().String(),
+		UUID:      uuid.NewV4().String(),
 		Schema:    1,
 		Type:      ActionRemoveBook,
 		Data:      b,

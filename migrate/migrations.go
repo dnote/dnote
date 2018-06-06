@@ -241,7 +241,7 @@ func migrateToV5(ctx infra.DnoteCtx) error {
 		}
 
 		migrated := migrateToV5PostAction{
-			ID:        uuid.NewV4().String(),
+			UUID:      uuid.NewV4().String(),
 			Schema:    1,
 			Type:      action.Type,
 			Data:      data,

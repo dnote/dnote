@@ -226,7 +226,7 @@ func TestMigrateToV5(t *testing.T) {
 		migrated := migratedActions[idx]
 		old := oldActions[idx]
 
-		testutils.AssertNotEqual(t, migrated.ID, "", fmt.Sprintf("id mismatch for migrated item with index %d", idx))
+		testutils.AssertNotEqual(t, migrated.UUID, "", fmt.Sprintf("uuid mismatch for migrated item with index %d", idx))
 		testutils.AssertEqual(t, migrated.Schema, 1, fmt.Sprintf("schema mismatch for migrated item with index %d", idx))
 		testutils.AssertEqual(t, migrated.Timestamp, old.Timestamp, fmt.Sprintf("timestamp mismatch for migrated item with index %d", idx))
 		testutils.AssertEqual(t, migrated.Type, old.Type, fmt.Sprintf("timestamp mismatch for migrated item with index %d", idx))

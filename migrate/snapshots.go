@@ -90,7 +90,7 @@ type migrateToV5PreAction struct {
 	Timestamp int64           `json:"timestamp"`
 }
 type migrateToV5PostAction struct {
-	ID        string          `json:"id"`
+	UUID      string          `json:"uuid"`
 	Schema    int             `json:"schema"`
 	Type      string          `json:"type"`
 	Data      json.RawMessage `json:"data"`
