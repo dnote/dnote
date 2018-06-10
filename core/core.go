@@ -18,7 +18,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.2.2"
+	Version = "0.3.0"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
@@ -492,9 +492,7 @@ func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Not
 func SanitizeContent(s string) string {
 	var ret string
 
-	ret = strings.Replace(s, "\n", "", -1)
-	ret = strings.Replace(ret, "\r\n", "", -1)
-	ret = strings.Trim(ret, " ")
+	ret = strings.Trim(s, " ")
 
 	return ret
 }

@@ -4,12 +4,14 @@
 * [edit](#dnote-edit)
 * [remove](#dnote-remove)
 * [ls](#dnote-ls)
+* [cat](#dnote-cat)
 * [upgrade](#dnote-upgrade)
 * [login](#dnote-login)
 * [sync](#dnote-sync)
 
 ## dnote add
-*alias: a, n, new*
+
+_alias: a, n, new_
 
 Add a new note to a book.
 
@@ -21,14 +23,13 @@ Launch a text editor to add a new note to the specified book.
 
 Write a new note with a content to the specified book.
 
-
 e.g.
 
     $ dnote add linux -c "find - recursively walk the directory"
 
-
 ## dnote edit
-*alias: e*
+
+_alias: e_
 
 Edit a note
 
@@ -45,7 +46,8 @@ e.g
     $ dnote edit linux 1 "New Content"
 
 ## dnote remove
-*alias: d*
+
+_alias: d_
 
 Remove either a note or a book
 
@@ -62,9 +64,9 @@ e.g
     $ dnote remove JS 1
     $ dnote remove -b JS
 
-
 ## dnote ls
-*alias: l, notes*
+
+_alias: l, notes_
 
 List books or notes
 
@@ -77,20 +79,34 @@ List all books.
 List all notes in the book.
 
 e.g
+
     $ dnote ls
     $ dnote ls golang
 
+## dnote cat
+
+_alias: c_
+
+See details of a note
+
+### `dnote cat [book name] [note index]`
+
+e.g
+
+    $ dnote cat golang 12
 
 ## dnote upgrade
 
 Upgrade the Dnote if newer release is available
 
 ## dnote sync
-*Dnote Cloud only*
+
+_Dnote Cloud only_
 
 Sync notes with Dnote cloud
 
 ## dnote login
-*Dnote Cloud only*
+
+_Dnote Cloud only_
 
 Start a login prompt

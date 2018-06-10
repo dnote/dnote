@@ -13,6 +13,7 @@ import (
 
 	// commands
 	"github.com/dnote-io/cli/cmd/add"
+	"github.com/dnote-io/cli/cmd/cat"
 	"github.com/dnote-io/cli/cmd/edit"
 	"github.com/dnote-io/cli/cmd/login"
 	"github.com/dnote-io/cli/cmd/ls"
@@ -44,6 +45,7 @@ func main() {
 	root.Register(sync.NewCmd(ctx))
 	root.Register(version.NewCmd(ctx))
 	root.Register(upgrade.NewCmd(ctx))
+	root.Register(cat.NewCmd(ctx))
 
 	if err := root.Execute(); err != nil {
 		log.Errorf("%s\n", err.Error())
