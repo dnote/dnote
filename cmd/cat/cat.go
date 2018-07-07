@@ -54,7 +54,6 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		book := dnote[bookName]
 		note := book.Notes[noteIdx]
 
-		log.Plain("\n")
 		log.Infof("book name: %s\n", bookName)
 		log.Infof("note uuid: %s\n", note.UUID)
 		log.Infof("created at: %s\n", time.Unix(note.AddedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
