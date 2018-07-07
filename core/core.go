@@ -18,7 +18,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.3.0"
+	Version = "0.3.1"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
@@ -493,6 +493,11 @@ func SanitizeContent(s string) string {
 	var ret string
 
 	ret = strings.Trim(s, " ")
+
+	// Remove newline at the end of the file because POSIX defines a line as
+	// characters followed by a newline
+	ret = strings.TrimSuffix(ret, "\n")
+	ret = strings.TrimSuffix(ret, "\r\n")
 
 	return ret
 }
