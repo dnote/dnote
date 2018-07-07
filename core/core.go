@@ -494,6 +494,11 @@ func SanitizeContent(s string) string {
 
 	ret = strings.Trim(s, " ")
 
+	// Remove newline at the end of the file because POSIX defines a line as
+	// characters followed by a newline
+	ret = strings.TrimSuffix(ret, "\n")
+	ret = strings.TrimSuffix(ret, "\r\n")
+
 	return ret
 }
 

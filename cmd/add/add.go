@@ -1,6 +1,7 @@
 package add
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dnote-io/cli/core"
@@ -66,8 +67,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
-		log.Printf("note: \"%s\"\n", content)
 		log.Successf("added to %s\n", bookName)
+		fmt.Printf("\n------------------------content------------------------\n")
+		fmt.Printf("%s", content)
+		fmt.Printf("\n-------------------------------------------------------\n")
 		return nil
 	}
 }
