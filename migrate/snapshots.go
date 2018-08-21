@@ -104,3 +104,29 @@ var (
 	migrateToV5ActionAddBook    = "add_book"
 	migrateToV5ActionRemoveBook = "remove_book"
 )
+
+// v6
+type migrateToV6PreNote struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+}
+type migrateToV6PostNote struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+	// Make a pointer to test absent values
+	Public *bool `json:"public"`
+}
+type migrateToV6PreBook struct {
+	Name  string               `json:"name"`
+	Notes []migrateToV6PreNote `json:"notes"`
+}
+type migrateToV6PostBook struct {
+	Name  string                `json:"name"`
+	Notes []migrateToV6PostNote `json:"notes"`
+}
+type migrateToV6PreDnote map[string]migrateToV6PreBook
+type migrateToV6PostDnote map[string]migrateToV6PostBook

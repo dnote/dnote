@@ -262,3 +262,56 @@ func migrateToV5(ctx infra.DnoteCtx) error {
 
 	return nil
 }
+
+// migrateToV6 adds a 'public' field to notes
+func migrateToV6(ctx infra.DnoteCtx) error {
+	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
+
+	b, err := ioutil.ReadFile(notePath)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read the note file")
+	}
+
+	var preDnote migrateToV6PreDnote
+	postDnote := migrateToV6PostDnote{}
+
+	err = json.Unmarshal(b, &preDnote)
+	if err != nil {
+		return errors.Wrap(err, "Failed to unmarshal existing dnote into JSON")
+	}
+
+	for bookName, book := range preDnote {
+		var notes = make([]migrateToV6PostNote, 0, len(book.Notes))
+		public := false
+		for _, note := range book.Notes {
+			newNote := migrateToV6PostNote{
+				UUID:     note.UUID,
+				Content:  note.Content,
+				AddedOn:  note.AddedOn,
+				EditedOn: note.EditedOn,
+				Public:   &public,
+			}
+
+			notes = append(notes, newNote)
+		}
+
+		b := migrateToV6PostBook{
+			Name:  bookName,
+			Notes: notes,
+		}
+
+		postDnote[bookName] = b
+	}
+
+	d, err := json.MarshalIndent(postDnote, "", "  ")
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal new dnote into JSON")
+	}
+
+	err = ioutil.WriteFile(notePath, d, 0644)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write the new dnote into the file")
+	}
+
+	return nil
+}

@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/dnote/actions"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
@@ -32,8 +33,8 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 type responseData struct {
-	Actions  []core.Action `json:"actions"`
-	Bookmark int           `json:"bookmark"`
+	Actions  []actions.Action `json:"actions"`
+	Bookmark int              `json:"bookmark"`
 }
 
 type syncPayload struct {
@@ -120,7 +121,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func getPayload(actions []core.Action, timestamp infra.Timestamp) (*bytes.Buffer, error) {
+func getPayload(actions []actions.Action, timestamp infra.Timestamp) (*bytes.Buffer, error) {
 	compressedActions, err := compressActions(actions)
 	if err != nil {
 		return &bytes.Buffer{}, errors.Wrap(err, "Failed to compress actions")
@@ -140,7 +141,7 @@ func getPayload(actions []core.Action, timestamp infra.Timestamp) (*bytes.Buffer
 	return ret, nil
 }
 
-func compressActions(actions []core.Action) ([]byte, error) {
+func compressActions(actions []actions.Action) ([]byte, error) {
 	b, err := json.Marshal(&actions)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal actions into JSON")

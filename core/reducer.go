@@ -4,39 +4,14 @@ import (
 	"encoding/json"
 	"sort"
 
+	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
 )
 
-type AddNoteData struct {
-	NoteUUID string `json:"note_uuid"`
-	BookName string `json:"book_name"`
-	Content  string `json:"content"`
-}
-
-type EditNoteData struct {
-	NoteUUID string `json:"note_uuid"`
-	FromBook string `json:"from_book"`
-	ToBook   string `json:"to_book"`
-	Content  string `json:"content"`
-}
-
-type RemoveNoteData struct {
-	NoteUUID string `json:"note_uuid"`
-	BookName string `json:"book_name"`
-}
-
-type AddBookData struct {
-	BookName string `json:"book_name"`
-}
-
-type RemoveBookData struct {
-	BookName string `json:"book_name"`
-}
-
 // ReduceAll reduces all actions
-func ReduceAll(ctx infra.DnoteCtx, actions []Action) error {
-	for _, action := range actions {
+func ReduceAll(ctx infra.DnoteCtx, ats []actions.Action) error {
+	for _, action := range ats {
 		if err := Reduce(ctx, action); err != nil {
 			return errors.Wrap(err, "Failed to reduce action")
 		}
@@ -47,19 +22,19 @@ func ReduceAll(ctx infra.DnoteCtx, actions []Action) error {
 
 // Reduce transitions the local dnote state by consuming the action returned
 // from the server
-func Reduce(ctx infra.DnoteCtx, action Action) error {
+func Reduce(ctx infra.DnoteCtx, action actions.Action) error {
 	var err error
 
 	switch action.Type {
-	case ActionAddNote:
+	case actions.ActionAddNote:
 		err = handleAddNote(ctx, action)
-	case ActionRemoveNote:
+	case actions.ActionRemoveNote:
 		err = handleRemoveNote(ctx, action)
-	case ActionEditNote:
+	case actions.ActionEditNote:
 		err = handleEditNote(ctx, action)
-	case ActionAddBook:
+	case actions.ActionAddBook:
 		err = handleAddBook(ctx, action)
-	case ActionRemoveBook:
+	case actions.ActionRemoveBook:
 		err = handleRemoveBook(ctx, action)
 	default:
 		return errors.Errorf("Unsupported action %s", action.Type)
@@ -72,8 +47,8 @@ func Reduce(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func handleAddNote(ctx infra.DnoteCtx, action Action) error {
-	var data AddNoteData
+func handleAddNote(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.AddNoteDataV1
 	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
@@ -117,8 +92,8 @@ func handleAddNote(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func handleRemoveNote(ctx infra.DnoteCtx, action Action) error {
-	var data RemoveNoteData
+func handleRemoveNote(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.RemoveNoteDataV1
 	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
@@ -146,8 +121,8 @@ func handleRemoveNote(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func handleEditNote(ctx infra.DnoteCtx, action Action) error {
-	var data EditNoteData
+func handleEditNoteV1(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.EditNoteDataV1
 	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
@@ -205,8 +180,90 @@ func handleEditNote(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func handleAddBook(ctx infra.DnoteCtx, action Action) error {
-	var data AddBookData
+func handleEditNoteV2(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.EditNoteDataV2
+	err := json.Unmarshal(action.Data, &data)
+	if err != nil {
+		return errors.Wrap(err, "Failed to parse the action data")
+	}
+
+	dnote, err := GetDnote(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to get dnote")
+	}
+
+	fromBook, ok := dnote[data.FromBook]
+	if !ok {
+		return errors.Errorf("Origin book with a name %s is not found", data.FromBook)
+	}
+
+	if data.ToBook == nil {
+		for idx, note := range fromBook.Notes {
+			if note.UUID == data.NoteUUID {
+				if data.Content != nil {
+					note.Content = *data.Content
+				}
+				if data.Public != nil {
+					note.Public = *data.Public
+				}
+
+				note.EditedOn = action.Timestamp
+				dnote[fromBook.Name].Notes[idx] = note
+			}
+		}
+	} else {
+		// Change the book
+		toBook := *data.ToBook
+
+		dstBook, ok := dnote[toBook]
+		if !ok {
+			return errors.Errorf("Destination book with a name %s is not found", toBook)
+		}
+
+		var index int
+		var note infra.Note
+
+		// Find the note
+		for idx := range fromBook.Notes {
+			note = fromBook.Notes[idx]
+
+			if note.UUID == data.NoteUUID {
+				index = idx
+			}
+		}
+
+		if data.Content != nil {
+			note.Content = *data.Content
+		}
+		if data.Public != nil {
+			note.Public = *data.Public
+		}
+		note.EditedOn = action.Timestamp
+
+		dnote[fromBook.Name] = GetUpdatedBook(dnote[fromBook.Name], append(fromBook.Notes[:index], fromBook.Notes[index+1:]...))
+		dnote[toBook] = GetUpdatedBook(dnote[toBook], append(dstBook.Notes, note))
+	}
+
+	err = WriteDnote(ctx, dnote)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write dnote")
+	}
+
+	return nil
+}
+
+func handleEditNote(ctx infra.DnoteCtx, action actions.Action) error {
+	if action.Schema == 1 {
+		return handleEditNoteV1(ctx, action)
+	} else if action.Schema == 2 {
+		return handleEditNoteV2(ctx, action)
+	}
+
+	return errors.Errorf("Unsupported schema version for editing note: %d", action.Schema)
+}
+
+func handleAddBook(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.AddBookDataV1
 	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
@@ -238,8 +295,8 @@ func handleAddBook(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func handleRemoveBook(ctx infra.DnoteCtx, action Action) error {
-	var data RemoveBookData
+func handleRemoveBook(ctx infra.DnoteCtx, action actions.Action) error {
+	var data actions.RemoveBookDataV1
 	err := json.Unmarshal(action.Data, &data)
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
