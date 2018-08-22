@@ -8,13 +8,13 @@ A command line interface for spontaneously capturing the things you learn while 
 
 On Linux or macOS, run:
 
-    curl -s https://raw.githubusercontent.com/dnote-io/cli/master/install.sh | sh
+    curl -s https://raw.githubusercontent.com/dnote/cli/master/install.sh | sh
 
 In some cases, you might need an elevated permission:
 
-    curl -s https://raw.githubusercontent.com/dnote-io/cli/master/install.sh | sudo sh
+    curl -s https://raw.githubusercontent.com/dnote/cli/master/install.sh | sudo sh
 
-On Windows, download [binary](https://github.com/dnote-io/cli/releases).
+On Windows, download [binary](https://github.com/dnote/cli/releases).
 
 ## Overview
 
@@ -47,10 +47,10 @@ Please refer to [commands](/COMMANDS.md).
 
 * [Dnote](https://dnote.io)
 * [Dnote Cloud](https://dnote.io/cloud)
-* [Browser Extension](https://github.com/dnote-io/browser-extension)
+* [Browser Extension](https://github.com/dnote/browser-extension)
 
 ## License
 
 MIT
 
-[![Build Status](https://travis-ci.org/dnote-io/cli.svg?branch=master)](https://travis-ci.org/dnote-io/cli)
+[![Build Status](https://travis-ci.org/dnote/cli.svg?branch=master)](https://travis-ci.org/dnote/cli)

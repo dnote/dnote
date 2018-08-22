@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/utils"
 )
 
 var (
@@ -131,7 +131,7 @@ func restoreBackup(ctx infra.DnoteCtx) error {
 		if err != nil {
 			log.Printf(`Failed to restore backup for a failed migration.
 	Don't worry. Your data is still intact in the backup directory.
-	Get help on https://github.com/dnote-io/cli/issues`)
+	Get help on https://github.com/dnote/cli/issues`)
 		}
 	}()
 

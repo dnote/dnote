@@ -8,7 +8,7 @@ set -eu
 
 not_supported() {
   echo "OS not supported: ${UNAME}"
-  echo "Please compile manually from https://github.com/dnote-io/cli"
+  echo "Please compile manually from https://github.com/dnote/cli"
   exit 1
 }
 
@@ -46,8 +46,8 @@ install() {
     fi
   fi
 
-  LATEST=$(curl -s https://api.github.com/repos/dnote-io/cli/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
-  URL="https://github.com/dnote-io/cli/releases/download/$LATEST/dnote-$PLATFORM"
+  LATEST=$(curl -s https://api.github.com/repos/dnote/cli/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
+  URL="https://github.com/dnote/cli/releases/download/$LATEST/dnote-$PLATFORM"
   DEST=${DEST:-/usr/local/bin/dnote}
 
   if [ -z $LATEST ]; then

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"

@@ -3,8 +3,8 @@ package version
 import (
 	"fmt"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
+	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/infra"
 	"github.com/spf13/cobra"
 )
 

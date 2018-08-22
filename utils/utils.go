@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dnote-io/cli/log"
+	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/dnote-io/cli/testutils"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote/cli/testutils"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )

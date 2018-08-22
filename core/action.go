@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/dnote-io/cli/infra"
+	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )

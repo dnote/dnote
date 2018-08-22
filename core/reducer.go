@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"github.com/dnote-io/cli/infra"
+	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
 )
 
