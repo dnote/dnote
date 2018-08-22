@@ -13,10 +13,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/testutils"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/testutils"
+	"github.com/dnote/cli/utils"
 )
 
 var binaryName = "test-dnote"

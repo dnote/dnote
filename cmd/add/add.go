@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/log"
+	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

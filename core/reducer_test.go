@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dnote-io/cli/testutils"
+	"github.com/dnote/cli/testutils"
 	"github.com/pkg/errors"
 )
 

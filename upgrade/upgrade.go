@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/log"
-	"github.com/dnote-io/cli/utils"
+	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
+	"github.com/dnote/cli/utils"
 	"github.com/google/go-github/github"
 	"github.com/pkg/errors"
 )
@@ -96,7 +96,7 @@ func Upgrade(ctx infra.DnoteCtx) error {
 
 	// Fetch the latest version
 	gh := github.NewClient(nil)
-	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote-io", "cli", nil)
+	releases, _, err := gh.Repositories.ListReleases(context.Background(), "dnote", "cli", nil)
 
 	if err != nil {
 		return err
@@ -176,6 +176,6 @@ func Upgrade(ctx infra.DnoteCtx) error {
 	}
 
 	log.Successf("updated: v%s -> v%s\n", core.Version, latestVersion)
-	log.Plain("changelog: https://github.com/dnote-io/cli/releases\n\n")
+	log.Plain("changelog: https://github.com/dnote/cli/releases\n\n")
 	return nil
 }

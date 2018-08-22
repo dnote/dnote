@@ -5,22 +5,22 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/dnote-io/cli/cmd/root"
-	"github.com/dnote-io/cli/core"
-	"github.com/dnote-io/cli/infra"
-	"github.com/dnote-io/cli/log"
+	"github.com/dnote/cli/cmd/root"
+	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 
 	// commands
-	"github.com/dnote-io/cli/cmd/add"
-	"github.com/dnote-io/cli/cmd/cat"
-	"github.com/dnote-io/cli/cmd/edit"
-	"github.com/dnote-io/cli/cmd/login"
-	"github.com/dnote-io/cli/cmd/ls"
-	"github.com/dnote-io/cli/cmd/remove"
-	"github.com/dnote-io/cli/cmd/sync"
-	"github.com/dnote-io/cli/cmd/upgrade"
-	"github.com/dnote-io/cli/cmd/version"
+	"github.com/dnote/cli/cmd/add"
+	"github.com/dnote/cli/cmd/cat"
+	"github.com/dnote/cli/cmd/edit"
+	"github.com/dnote/cli/cmd/login"
+	"github.com/dnote/cli/cmd/ls"
+	"github.com/dnote/cli/cmd/remove"
+	"github.com/dnote/cli/cmd/sync"
+	"github.com/dnote/cli/cmd/upgrade"
+	"github.com/dnote/cli/cmd/version"
 )
 
 // apiEndpoint is populated during link time
