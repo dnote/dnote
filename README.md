@@ -20,8 +20,8 @@ On Windows, download [binary](https://github.com/dnote/cli/releases).
 
 Write technical notes without getting distracted from programming. The reasons are:
 
-* We forget exponentially unless we write down what we learn and come back.
-* Ideas cannot be grokked unless we can put them down in clear words.
+- We forget exponentially unless we write down what we learn and come back.
+- Ideas cannot be grokked unless we can put them down in clear words.
 
 ## Examples
 
@@ -34,7 +34,7 @@ $ dnote add linux -c "find - recursively walk the directory"
 - See the notes in a book
 
 ```
-$ dnote ls linux
+$ dnote view linux
 • on book linux
 (0) find - recursively walk the directory
 ```
@@ -45,9 +45,9 @@ Please refer to [commands](/COMMANDS.md).
 
 ## Links
 
-* [Dnote](https://dnote.io)
-* [Dnote Cloud](https://dnote.io/cloud)
-* [Browser Extension](https://github.com/dnote/browser-extension)
+- [Dnote](https://dnote.io)
+- [Dnote Cloud](https://dnote.io/cloud)
+- [Browser Extension](https://github.com/dnote/browser-extension)
 
 ## License
 

@@ -1,13 +1,12 @@
 # Commands
 
-* [add](#dnote-add)
-* [edit](#dnote-edit)
-* [remove](#dnote-remove)
-* [ls](#dnote-ls)
-* [cat](#dnote-cat)
-* [upgrade](#dnote-upgrade)
-* [login](#dnote-login)
-* [sync](#dnote-sync)
+- [add](#dnote-add)
+- [view](#dnote-view)
+- [edit](#dnote-edit)
+- [remove](#dnote-remove)
+- [upgrade](#dnote-upgrade)
+- [login](#dnote-login)
+- [sync](#dnote-sync)
 
 ## dnote add
 
@@ -26,6 +25,34 @@ Write a new note with a content to the specified book.
 e.g.
 
     $ dnote add linux -c "find - recursively walk the directory"
+
+## dnote view
+
+_alias: v_
+
+- List books or notes.
+- View a note detail.
+
+### `dnote view`
+
+List all books.
+
+### `dnote view [book name]`
+
+List all notes in the book.
+
+e.g
+
+    $ dnote view
+    $ dnote view golang
+
+### `dnote view [book name] [note index]`
+
+See details of a note
+
+e.g
+
+    $ dnote view golang 12
 
 ## dnote edit
 
@@ -64,7 +91,31 @@ e.g
     $ dnote remove JS 1
     $ dnote remove -b JS
 
+## dnote upgrade
+
+Upgrade the Dnote if newer release is available
+
+## dnote sync
+
+_Dnote Cloud only_
+
+Sync notes with Dnote cloud
+
+## dnote login
+
+_Dnote Cloud only_
+
+Start a login prompt
+
+---
+
+# Deprecated Commands
+
+The following commands are deprecated and easier alternatives are provided.
+
 ## dnote ls
+
+**"ls" is replaced by "view". It will be removed in v0.5.0**
 
 _alias: l, notes_
 
@@ -85,6 +136,8 @@ e.g
 
 ## dnote cat
 
+**"cat" is replaced by "view". It will be removed in v0.5.0**
+
 _alias: c_
 
 See details of a note
@@ -94,19 +147,3 @@ See details of a note
 e.g
 
     $ dnote cat golang 12
-
-## dnote upgrade
-
-Upgrade the Dnote if newer release is available
-
-## dnote sync
-
-_Dnote Cloud only_
-
-Sync notes with Dnote cloud
-
-## dnote login
-
-_Dnote Cloud only_
-
-Start a login prompt

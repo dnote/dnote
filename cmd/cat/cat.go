@@ -17,6 +17,11 @@ var example = `
  dnote cat javascript 2
  `
 
+var deprecationWarning = `and "view" will replace it in v0.5.0.
+
+ Run "dnote view --help" for more information.
+`
+
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 2 {
 		return errors.New("Incorrect number of arguments")
@@ -27,18 +32,19 @@ func preRun(cmd *cobra.Command, args []string) error {
 
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "cat <book name> <note index>",
-		Aliases: []string{"c"},
-		Short:   "See a note",
-		Example: example,
-		RunE:    newRun(ctx),
-		PreRunE: preRun,
+		Use:        "cat <book name> <note index>",
+		Aliases:    []string{"c"},
+		Short:      "See a note",
+		Example:    example,
+		RunE:       NewRun(ctx),
+		PreRunE:    preRun,
+		Deprecated: deprecationWarning,
 	}
 
 	return cmd
 }
 
-func newRun(ctx infra.DnoteCtx) core.RunEFunc {
+func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		dnote, err := core.GetDnote(ctx)
 		if err != nil {
