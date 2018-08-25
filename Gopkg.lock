@@ -2,28 +2,28 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:f2aa80ae47e388af9f3518c9cb31674fea6b275e45f7e3cbd27d6783070946a6"
+  digest = "1:97242fd82dcd5574a59c31685652a4de519934674a9fa21159604fdd5a005e7c"
   name = "github.com/dnote/actions"
   packages = ["."]
   pruneopts = ""
-  revision = "c5a5bcd279f1ccdc554e4a96b2c54e6176cb845b"
+  revision = "e646839669907194077733897c26ce2bb9856896"
+  version = "v0.1.0"
 
 [[projects]]
-  digest = "1:d7d69c103aba5ea229451115b28ca06d061e3861b2f44bcd0100cbc65659c4d9"
+  digest = "1:e988ed0ca0d81f4d28772760c02ee95084961311291bdfefc1b04617c178b722"
   name = "github.com/fatih/color"
   packages = ["."]
   pruneopts = ""
-  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
-  version = "v1.6.0"
+  revision = "5b77d2a35fb0ede96d138fc9a99f5c9b6aef11b4"
+  version = "v1.7.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:494c5cc7e63fb171880b38c36d0f3b1c49ab293810a49137a1ab001294281211"
+  digest = "1:9f100ae40cada79ca20c068dc8510ad2d8decc49d84f27f9a45892cef3504557"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = ""
-  revision = "0c3b302de2a6de84a2511db47ea1bb2ff8146830"
+  revision = "d7732128a00e8e95e8fe896017da18ee20b2180d"
 
 [[projects]]
   branch = "master"
@@ -74,36 +74,36 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:2208a80fc3259291e43b30f42f844d18f4218036dff510f42c653ec9890d460a"
+  digest = "1:a1403cc8a94b8d7956ee5e9694badef0e7b051af289caad1cf668331e3ffa4f6"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = ""
-  revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
-  version = "v0.0.1"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
 
 [[projects]]
-  digest = "1:261bc565833ef4f02121450d74eb88d5ae4bd74bfe5d0e862cddb8550ec35000"
+  digest = "1:0a52bcb568386d98f4894575d53ce3e456f56471de6897bb8b9de13c33d9340e"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = ""
-  revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
-  version = "v1.0.0"
+  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
+  version = "v1.0.2"
 
 [[projects]]
   branch = "master"
-  digest = "1:407b5f905024dd94ee08c1777fabb380fb3d380f92a7f7df2592be005337eeb3"
+  digest = "1:7a5f7a1206de6b90f67cb465e489eac3298e95afa7262813b542df4fab38952f"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "37707fdb30a5b38865cfb95e5aab41707daec7fd"
+  revision = "4910a1d54f876d7b22162a85f4d066d3ee649450"
 
 [[projects]]
   branch = "v2"
-  digest = "1:f769ed60e075e4221612c2f4162fccc9d3795ef358fa463425e3b3d7a5debb27"
+  digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = ""
-  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
 
 [solve-meta]
   analyzer-name = "dep"
