@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/dnote/cli/testutils"
@@ -290,5 +291,36 @@ func TestMigrateToV5(t *testing.T) {
 			testutils.AssertEqual(t, oldData.BookName, migratedData.FromBook, "book_name should have been renamed to from_book")
 			testutils.AssertEqual(t, migratedData.ToBook, "", "to_book should be empty")
 		}
+	}
+}
+
+func TestMigrateToV6(t *testing.T) {
+	ctx := testutils.InitCtx("../tmp")
+
+	// set up
+	testutils.SetupTmp(ctx)
+	testutils.WriteFile(ctx, "./fixtures/6-pre-dnote.json", "dnote")
+	defer testutils.ClearTmp(ctx)
+
+	// execute
+	if err := migrateToV6(ctx); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to migrate").Error())
+	}
+
+	// test
+	b := testutils.ReadFile(ctx, "dnote")
+	var got migrateToV6PostDnote
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
+	}
+
+	b = testutils.ReadFileAbs("./fixtures/6-post-dnote.json")
+	var expected migrateToV6PostDnote
+	if err := json.Unmarshal(b, &expected); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
+	}
+
+	if ok := reflect.DeepEqual(expected, got); !ok {
+		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", got, expected)
 	}
 }

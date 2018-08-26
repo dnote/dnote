@@ -56,6 +56,20 @@ func ReadFile(ctx infra.DnoteCtx, filename string) []byte {
 	return b
 }
 
+func ReadFileAbs(filename string) []byte {
+	fp, err := filepath.Abs(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	b, err := ioutil.ReadFile(fp)
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
 func SetupTmp(ctx infra.DnoteCtx) {
 	if err := os.MkdirAll(ctx.DnoteDir, 0755); err != nil {
 		panic(err)

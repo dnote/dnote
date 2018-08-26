@@ -13,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/dnote/actions"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/testutils"
@@ -97,22 +98,22 @@ func TestAdd_NewBook_ContentFlag(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := core.ReadActionLog(ctx)
+	actionSlice, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
 
-	if len(actions) != 2 {
-		t.Fatalf("action log length mismatch. got %d", len(actions))
+	if len(actionSlice) != 2 {
+		t.Fatalf("action log length mismatch. got %d", len(actionSlice))
 	}
 
 	book := dnote["js"]
 	note := book.Notes[0]
-	bookAction := actions[0]
-	noteAction := actions[1]
+	bookAction := actionSlice[0]
+	noteAction := actionSlice[1]
 
-	var noteActionData core.AddNoteData
-	var bookActionData core.AddBookData
+	var noteActionData actions.AddNoteDataV1
+	var bookActionData actions.AddBookDataV1
 	err = json.Unmarshal(bookAction.Data, &bookActionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
@@ -122,10 +123,10 @@ func TestAdd_NewBook_ContentFlag(t *testing.T) {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
-	testutils.AssertEqual(t, bookAction.Type, core.ActionAddBook, "bookAction type mismatch")
+	testutils.AssertEqual(t, bookAction.Type, actions.ActionAddBook, "bookAction type mismatch")
 	testutils.AssertNotEqual(t, bookActionData.BookName, "", "bookAction data note_uuid mismatch")
 	testutils.AssertNotEqual(t, bookAction.Timestamp, 0, "bookAction timestamp mismatch")
-	testutils.AssertEqual(t, noteAction.Type, core.ActionAddNote, "noteAction type mismatch")
+	testutils.AssertEqual(t, noteAction.Type, actions.ActionAddNote, "noteAction type mismatch")
 	testutils.AssertEqual(t, noteActionData.Content, "foo", "noteAction data name mismatch")
 	testutils.AssertNotEqual(t, noteActionData.NoteUUID, nil, "noteAction data note_uuid mismatch")
 	testutils.AssertNotEqual(t, noteActionData.BookName, "", "noteAction data note_uuid mismatch")
@@ -154,22 +155,22 @@ func TestAdd_ExistingBook_ContentFlag(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := core.ReadActionLog(ctx)
+	actionSlice, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
 
 	book := dnote["js"]
-	action := actions[0]
+	action := actionSlice[0]
 
-	var actionData core.AddNoteData
+	var actionData actions.AddNoteDataV1
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
-	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	testutils.AssertEqual(t, action.Type, core.ActionAddNote, "action type mismatch")
+	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
+	testutils.AssertEqual(t, action.Type, actions.ActionAddNote, "action type mismatch")
 	testutils.AssertEqual(t, actionData.Content, "foo", "action data name mismatch")
 	testutils.AssertNotEqual(t, actionData.NoteUUID, "", "action data note_uuid mismatch")
 	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
@@ -199,22 +200,22 @@ func TestEdit_ContentFlag(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := core.ReadActionLog(ctx)
+	actionSlice, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
 
 	book := dnote["js"]
-	action := actions[0]
+	action := actionSlice[0]
 
-	var actionData core.EditNoteData
+	var actionData actions.EditNoteDataV1
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
-	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	testutils.AssertEqual(t, action.Type, core.ActionEditNote, "action type mismatch")
+	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
+	testutils.AssertEqual(t, action.Type, actions.ActionEditNote, "action type mismatch")
 	testutils.AssertEqual(t, actionData.Content, "foo bar", "action data name mismatch")
 	testutils.AssertEqual(t, actionData.FromBook, "js", "action data from_book mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
@@ -270,27 +271,27 @@ func TestRemoveNote(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := core.ReadActionLog(ctx)
+	actionSlice, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
 
-	if len(actions) != 1 {
-		t.Fatalf("action log length mismatch. got %d", len(actions))
+	if len(actionSlice) != 1 {
+		t.Fatalf("action log length mismatch. got %d", len(actionSlice))
 	}
 
 	book := dnote["js"]
 	otherBook := dnote["linux"]
-	action := actions[0]
+	action := actionSlice[0]
 
-	var actionData core.RemoveNoteData
+	var actionData actions.RemoveNoteDataV1
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
-	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	testutils.AssertEqual(t, action.Type, core.ActionRemoveNote, "action type mismatch")
+	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
+	testutils.AssertEqual(t, action.Type, actions.ActionRemoveNote, "action type mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
 	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
@@ -343,26 +344,26 @@ func TestRemoveBook(t *testing.T) {
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
 	}
-	actions, err := core.ReadActionLog(ctx)
+	actionSlice, err := core.ReadActionLog(ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to read actions"))
 	}
 
-	if len(actions) != 1 {
-		t.Fatalf("action log length mismatch. got %d", len(actions))
+	if len(actionSlice) != 1 {
+		t.Fatalf("action log length mismatch. got %d", len(actionSlice))
 	}
 
 	book := dnote["linux"]
-	action := actions[0]
+	action := actionSlice[0]
 
-	var actionData core.RemoveBookData
+	var actionData actions.RemoveBookDataV1
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
-	testutils.AssertEqual(t, len(actions), 1, "There should be 1 action")
-	testutils.AssertEqual(t, action.Type, core.ActionRemoveBook, "action type mismatch")
+	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
+	testutils.AssertEqual(t, action.Type, actions.ActionRemoveBook, "action type mismatch")
 	testutils.AssertEqual(t, actionData.BookName, "js", "action data name mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, len(dnote), 1, "There should be 1 book")

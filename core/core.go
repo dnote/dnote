@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
@@ -18,7 +19,7 @@ import (
 
 const (
 	// Version is the current version of dnote
-	Version = "0.3.1"
+	Version = "0.4.0"
 
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
@@ -67,7 +68,7 @@ func InitActionFile(ctx infra.DnoteCtx) error {
 		return nil
 	}
 
-	b, err := json.Marshal(&[]Action{})
+	b, err := json.Marshal(&[]actions.Action{})
 	if err != nil {
 		return errors.Wrap(err, "Failed to get initial action content")
 	}
@@ -277,7 +278,7 @@ func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 
 // LogAction appends the action to the action log and updates the last_action
 // timestamp
-func LogAction(ctx infra.DnoteCtx, action Action) error {
+func LogAction(ctx infra.DnoteCtx, action actions.Action) error {
 	actions, err := ReadActionLog(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the action log")
@@ -298,10 +299,10 @@ func LogAction(ctx infra.DnoteCtx, action Action) error {
 	return nil
 }
 
-func WriteActionLog(ctx infra.DnoteCtx, actions []Action) error {
+func WriteActionLog(ctx infra.DnoteCtx, ats []actions.Action) error {
 	path := GetActionPath(ctx)
 
-	d, err := json.Marshal(actions)
+	d, err := json.Marshal(ats)
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal newly generated actions to JSON")
 	}
@@ -315,7 +316,7 @@ func WriteActionLog(ctx infra.DnoteCtx, actions []Action) error {
 }
 
 func ClearActionLog(ctx infra.DnoteCtx) error {
-	var content []Action
+	var content []actions.Action
 
 	if err := WriteActionLog(ctx, content); err != nil {
 		return errors.Wrap(err, "Failed to write action log")
@@ -336,8 +337,8 @@ func ReadActionLogContent(ctx infra.DnoteCtx) ([]byte, error) {
 }
 
 // ReadActionLog returns the action log content
-func ReadActionLog(ctx infra.DnoteCtx) ([]Action, error) {
-	var ret []Action
+func ReadActionLog(ctx infra.DnoteCtx) ([]actions.Action, error) {
+	var ret []actions.Action
 
 	b, err := ReadActionLogContent(ctx)
 	if err != nil {

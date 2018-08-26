@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/dnote/actions"
 	"github.com/dnote/cli/testutils"
 	"github.com/pkg/errors"
 )
@@ -17,13 +18,13 @@ func TestReduceAddNote(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote4.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&AddNoteData{
+	b, err := json.Marshal(&actions.AddNoteDataV1{
 		Content:  "new content",
 		BookName: "js",
 		NoteUUID: "06896551-8a06-4996-89cc-0d866308b0f6",
 	})
-	action := Action{
-		Type:      ActionAddNote,
+	action := actions.Action{
+		Type:      actions.ActionAddNote,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -60,13 +61,13 @@ func TestReduceAddNote_SortByAddedOn(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&AddNoteData{
+	b, err := json.Marshal(&actions.AddNoteDataV1{
 		Content:  "new content",
 		BookName: "js",
 		NoteUUID: "06896551-8a06-4996-89cc-0d866308b0f6",
 	})
-	action := Action{
-		Type:      ActionAddNote,
+	action := actions.Action{
+		Type:      actions.ActionAddNote,
 		Data:      b,
 		Timestamp: 1515199944,
 	}
@@ -106,12 +107,12 @@ func TestReduceRemoveNote(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&RemoveNoteData{
+	b, err := json.Marshal(&actions.RemoveNoteDataV1{
 		BookName: "js",
 		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 	})
-	action := Action{
-		Type:      ActionRemoveNote,
+	action := actions.Action{
+		Type:      actions.ActionRemoveNote,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -146,14 +147,15 @@ func TestReduceEditNote(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&EditNoteData{
+	b, err := json.Marshal(&actions.EditNoteDataV1{
 		FromBook: "js",
 		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 		Content:  "updated content",
 	})
-	action := Action{
-		Type:      ActionEditNote,
+	action := actions.Action{
+		Type:      actions.ActionEditNote,
 		Data:      b,
+		Schema:    1,
 		Timestamp: 1517629805,
 	}
 	err = Reduce(ctx, action)
@@ -191,18 +193,154 @@ func TestReduceEditNote_changeBook(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&EditNoteData{
+	b, err := json.Marshal(&actions.EditNoteDataV1{
 		FromBook: "js",
 		ToBook:   "linux",
 		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 		Content:  "updated content",
 	})
-	action := Action{
-		Type:      ActionEditNote,
+	action := actions.Action{
+		Type:      actions.ActionEditNote,
 		Data:      b,
+		Schema:    1,
 		Timestamp: 1517629805,
 	}
 	err = Reduce(ctx, action)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to process action"))
+	}
+
+	// Test
+	dnote, err := GetDnote(ctx)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
+	}
+
+	targetBook := dnote["js"]
+	otherBook := dnote["linux"]
+
+	if len(targetBook.Notes) != 1 {
+		t.Fatalf("target book length mismatch. Got %d", len(targetBook.Notes))
+	}
+	if len(otherBook.Notes) != 2 {
+		t.Fatalf("other book length mismatch. Got %d", len(targetBook.Notes))
+	}
+
+	testutils.AssertEqual(t, len(dnote), 2, "number of books mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].UUID, "3e065d55-6d47-42f2-a6bf-f5844130b2d2", "other book remaining note uuid mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].Content, "updated content", "edited note content mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[1].EditedOn, int64(1517629805), "edited note edited_on mismatch")
+}
+
+func TestReduceEditNote_V2_Content(t *testing.T) {
+	// Setup
+	ctx := testutils.InitCtx("../tmp")
+
+	testutils.SetupTmp(ctx)
+	defer testutils.ClearTmp(ctx)
+	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
+
+	// Execute
+	b := json.RawMessage(`{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "content": "updated content"}`)
+
+	action := actions.Action{
+		Type:      actions.ActionEditNote,
+		Data:      b,
+		Schema:    2,
+		Timestamp: 1517629805,
+	}
+	err := Reduce(ctx, action)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to process action"))
+	}
+
+	// Test
+	dnote, err := GetDnote(ctx)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
+	}
+
+	targetBook := dnote["js"]
+	otherBook := dnote["linux"]
+
+	testutils.AssertEqual(t, len(dnote), 2, "number of books mismatch")
+	testutils.AssertEqual(t, len(targetBook.Notes), 2, "target book notes length mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].Content, "updated content", "edited note content mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].EditedOn, int64(1517629805), "edited note edited_on mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].Public, false, "edited note public mismatch")
+	testutils.AssertEqual(t, len(otherBook.Notes), 1, "other book notes length mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].UUID, "3e065d55-6d47-42f2-a6bf-f5844130b2d2", "other book remaining note uuid mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
+}
+
+func TestReduceEditNote_V2_public(t *testing.T) {
+	// Setup
+	ctx := testutils.InitCtx("../tmp")
+
+	testutils.SetupTmp(ctx)
+	defer testutils.ClearTmp(ctx)
+	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
+
+	// Execute
+	b := json.RawMessage(`{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "public": true}`)
+
+	action := actions.Action{
+		Type:      actions.ActionEditNote,
+		Data:      b,
+		Schema:    2,
+		Timestamp: 1517629805,
+	}
+	err := Reduce(ctx, action)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to process action"))
+	}
+
+	// Test
+	dnote, err := GetDnote(ctx)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
+	}
+
+	targetBook := dnote["js"]
+	otherBook := dnote["linux"]
+
+	testutils.AssertEqual(t, len(dnote), 2, "number of books mismatch")
+	testutils.AssertEqual(t, len(targetBook.Notes), 2, "target book notes length mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].Content, "Date object implements mathematical comparisons", "edited note content mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].EditedOn, int64(1517629805), "edited note edited_on mismatch")
+	testutils.AssertEqual(t, targetBook.Notes[1].Public, true, "edited note public mismatch")
+	testutils.AssertEqual(t, len(otherBook.Notes), 1, "other book notes length mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].UUID, "3e065d55-6d47-42f2-a6bf-f5844130b2d2", "other book remaining note uuid mismatch")
+	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
+}
+
+func TestReduceEditNote_V2_changeBook(t *testing.T) {
+	// Setup
+	ctx := testutils.InitCtx("../tmp")
+
+	testutils.SetupTmp(ctx)
+	defer testutils.ClearTmp(ctx)
+	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
+
+	// Execute
+	b := json.RawMessage(`{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "to_book": "linux", "content": "updated content"}`)
+	action := actions.Action{
+		Type:      actions.ActionEditNote,
+		Data:      b,
+		Schema:    2,
+		Timestamp: 1517629805,
+	}
+	err := Reduce(ctx, action)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
@@ -242,9 +380,9 @@ func TestReduceAddBook(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote4.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&AddBookData{BookName: "new_book"})
-	action := Action{
-		Type:      ActionAddBook,
+	b, err := json.Marshal(&actions.AddBookDataV1{BookName: "new_book"})
+	action := actions.Action{
+		Type:      actions.ActionAddBook,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -274,9 +412,9 @@ func TestReduceRemoveBook(t *testing.T) {
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	b, err := json.Marshal(&RemoveBookData{BookName: "linux"})
-	action := Action{
-		Type:      ActionRemoveBook,
+	b, err := json.Marshal(&actions.RemoveBookDataV1{BookName: "linux"})
+	action := actions.Action{
+		Type:      actions.ActionRemoveBook,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
