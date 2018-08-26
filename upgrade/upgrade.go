@@ -19,8 +19,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// upgradeInterval is 7 days
-var upgradeInterval int64 = 86400 * 7
+// upgradeInterval is 3 weeks
+var upgradeInterval int64 = 86400 * 7 * 3
 
 // getAsset finds the asset to download from the liast of assets in a release
 func getAsset(release *github.RepositoryRelease) *github.ReleaseAsset {
