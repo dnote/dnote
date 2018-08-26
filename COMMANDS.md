@@ -14,17 +14,13 @@ _alias: a, n, new_
 
 Add a new note to a book.
 
-### `dnote add [book name]`
+```bash
+# Launch a text editor to add a new note to the specified book.
+$ dnote add linux
 
-Launch a text editor to add a new note to the specified book.
-
-### `dnote add [book name] -c "[content]"`
-
-Write a new note with a content to the specified book.
-
-e.g.
-
-    $ dnote add linux -c "find - recursively walk the directory"
+# Write a new note with a content to the specified book.
+$ dnote add linux -c "find - recursively walk the directory"
+```
 
 ## dnote view
 
@@ -33,26 +29,16 @@ _alias: v_
 - List books or notes.
 - View a note detail.
 
-### `dnote view`
+```bash
+# List all books.
+$ dnote view
 
-List all books.
+# List all notes in a book.
+$ dnote view golang
 
-### `dnote view [book name]`
-
-List all notes in the book.
-
-e.g
-
-    $ dnote view
-    $ dnote view golang
-
-### `dnote view [book name] [note index]`
-
-See details of a note
-
-e.g
-
-    $ dnote view golang 12
+# See details of a note
+$ dnote view golang 12
+```
 
 ## dnote edit
 
@@ -60,17 +46,13 @@ _alias: e_
 
 Edit a note
 
-### `dnote edit [book name] [note index]`
+```bash
+# Launch a text editor to edit a note with the given index.
+$ dnote edit linux 1
 
-Launch a text editor to edit a note with the given index.
-
-### `dnote edit [book name] [note index] -c "[note content]"`
-
-Edit a note with the given index in the specified book with a content.
-
-e.g
-
-    $ dnote edit linux 1 "New Content"
+# Edit a note with the given index in the specified book with a content.
+$ dnote edit linux 1 "New Content"
+```
 
 ## dnote remove
 
@@ -78,18 +60,13 @@ _alias: d_
 
 Remove either a note or a book
 
-### `dnote remove [book name] [index]`
+```bash
+# Remove the note with `index` in the specified book.
+$ dnote remove JS 1
 
-Removes the note with `index` in the specified book.
-
-### `dnote remove -b [book name]`
-
-Removes the book with the `book name`.
-
-e.g
-
-    $ dnote remove JS 1
-    $ dnote remove -b JS
+# Remove the book with the `book name`.
+$ dnote remove -b JS
+```
 
 ## dnote upgrade
 
@@ -99,6 +76,8 @@ Upgrade the Dnote if newer release is available
 
 _Dnote Cloud only_
 
+_alias: s_
+
 Sync notes with Dnote cloud
 
 ## dnote login
@@ -106,44 +85,3 @@ Sync notes with Dnote cloud
 _Dnote Cloud only_
 
 Start a login prompt
-
----
-
-# Deprecated Commands
-
-The following commands are deprecated and easier alternatives are provided.
-
-## dnote ls
-
-**"ls" is replaced by "view". It will be removed in v0.5.0**
-
-_alias: l, notes_
-
-List books or notes
-
-### `dnote ls`
-
-List all books.
-
-### `dnote ls [book name]`
-
-List all notes in the book.
-
-e.g
-
-    $ dnote ls
-    $ dnote ls golang
-
-## dnote cat
-
-**"cat" is replaced by "view". It will be removed in v0.5.0**
-
-_alias: c_
-
-See details of a note
-
-### `dnote cat [book name] [note index]`
-
-e.g
-
-    $ dnote cat golang 12
