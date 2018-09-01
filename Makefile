@@ -3,7 +3,7 @@ release:
 	@echo "** Tagging and pushing..."
 	@git tag -a $(VERSION) -m "$(VERSION)"
 	@git push --tags
-	@goreleaser
+	@goreleaser --rm-dist
 .PHONY: release
 
 build-snapshot:
