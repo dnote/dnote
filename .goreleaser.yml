@@ -2,6 +2,9 @@ archive:
   format: binary
   name_template: "dnote_{{ .Os }}_{{ .Arch }}"
 
+checksum:
+  name_template: 'dnote_{{ .Version }}_checksums.txt'
+
 builds:
 -
   binary: dnote
