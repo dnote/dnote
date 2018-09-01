@@ -4,7 +4,6 @@
 - [view](#dnote-view)
 - [edit](#dnote-edit)
 - [remove](#dnote-remove)
-- [upgrade](#dnote-upgrade)
 - [login](#dnote-login)
 - [sync](#dnote-sync)
 
@@ -67,10 +66,6 @@ $ dnote remove JS 1
 # Remove the book with the `book name`.
 $ dnote remove -b JS
 ```
-
-## dnote upgrade
-
-Upgrade the Dnote if newer release is available
 
 ## dnote sync
 
