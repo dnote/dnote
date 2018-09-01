@@ -1,0 +1,25 @@
+archive:
+  format: binary
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+builds:
+-
+  binary: dnote
+  ldflags:
+    - -X core.Version={{.Version}}
+    - -X main.apiEndpoint=https://api.dnote.io
+  goos:
+    - darwin
+    - linux
+    - windows
+    - openbsd
+  goarch:
+    - amd64
+    - 386
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^refactor:'

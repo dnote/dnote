@@ -11,12 +11,15 @@ import (
 var example = `
  dnote upgrade`
 
+var deprecationWarning = `see https://github.com/dnote/cli/issues/96.`
+
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "upgrade",
-		Short:   "Upgrades dnote",
-		Example: example,
-		RunE:    newRun(ctx),
+		Use:        "upgrade",
+		Short:      "Upgrades dnote",
+		Example:    example,
+		RunE:       newRun(ctx),
+		Deprecated: deprecationWarning,
 	}
 
 	return cmd

@@ -17,11 +17,11 @@ import (
 	"github.com/dnote/cli/cmd/edit"
 	"github.com/dnote/cli/cmd/login"
 	"github.com/dnote/cli/cmd/ls"
-	"github.com/dnote/cli/cmd/view"
 	"github.com/dnote/cli/cmd/remove"
 	"github.com/dnote/cli/cmd/sync"
 	"github.com/dnote/cli/cmd/upgrade"
 	"github.com/dnote/cli/cmd/version"
+	"github.com/dnote/cli/cmd/view"
 )
 
 // apiEndpoint is populated during link time
