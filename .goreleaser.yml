@@ -1,13 +1,12 @@
 archive:
   format: binary
-
-checksum:
-  name_template: 'checksums.txt'
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 
 builds:
 -
   binary: dnote
   ldflags:
+    - -X core.Version={{.Version}}
     - -X main.apiEndpoint=https://api.dnote.io
   goos:
     - darwin
