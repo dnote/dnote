@@ -1,6 +1,6 @@
 archive:
   format: binary
-  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+  name_template: "dnote_{{ .Os }}_{{ .Arch }}"
 
 builds:
 -
