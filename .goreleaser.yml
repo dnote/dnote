@@ -1,0 +1,26 @@
+archive:
+  format: binary
+
+checksum:
+  name_template: 'checksums.txt'
+
+builds:
+-
+  binary: dnote
+  ldflags:
+    - -X main.apiEndpoint=https://api.dnote.io
+  goos:
+    - darwin
+    - linux
+    - windows
+    - openbsd
+  goarch:
+    - amd64
+    - 386
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^refactor:'
