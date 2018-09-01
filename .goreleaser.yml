@@ -1,9 +1,9 @@
 archive:
   format: binary
-  name_template: "dnote_{{ .Os }}_{{ .Arch }}"
+  name_template: "dnote-{{ .Os }}-{{ .Arch }}"
 
 checksum:
-  name_template: 'dnote_{{ .Version }}_checksums.txt'
+  name_template: 'dnote-{{ .Version }}-checksums.txt'
 
 builds:
 -
@@ -19,6 +19,16 @@ builds:
   goarch:
     - amd64
     - 386
+
+brew:
+  github:
+    owner: dnote
+    name: homebrew-dnote
+  commit_author:
+    name: sungwoncho
+    email: mikeswcho@gmail.com
+  homepage: https://dnote.io
+  description: Capture your learning without leaving the command line
 
 changelog:
   sort: asc
