@@ -1,20 +1,14 @@
 release:
 	@echo "** Releasing version $(VERSION)..."
-	@echo "** Building..."
-	@$(MAKE) build
 	@echo "** Tagging and pushing..."
 	@git tag -a $(VERSION) -m "$(VERSION)"
 	@git push --tags
+	@goreleaser
 .PHONY: release
 
-build: install-gox
-	@$(GOPATH)/bin/gox -ldflags "-X main.apiEndpoint=https://api.dnote.io" -osarch="darwin/386 darwin/amd64 linux/386 linux/amd64 openbsd/386 openbsd/amd64 window/386 windows/amd64" -output="dnote-{{.OS}}-{{.Arch}}" ./...
-.PHONY: build
-
-install-gox:
-	@echo "** Installing Gox..."
-	@go get github.com/mitchellh/gox
-.PHONY: install-gox
+build-snapshot:
+	@goreleaser --snapshot --rm-dist
+.PHONY: build-snapshot
 
 clean:
 	@git clean -f
