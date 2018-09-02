@@ -6,6 +6,7 @@ type DnoteCtx struct {
 	HomeDir     string
 	DnoteDir    string
 	APIEndpoint string
+	Version     string
 }
 
 // Config holds dnote configuration

@@ -117,6 +117,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "Failed to clear the action log")
 		}
 
+		if err := core.CheckUpdate(ctx); err != nil {
+			log.Error(errors.Wrap(err, "automatically checking updates").Error())
+		}
+
 		return nil
 	}
 }
@@ -170,7 +174,7 @@ func postActions(ctx infra.DnoteCtx, APIKey string, payload io.Reader) (*http.Re
 	}
 
 	req.Header.Set("Authorization", APIKey)
-	req.Header.Set("CLI-Version", core.Version)
+	req.Header.Set("CLI-Version", ctx.Version)
 
 	client := http.Client{}
 	resp, err := client.Do(req)

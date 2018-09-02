@@ -3,11 +3,11 @@ release:
 	@echo "** Tagging and pushing..."
 	@git tag -a $(VERSION) -m "$(VERSION)"
 	@git push --tags
-	@goreleaser --rm-dist
+	@API_ENDPOINT=https://api.dnote.io goreleaser --rm-dist
 .PHONY: release
 
 build-snapshot:
-	@goreleaser --snapshot --rm-dist
+	@API_ENDPOINT=http://127.0.0.1:5000 goreleaser --snapshot --rm-dist
 .PHONY: build-snapshot
 
 clean:
