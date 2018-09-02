@@ -71,6 +71,11 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		fmt.Printf("\n------------------------content------------------------\n")
 		fmt.Printf("%s", content)
 		fmt.Printf("\n-------------------------------------------------------\n")
+
+		if err := core.CheckUpdate(ctx); err != nil {
+			log.Error(errors.Wrap(err, "automatically checking updates").Error())
+		}
+
 		return nil
 	}
 }

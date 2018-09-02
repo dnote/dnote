@@ -19,13 +19,13 @@ import (
 	"github.com/dnote/cli/cmd/ls"
 	"github.com/dnote/cli/cmd/remove"
 	"github.com/dnote/cli/cmd/sync"
-	"github.com/dnote/cli/cmd/upgrade"
 	"github.com/dnote/cli/cmd/version"
 	"github.com/dnote/cli/cmd/view"
 )
 
-// apiEndpoint is populated during link time
+// apiEndpoint and versionTag are populated during link time
 var apiEndpoint string
+var versionTag = "master"
 
 func main() {
 	ctx, err := newCtx()
@@ -45,7 +45,6 @@ func main() {
 	root.Register(ls.NewCmd(ctx))
 	root.Register(sync.NewCmd(ctx))
 	root.Register(version.NewCmd(ctx))
-	root.Register(upgrade.NewCmd(ctx))
 	root.Register(cat.NewCmd(ctx))
 	root.Register(view.NewCmd(ctx))
 
@@ -66,6 +65,7 @@ func newCtx() (infra.DnoteCtx, error) {
 		HomeDir:     homeDir,
 		DnoteDir:    dnoteDir,
 		APIEndpoint: apiEndpoint,
+		Version:     versionTag,
 	}
 
 	return ret, nil

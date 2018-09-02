@@ -17,10 +17,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	// Version is the current version of dnote
-	Version = "master"
-
+var (
 	// TimestampFilename is the name of the file containing upgrade info
 	TimestampFilename = "timestamps"
 	// DnoteDirName is the name of the directory containing dnote files

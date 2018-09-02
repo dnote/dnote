@@ -222,7 +222,7 @@ func migrateToV5(ctx infra.DnoteCtx) error {
 		case migrateToV5ActionEditNote:
 			var oldData migrateToV5PreEditNoteData
 			if err = json.Unmarshal(action.Data, &oldData); err != nil {
-				return errors.Wrapf(err, "unmarshalling old data of an edit note action %s", action.ID)
+				return errors.Wrapf(err, "unmarshalling old data of an edit note action %d", action.ID)
 			}
 
 			migratedData := migrateToV5PostEditNoteData{

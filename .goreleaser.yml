@@ -1,6 +1,9 @@
 archive:
-  format: binary
-  name_template: "dnote-{{ .Os }}-{{ .Arch }}"
+  format: tar.gz
+  format_overrides:
+    - goos: windows
+      format: zip
+  name_template: "dnote_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: 'dnote-{{ .Version }}-checksums.txt'
@@ -9,8 +12,7 @@ builds:
 -
   binary: dnote
   ldflags:
-    - -X core.Version={{.Version}}
-    - -X main.apiEndpoint=https://api.dnote.io
+    - -X main.apiEndpoint={{ .Env.API_ENDPOINT }} -X main.versionTag={{ .Version }}
   goos:
     - darwin
     - linux
