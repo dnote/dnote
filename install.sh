@@ -12,7 +12,7 @@ not_supported() {
   exit 1
 }
 
-install() {
+get_platform() {
   UNAME=$(uname)
 
   if [ "$UNAME" != "Linux" -a "$UNAME" != "Darwin" -a "$UNAME" != "OpenBSD" ] ; then
@@ -22,46 +22,68 @@ install() {
   if [ "$UNAME" = "Darwin" ]; then
     OSX_ARCH=$(uname -m)
     if [ "${OSX_ARCH}" = "x86_64" ]; then
-      PLATFORM="darwin-amd64"
+      platform="darwin_amd64"
     else
       not_supported
     fi
   elif [ "$UNAME" = "Linux" ]; then
     LINUX_ARCH=$(uname -m)
     if [ "${LINUX_ARCH}" = "x86_64" ]; then
-      PLATFORM="linux-amd64"
+      platform="linux_amd64"
     elif [ "${LINUX_ARCH}" = "i686" ]; then
-      PLATFORM="linux-386"
+      platform="linux_386"
     else
       not_supported
     fi
   elif [ "$UNAME" = "OpenBSD" ]; then
     OPENBSD_ARCH=$(uname -m)
     if [ "${OPENBSD_ARCH}" = "x86_64" ]; then
-      PLATFORM="openbsd-amd64"
+      platform="openbsd_amd64"
     elif [ "${OPENBSD_ARCH}" = "i686" ]; then
-      PLATFORM="openbsd-386"
+      platform="openbsd_386"
     else
       not_supported
     fi
   fi
 
-  LATEST=$(curl -s https://api.github.com/repos/dnote/cli/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
-  URL="https://github.com/dnote/cli/releases/download/$LATEST/dnote-$PLATFORM"
-  DEST=${DEST:-/usr/local/bin/dnote}
+  echo $platform
+}
 
+get_version() {
+  LATEST=$(curl -s https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
   if [ -z $LATEST ]; then
     echo "Error fetching latest version. Please try again."
     exit 1
   fi
 
-  echo "Downloading Dnote binary from $URL to $DEST"
-  if curl -L --progress-bar $URL -o $DEST; then
-    chmod +x $DEST
+  # remove the preceding 'v'
+  echo ${LATEST#v}
+}
+
+execute() {
+  echo "downloading Dnote v${LATEST}..."
+  echo ${URL}
+  if curl -L --progress-bar $URL -o "${TMPDIR}/${TARBALL}"; then
+    (cd "${TMPDIR}" && tar -xzf "${TARBALL}")
+
+    install -d "${BINDIR}"
+    install "${TMPDIR}/${BINARY}" "${BINDIR}/"
+
     echo "Successfully installed Dnote"
   else
     echo "Installation failed. You might need elevated permission."
+    exit 1
   fi
 }
 
-install
+REPO_OWNER=dnote
+REPO_NAME=cli
+PLATFORM=$(get_platform)
+LATEST=$(get_version)
+TARBALL="dnote_${LATEST}_${PLATFORM}.tar.gz"
+URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v${LATEST}/${TARBALL}"
+TMPDIR="$(mktemp -d)"
+BINDIR=${BINDIR:-/usr/local/bin}
+BINARY=dnote
+
+execute
