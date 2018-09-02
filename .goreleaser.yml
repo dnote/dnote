@@ -33,19 +33,6 @@ brew:
     email: mikeswcho@gmail.com
   homepage: https://dnote.io
   description: Capture your learning without leaving the command line
-  dependencies:
-    - go
-    - dep
-  install: |
-    ENV["GOPATH"] = buildpath
-
-    (buildpath/"src/github.com/dnote/cli").install buildpath.children
-    cd "src/github.com/dnote/cli" do
-      system "dep", "ensure"
-      system "go", "build", "-ldflags", "-X main.apiEndpoint=https://api.dnote.io", "-o", bin/"dnote"
-    end
-  test: |
-    system "${bin}/dnote --version"
 
 changelog:
   sort: asc
