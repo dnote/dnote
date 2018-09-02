@@ -8,7 +8,6 @@ import (
 
 	"github.com/dnote/cli/cmd/cat"
 	"github.com/dnote/cli/cmd/ls"
-	"github.com/dnote/cli/log"
 )
 
 var example = `
@@ -53,10 +52,6 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			run = cat.NewRun(ctx)
 		} else {
 			return errors.New("Incorrect number of arguments")
-		}
-
-		if err := core.CheckUpdate(ctx); err != nil {
-			log.Error(errors.Wrap(err, "automatically checking updates").Error())
 		}
 
 		return run(cmd, args)

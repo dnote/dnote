@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/dnote/cli/infra"
@@ -60,7 +61,7 @@ func checkVersion(ctx infra.DnoteCtx) error {
 	if latestVersion == ctx.Version {
 		log.Success("you are up-to-date\n\n")
 	} else {
-		log.Info("to upgrade, see https://github.com/dnote/cli/blob/master/README.md")
+		log.Infof("to upgrade, see https://github.com/dnote/cli/blob/master/README.md\n")
 	}
 
 	return nil
@@ -81,6 +82,7 @@ func CheckUpdate(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "updating the last upgrade timestamp")
 	}
 
+	fmt.Printf("\n")
 	willCheck, err := utils.AskConfirmation("check for upgrade?", true)
 	if err != nil {
 		return errors.Wrap(err, "getting user confirmation")
