@@ -6,7 +6,14 @@ A command line interface for spontaneously capturing the things you learn while 
 
 ## Install
 
-On Linux or macOS, run:
+On macOS, you can install using Homebrew:
+
+```sh
+brew tap dnote/dnote
+brew install dnote
+```
+
+On Linux or macOS, you can use the installation script:
 
     curl -s https://raw.githubusercontent.com/dnote/cli/master/install.sh | sh
 
@@ -14,7 +21,7 @@ In some cases, you might need an elevated permission:
 
     curl -s https://raw.githubusercontent.com/dnote/cli/master/install.sh | sudo sh
 
-On Windows, download [binary](https://github.com/dnote/cli/releases).
+Otherwise, you can download the binary for your platform manually from the [releases page](https://github.com/dnote/cli/releases).
 
 ## Overview
 
