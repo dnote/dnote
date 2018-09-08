@@ -6,6 +6,7 @@ import (
 
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 )
 
@@ -54,6 +55,8 @@ func handleAddNote(ctx infra.DnoteCtx, action actions.Action) error {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
 
+	log.Debug("reducing add_note. action: %+v. data: %+v\n", action, data)
+
 	note := infra.Note{
 		UUID:    data.NoteUUID,
 		Content: data.Content,
@@ -99,6 +102,8 @@ func handleRemoveNote(ctx infra.DnoteCtx, action actions.Action) error {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
 
+	log.Debug("reducing remove_note. action: %+v. data: %+v\n", action, data)
+
 	dnote, err := GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
@@ -127,6 +132,8 @@ func handleEditNoteV1(ctx infra.DnoteCtx, action actions.Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
+
+	log.Debug("reducing edit_note v1. action: %+v. data: %+v\n", action, data)
 
 	dnote, err := GetDnote(ctx)
 	if err != nil {
@@ -186,6 +193,8 @@ func handleEditNoteV2(ctx infra.DnoteCtx, action actions.Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
+
+	log.Debug("reducing edit_note v2. action: %+v. data: %+v\n", action, data)
 
 	dnote, err := GetDnote(ctx)
 	if err != nil {
@@ -269,6 +278,8 @@ func handleAddBook(ctx infra.DnoteCtx, action actions.Action) error {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
 
+	log.Debug("reducing add_book. action: %+v. data: %+v\n", action, data)
+
 	dnote, err := GetDnote(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get dnote")
@@ -301,6 +312,8 @@ func handleRemoveBook(ctx infra.DnoteCtx, action actions.Action) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to parse the action data")
 	}
+
+	log.Debug("reducing remove_book. action: %+v. data: %+v\n", action, data)
 
 	dnote, err := GetDnote(ctx)
 	if err != nil {
