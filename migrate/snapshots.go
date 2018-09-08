@@ -130,3 +130,27 @@ type migrateToV6PostBook struct {
 }
 type migrateToV6PreDnote map[string]migrateToV6PreBook
 type migrateToV6PostDnote map[string]migrateToV6PostBook
+
+// v7
+var migrateToV7ActionTypeEditNote = "edit_note"
+
+type migrateToV7Action struct {
+	UUID      string          `json:"uuid"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV7EditNoteDataV1 struct {
+	NoteUUID string `json:"note_uuid"`
+	FromBook string `json:"from_book"`
+	ToBook   string `json:"to_book"`
+	Content  string `json:"content"`
+}
+type migrateToV7EditNoteDataV2 struct {
+	NoteUUID string  `json:"note_uuid"`
+	FromBook string  `json:"from_book"`
+	ToBook   *string `json:"to_book"`
+	Content  *string `json:"content"`
+	Public   *bool   `json:"public"`
+}

@@ -138,3 +138,18 @@ func ReadJSON(path string, destination interface{}) {
 		panic(errors.Wrap(err, "Failed to get event"))
 	}
 }
+
+// IsEqualJSON deeply compares two JSON byte slices
+func IsEqualJSON(s1, s2 []byte) (bool, error) {
+	var o1 interface{}
+	var o2 interface{}
+
+	if err := json.Unmarshal(s1, &o1); err != nil {
+		return false, errors.Wrap(err, "unmarshalling first  JSON")
+	}
+	if err := json.Unmarshal(s2, &o2); err != nil {
+		return false, errors.Wrap(err, "unmarshalling second JSON")
+	}
+
+	return reflect.DeepEqual(o1, o2), nil
+}

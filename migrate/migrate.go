@@ -27,6 +27,7 @@ const (
 	migrationV4
 	migrationV5
 	migrationV6
+	migrationV7
 )
 
 var migrationSequence = []int{
@@ -36,6 +37,7 @@ var migrationSequence = []int{
 	migrationV4,
 	migrationV5,
 	migrationV6,
+	migrationV7,
 }
 
 type schema struct {
@@ -93,6 +95,8 @@ func performMigration(ctx infra.DnoteCtx, migrationID int) error {
 		migrationError = migrateToV5(ctx)
 	case migrationV6:
 		migrationError = migrateToV6(ctx)
+	case migrationV7:
+		migrationError = migrateToV7(ctx)
 	default:
 		return errors.Errorf("Unrecognized migration id %d", migrationID)
 	}
