@@ -50,7 +50,7 @@ Edit a note
 $ dnote edit linux 1
 
 # Edit a note with the given index in the specified book with a content.
-$ dnote edit linux 1 "New Content"
+$ dnote edit linux 1 -c "New Content"
 ```
 
 ## dnote remove
