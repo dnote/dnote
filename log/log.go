@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -54,4 +55,11 @@ func Errorf(msg string, v ...interface{}) {
 
 func Printf(msg string, v ...interface{}) {
 	fmt.Fprintf(color.Output, "%s%s %s", indent, SprintfGray("•"), fmt.Sprintf(msg, v...))
+}
+
+// Debug prints to the console if DNOTE_DEBUG is set
+func Debug(msg string, v ...interface{}) {
+	if os.Getenv("DNOTE_DEBUG") == "1" {
+		fmt.Fprintf(color.Output, "%s %s", SprintfGray("DEBUG:"), fmt.Sprintf(msg, v...))
+	}
 }

@@ -24,6 +24,10 @@ Run
 ./scripts/test.sh
 ```
 
+## Debug
+
+Run Dnote with `DNOTE_DEBUG=1` to print debugging statements.
+
 ## Release
 
 This project uses [goreleaser](https://github.com/goreleaser/goreleaser) to automate the release process.
