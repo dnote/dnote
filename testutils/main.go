@@ -45,6 +45,17 @@ func WriteFile(ctx infra.DnoteCtx, fixturePath string, filename string) {
 	}
 }
 
+func WriteFileWithContent(ctx infra.DnoteCtx, content []byte, filename string) {
+	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
+	if err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile(dp, content, 0644); err != nil {
+		panic(err)
+	}
+}
+
 func ReadFile(ctx infra.DnoteCtx, filename string) []byte {
 	path := filepath.Join(ctx.DnoteDir, filename)
 
