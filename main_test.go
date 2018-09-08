@@ -208,7 +208,7 @@ func TestEdit_ContentFlag(t *testing.T) {
 	book := dnote["js"]
 	action := actionSlice[0]
 
-	var actionData actions.EditNoteDataV1
+	var actionData actions.EditNoteDataV2
 	err = json.Unmarshal(action.Data, &actionData)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
@@ -216,8 +216,12 @@ func TestEdit_ContentFlag(t *testing.T) {
 
 	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
 	testutils.AssertEqual(t, action.Type, actions.ActionEditNote, "action type mismatch")
-	testutils.AssertEqual(t, actionData.Content, "foo bar", "action data name mismatch")
+	testutils.AssertEqual(t, action.Schema, 2, "action schema mismatch")
+	testutils.AssertEqual(t, *actionData.Content, "foo bar", "action data name mismatch")
 	testutils.AssertEqual(t, actionData.FromBook, "js", "action data from_book mismatch")
+	if actionData.ToBook != nil {
+		t.Errorf("action data to_book mismatch. Expected %+v. Got %+v", nil, actionData.ToBook)
+	}
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, len(book.Notes), 2, "Book should have one note")

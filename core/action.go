@@ -62,11 +62,12 @@ func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
 }
 
 func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ts int64) error {
-	b, err := json.Marshal(actions.EditNoteDataV1{
+	b, err := json.Marshal(actions.EditNoteDataV2{
 		NoteUUID: noteUUID,
 		FromBook: bookName,
-		Content:  content,
+		Content:  &content,
 	})
+
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal data into JSON")
 	}

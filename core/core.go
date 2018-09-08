@@ -11,6 +11,7 @@ import (
 
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/migrate"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -57,8 +58,8 @@ func GetDnoteTmpContentPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TmpContentFilename)
 }
 
-// InitActionFile populates action file if it does not exist
-func InitActionFile(ctx infra.DnoteCtx) error {
+// initActionFile populates action file if it does not exist
+func initActionFile(ctx infra.DnoteCtx) error {
 	path := GetActionPath(ctx)
 
 	if utils.FileExists(path) {
@@ -97,8 +98,43 @@ func getEditorCommand() string {
 	}
 }
 
-// InitConfigFile populates a new config file if it does not exist yet
-func InitConfigFile(ctx infra.DnoteCtx) error {
+// InitFiles creates, if necessary, the dnote directory and files inside
+func InitFiles(ctx infra.DnoteCtx) error {
+	fresh, err := isFreshInstall(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to check if fresh install")
+	}
+
+	err = initDnoteDir(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote dir")
+	}
+	err = initConfigFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to generate config file")
+	}
+	err = initDnoteFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote file")
+	}
+	err = initTimestampFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create dnote upgrade file")
+	}
+	err = initActionFile(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create action file")
+	}
+	err = migrate.InitSchemaFile(ctx, fresh)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create migration file")
+	}
+
+	return nil
+}
+
+// initConfigFile populates a new config file if it does not exist yet
+func initConfigFile(ctx infra.DnoteCtx) error {
 	path := GetConfigPath(ctx)
 
 	if utils.FileExists(path) {
@@ -124,8 +160,8 @@ func InitConfigFile(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-// InitDnoteDir initializes dnote directory if it does not exist yet
-func InitDnoteDir(ctx infra.DnoteCtx) error {
+// initDnoteDir initializes dnote directory if it does not exist yet
+func initDnoteDir(ctx infra.DnoteCtx) error {
 	path := ctx.DnoteDir
 
 	if utils.FileExists(path) {
@@ -139,8 +175,8 @@ func InitDnoteDir(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-// InitDnoteFile creates an empty dnote file
-func InitDnoteFile(ctx infra.DnoteCtx) error {
+// initDnoteFile creates an empty dnote file
+func initDnoteFile(ctx infra.DnoteCtx) error {
 	path := GetDnotePath(ctx)
 
 	if utils.FileExists(path) {
@@ -156,8 +192,8 @@ func InitDnoteFile(ctx infra.DnoteCtx) error {
 	return err
 }
 
-// InitTimestampFile creates an empty dnote upgrade file
-func InitTimestampFile(ctx infra.DnoteCtx) error {
+// initTimestampFile creates an empty dnote upgrade file
+func initTimestampFile(ctx infra.DnoteCtx) error {
 	path := GetTimestampPath(ctx)
 
 	if utils.FileExists(path) {
@@ -459,8 +495,8 @@ func MigrateToDnoteDir(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-// IsFreshInstall checks if the dnote files have been initialized
-func IsFreshInstall(ctx infra.DnoteCtx) (bool, error) {
+// isFreshInstall checks if the dnote files have been initialized
+func isFreshInstall(ctx infra.DnoteCtx) (bool, error) {
 	path := ctx.DnoteDir
 
 	_, err := os.Stat(path)

@@ -29,42 +29,17 @@ func Execute() error {
 func Prepare(ctx infra.DnoteCtx) error {
 	err := core.MigrateToDnoteDir(ctx)
 	if err != nil {
-		return errors.Wrap(err, "Failed to initialize dnote dir")
+		return errors.Wrap(err, "initializing dnote dir")
 	}
 
-	fresh, err := core.IsFreshInstall(ctx)
+	err = core.InitFiles(ctx)
 	if err != nil {
-		return errors.Wrap(err, "Failed to check if fresh install")
-	}
-
-	err = core.InitDnoteDir(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote dir")
-	}
-	err = core.InitConfigFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to generate config file")
-	}
-	err = core.InitDnoteFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote file")
-	}
-	err = core.InitTimestampFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote upgrade file")
-	}
-	err = core.InitActionFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create action file")
-	}
-	err = migrate.InitSchemaFile(ctx, fresh)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create migration file")
+		return errors.Wrap(err, "initiating files")
 	}
 
 	err = migrate.Migrate(ctx)
 	if err != nil {
-		return errors.Wrap(err, "Failed to perform migration")
+		return errors.Wrap(err, "running migration")
 	}
 
 	return nil

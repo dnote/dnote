@@ -315,3 +315,69 @@ func migrateToV6(ctx infra.DnoteCtx) error {
 
 	return nil
 }
+
+// migrateToV7 migrates data of edit_note action to the proper version which is
+// EditNoteDataV2. Due to a bug, edit logged actions with schema version '2'
+// but with a data of EditNoteDataV1. https://github.com/dnote/cli/issues/107
+func migrateToV7(ctx infra.DnoteCtx) error {
+	actionPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+
+	b, err := ioutil.ReadFile(actionPath)
+	if err != nil {
+		return errors.Wrap(err, "reading actions file")
+	}
+
+	var preActions []migrateToV7Action
+	postActions := []migrateToV7Action{}
+	err = json.Unmarshal(b, &preActions)
+	if err != nil {
+		return errors.Wrap(err, "unmarhsalling existing actions")
+	}
+
+	for _, action := range preActions {
+		var newAction migrateToV7Action
+
+		if action.Type == migrateToV7ActionTypeEditNote {
+			var oldData migrateToV7EditNoteDataV1
+			if e := json.Unmarshal(action.Data, &oldData); e != nil {
+				return errors.Wrapf(e, "unmarshalling data of action with uuid %s", action.Data)
+			}
+
+			newData := migrateToV7EditNoteDataV2{
+				NoteUUID: oldData.NoteUUID,
+				FromBook: oldData.FromBook,
+				ToBook:   nil,
+				Content:  &oldData.Content,
+				Public:   nil,
+			}
+			d, e := json.Marshal(newData)
+			if e != nil {
+				return errors.Wrapf(e, "marshalling new data of action with uuid %s", action.Data)
+			}
+
+			newAction = migrateToV7Action{
+				UUID:      action.UUID,
+				Schema:    action.Schema,
+				Type:      action.Type,
+				Timestamp: action.Timestamp,
+				Data:      d,
+			}
+		} else {
+			newAction = action
+		}
+
+		postActions = append(postActions, newAction)
+	}
+
+	d, err := json.Marshal(postActions)
+	if err != nil {
+		return errors.Wrap(err, "marshalling new actions")
+	}
+
+	err = ioutil.WriteFile(actionPath, d, 0644)
+	if err != nil {
+		return errors.Wrap(err, "writing new actions to a file")
+	}
+
+	return nil
+}

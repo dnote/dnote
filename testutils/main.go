@@ -45,6 +45,17 @@ func WriteFile(ctx infra.DnoteCtx, fixturePath string, filename string) {
 	}
 }
 
+func WriteFileWithContent(ctx infra.DnoteCtx, content []byte, filename string) {
+	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
+	if err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile(dp, content, 0644); err != nil {
+		panic(err)
+	}
+}
+
 func ReadFile(ctx infra.DnoteCtx, filename string) []byte {
 	path := filepath.Join(ctx.DnoteDir, filename)
 
@@ -126,4 +137,19 @@ func ReadJSON(path string, destination interface{}) {
 	if err := json.Unmarshal(dat, destination); err != nil {
 		panic(errors.Wrap(err, "Failed to get event"))
 	}
+}
+
+// IsEqualJSON deeply compares two JSON byte slices
+func IsEqualJSON(s1, s2 []byte) (bool, error) {
+	var o1 interface{}
+	var o2 interface{}
+
+	if err := json.Unmarshal(s1, &o1); err != nil {
+		return false, errors.Wrap(err, "unmarshalling first  JSON")
+	}
+	if err := json.Unmarshal(s2, &o2); err != nil {
+		return false, errors.Wrap(err, "unmarshalling second JSON")
+	}
+
+	return reflect.DeepEqual(o1, o2), nil
 }

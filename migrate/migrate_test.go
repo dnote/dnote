@@ -324,3 +324,39 @@ func TestMigrateToV6(t *testing.T) {
 		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", got, expected)
 	}
 }
+
+func TestMigrateToV7(t *testing.T) {
+	ctx := testutils.InitCtx("../tmp")
+
+	// set up
+	testutils.SetupTmp(ctx)
+	testutils.WriteFile(ctx, "./fixtures/7-pre-actions.json", "actions")
+	defer testutils.ClearTmp(ctx)
+
+	// execute
+	if err := migrateToV7(ctx); err != nil {
+		t.Fatal(errors.Wrap(err, "migrating").Error())
+	}
+
+	// test
+	b := testutils.ReadFile(ctx, "actions")
+	var got []migrateToV7Action
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(errors.Wrap(err, "unmarshalling the result").Error())
+	}
+
+	b2 := testutils.ReadFileAbs("./fixtures/7-post-actions.json")
+	var expected []migrateToV7Action
+	if err := json.Unmarshal(b, &expected); err != nil {
+		t.Fatal(errors.Wrap(err, "unmarshalling the result into Dnote").Error())
+	}
+
+	ok, err := testutils.IsEqualJSON(b, b2)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "comparing JSON").Error())
+	}
+
+	if !ok {
+		t.Errorf("Result does not match.\nActual:   %+v\nExpected: %+v", got, expected)
+	}
+}
