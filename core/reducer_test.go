@@ -138,7 +138,7 @@ func TestReduceRemoveNote(t *testing.T) {
 	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
 }
 
-func TestReduceEditNote(t *testing.T) {
+func TestReduceEditNote_V1_Content(t *testing.T) {
 	// Setup
 	ctx := testutils.InitCtx("../tmp")
 
@@ -184,7 +184,7 @@ func TestReduceEditNote(t *testing.T) {
 	testutils.AssertEqual(t, otherBook.Notes[0].Content, "wc -l to count words", "other book remaining note content mismatch")
 }
 
-func TestReduceEditNote_changeBook(t *testing.T) {
+func TestReduceEditNote_V1_ChangeBook(t *testing.T) {
 	// Setup
 	ctx := testutils.InitCtx("../tmp")
 
