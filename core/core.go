@@ -93,8 +93,10 @@ func getEditorCommand() string {
 		return "nano"
 	case "emacs":
 		return "emacs"
-	default:
+	case "":
 		return "vi"
+	default:
+		return editor
 	}
 }
 
