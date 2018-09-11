@@ -1,8 +1,8 @@
 package cat
 
 import (
+	"database/sql"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/dnote/cli/core"
@@ -44,30 +44,48 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
+type noteInfo struct {
+	BookLabel string
+	UUID      string
+	Content   string
+	AddedOn   int64
+	EditedOn  int64
+}
+
 func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		dnote, err := core.GetDnote(ctx)
-		if err != nil {
-			return errors.Wrap(err, "reading dnote")
+		db := ctx.DB
+		bookLabel := args[0]
+		noteID := args[1]
+
+		var bookUUID string
+		err := db.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
+		if err == sql.ErrNoRows {
+			return errors.Errorf("book '%s' not found", bookLabel)
+		} else if err != nil {
+			return errors.Wrap(err, "querying the book")
 		}
 
-		bookName := args[0]
-		noteIdx, err := strconv.Atoi(args[1])
-		if err != nil {
-			return errors.Wrapf(err, "parsing note index '%+v'", args[1])
+		var info noteInfo
+		err = db.QueryRow(`SELECT books.label, notes.uuid, notes.content, notes.added_on, notes.edited_on
+			FROM notes
+			INNER JOIN books ON books.uuid = notes.book_uuid
+			WHERE notes.id = ? AND books.uuid = ?`, noteID, bookUUID).
+			Scan(&info.BookLabel, &info.UUID, &info.Content, &info.AddedOn, &info.EditedOn)
+		if err == sql.ErrNoRows {
+			return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+		} else if err != nil {
+			return errors.Wrap(err, "querying the note")
 		}
 
-		book := dnote[bookName]
-		note := book.Notes[noteIdx]
-
-		log.Infof("book name: %s\n", bookName)
-		log.Infof("note uuid: %s\n", note.UUID)
-		log.Infof("created at: %s\n", time.Unix(note.AddedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
-		if note.EditedOn != 0 {
-			log.Infof("updated at: %s\n", time.Unix(note.EditedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
+		log.Infof("book name: %s\n", info.BookLabel)
+		log.Infof("note uuid: %s\n", info.UUID)
+		log.Infof("created at: %s\n", time.Unix(info.AddedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
+		if info.EditedOn != 0 {
+			log.Infof("updated at: %s\n", time.Unix(info.EditedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
 		}
 		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", note.Content)
+		fmt.Printf("%s", info.Content)
 		fmt.Printf("\n-------------------------------------------------------\n")
 
 		return nil

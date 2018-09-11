@@ -14,13 +14,22 @@ func TestLogActionEditNote(t *testing.T) {
 	ctx := testutils.InitCtx("../tmp")
 
 	testutils.SetupTmp(ctx)
+	testutils.SetupDB(ctx)
 	defer testutils.ClearTmp(ctx)
 	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
 	InitFiles(ctx)
 
-	if err := LogActionEditNote(ctx, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "js", "updated content", 1536168581); err != nil {
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+	}
+
+	if err := LogActionEditNote(tx, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "js", "updated content", 1536168581); err != nil {
 		t.Fatalf("Failed to perform %s", err.Error())
 	}
+
+	tx.Commit()
 
 	b := testutils.ReadFile(ctx, "actions")
 	var got []actions.Action

@@ -210,7 +210,7 @@ func migrateToV5(ctx infra.DnoteCtx) error {
 	var actions []migrateToV5PreAction
 	err = json.Unmarshal(b, &actions)
 	if err != nil {
-		return errors.Wrap(err, "unmarshalling actions to JSON")
+		return errors.Wrap(err, "unmarshalling actions from JSON")
 	}
 
 	result := []migrateToV5PostAction{}
@@ -377,6 +377,130 @@ func migrateToV7(ctx infra.DnoteCtx) error {
 	err = ioutil.WriteFile(actionPath, d, 0644)
 	if err != nil {
 		return errors.Wrap(err, "writing new actions to a file")
+	}
+
+	return nil
+}
+
+// migrateToV8 migrates dnote data to sqlite database
+func migrateToV8(ctx infra.DnoteCtx) error {
+	tx, err := ctx.DB.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	// 1. Migrate the the dnote file
+	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
+	b, err := ioutil.ReadFile(dnoteFilePath)
+	if err != nil {
+		return errors.Wrap(err, "reading the notes")
+	}
+
+	var dnote migrateToV8Dnote
+	err = json.Unmarshal(b, &dnote)
+	if err != nil {
+		return errors.Wrap(err, "unmarhsalling notes to JSON")
+	}
+
+	for bookName, book := range dnote {
+		bookUUID := uuid.NewV4().String()
+		_, err = tx.Exec(`INSERT INTO books (uuid, label) VALUES (?, ?)`, bookUUID, bookName)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrapf(err, "inserting book %s", book.Name)
+		}
+
+		for _, note := range book.Notes {
+			_, err = tx.Exec(`INSERT INTO notes
+			(uuid, book_uuid, content, added_on, edited_on, public)
+			VALUES (?, ?, ?, ?, ?, ?)
+			`, note.UUID, bookUUID, note.Content, note.AddedOn, note.EditedOn, note.Public)
+
+			if err != nil {
+				tx.Rollback()
+				return errors.Wrapf(err, "inserting the note %s", note.UUID)
+			}
+		}
+	}
+
+	// 2. Migrate the actions file
+	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+	b, err = ioutil.ReadFile(actionsPath)
+	if err != nil {
+		return errors.Wrap(err, "reading the actions")
+	}
+
+	var actions []migrateToV8Action
+	err = json.Unmarshal(b, &actions)
+	if err != nil {
+		return errors.Wrap(err, "unmarhsalling actions from JSON")
+	}
+
+	for _, action := range actions {
+		_, err = tx.Exec(`INSERT INTO actions
+			(uuid, schema, type, data, timestamp)
+			VALUES (?, ?, ?, ?, ?)
+			`, action.UUID, action.Schema, action.Type, action.Data, action.Timestamp)
+
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrapf(err, "inserting the action %s", action.UUID)
+		}
+	}
+
+	// 3. Migrate the timestamps file
+	timestampsPath := fmt.Sprintf("%s/timestamps", ctx.DnoteDir)
+	b, err = ioutil.ReadFile(timestampsPath)
+	if err != nil {
+		return errors.Wrap(err, "reading the timestamps")
+	}
+
+	var timestamp migrateToV8Timestamp
+	err = yaml.Unmarshal(b, &timestamp)
+	if err != nil {
+		return errors.Wrap(err, "unmarhsalling timestamps from YAML")
+	}
+
+	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,
+		migrateToV8SystemKeyLastUpgrade, timestamp.LastUpgrade)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting the last_upgrade value")
+	}
+
+	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,
+		migrateToV8SystemKeyLastUpgrade, timestamp.LastUpgrade)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting the last_upgrade value")
+	}
+	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,
+		migrateToV8SystemKeyLastAction, timestamp.LastAction)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting the last_action value")
+	}
+	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,
+		migrateToV8SystemKeyBookMark, timestamp.Bookmark)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "inserting the bookmark value")
+	}
+
+	tx.Commit()
+
+	if err := os.RemoveAll(dnoteFilePath); err != nil {
+		return errors.Wrap(err, "removing the old dnote file")
+	}
+	if err := os.RemoveAll(actionsPath); err != nil {
+		return errors.Wrap(err, "removing the actions file")
+	}
+	if err := os.RemoveAll(timestampsPath); err != nil {
+		return errors.Wrap(err, "removing the timestamps file")
+	}
+	schemaPath := fmt.Sprintf("%s/schema", ctx.DnoteDir)
+	if err := os.RemoveAll(schemaPath); err != nil {
+		return errors.Wrap(err, "removing the schema file")
 	}
 
 	return nil

@@ -154,3 +154,34 @@ type migrateToV7EditNoteDataV2 struct {
 	Content  *string `json:"content"`
 	Public   *bool   `json:"public"`
 }
+
+// v8
+type migrateToV8Action struct {
+	UUID      string          `json:"uuid"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV8Note struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+	// Make a pointer to test absent values
+	Public *bool `json:"public"`
+}
+type migrateToV8Book struct {
+	Name  string            `json:"name"`
+	Notes []migrateToV8Note `json:"notes"`
+}
+type migrateToV8Dnote map[string]migrateToV8Book
+type migrateToV8Timestamp struct {
+	LastUpgrade int64 `yaml:"last_upgrade"`
+	Bookmark    int   `yaml:"bookmark"`
+	LastAction  int64 `yaml:"last_action"`
+}
+
+var migrateToV8SystemKeyLastUpgrade = "last_upgrade"
+var migrateToV8SystemKeyLastAction = "last_action"
+var migrateToV8SystemKeyBookMark = "bookmark"

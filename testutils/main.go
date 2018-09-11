@@ -18,15 +18,22 @@ import (
 func InitCtx(relPath string) infra.DnoteCtx {
 	path, err := filepath.Abs(relPath)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "pasrsing path").Error())
 	}
 
-	ctx := infra.DnoteCtx{
-		HomeDir:  path,
-		DnoteDir: fmt.Sprintf("%s/.dnote", path),
+	os.Setenv("DNOTE_HOME_DIR", path)
+	ctx, err := infra.NewCtx("", "")
+	if err != nil {
+		panic(errors.Wrap(err, "getting new ctx").Error())
 	}
 
 	return ctx
+}
+
+func SetupDB(ctx infra.DnoteCtx) {
+	if err := infra.InitDB(ctx); err != nil {
+		panic(errors.Wrap(err, "initing db").Error())
+	}
 }
 
 func WriteFile(ctx infra.DnoteCtx, fixturePath string, filename string) {

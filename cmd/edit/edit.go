@@ -1,8 +1,8 @@
 package edit
 
 import (
+	"database/sql"
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"github.com/dnote/cli/core"
@@ -47,61 +47,63 @@ func preRun(cmd *cobra.Command, args []string) error {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		dnote, err := core.GetDnote(ctx)
+		db := ctx.DB
+		bookLabel := args[0]
+		noteID := args[1]
+
+		bookUUID, err := core.GetBookUUID(ctx, bookLabel)
 		if err != nil {
-			return errors.Wrap(err, "Failed to read dnote")
+			return errors.Wrap(err, "finding book uuid")
 		}
 
-		targetBookName := args[0]
-		targetIdx, err := strconv.Atoi(args[1])
-		if err != nil {
-			return errors.Wrapf(err, "Failed to parse the given index %+v", args[1])
+		var noteUUID, oldContent string
+		err = db.QueryRow("SELECT uuid, content FROM notes WHERE id = ? AND book_uuid = ?", noteID, bookUUID).Scan(&noteUUID, &oldContent)
+		if err == sql.ErrNoRows {
+			return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+		} else if err != nil {
+			return errors.Wrap(err, "querying the book")
 		}
-
-		targetBook, exists := dnote[targetBookName]
-		if !exists {
-			return errors.Errorf("Book %s does not exist", targetBookName)
-		}
-		if targetIdx > len(targetBook.Notes)-1 {
-			return errors.Errorf("Book %s does not have note with index %d", targetBookName, targetIdx)
-		}
-		targetNote := targetBook.Notes[targetIdx]
 
 		if newContent == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
 
-			e := ioutil.WriteFile(fpath, []byte(targetNote.Content), 0644)
+			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
 			if e != nil {
-				return errors.Wrap(e, "Failed to prepare editor content")
+				return errors.Wrap(e, "preparing tmp content file")
 			}
 
 			e = core.GetEditorInput(ctx, fpath, &newContent)
 			if e != nil {
-				return errors.Wrap(err, "Failed to get editor input")
+				return errors.Wrap(err, "getting editor input")
 			}
-
 		}
 
-		if targetNote.Content == newContent {
+		if oldContent == newContent {
 			return errors.New("Nothing changed")
 		}
 
 		ts := time.Now().Unix()
+		newContent = core.SanitizeContent(newContent)
 
-		targetNote.Content = core.SanitizeContent(newContent)
-		targetNote.EditedOn = ts
-		targetBook.Notes[targetIdx] = targetNote
-		dnote[targetBookName] = targetBook
-
-		err = core.LogActionEditNote(ctx, targetNote.UUID, targetBook.Name, targetNote.Content, ts)
+		tx, err := db.Begin()
 		if err != nil {
-			return errors.Wrap(err, "Failed to log action")
+			return errors.Wrap(err, "beginning a transaction")
+		}
+		_, err = tx.Exec(`UPDATE notes
+			SET content = ?, edited_on = ?
+			WHERE id = ? AND book_uuid = ?`, newContent, ts, noteID, bookUUID)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "updating the note")
 		}
 
-		err = core.WriteDnote(ctx, dnote)
+		err = core.LogActionEditNote(tx, noteUUID, bookLabel, newContent, ts)
 		if err != nil {
-			return errors.Wrap(err, "Failed to write dnote")
+			tx.Rollback()
+			return errors.Wrap(err, "logging an action")
 		}
+
+		tx.Commit()
 
 		log.Printf("new content: %s\n", newContent)
 		log.Success("edited the note\n")

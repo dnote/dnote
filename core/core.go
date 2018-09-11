@@ -1,28 +1,26 @@
 package core
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
-	"github.com/dnote/cli/migrate"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
 var (
 	// TimestampFilename is the name of the file containing upgrade info
-	TimestampFilename = "timestamps"
-	// DnoteDirName is the name of the directory containing dnote files
-	DnoteDirName       = ".dnote"
+	TimestampFilename  = "timestamps"
 	ConfigFilename     = "dnoterc"
 	DnoteFilename      = "dnote"
 	ActionFilename     = "actions"
@@ -58,21 +56,18 @@ func GetDnoteTmpContentPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TmpContentFilename)
 }
 
-// initActionFile populates action file if it does not exist
-func initActionFile(ctx infra.DnoteCtx) error {
-	path := GetActionPath(ctx)
+func GetBookUUID(ctx infra.DnoteCtx, label string) (string, error) {
+	db := ctx.DB
 
-	if utils.FileExists(path) {
-		return nil
+	var ret string
+	err := db.QueryRow("SELECT uuid FROM books WHERE label = ?", label).Scan(&ret)
+	if err == sql.ErrNoRows {
+		return ret, errors.Errorf("book '%s' not found", label)
+	} else if err != nil {
+		return ret, errors.Wrap(err, "querying the book")
 	}
 
-	b, err := json.Marshal(&[]actions.Action{})
-	if err != nil {
-		return errors.Wrap(err, "Failed to get initial action content")
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	return err
+	return ret, nil
 }
 
 func getEditorCommand() string {
@@ -100,34 +95,11 @@ func getEditorCommand() string {
 
 // InitFiles creates, if necessary, the dnote directory and files inside
 func InitFiles(ctx infra.DnoteCtx) error {
-	fresh, err := isFreshInstall(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to check if fresh install")
+	if err := initDnoteDir(ctx); err != nil {
+		return errors.Wrap(err, "creating the dnote dir")
 	}
-
-	err = initDnoteDir(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote dir")
-	}
-	err = initConfigFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to generate config file")
-	}
-	err = initDnoteFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote file")
-	}
-	err = initTimestampFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create dnote upgrade file")
-	}
-	err = initActionFile(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create action file")
-	}
-	err = migrate.InitSchemaFile(ctx, fresh)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create migration file")
+	if err := initConfigFile(ctx); err != nil {
+		return errors.Wrap(err, "generating the config file")
 	}
 
 	return nil
@@ -175,45 +147,7 @@ func initDnoteDir(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-// initDnoteFile creates an empty dnote file
-func initDnoteFile(ctx infra.DnoteCtx) error {
-	path := GetDnotePath(ctx)
-
-	if utils.FileExists(path) {
-		return nil
-	}
-
-	b, err := json.Marshal(&infra.Dnote{})
-	if err != nil {
-		return errors.Wrap(err, "Failed to get initial dnote content")
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	return err
-}
-
-// initTimestampFile creates an empty dnote upgrade file
-func initTimestampFile(ctx infra.DnoteCtx) error {
-	path := GetTimestampPath(ctx)
-
-	if utils.FileExists(path) {
-		return nil
-	}
-
-	now := time.Now().Unix()
-	ts := infra.Timestamp{
-		LastUpgrade: now,
-	}
-
-	b, err := yaml.Marshal(&ts)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get initial timestamp content")
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	return err
-}
-
+// TODO: delete
 // ReadTimestamp gets the content of the timestamp file
 func ReadTimestamp(ctx infra.DnoteCtx) (infra.Timestamp, error) {
 	var ret infra.Timestamp
@@ -309,24 +243,14 @@ func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 	return nil
 }
 
-// LogAction appends the action to the action log and updates the last_action
-// timestamp
-func LogAction(ctx infra.DnoteCtx, action actions.Action) error {
-	actions, err := ReadActionLog(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to read the action log")
-	}
+// LogAction logs action
+func LogAction(tx *sql.Tx, schema int, actionType, data string, timestamp int64) error {
+	uuid := uuid.NewV4().String()
 
-	actions = append(actions, action)
-
-	err = WriteActionLog(ctx, actions)
+	_, err := tx.Exec(`INSERT INTO actions (uuid, schema, type, data, timestamp)
+	VALUES (?, ?, ?, ?, ?)`, uuid, schema, actionType, data, timestamp)
 	if err != nil {
-		return errors.Wrap(err, "Failed to write action log")
-	}
-
-	err = UpdateLastActionTimestamp(ctx, action.Timestamp)
-	if err != nil {
-		return errors.Wrap(err, "Failed to update the last_action timestamp")
+		return errors.Wrap(err, "inserting an action")
 	}
 
 	return nil
@@ -422,7 +346,7 @@ func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
 // NewNote returns a note
 func NewNote(content string, ts int64) infra.Note {
 	return infra.Note{
-		UUID:    utils.GenerateUID(),
+		UUID:    utils.GenerateUUID(),
 		Content: content,
 		AddedOn: ts,
 	}
@@ -442,72 +366,6 @@ func GetUpdatedBook(book infra.Book, notes []infra.Note) infra.Book {
 	b.Notes = notes
 
 	return b
-}
-
-// MigrateToDnoteDir creates dnote directory if artifacts from the previous version
-// of dnote are present, and moves the artifacts to the directory.
-func MigrateToDnoteDir(ctx infra.DnoteCtx) error {
-	homeDir := ctx.HomeDir
-
-	temporaryDirPath := fmt.Sprintf("%s/.dnote-tmp", homeDir)
-	oldDnotePath := fmt.Sprintf("%s/.dnote", homeDir)
-	oldDnotercPath := fmt.Sprintf("%s/.dnoterc", homeDir)
-	oldDnoteUpgradePath := fmt.Sprintf("%s/.dnote-upgrade", homeDir)
-
-	// Check if a dnote file exists. Return early if it does not exist,
-	// or exists but already a directory.
-	fi, err := os.Stat(oldDnotePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-
-		return errors.Wrap(err, "Failed to look up old dnote path")
-	}
-	if fi.IsDir() {
-		return nil
-	}
-
-	if err := os.Mkdir(temporaryDirPath, 0755); err != nil {
-		return errors.Wrap(err, "Failed to make temporary .dnote directory")
-	}
-
-	// In the beta release for v0.2, backup user's .dnote
-	if err := utils.CopyFile(oldDnotePath, fmt.Sprintf("%s/dnote-bak-5cdde2e83", homeDir)); err != nil {
-		return errors.Wrap(err, "Failed to back up the old .dnote file")
-	}
-
-	if err := os.Rename(oldDnotePath, fmt.Sprintf("%s/dnote", temporaryDirPath)); err != nil {
-		return errors.Wrap(err, "Failed to move .dnote file")
-	}
-	if err := os.Rename(oldDnotercPath, fmt.Sprintf("%s/dnoterc", temporaryDirPath)); err != nil {
-		return errors.Wrap(err, "Failed to move .dnoterc file")
-	}
-	if err := os.Remove(oldDnoteUpgradePath); err != nil {
-		return errors.Wrap(err, "Failed to delete the old upgrade file")
-	}
-
-	// Now that all files are moved to the temporary dir, rename the dir to .dnote
-	if err := os.Rename(temporaryDirPath, fmt.Sprintf("%s/.dnote", homeDir)); err != nil {
-		return errors.Wrap(err, "Failed to rename temporary dir to .dnote")
-	}
-
-	return nil
-}
-
-// isFreshInstall checks if the dnote files have been initialized
-func isFreshInstall(ctx infra.DnoteCtx) (bool, error) {
-	path := ctx.DnoteDir
-
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return true, nil
-	}
-	if err != nil {
-		return false, errors.Wrap(err, "Failed to get file info for dnote directory")
-	}
-
-	return false, nil
 }
 
 func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Note {

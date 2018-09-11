@@ -4,22 +4,16 @@ import (
 	"bufio"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-// GenerateUID returns a uid
-func GenerateUID() string {
+// GenerateUUID returns a uid
+func GenerateUUID() string {
 	return uuid.NewV4().String()
 }
 
@@ -33,6 +27,7 @@ func GetInput() (string, error) {
 	return input, nil
 }
 
+// AskConfirmation prompts for user input to confirm a choice
 func AskConfirmation(question string, optimistic bool) (bool, error) {
 	var choices string
 	if optimistic {
@@ -61,19 +56,6 @@ func AskConfirmation(question string, optimistic bool) (bool, error) {
 func FileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	return !os.IsNotExist(err)
-}
-
-func IsDir(path string) (bool, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-
-		return false, errors.Wrapf(err, "Failed to check if '%s' is directory", path)
-	}
-
-	return fileInfo.IsDir(), nil
 }
 
 // CopyFile copies a file from the src to dest

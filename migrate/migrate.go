@@ -1,3 +1,5 @@
+// Package migrate provides legacy migration logic for JSON-based notes
+// used until v0.4.x releases
 package migrate
 
 import (
@@ -28,6 +30,7 @@ const (
 	migrationV5
 	migrationV6
 	migrationV7
+	migrationV8
 )
 
 var migrationSequence = []int{
@@ -38,6 +41,7 @@ var migrationSequence = []int{
 	migrationV5,
 	migrationV6,
 	migrationV7,
+	migrationV8,
 }
 
 type schema struct {
@@ -59,6 +63,12 @@ func makeSchema(complete bool) schema {
 
 // Migrate determines migrations to be run and performs them
 func Migrate(ctx infra.DnoteCtx) error {
+	// If schema does not exist, no need to continue as no legacy data exists
+	schemaPath := getSchemaPath(ctx)
+	if ok := utils.FileExists(schemaPath); !ok {
+		return nil
+	}
+
 	unrunMigrations, err := getUnrunMigrations(ctx)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get unrun migrations")
@@ -66,7 +76,7 @@ func Migrate(ctx infra.DnoteCtx) error {
 
 	for _, mid := range unrunMigrations {
 		if err := performMigration(ctx, mid); err != nil {
-			return errors.Wrapf(err, "Failed to run migration #%d", mid)
+			return errors.Wrapf(err, "running migration #%d", mid)
 		}
 	}
 
@@ -76,6 +86,16 @@ func Migrate(ctx infra.DnoteCtx) error {
 // performMigration backs up current .dnote data, performs migration, and
 // restores or cleans backups depending on if there is an error
 func performMigration(ctx infra.DnoteCtx, migrationID int) error {
+	// migrationV8 is the final migration of the legacy JSON Dnote migration
+	// migrate to sqlite and return
+	if migrationID == migrationV8 {
+		if err := migrateToV8(ctx); err != nil {
+			return errors.Wrap(err, "migrating to sqlite")
+		}
+
+		return nil
+	}
+
 	if err := backupDnoteDir(ctx); err != nil {
 		return errors.Wrap(err, "Failed to back up dnote directory")
 	}
@@ -172,8 +192,8 @@ func getSchemaPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename)
 }
 
-// InitSchemaFile creates a migration file
-func InitSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
+// initSchemaFile creates a migration file
+func initSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
 	path := getSchemaPath(ctx)
 	if utils.FileExists(path) {
 		return nil
@@ -192,6 +212,7 @@ func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	var ret schema
 
 	path := getSchemaPath(ctx)
+
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to read schema file")
