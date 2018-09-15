@@ -17,11 +17,11 @@ func GenerateUUID() string {
 	return uuid.NewV4().String()
 }
 
-func GetInput() (string, error) {
+func getInput() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to read stdin")
+		return "", errors.Wrap(err, "reading stdin")
 	}
 
 	return input, nil
@@ -38,7 +38,7 @@ func AskConfirmation(question string, optimistic bool) (bool, error) {
 
 	log.Printf("%s %s: ", question, choices)
 
-	res, err := GetInput()
+	res, err := getInput()
 	if err != nil {
 		return false, errors.Wrap(err, "Failed to get user input")
 	}
@@ -62,35 +62,35 @@ func FileExists(filepath string) bool {
 func CopyFile(src, dest string) error {
 	in, err := os.Open(src)
 	if err != nil {
-		return errors.Wrap(err, "Failed to open the input file")
+		return errors.Wrap(err, "opening the input file")
 	}
 	defer in.Close()
 
 	out, err := os.Create(dest)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create the output file")
+		return errors.Wrap(err, "creating the output file")
 	}
 
 	if _, err = io.Copy(out, in); err != nil {
-		return errors.Wrap(err, "Failed to copy the file content")
+		return errors.Wrap(err, "copying the file content")
 	}
 
 	if err = out.Sync(); err != nil {
-		return errors.Wrap(err, "Failed to flush the output file to disk")
+		return errors.Wrap(err, "flushing the output file to disk")
 	}
 
 	fi, err := os.Stat(src)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get file info for the input file")
+		return errors.Wrap(err, "getting the file info for the input file")
 	}
 
 	if err = os.Chmod(dest, fi.Mode()); err != nil {
-		return errors.Wrap(err, "Failed to copy permission to the output file")
+		return errors.Wrap(err, "copying permission to the output file")
 	}
 
 	// Close the output file
 	if err = out.Close(); err != nil {
-		return errors.Wrap(err, "Failed to close the output file")
+		return errors.Wrap(err, "closing the output file")
 	}
 
 	return nil
@@ -104,25 +104,25 @@ func CopyDir(src, dest string) error {
 
 	fi, err := os.Stat(srcPath)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get file info for the input")
+		return errors.Wrap(err, "getting the file info for the input")
 	}
 	if !fi.IsDir() {
-		return errors.Wrap(err, "Source is not a directory")
+		return errors.New("source is not a directory")
 	}
 
 	_, err = os.Stat(dest)
 	if err != nil && !os.IsNotExist(err) {
-		return errors.Wrap(err, "Failed to look up the destination")
+		return errors.Wrap(err, "looking up the destination")
 	}
 
 	err = os.MkdirAll(dest, fi.Mode())
 	if err != nil {
-		return errors.Wrap(err, "Failed to create destination")
+		return errors.Wrap(err, "creating destination")
 	}
 
 	entries, err := ioutil.ReadDir(src)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read directory listing for the input")
+		return errors.Wrap(err, "reading the directory listing for the input")
 	}
 
 	for _, entry := range entries {
@@ -131,11 +131,11 @@ func CopyDir(src, dest string) error {
 
 		if entry.IsDir() {
 			if err = CopyDir(srcEntryPath, destEntryPath); err != nil {
-				return errors.Wrapf(err, "Failed to copy %s", entry.Name())
+				return errors.Wrapf(err, "copying %s", entry.Name())
 			}
 		} else {
 			if err = CopyFile(srcEntryPath, destEntryPath); err != nil {
-				return errors.Wrapf(err, "Failed to copy %s", entry.Name())
+				return errors.Wrapf(err, "copying %s", entry.Name())
 			}
 		}
 	}

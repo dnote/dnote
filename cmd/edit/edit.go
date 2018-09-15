@@ -21,6 +21,7 @@ var example = `
 	* Skip the prompt by providing new content directly
 	dnote edit js 3 -c "new content"`
 
+// NewCmd returns a new edit command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "edit",

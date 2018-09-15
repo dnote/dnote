@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 
+	// use sqlite
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/pkg/errors"
@@ -59,6 +60,7 @@ type Timestamp struct {
 	LastAction int64 `yaml:"last_action"`
 }
 
+// NewCtx returns a new dnote context
 func NewCtx(apiEndpoint, versionTag string) (DnoteCtx, error) {
 	homeDir, err := getHomeDir()
 	if err != nil {
@@ -110,7 +112,9 @@ func getHomeDir() (string, error) {
 	return usr.HomeDir, nil
 }
 
-// InitDB initializes the database
+// InitDB initializes the database.
+// Ideally this process must be a part of migration sequence. But it is performed
+// seaprately because it is a prerequisite for legacy migration.
 func InitDB(ctx DnoteCtx) error {
 	db := ctx.DB
 

@@ -33,6 +33,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewCmd returns a new ls command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:        "ls <book name?>",

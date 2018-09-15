@@ -2,14 +2,12 @@ package core
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
@@ -19,35 +17,18 @@ import (
 )
 
 var (
-	// TimestampFilename is the name of the file containing upgrade info
-	TimestampFilename  = "timestamps"
-	ConfigFilename     = "dnoterc"
-	DnoteFilename      = "dnote"
-	ActionFilename     = "actions"
+	// ConfigFilename is the name of the config file
+	ConfigFilename = "dnoterc"
+	// TmpContentFilename is the name of the temporary file that holds editor input
 	TmpContentFilename = "DNOTE_TMPCONTENT"
 )
 
+// RunEFunc is a function type of dnote commands
 type RunEFunc func(*cobra.Command, []string) error
 
 // GetConfigPath returns the path to the dnote config file
 func GetConfigPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ConfigFilename)
-}
-
-// GetDnotePath returns the path to the dnote file
-func GetDnotePath(ctx infra.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, DnoteFilename)
-}
-
-// GetTimestampPath returns the path to the file containing dnote upgrade
-// information
-func GetTimestampPath(ctx infra.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TimestampFilename)
-}
-
-// GetActionPath returns the path to the file containing user actions
-func GetActionPath(ctx infra.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ActionFilename)
 }
 
 // GetDnoteTmpContentPath returns the path to the temporary file containing
@@ -56,6 +37,7 @@ func GetDnoteTmpContentPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, TmpContentFilename)
 }
 
+// GetBookUUID returns a uuid of a book given a label
 func GetBookUUID(ctx infra.DnoteCtx, label string) (string, error) {
 	db := ctx.DB
 
@@ -70,6 +52,8 @@ func GetBookUUID(ctx infra.DnoteCtx, label string) (string, error) {
 	return ret, nil
 }
 
+// getEditorCommand returns the system's editor command with appropriate flags,
+// if necessary, to make the command wait until editor is close to exit.
 func getEditorCommand() string {
 	editor := os.Getenv("EDITOR")
 
@@ -121,12 +105,12 @@ func initConfigFile(ctx infra.DnoteCtx) error {
 
 	b, err := yaml.Marshal(config)
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal config into YAML")
+		return errors.Wrap(err, "marshalling config into YAML")
 	}
 
 	err = ioutil.WriteFile(path, b, 0644)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to write the config file at '%s'", path)
+		return errors.Wrap(err, "writing the config file")
 	}
 
 	return nil
@@ -147,103 +131,24 @@ func initDnoteDir(ctx infra.DnoteCtx) error {
 	return nil
 }
 
-// TODO: delete
-// ReadTimestamp gets the content of the timestamp file
-func ReadTimestamp(ctx infra.DnoteCtx) (infra.Timestamp, error) {
-	var ret infra.Timestamp
-
-	path := GetTimestampPath(ctx)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return ret, err
-	}
-
-	err = yaml.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to unmarshal timestamp content")
-	}
-
-	return ret, nil
-}
-
-func WriteTimestamp(ctx infra.DnoteCtx, timestamp infra.Timestamp) error {
-	d, err := yaml.Marshal(timestamp)
-	if err != nil {
-		return errors.Wrap(err, "Failed to marshal timestamp into YAML")
-	}
-
-	path := GetTimestampPath(ctx)
-	err = ioutil.WriteFile(path, d, 0644)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write timestamp to the file")
-	}
-
-	return nil
-}
-
-// ReadNoteContent reads the content of dnote
-func ReadNoteContent(ctx infra.DnoteCtx) ([]byte, error) {
-	notePath := GetDnotePath(ctx)
-
-	b, err := ioutil.ReadFile(notePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-// GetDnote reads and parses the dnote
-func GetDnote(ctx infra.DnoteCtx) (infra.Dnote, error) {
-	ret := infra.Dnote{}
-
-	b, err := ReadNoteContent(ctx)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to read note content")
-	}
-
-	err = json.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to unmarshal note content")
-	}
-
-	return ret, nil
-}
-
-// WriteDnote persists the state of Dnote into the dnote file
-func WriteDnote(ctx infra.DnoteCtx, dnote infra.Dnote) error {
-	d, err := json.MarshalIndent(dnote, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	notePath := GetDnotePath(ctx)
-
-	err = ioutil.WriteFile(notePath, d, 0644)
-	if err != nil {
-		errors.Wrap(err, "Failed to write to the dnote file")
-	}
-
-	return nil
-}
-
+// WriteConfig writes the config to the config file
 func WriteConfig(ctx infra.DnoteCtx, config infra.Config) error {
 	d, err := yaml.Marshal(config)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "marhsalling config")
 	}
 
 	configPath := GetConfigPath(ctx)
 
 	err = ioutil.WriteFile(configPath, d, 0644)
 	if err != nil {
-		errors.Wrap(err, "Failed to write to the config file")
+		errors.Wrap(err, "writing the config file")
 	}
 
 	return nil
 }
 
-// LogAction logs action
+// LogAction logs action and updates the last_action
 func LogAction(tx *sql.Tx, schema int, actionType, data string, timestamp int64) error {
 	uuid := uuid.NewV4().String()
 
@@ -253,131 +158,30 @@ func LogAction(tx *sql.Tx, schema int, actionType, data string, timestamp int64)
 		return errors.Wrap(err, "inserting an action")
 	}
 
-	return nil
-}
-
-func WriteActionLog(ctx infra.DnoteCtx, ats []actions.Action) error {
-	path := GetActionPath(ctx)
-
-	d, err := json.Marshal(ats)
+	_, err = tx.Exec("UPDATE system SET value = ? WHERE key = ?", timestamp, "last_action")
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal newly generated actions to JSON")
-	}
-
-	err = ioutil.WriteFile(path, d, 0644)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write to the actions file")
+		return errors.Wrap(err, "updating last_action")
 	}
 
 	return nil
 }
 
-func ClearActionLog(ctx infra.DnoteCtx) error {
-	var content []actions.Action
-
-	if err := WriteActionLog(ctx, content); err != nil {
-		return errors.Wrap(err, "Failed to write action log")
-	}
-
-	return nil
-}
-
-func ReadActionLogContent(ctx infra.DnoteCtx) ([]byte, error) {
-	path := GetActionPath(ctx)
-
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return []byte{}, errors.Wrap(err, "Failed to read the action file")
-	}
-
-	return b, nil
-}
-
-// ReadActionLog returns the action log content
-func ReadActionLog(ctx infra.DnoteCtx) ([]actions.Action, error) {
-	var ret []actions.Action
-
-	b, err := ReadActionLogContent(ctx)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to read the action log content")
-	}
-
-	err = json.Unmarshal(b, &ret)
-	if err != nil {
-		return ret, errors.Wrap(err, "Failed to unmarshal action log JSON")
-	}
-
-	return ret, nil
-}
-
+// ReadConfig reads the config file
 func ReadConfig(ctx infra.DnoteCtx) (infra.Config, error) {
 	var ret infra.Config
 
 	configPath := GetConfigPath(ctx)
 	b, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return ret, err
+		return ret, errors.Wrap(err, "reading config file")
 	}
 
 	err = yaml.Unmarshal(b, &ret)
 	if err != nil {
-		return ret, errors.Wrap(err, "Failed to unmarshal config YAML")
+		return ret, errors.Wrap(err, "unmarshalling config")
 	}
 
 	return ret, nil
-}
-
-func UpdateLastActionTimestamp(ctx infra.DnoteCtx, val int64) error {
-	ts, err := ReadTimestamp(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to read the timestamp file")
-	}
-
-	ts.LastAction = val
-
-	err = WriteTimestamp(ctx, ts)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write the timestamp to the file")
-	}
-
-	return nil
-}
-
-// NewNote returns a note
-func NewNote(content string, ts int64) infra.Note {
-	return infra.Note{
-		UUID:    utils.GenerateUUID(),
-		Content: content,
-		AddedOn: ts,
-	}
-}
-
-// NewBook returns a book
-func NewBook(name string) infra.Book {
-	return infra.Book{
-		Name:  name,
-		Notes: make([]infra.Note, 0),
-	}
-}
-
-func GetUpdatedBook(book infra.Book, notes []infra.Note) infra.Book {
-	b := NewBook(book.Name)
-
-	b.Notes = notes
-
-	return b
-}
-
-func FilterNotes(notes []infra.Note, testFunc func(infra.Note) bool) []infra.Note {
-	var ret []infra.Note
-
-	for _, note := range notes {
-		if testFunc(note) {
-			ret = append(ret, note)
-		}
-	}
-
-	return ret
 }
 
 // SanitizeContent sanitizes note content
@@ -394,10 +198,10 @@ func SanitizeContent(s string) string {
 	return ret
 }
 
-func getEditorCmd(ctx infra.DnoteCtx, fpath string) (*exec.Cmd, error) {
+func newEditorCmd(ctx infra.DnoteCtx, fpath string) (*exec.Cmd, error) {
 	config, err := ReadConfig(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to read the config")
+		return nil, errors.Wrap(err, "reading config")
 	}
 
 	args := strings.Fields(config.Editor)
@@ -412,17 +216,17 @@ func GetEditorInput(ctx infra.DnoteCtx, fpath string, content *string) error {
 	if !utils.FileExists(fpath) {
 		f, err := os.Create(fpath)
 		if err != nil {
-			return errors.Wrap(err, "Failed to create a temporary file for content")
+			return errors.Wrap(err, "creating a temporary content file")
 		}
 		err = f.Close()
 		if err != nil {
-			return errors.Wrap(err, "Failed to close the temporary file for content")
+			return errors.Wrap(err, "closing the temporary content file")
 		}
 	}
 
-	cmd, err := getEditorCmd(ctx, fpath)
+	cmd, err := newEditorCmd(ctx, fpath)
 	if err != nil {
-		return errors.Wrap(err, "Failed to create the editor command")
+		return errors.Wrap(err, "creating an editor command")
 	}
 
 	cmd.Stdin = os.Stdin
@@ -431,22 +235,22 @@ func GetEditorInput(ctx infra.DnoteCtx, fpath string, content *string) error {
 
 	err = cmd.Start()
 	if err != nil {
-		return errors.Wrapf(err, "Failed to launch the editor")
+		return errors.Wrapf(err, "launching an editor")
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return errors.Wrap(err, "Failed to wait for the editor")
+		return errors.Wrap(err, "waiting for the editor")
 	}
 
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
-		return errors.Wrap(err, "Failed to read the file")
+		return errors.Wrap(err, "reading the temporary content file")
 	}
 
 	err = os.Remove(fpath)
 	if err != nil {
-		return errors.Wrap(err, "Failed to remove the temporary content file")
+		return errors.Wrap(err, "removing the temporary content file")
 	}
 
 	raw := string(b)

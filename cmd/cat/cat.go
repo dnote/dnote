@@ -30,6 +30,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewCmd returns a new cat command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:        "cat <book name> <note index>",

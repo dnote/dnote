@@ -7,9 +7,9 @@ import (
 
 	"github.com/dnote/actions"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 )
 
+// LogActionAddNote logs an action for adding a note
 func LogActionAddNote(tx *sql.Tx, noteUUID, bookName, content string, timestamp int64) error {
 	b, err := json.Marshal(actions.AddNoteDataV2{
 		NoteUUID: noteUUID,
@@ -29,6 +29,7 @@ func LogActionAddNote(tx *sql.Tx, noteUUID, bookName, content string, timestamp 
 	return nil
 }
 
+// LogActionRemoveNote logs an action for removing a book
 func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 	b, err := json.Marshal(actions.RemoveNoteDataV1{
 		NoteUUID: noteUUID,
@@ -46,6 +47,7 @@ func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 	return nil
 }
 
+// LogActionEditNote logs an action for editing a note
 func LogActionEditNote(tx *sql.Tx, noteUUID, bookName, content string, ts int64) error {
 	b, err := json.Marshal(actions.EditNoteDataV2{
 		NoteUUID: noteUUID,
@@ -63,6 +65,7 @@ func LogActionEditNote(tx *sql.Tx, noteUUID, bookName, content string, ts int64)
 	return nil
 }
 
+// LogActionAddBook logs an action for adding a book
 func LogActionAddBook(tx *sql.Tx, name string) error {
 	b, err := json.Marshal(actions.AddBookDataV1{
 		BookName: name,
@@ -71,11 +74,11 @@ func LogActionAddBook(tx *sql.Tx, name string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	_, err = tx.Exec("INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)",
-		uuid.NewV4().String(), 2, actions.ActionAddBook, string(b), time.Now().Unix())
-	if err != nil {
-		return errors.Wrap(err, "inserting an action")
+	ts := time.Now().Unix()
+	if err := LogAction(tx, 2, actions.ActionAddBook, string(b), ts); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
+
 	return nil
 }
 

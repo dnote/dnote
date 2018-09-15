@@ -35,8 +35,10 @@ func Prepare(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "initializing database")
 	}
 
-	// perform any necessary legacy migration
-	if err := migrate.Migrate(ctx); err != nil {
+	if err := migrate.Legacy(ctx); err != nil {
+		return errors.Wrap(err, "running legacy migration")
+	}
+	if err := migrate.Run(ctx); err != nil {
 		return errors.Wrap(err, "running migration")
 	}
 

@@ -1,9 +1,12 @@
+// Package migrate provides migration logic for both sqlite and
+// legacy JSON-based notes used until v0.4.x releases
 package migrate
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
@@ -13,6 +16,453 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 )
+
+var (
+	schemaFilename = "schema"
+	backupDirName  = ".dnote-bak"
+)
+
+// migration IDs
+const (
+	_ = iota
+	legacyMigrationV1
+	legacyMigrationV2
+	legacyMigrationV3
+	legacyMigrationV4
+	legacyMigrationV5
+	legacyMigrationV6
+	legacyMigrationV7
+	legacyMigrationV8
+)
+
+var migrationSequence = []int{
+	legacyMigrationV1,
+	legacyMigrationV2,
+	legacyMigrationV3,
+	legacyMigrationV4,
+	legacyMigrationV5,
+	legacyMigrationV6,
+	legacyMigrationV7,
+	legacyMigrationV8,
+}
+
+type schema struct {
+	currentVersion int `yaml:"current_version"`
+}
+
+func makeSchema(complete bool) schema {
+	s := schema{}
+
+	var currentVersion int
+	if complete {
+		currentVersion = len(migrationSequence)
+	}
+
+	s.currentVersion = currentVersion
+
+	return s
+}
+
+// Legacy performs migration on JSON-based dnote if necessary
+func Legacy(ctx infra.DnoteCtx) error {
+	// If schema does not exist, no need run a legacy migration
+	schemaPath := getSchemaPath(ctx)
+	if ok := utils.FileExists(schemaPath); !ok {
+		return nil
+	}
+
+	unrunMigrations, err := getUnrunMigrations(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to get unrun migrations")
+	}
+
+	for _, mid := range unrunMigrations {
+		if err := performMigration(ctx, mid); err != nil {
+			return errors.Wrapf(err, "running migration #%d", mid)
+		}
+	}
+
+	return nil
+}
+
+// performMigration backs up current .dnote data, performs migration, and
+// restores or cleans backups depending on if there is an error
+func performMigration(ctx infra.DnoteCtx, migrationID int) error {
+	// legacyMigrationV8 is the final migration of the legacy JSON Dnote migration
+	// migrate to sqlite and return
+	if migrationID == legacyMigrationV8 {
+		if err := migrateToV8(ctx); err != nil {
+			return errors.Wrap(err, "migrating to sqlite")
+		}
+
+		return nil
+	}
+
+	if err := backupDnoteDir(ctx); err != nil {
+		return errors.Wrap(err, "Failed to back up dnote directory")
+	}
+
+	var migrationError error
+
+	switch migrationID {
+	case legacyMigrationV1:
+		migrationError = migrateToV1(ctx)
+	case legacyMigrationV2:
+		migrationError = migrateToV2(ctx)
+	case legacyMigrationV3:
+		migrationError = migrateToV3(ctx)
+	case legacyMigrationV4:
+		migrationError = migrateToV4(ctx)
+	case legacyMigrationV5:
+		migrationError = migrateToV5(ctx)
+	case legacyMigrationV6:
+		migrationError = migrateToV6(ctx)
+	case legacyMigrationV7:
+		migrationError = migrateToV7(ctx)
+	default:
+		return errors.Errorf("Unrecognized migration id %d", migrationID)
+	}
+
+	if migrationError != nil {
+		if err := restoreBackup(ctx); err != nil {
+			panic(errors.Wrap(err, "Failed to restore backup for a failed migration"))
+		}
+
+		return errors.Wrapf(migrationError, "Failed to perform migration #%d", migrationID)
+	}
+
+	if err := clearBackup(ctx); err != nil {
+		return errors.Wrap(err, "Failed to clear backup")
+	}
+
+	if err := updateSchemaVersion(ctx, migrationID); err != nil {
+		return errors.Wrap(err, "Failed to update schema version")
+	}
+
+	return nil
+}
+
+// backupDnoteDir backs up the dnote directory to a temporary backup directory
+func backupDnoteDir(ctx infra.DnoteCtx) error {
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
+	tmpPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+
+	if err := utils.CopyDir(srcPath, tmpPath); err != nil {
+		return errors.Wrap(err, "Failed to copy the .dnote directory")
+	}
+
+	return nil
+}
+
+func restoreBackup(ctx infra.DnoteCtx) error {
+	var err error
+
+	defer func() {
+		if err != nil {
+			log.Printf(`Failed to restore backup for a failed migration.
+	Don't worry. Your data is still intact in the backup directory.
+	Get help on https://github.com/dnote/cli/issues`)
+		}
+	}()
+
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
+	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+
+	if err = os.RemoveAll(srcPath); err != nil {
+		return errors.Wrapf(err, "Failed to clear current dnote data at %s", backupPath)
+	}
+
+	if err = os.Rename(backupPath, srcPath); err != nil {
+		return errors.Wrap(err, `Failed to copy backup data to the original directory.`)
+	}
+
+	return nil
+}
+
+func clearBackup(ctx infra.DnoteCtx) error {
+	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+
+	if err := os.RemoveAll(backupPath); err != nil {
+		return errors.Wrapf(err, "Failed to remove backup at %s", backupPath)
+	}
+
+	return nil
+}
+
+// getSchemaPath returns the path to the file containing schema info
+func getSchemaPath(ctx infra.DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename)
+}
+
+// initSchemaFile creates a migration file
+func initSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
+	path := getSchemaPath(ctx)
+	if utils.FileExists(path) {
+		return nil
+	}
+
+	s := makeSchema(pristine)
+	err := writeSchema(ctx, s)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write schema")
+	}
+
+	return nil
+}
+
+func readSchema(ctx infra.DnoteCtx) (schema, error) {
+	var ret schema
+
+	path := getSchemaPath(ctx)
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to read schema file")
+	}
+
+	err = yaml.Unmarshal(b, &ret)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to unmarshal the schema JSON")
+	}
+
+	return ret, nil
+}
+
+func writeSchema(ctx infra.DnoteCtx, s schema) error {
+	path := getSchemaPath(ctx)
+	d, err := yaml.Marshal(&s)
+	if err != nil {
+		return errors.Wrap(err, "Failed to marshal schema into yaml")
+	}
+
+	if err := ioutil.WriteFile(path, d, 0644); err != nil {
+		return errors.Wrap(err, "Failed to write schema file")
+	}
+
+	return nil
+}
+
+func getUnrunMigrations(ctx infra.DnoteCtx) ([]int, error) {
+	var ret []int
+
+	schema, err := readSchema(ctx)
+	if err != nil {
+		return ret, errors.Wrap(err, "Failed to read schema")
+	}
+
+	if schema.currentVersion == len(migrationSequence) {
+		return ret, nil
+	}
+
+	nextVersion := schema.currentVersion
+	ret = migrationSequence[nextVersion:]
+
+	return ret, nil
+}
+
+func updateSchemaVersion(ctx infra.DnoteCtx, mID int) error {
+	s, err := readSchema(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read schema")
+	}
+
+	s.currentVersion = mID
+
+	err = writeSchema(ctx, s)
+	if err != nil {
+		return errors.Wrap(err, "Failed to write schema")
+	}
+
+	return nil
+}
+
+/***** snapshots **/
+
+// v2
+type migrateToV2PreNote struct {
+	UID     string
+	Content string
+	AddedOn int64
+}
+type migrateToV2PostNote struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"editd_on"`
+}
+type migrateToV2PreBook []migrateToV2PreNote
+type migrateToV2PostBook struct {
+	Name  string                `json:"name"`
+	Notes []migrateToV2PostNote `json:"notes"`
+}
+type migrateToV2PreDnote map[string]migrateToV2PreBook
+type migrateToV2PostDnote map[string]migrateToV2PostBook
+
+//v3
+var (
+	migrateToV3ActionAddNote = "add_note"
+	migrateToV3ActionAddBook = "add_book"
+)
+
+type migrateToV3Note struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+}
+type migrateToV3Book struct {
+	UUID  string            `json:"uuid"`
+	Name  string            `json:"name"`
+	Notes []migrateToV3Note `json:"notes"`
+}
+type migrateToV3Dnote map[string]migrateToV3Book
+type migrateToV3Action struct {
+	Type      string                 `json:"type"`
+	Data      map[string]interface{} `json:"data"`
+	Timestamp int64                  `json:"timestamp"`
+}
+
+// v4
+type migrateToV4PreConfig struct {
+	Book   string
+	APIKey string
+}
+type migrateToV4PostConfig struct {
+	Editor string
+	APIKey string
+}
+
+// v5
+type migrateToV5AddNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+	Content  string `json:"content"`
+}
+type migrateToV5RemoveNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+}
+type migrateToV5AddBookData struct {
+	BookName string `json:"book_name"`
+}
+type migrateToV5RemoveBookData struct {
+	BookName string `json:"book_name"`
+}
+type migrateToV5PreEditNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	BookName string `json:"book_name"`
+	Content  string `json:"content"`
+}
+type migrateToV5PostEditNoteData struct {
+	NoteUUID string `json:"note_uuid"`
+	FromBook string `json:"from_book"`
+	ToBook   string `json:"to_book"`
+	Content  string `json:"content"`
+}
+type migrateToV5PreAction struct {
+	ID        int             `json:"id"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV5PostAction struct {
+	UUID      string          `json:"uuid"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+
+var (
+	migrateToV5ActionAddNote    = "add_note"
+	migrateToV5ActionRemoveNote = "remove_note"
+	migrateToV5ActionEditNote   = "edit_note"
+	migrateToV5ActionAddBook    = "add_book"
+	migrateToV5ActionRemoveBook = "remove_book"
+)
+
+// v6
+type migrateToV6PreNote struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+}
+type migrateToV6PostNote struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+	// Make a pointer to test absent values
+	Public *bool `json:"public"`
+}
+type migrateToV6PreBook struct {
+	Name  string               `json:"name"`
+	Notes []migrateToV6PreNote `json:"notes"`
+}
+type migrateToV6PostBook struct {
+	Name  string                `json:"name"`
+	Notes []migrateToV6PostNote `json:"notes"`
+}
+type migrateToV6PreDnote map[string]migrateToV6PreBook
+type migrateToV6PostDnote map[string]migrateToV6PostBook
+
+// v7
+var migrateToV7ActionTypeEditNote = "edit_note"
+
+type migrateToV7Action struct {
+	UUID      string          `json:"uuid"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV7EditNoteDataV1 struct {
+	NoteUUID string `json:"note_uuid"`
+	FromBook string `json:"from_book"`
+	ToBook   string `json:"to_book"`
+	Content  string `json:"content"`
+}
+type migrateToV7EditNoteDataV2 struct {
+	NoteUUID string  `json:"note_uuid"`
+	FromBook string  `json:"from_book"`
+	ToBook   *string `json:"to_book"`
+	Content  *string `json:"content"`
+	Public   *bool   `json:"public"`
+}
+
+// v8
+type migrateToV8Action struct {
+	UUID      string          `json:"uuid"`
+	Schema    int             `json:"schema"`
+	Type      string          `json:"type"`
+	Data      json.RawMessage `json:"data"`
+	Timestamp int64           `json:"timestamp"`
+}
+type migrateToV8Note struct {
+	UUID     string `json:"uuid"`
+	Content  string `json:"content"`
+	AddedOn  int64  `json:"added_on"`
+	EditedOn int64  `json:"edited_on"`
+	// Make a pointer to test absent values
+	Public *bool `json:"public"`
+}
+type migrateToV8Book struct {
+	Name  string            `json:"name"`
+	Notes []migrateToV8Note `json:"notes"`
+}
+type migrateToV8Dnote map[string]migrateToV8Book
+type migrateToV8Timestamp struct {
+	LastUpgrade int64 `yaml:"last_upgrade"`
+	Bookmark    int   `yaml:"bookmark"`
+	LastAction  int64 `yaml:"last_action"`
+}
+
+var migrateToV8SystemKeyLastUpgrade = "last_upgrade"
+var migrateToV8SystemKeyLastAction = "last_action"
+var migrateToV8SystemKeyBookMark = "bookmark"
+
+/***** migrations **/
 
 // migrateToV1 deletes YAML archive if exists
 func migrateToV1(ctx infra.DnoteCtx) error {
@@ -331,7 +781,7 @@ func migrateToV7(ctx infra.DnoteCtx) error {
 	postActions := []migrateToV7Action{}
 	err = json.Unmarshal(b, &preActions)
 	if err != nil {
-		return errors.Wrap(err, "unmarhsalling existing actions")
+		return errors.Wrap(err, "unmarshalling existing actions")
 	}
 
 	for _, action := range preActions {
@@ -399,7 +849,7 @@ func migrateToV8(ctx infra.DnoteCtx) error {
 	var dnote migrateToV8Dnote
 	err = json.Unmarshal(b, &dnote)
 	if err != nil {
-		return errors.Wrap(err, "unmarhsalling notes to JSON")
+		return errors.Wrap(err, "unmarshalling notes to JSON")
 	}
 
 	for bookName, book := range dnote {
@@ -433,7 +883,7 @@ func migrateToV8(ctx infra.DnoteCtx) error {
 	var actions []migrateToV8Action
 	err = json.Unmarshal(b, &actions)
 	if err != nil {
-		return errors.Wrap(err, "unmarhsalling actions from JSON")
+		return errors.Wrap(err, "unmarshalling actions from JSON")
 	}
 
 	for _, action := range actions {
@@ -458,14 +908,7 @@ func migrateToV8(ctx infra.DnoteCtx) error {
 	var timestamp migrateToV8Timestamp
 	err = yaml.Unmarshal(b, &timestamp)
 	if err != nil {
-		return errors.Wrap(err, "unmarhsalling timestamps from YAML")
-	}
-
-	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,
-		migrateToV8SystemKeyLastUpgrade, timestamp.LastUpgrade)
-	if err != nil {
-		tx.Rollback()
-		return errors.Wrap(err, "inserting the last_upgrade value")
+		return errors.Wrap(err, "unmarshalling timestamps from YAML")
 	}
 
 	_, err = tx.Exec(`INSERT INTO system (key, value) VALUES (?, ?)`,

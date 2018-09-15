@@ -30,6 +30,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewCmd returns a new add command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add <content>",

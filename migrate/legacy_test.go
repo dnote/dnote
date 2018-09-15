@@ -178,7 +178,7 @@ func TestMigrateToV5(t *testing.T) {
 	b := testutils.ReadFile(ctx, "actions")
 	var migratedActions []migrateToV5PostAction
 	if err := json.Unmarshal(b, &migratedActions); err != nil {
-		t.Fatal(errors.Wrap(err, "unmarhsalling migrated actions").Error())
+		t.Fatal(errors.Wrap(err, "unmarshalling migrated actions").Error())
 	}
 
 	if len(oldActions) != len(migratedActions) {
@@ -198,10 +198,10 @@ func TestMigrateToV5(t *testing.T) {
 		case migrateToV5ActionAddNote:
 			var oldData, migratedData migrateToV5AddNoteData
 			if err := json.Unmarshal(old.Data, &oldData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling old data").Error())
 			}
 			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling new data").Error())
 			}
 
 			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
@@ -210,10 +210,10 @@ func TestMigrateToV5(t *testing.T) {
 		case migrateToV5ActionRemoveNote:
 			var oldData, migratedData migrateToV5RemoveNoteData
 			if err := json.Unmarshal(old.Data, &oldData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling old data").Error())
 			}
 			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling new data").Error())
 			}
 
 			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
@@ -221,20 +221,20 @@ func TestMigrateToV5(t *testing.T) {
 		case migrateToV5ActionAddBook:
 			var oldData, migratedData migrateToV5AddBookData
 			if err := json.Unmarshal(old.Data, &oldData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling old data").Error())
 			}
 			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling new data").Error())
 			}
 
 			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
 		case migrateToV5ActionRemoveBook:
 			var oldData, migratedData migrateToV5RemoveBookData
 			if err := json.Unmarshal(old.Data, &oldData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling old data").Error())
 			}
 			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling new data").Error())
 			}
 
 			testutils.AssertEqual(t, oldData.BookName, migratedData.BookName, fmt.Sprintf("data book_name mismatch for item idx %d", idx))
@@ -242,10 +242,10 @@ func TestMigrateToV5(t *testing.T) {
 			var oldData migrateToV5PreEditNoteData
 			var migratedData migrateToV5PostEditNoteData
 			if err := json.Unmarshal(old.Data, &oldData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling old data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling old data").Error())
 			}
 			if err := json.Unmarshal(migrated.Data, &migratedData); err != nil {
-				t.Fatal(errors.Wrap(err, "unmarhsalling new data").Error())
+				t.Fatal(errors.Wrap(err, "unmarshalling new data").Error())
 			}
 
 			testutils.AssertEqual(t, oldData.NoteUUID, migratedData.NoteUUID, fmt.Sprintf("data note_uuid mismatch for item idx %d", idx))
@@ -570,4 +570,31 @@ func TestMigrateToV8(t *testing.T) {
 	testutils.AssertEqual(t, a11.actionType, "remove_note", "action 11 type mismatch")
 	testutils.AssertEqual(t, a11.data, `{"note_uuid":"b23a88ba-b291-4294-9795-86b394db5dcf","book_name":"js"}`, "action 11 data mismatch")
 	testutils.AssertEqual(t, a11.timestamp, 1536977274, "action 11 timestamp mismatch")
+
+	// 3. test if system is migrated
+	var systemCount int
+	err = db.QueryRow("SELECT count(*) FROM system").Scan(&systemCount)
+	if err != nil {
+		panic(errors.Wrap(err, "counting system"))
+	}
+
+	testutils.AssertEqual(t, systemCount, 3, "action count mismatch")
+
+	var lastUpgrade, lastAction, bookmark int
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "last_upgrade").Scan(&lastUpgrade)
+	if err != nil {
+		panic(errors.Wrap(err, "finding last_upgrade"))
+	}
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "last_action").Scan(&lastAction)
+	if err != nil {
+		panic(errors.Wrap(err, "finding last_action"))
+	}
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
+	if err != nil {
+		panic(errors.Wrap(err, "finding bookmark"))
+	}
+
+	testutils.AssertEqual(t, lastUpgrade, 1536977220, "last_upgrade mismatch")
+	testutils.AssertEqual(t, lastAction, 1536977274, "last_action mismatch")
+	testutils.AssertEqual(t, bookmark, 9, "bookmark mismatch")
 }
