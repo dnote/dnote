@@ -148,7 +148,7 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
-	rows, err := db.Query(`SELECT id, content FROM notes WHERE book_uuid = ?;`, bookUUID)
+	rows, err := db.Query(`SELECT id, content FROM notes WHERE book_uuid = ? ORDER BY added_on ASC;`, bookUUID)
 	if err != nil {
 		return errors.Wrap(err, "querying notes")
 	}

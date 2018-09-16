@@ -75,7 +75,7 @@ func handleAddNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error 
 
 	_, err = tx.Exec(`INSERT INTO notes
 	(uuid, book_uuid, content, added_on, public)
-	VALUES (?, ?, ?, ?, ?, ?)`, data.NoteUUID, bookUUID, data.Content, action.Timestamp, false)
+	VALUES (?, ?, ?, ?, ?)`, data.NoteUUID, bookUUID, data.Content, action.Timestamp, false)
 	if err != nil {
 		return errors.Wrap(err, "inserting a note")
 	}
@@ -145,7 +145,7 @@ func handleEditNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error
 	if err != nil {
 		return errors.Wrap(err, "building edit note query")
 	}
-	_, err = tx.Exec(queryTmpl, queryArgs)
+	_, err = tx.Exec(queryTmpl, queryArgs...)
 	if err != nil {
 		return errors.Wrap(err, "updating a note")
 	}

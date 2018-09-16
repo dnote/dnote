@@ -2,6 +2,7 @@
 package testutils
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,7 +16,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func InitCtx(relPath string) infra.DnoteCtx {
+// InitEnv sets up a test env and returns a new dnote context
+func InitEnv(relPath string, relFixturePath string) infra.DnoteCtx {
 	path, err := filepath.Abs(relPath)
 	if err != nil {
 		panic(errors.Wrap(err, "pasrsing path").Error())
@@ -27,12 +29,29 @@ func InitCtx(relPath string) infra.DnoteCtx {
 		panic(errors.Wrap(err, "getting new ctx").Error())
 	}
 
+	// set up directory and db
+	if err := os.MkdirAll(ctx.DnoteDir, 0755); err != nil {
+		panic(err)
+	}
+
+	b := ReadFileAbs(relFixturePath)
+	setupSQL := string(b)
+
+	db := ctx.DB
+	_, err = db.Exec(setupSQL)
+	if err != nil {
+		panic(errors.Wrap(err, "running schema sql").Error())
+	}
+
 	return ctx
 }
 
-func SetupDB(ctx infra.DnoteCtx) {
-	if err := infra.InitDB(ctx); err != nil {
-		panic(errors.Wrap(err, "initing db").Error())
+// TeardownEnv cleans up the test env represented by the given context
+func TeardownEnv(ctx infra.DnoteCtx) {
+	ctx.DB.Close()
+
+	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
+		panic(err)
 	}
 }
 
@@ -86,18 +105,6 @@ func ReadFileAbs(filename string) []byte {
 	}
 
 	return b
-}
-
-func SetupTmp(ctx infra.DnoteCtx) {
-	if err := os.MkdirAll(ctx.DnoteDir, 0755); err != nil {
-		panic(err)
-	}
-}
-
-func ClearTmp(ctx infra.DnoteCtx) {
-	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
-		panic(err)
-	}
 }
 
 // AssertEqual fails a test if the actual does not match the expected
@@ -159,4 +166,22 @@ func IsEqualJSON(s1, s2 []byte) (bool, error) {
 	}
 
 	return reflect.DeepEqual(o1, o2), nil
+}
+
+// MustExec executes the given SQL query and panics if an error occurs
+func MustExec(t *testing.T, message string, db *sql.DB, query string, args ...interface{}) sql.Result {
+	result, err := db.Exec(query, args...)
+	if err != nil {
+		t.Fatal(errors.Wrap(errors.Wrap(err, "executing sql"), message))
+	}
+
+	return result
+}
+
+// MustScan scans the given row and panics in case of any errors
+func MustScan(t *testing.T, message string, row *sql.Row, args ...interface{}) {
+	err := row.Scan(args...)
+	if err != nil {
+		t.Fatal(errors.Wrap(errors.Wrap(err, "scanning a row"), message))
+	}
 }

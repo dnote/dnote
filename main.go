@@ -31,6 +31,7 @@ func main() {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing context"))
 	}
+	defer ctx.DB.Close()
 
 	if err := root.Prepare(ctx); err != nil {
 		panic(errors.Wrap(err, "preparing dnote run"))
