@@ -16,12 +16,11 @@ import (
 )
 
 func TestMigrateToV1(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
 
 	t.Run("yaml exists", func(t *testing.T) {
 		// set up
-		testutils.SetupTmp(ctx)
-		defer testutils.ClearTmp(ctx)
+		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
 		if err != nil {
@@ -42,8 +41,8 @@ func TestMigrateToV1(t *testing.T) {
 
 	t.Run("yaml does not exist", func(t *testing.T) {
 		// set up
-		testutils.SetupTmp(ctx)
-		defer testutils.ClearTmp(ctx)
+		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
 		if err != nil {
@@ -63,12 +62,10 @@ func TestMigrateToV1(t *testing.T) {
 }
 
 func TestMigrateToV2(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
 
-	// set up
-	testutils.SetupTmp(ctx)
 	testutils.WriteFile(ctx, "./fixtures/2-pre-dnote.json", "dnote")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV2(ctx); err != nil {
@@ -98,12 +95,11 @@ func TestMigrateToV2(t *testing.T) {
 }
 
 func TestMigrateToV3(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
-
 	// set up
-	testutils.SetupTmp(ctx)
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
 	testutils.WriteFile(ctx, "./fixtures/3-pre-dnote.json", "dnote")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV3(ctx); err != nil {
@@ -133,13 +129,12 @@ func TestMigrateToV3(t *testing.T) {
 }
 
 func TestMigrateToV4(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
-
 	// set up
-	testutils.SetupTmp(ctx)
-	testutils.WriteFile(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
-	defer testutils.ClearTmp(ctx)
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
 	defer os.Setenv("EDITOR", "")
+
+	testutils.WriteFile(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
 
 	// execute
 	os.Setenv("EDITOR", "vim")
@@ -159,12 +154,11 @@ func TestMigrateToV4(t *testing.T) {
 }
 
 func TestMigrateToV5(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
-
 	// set up
-	testutils.SetupTmp(ctx)
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
 	testutils.WriteFile(ctx, "./fixtures/5-pre-actions.json", "actions")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV5(ctx); err != nil {
@@ -257,12 +251,11 @@ func TestMigrateToV5(t *testing.T) {
 }
 
 func TestMigrateToV6(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
-
 	// set up
-	testutils.SetupTmp(ctx)
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
 	testutils.WriteFile(ctx, "./fixtures/6-pre-dnote.json", "dnote")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV6(ctx); err != nil {
@@ -288,12 +281,11 @@ func TestMigrateToV6(t *testing.T) {
 }
 
 func TestMigrateToV7(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
-
 	// set up
-	testutils.SetupTmp(ctx)
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
 	testutils.WriteFile(ctx, "./fixtures/7-pre-actions.json", "actions")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV7(ctx); err != nil {
@@ -324,17 +316,15 @@ func TestMigrateToV7(t *testing.T) {
 }
 
 func TestMigrateToV8(t *testing.T) {
-	ctx := testutils.InitCtx("../tmp")
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
 
 	// set up
-	testutils.SetupTmp(ctx)
-	testutils.SetupDB(ctx)
 	testutils.WriteFile(ctx, "./fixtures/8-actions.json", "actions")
 	testutils.WriteFile(ctx, "./fixtures/8-dnote.json", "dnote")
 	testutils.WriteFile(ctx, "./fixtures/8-dnoterc.yaml", "dnoterc")
 	testutils.WriteFile(ctx, "./fixtures/8-schema.yaml", "schema")
 	testutils.WriteFile(ctx, "./fixtures/8-timestamps.yaml", "timestamps")
-	defer testutils.ClearTmp(ctx)
 
 	// execute
 	if err := migrateToV8(ctx); err != nil {

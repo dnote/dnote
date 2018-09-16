@@ -234,6 +234,7 @@ func TestReduceAddBook(t *testing.T) {
 		panic(errors.Wrap(err, "beginning a transaction"))
 	}
 	if err = Reduce(ctx, tx, action); err != nil {
+		tx.Rollback()
 		t.Fatal(errors.Wrap(err, "Failed to process action"))
 	}
 	tx.Commit()
@@ -247,38 +248,53 @@ func TestReduceAddBook(t *testing.T) {
 	testutils.AssertEqual(t, newBookNoteCount, 0, "new book number of notes mismatch")
 }
 
-//func TestReduceRemoveBook(t *testing.T) {
-//	// Setup
-//	ctx := testutils.InitCtx("../tmp")
-//
-//	testutils.SetupTmp(ctx)
-//	defer testutils.ClearTmp(ctx)
-//	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
-//
-//	// Execute
-//	b, err := json.Marshal(&actions.RemoveBookDataV1{BookName: "linux"})
-//	action := actions.Action{
-//		Type:      actions.ActionRemoveBook,
-//		Data:      b,
-//		Timestamp: 1517629805,
-//	}
-//	if err = Reduce(ctx, action); err != nil {
-//		t.Fatal(errors.Wrap(err, "Failed to process action"))
-//	}
-//
-//	// Test
-//	dnote, err := GetDnote(ctx)
-//	if err != nil {
-//		t.Fatal(errors.Wrap(err, "Failed to get dnote"))
-//	}
-//
-//	remainingBook := dnote["js"]
-//
-//	testutils.AssertEqual(t, len(dnote), 1, "number of books mismatch")
-//	testutils.AssertEqual(t, remainingBook.Name, "js", "remaining book name mismatch")
-//	testutils.AssertEqual(t, len(remainingBook.Notes), 2, "remaining book number of notes mismatch")
-//	testutils.AssertEqual(t, remainingBook.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
-//	testutils.AssertEqual(t, remainingBook.Notes[0].Content, "Booleans have toString()", "remaining note content mismatch")
-//	testutils.AssertEqual(t, remainingBook.Notes[1].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
-//	testutils.AssertEqual(t, remainingBook.Notes[1].Content, "Date object implements mathematical comparisons", "edited note content mismatch")
-//}
+func TestReduceRemoveBook(t *testing.T) {
+	// Setup
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
+	testutils.Setup2(t, ctx)
+
+	// Execute
+	b, err := json.Marshal(&actions.RemoveBookDataV1{BookName: "linux"})
+	action := actions.Action{
+		Type:      actions.ActionRemoveBook,
+		Data:      b,
+		Timestamp: 1517629805,
+	}
+
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		panic(errors.Wrap(err, "beginning a transaction"))
+	}
+	if err = Reduce(ctx, tx, action); err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "Failed to process action"))
+	}
+	tx.Commit()
+
+	// Test
+	var bookCount, noteCount, jsNoteCount, linuxNoteCount int
+	var jsBookLabel string
+	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	testutils.MustScan(t, "counting note", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	testutils.MustScan(t, "counting js note", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "js-book-uuid"), &jsNoteCount)
+	testutils.MustScan(t, "counting linux note", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "linux-book-uuid"), &linuxNoteCount)
+	testutils.MustScan(t, "scanning book", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "js-book-uuid"), &jsBookLabel)
+
+	var n1, n2 infra.Note
+	testutils.MustScan(t, "scanning note 1", db.QueryRow("SELECT uuid, content FROM notes WHERE uuid = ?", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Content)
+	testutils.MustScan(t, "scanning note 2", db.QueryRow("SELECT uuid, content FROM notes WHERE uuid = ?", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n2.UUID, &n2.Content)
+
+	testutils.AssertEqual(t, bookCount, 1, "number of books mismatch")
+	testutils.AssertEqual(t, noteCount, 2, "number of notes mismatch")
+	testutils.AssertEqual(t, jsNoteCount, 2, "js note count mismatch")
+	testutils.AssertEqual(t, linuxNoteCount, 0, "linux note count mismatch")
+	testutils.AssertEqual(t, jsBookLabel, "js", "remaining book name mismatch")
+
+	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "remaining note uuid mismatch")
+	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "remaining note content mismatch")
+	testutils.AssertEqual(t, n2.UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "edited note uuid mismatch")
+	testutils.AssertEqual(t, n2.Content, "Date object implements mathematical comparisons", "edited note content mismatch")
+}

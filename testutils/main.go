@@ -55,6 +55,7 @@ func TeardownEnv(ctx infra.DnoteCtx) {
 	}
 }
 
+// WriteFile writes the content of the given fixture to the filename inside the dnote dir
 func WriteFile(ctx infra.DnoteCtx, fixturePath string, filename string) {
 	fp, err := filepath.Abs(fixturePath)
 	if err != nil {
@@ -71,17 +72,7 @@ func WriteFile(ctx infra.DnoteCtx, fixturePath string, filename string) {
 	}
 }
 
-func WriteFileWithContent(ctx infra.DnoteCtx, content []byte, filename string) {
-	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
-	if err != nil {
-		panic(err)
-	}
-
-	if err := ioutil.WriteFile(dp, content, 0644); err != nil {
-		panic(err)
-	}
-}
-
+// ReadFile reads the content of the file with the given name in dnote dir
 func ReadFile(ctx infra.DnoteCtx, filename string) []byte {
 	path := filepath.Join(ctx.DnoteDir, filename)
 
@@ -93,8 +84,10 @@ func ReadFile(ctx infra.DnoteCtx, filename string) []byte {
 	return b
 }
 
-func ReadFileAbs(filename string) []byte {
-	fp, err := filepath.Abs(filename)
+// ReadFileAbs reads the content of the file with the given file path by resolving
+// it as an absolute path
+func ReadFileAbs(relpath string) []byte {
+	fp, err := filepath.Abs(relpath)
 	if err != nil {
 		panic(err)
 	}
@@ -107,15 +100,33 @@ func ReadFileAbs(filename string) []byte {
 	return b
 }
 
-// AssertEqual fails a test if the actual does not match the expected
-func AssertEqual(t *testing.T, a interface{}, b interface{}, message string) {
+func checkEqual(a interface{}, b interface{}, message string) (bool, string) {
 	if a == b {
-		return
+		return true, ""
 	}
+
 	if len(message) == 0 {
 		message = fmt.Sprintf("%v != %v", a, b)
 	}
-	t.Errorf("%s. Actual: %+v. Expected: %+v.", message, a, b)
+	errorMessage := fmt.Sprintf("%s. Actual: %+v. Expected: %+v.", message, a, b)
+
+	return false, errorMessage
+}
+
+// AssertEqual errors a test if the actual does not match the expected
+func AssertEqual(t *testing.T, a interface{}, b interface{}, message string) {
+	ok, m := checkEqual(a, b, message)
+	if !ok {
+		t.Error(m)
+	}
+}
+
+// AssertEqualf fails a test if the actual does not match the expected
+func AssertEqualf(t *testing.T, a interface{}, b interface{}, message string) {
+	ok, m := checkEqual(a, b, message)
+	if !ok {
+		t.Fatal(m)
+	}
 }
 
 // AssertNotEqual fails a test if the actual matches the expected
@@ -168,7 +179,7 @@ func IsEqualJSON(s1, s2 []byte) (bool, error) {
 	return reflect.DeepEqual(o1, o2), nil
 }
 
-// MustExec executes the given SQL query and panics if an error occurs
+// MustExec executes the given SQL query and fails a test if an error occurs
 func MustExec(t *testing.T, message string, db *sql.DB, query string, args ...interface{}) sql.Result {
 	result, err := db.Exec(query, args...)
 	if err != nil {
@@ -178,7 +189,7 @@ func MustExec(t *testing.T, message string, db *sql.DB, query string, args ...in
 	return result
 }
 
-// MustScan scans the given row and panics in case of any errors
+// MustScan scans the given row and fails a test in case of any errors
 func MustScan(t *testing.T, message string, row *sql.Row, args ...interface{}) {
 	err := row.Scan(args...)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 )
 
@@ -50,6 +51,18 @@ func Reduce(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error {
 	return nil
 }
 
+func getBookUUIDWithTx(tx *sql.Tx, bookLabel string) (string, error) {
+	var ret string
+	err := tx.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&ret)
+	if err == sql.ErrNoRows {
+		return ret, errors.Errorf("book '%s' not found", bookLabel)
+	} else if err != nil {
+		return ret, errors.Wrap(err, "querying the book")
+	}
+
+	return ret, nil
+}
+
 func handleAddNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error {
 	var data actions.AddNoteDataV1
 	if err := json.Unmarshal(action.Data, &data); err != nil {
@@ -58,7 +71,7 @@ func handleAddNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error 
 
 	log.Debug("reducing add_note. action: %+v. data: %+v\n", action, data)
 
-	bookUUID, err := GetBookUUID(ctx, data.BookName)
+	bookUUID, err := getBookUUIDWithTx(tx, data.BookName)
 	if err != nil {
 		return errors.Wrap(err, "getting book uuid")
 	}
@@ -66,7 +79,7 @@ func handleAddNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error 
 	var noteCount int
 	err = tx.QueryRow("SELECT count(uuid) FROM notes WHERE uuid = ? AND book_uuid = ?", data.NoteUUID, bookUUID).Scan(&noteCount)
 	if err != nil {
-		return errors.Wrap(err, "querying the book")
+		return errors.Wrap(err, "counting note")
 	}
 
 	if noteCount > 1 {
@@ -99,7 +112,7 @@ func handleRemoveNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) err
 	return nil
 }
 
-func buildEditNoteQuery(ctx infra.DnoteCtx, noteUUID, bookUUID string, ts int64, data actions.EditNoteDataV2) (string, []interface{}, error) {
+func buildEditNoteQuery(ctx infra.DnoteCtx, tx *sql.Tx, noteUUID, bookUUID string, ts int64, data actions.EditNoteDataV2) (string, []interface{}, error) {
 	setTmpl := "edited_on = ?"
 	queryArgs := []interface{}{ts}
 
@@ -112,7 +125,7 @@ func buildEditNoteQuery(ctx infra.DnoteCtx, noteUUID, bookUUID string, ts int64,
 		queryArgs = append(queryArgs, *data.Public)
 	}
 	if data.ToBook != nil {
-		bookUUID, err := GetBookUUID(ctx, *data.ToBook)
+		bookUUID, err := getBookUUIDWithTx(tx, *data.ToBook)
 		if err != nil {
 			return "", []interface{}{}, errors.Wrap(err, "getting destination book uuid")
 		}
@@ -136,12 +149,12 @@ func handleEditNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error
 
 	log.Debug("reducing edit_note v2. action: %+v. data: %+v\n", action, data)
 
-	bookUUID, err := GetBookUUID(ctx, data.FromBook)
+	bookUUID, err := getBookUUIDWithTx(tx, data.FromBook)
 	if err != nil {
 		return errors.Wrap(err, "getting book uuid")
 	}
 
-	queryTmpl, queryArgs, err := buildEditNoteQuery(ctx, data.NoteUUID, bookUUID, action.Timestamp, data)
+	queryTmpl, queryArgs, err := buildEditNoteQuery(ctx, tx, data.NoteUUID, bookUUID, action.Timestamp, data)
 	if err != nil {
 		return errors.Wrap(err, "building edit note query")
 	}
@@ -168,13 +181,13 @@ func handleAddBook(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error 
 		return errors.Wrap(err, "counting books")
 	}
 
-	if bookCount > 1 {
+	if bookCount > 0 {
 		// If book already exists, another machine added a book with the same name.
 		// noop
 		return nil
 	}
 
-	_, err = tx.Exec("INSERT INTO books (label) VALUES (?)", data.BookName)
+	_, err = tx.Exec("INSERT INTO books (uuid, label) VALUES (?, ?)", utils.GenerateUUID(), data.BookName)
 	if err != nil {
 		return errors.Wrap(err, "inserting a book")
 	}
@@ -190,9 +203,14 @@ func handleRemoveBook(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) err
 
 	log.Debug("reducing remove_book. action: %+v. data: %+v\n", action, data)
 
-	bookUUID, err := GetBookUUID(ctx, data.BookName)
-	if err != nil {
-		return errors.Wrap(err, "getting book uuid")
+	var bookUUID string
+	err := tx.QueryRow("SELECT uuid FROM books WHERE label = ?", data.BookName).Scan(&bookUUID)
+	if err == sql.ErrNoRows {
+		// If book does not exist, another client added and removed the book, making the add_book action
+		// obsolete. noop.
+		return nil
+	} else if err != nil {
+		return errors.Wrap(err, "querying the book")
 	}
 
 	_, err = tx.Exec("DELETE FROM notes WHERE book_uuid = ?", bookUUID)

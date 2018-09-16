@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"time"
 
 	// use sqlite
 	_ "github.com/mattn/go-sqlite3"
@@ -170,6 +171,46 @@ func InitDB(ctx DnoteCtx) error {
 	if err != nil {
 		return errors.Wrap(err, "creating indices")
 	}
+
+	return nil
+}
+
+// InitSystem inserts system data if missing
+func InitSystem(ctx DnoteCtx) error {
+	db := ctx.DB
+
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	var bookmarkCount, lastUpgradeCount int
+	if err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", "bookmark").
+		Scan(&bookmarkCount); err != nil {
+		return errors.Wrap(err, "counting bookmarks")
+	}
+	if bookmarkCount == 0 {
+		_, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", "bookmark", 0)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "inserting bookmark")
+		}
+	}
+
+	if err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", "last_upgrade").
+		Scan(&lastUpgradeCount); err != nil {
+		return errors.Wrap(err, "counting last_upgrade")
+	}
+	if lastUpgradeCount == 0 {
+		now := time.Now().Unix()
+		_, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", "last_upgrade", now)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "inserting bookmark")
+		}
+	}
+
+	tx.Commit()
 
 	return nil
 }
