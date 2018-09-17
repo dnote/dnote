@@ -243,7 +243,7 @@ func TestRemoveNote(t *testing.T) {
 	testutils.WriteFile(ctx, "./testutils/fixtures/dnote3.json", "dnote")
 
 	// Execute
-	cmd, stderr, err := newDnoteCmd(ctx, "remove", "js", "1")
+	cmd, stderr, err := newDnoteCmd(ctx, "remove", "js", "0")
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to get command"))
 	}
@@ -296,13 +296,13 @@ func TestRemoveNote(t *testing.T) {
 
 	testutils.AssertEqual(t, len(actionSlice), 1, "There should be 1 action")
 	testutils.AssertEqual(t, action.Type, actions.ActionRemoveNote, "action type mismatch")
-	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
+	testutils.AssertEqual(t, actionData.NoteUUID, "43827b9a-c2b0-4c06-a290-97991c896653", "action data note_uuid mismatch")
 	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, len(book.Notes), 1, "Book should have one note")
 	testutils.AssertEqual(t, len(otherBook.Notes), 1, "Other book should have one note")
-	testutils.AssertEqual(t, book.Notes[0].UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
-	testutils.AssertEqual(t, book.Notes[0].Content, "Booleans have toString()", "Note content mismatch")
+	testutils.AssertEqual(t, book.Notes[0].UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
+	testutils.AssertEqual(t, book.Notes[0].Content, "Date object implements mathematical comparisons", "Note content mismatch")
 }
 
 func TestRemoveBook(t *testing.T) {
