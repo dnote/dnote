@@ -94,9 +94,9 @@ func note(ctx infra.DnoteCtx, index int, bookName string) error {
 		return nil
 	}
 
+	note := notes[index]
 	dnote[bookName] = core.GetUpdatedBook(dnote[bookName], append(notes[:index], notes[index+1:]...))
 
-	note := notes[index]
 	err = core.LogActionRemoveNote(ctx, note.UUID, book.Name)
 	if err != nil {
 		return errors.Wrap(err, "Failed to log action")
