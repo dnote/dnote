@@ -14,10 +14,9 @@ import (
 
 // ReduceAll reduces all actions
 func ReduceAll(ctx infra.DnoteCtx, tx *sql.Tx, actionSlice []actions.Action) error {
-
 	for _, action := range actionSlice {
 		if err := Reduce(ctx, tx, action); err != nil {
-			return errors.Wrap(err, "Failed to reduce action")
+			return errors.Wrap(err, "reducing action")
 		}
 	}
 
@@ -45,7 +44,7 @@ func Reduce(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error {
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "Failed to process the action %s", action.Type)
+		return errors.Wrapf(err, "reducing %s", action.Type)
 	}
 
 	return nil
@@ -82,8 +81,12 @@ func handleAddNote(ctx infra.DnoteCtx, tx *sql.Tx, action actions.Action) error 
 		return errors.Wrap(err, "counting note")
 	}
 
-	if noteCount > 1 {
-		return errors.New("duplicate note exists")
+	if noteCount > 0 {
+		// if a duplicate exists, it is because the same action has been previously synced to the server
+		// but the client did not bring the bookmark up-to-date at the time because it had error reducing
+		// the returned actions.
+		// noop so that the client can update bookmark
+		return nil
 	}
 
 	_, err = tx.Exec(`INSERT INTO notes

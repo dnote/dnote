@@ -46,10 +46,7 @@ type syncPayload struct {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		tx, err := ctx.DB.Begin()
-		if err != nil {
-			return errors.Wrap(err, "beginning a transaction")
-		}
+		db := ctx.DB
 
 		config, err := core.ReadConfig(ctx)
 		if err != nil {
@@ -61,12 +58,12 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		var bookmark int
-		err = tx.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
+		err = db.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
 		if err != nil {
 			return errors.Wrap(err, "getting bookmark")
 		}
 
-		actions, err := getLocalActions(tx)
+		actions, err := getLocalActions(db)
 		if err != nil {
 			return errors.Wrap(err, "getting local actions")
 		}
@@ -97,27 +94,32 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		fmt.Println(" done.")
 
 		var respData responseData
-		err = json.Unmarshal(body, &respData)
-		if err != nil {
+		if err = json.Unmarshal(body, &respData); err != nil {
 			return errors.Wrap(err, "unmarshalling the payload")
 		}
 
-		log.Infof("resolving delta (total %d).", len(respData.Actions))
-		err = core.ReduceAll(ctx, tx, respData.Actions)
+		// First, remove our actions because server has successfully ingested them
+		if _, err = db.Exec("DELETE FROM actions"); err != nil {
+			return errors.Wrap(err, "deleting actions")
+		}
+
+		tx, err := db.Begin()
 		if err != nil {
+			return errors.Wrap(err, "beginning a transaction")
+		}
+
+		log.Infof("resolving delta (total %d).", len(respData.Actions))
+		if err := core.ReduceAll(ctx, tx, respData.Actions); err != nil {
+			tx.Rollback()
 			return errors.Wrap(err, "reducing returned actions")
 		}
-		fmt.Println(" done.")
 
-		_, err = tx.Exec("UPDATE system SET value = ? WHERE key = ?", respData.Bookmark, "bookmark")
-		if err != nil {
+		if _, err = tx.Exec("UPDATE system SET value = ? WHERE key = ?", respData.Bookmark, "bookmark"); err != nil {
+			tx.Rollback()
 			return errors.Wrap(err, "updating the bookmark")
 		}
 
-		_, err = tx.Exec("DELETE FROM actions")
-		if err != nil {
-			return errors.Wrap(err, "clearing the action log")
-		}
+		fmt.Println(" done.")
 
 		tx.Commit()
 
@@ -191,10 +193,10 @@ func postActions(ctx infra.DnoteCtx, APIKey string, payload io.Reader) (*http.Re
 	return resp, nil
 }
 
-func getLocalActions(tx *sql.Tx) ([]actions.Action, error) {
+func getLocalActions(db *sql.DB) ([]actions.Action, error) {
 	ret := []actions.Action{}
 
-	rows, err := tx.Query("SELECT uuid, schema, type, data, timestamp FROM actions")
+	rows, err := db.Query("SELECT uuid, schema, type, data, timestamp FROM actions")
 	if err != nil {
 		return ret, errors.Wrap(err, "querying actions")
 	}
