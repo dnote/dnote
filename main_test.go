@@ -1,14 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -24,37 +21,11 @@ var binaryName = "test-dnote"
 
 func TestMain(m *testing.M) {
 	if err := exec.Command("go", "build", "-o", binaryName).Run(); err != nil {
-		log.Print(errors.Wrap(err, "Failed to build a binary").Error())
+		log.Print(errors.Wrap(err, "building a binary").Error())
 		os.Exit(1)
 	}
 
 	os.Exit(m.Run())
-}
-
-func newDnoteCmd(ctx infra.DnoteCtx, arg ...string) (*exec.Cmd, *bytes.Buffer, error) {
-	var stderr bytes.Buffer
-
-	binaryPath, err := filepath.Abs(binaryName)
-	if err != nil {
-		return &exec.Cmd{}, &stderr, errors.Wrap(err, "Failed to get the absolute path to the test binary")
-	}
-
-	cmd := exec.Command(binaryPath, arg...)
-	cmd.Env = []string{fmt.Sprintf("DNOTE_DIR=%s", ctx.DnoteDir), fmt.Sprintf("DNOTE_HOME_DIR=%s", ctx.HomeDir)}
-	cmd.Stderr = &stderr
-
-	return cmd, &stderr, nil
-}
-
-func runDnoteCmd(ctx infra.DnoteCtx, arg ...string) {
-	cmd, stderr, err := newDnoteCmd(ctx, arg...)
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to get command").Error())
-	}
-
-	if err := cmd.Run(); err != nil {
-		panic(errors.Wrapf(err, "Failed to run command %s", stderr.String()))
-	}
 }
 
 func TestInit(t *testing.T) {
@@ -63,7 +34,7 @@ func TestInit(t *testing.T) {
 	defer testutils.TeardownEnv(ctx)
 
 	// Execute
-	runDnoteCmd(ctx)
+	testutils.RunDnoteCmd(t, ctx, binaryName)
 
 	// Test
 	if !utils.FileExists(ctx.DnoteDir) {
@@ -97,7 +68,7 @@ func TestAddNote_NewBook_ContentFlag(t *testing.T) {
 	defer testutils.TeardownEnv(ctx)
 
 	// Execute
-	runDnoteCmd(ctx, "add", "js", "-c", "foo")
+	testutils.RunDnoteCmd(t, ctx, binaryName, "add", "js", "-c", "foo")
 
 	// Test
 	db := ctx.DB
@@ -150,7 +121,7 @@ func TestAddNote_ExistingBook_ContentFlag(t *testing.T) {
 	testutils.Setup3(t, ctx)
 
 	// Execute
-	runDnoteCmd(ctx, "add", "js", "-c", "foo")
+	testutils.RunDnoteCmd(t, ctx, binaryName, "add", "js", "-c", "foo")
 
 	// Test
 	db := ctx.DB
@@ -197,7 +168,7 @@ func TestEditNote_ContentFlag(t *testing.T) {
 	testutils.Setup4(t, ctx)
 
 	// Execute
-	runDnoteCmd(ctx, "edit", "js", "2", "-c", "foo bar")
+	testutils.RunDnoteCmd(t, ctx, binaryName, "edit", "js", "2", "-c", "foo bar")
 
 	// Test
 	db := ctx.DB
@@ -250,32 +221,7 @@ func TestRemoveNote(t *testing.T) {
 	testutils.Setup2(t, ctx)
 
 	// Execute
-	cmd, stderr, err := newDnoteCmd(ctx, "remove", "js", "1")
-	if err != nil {
-		panic(errors.Wrap(err, "getting command"))
-	}
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		panic(errors.Wrap(err, "getting stdin %s"))
-	}
-	defer stdin.Close()
-
-	// Start the program
-	err = cmd.Start()
-	if err != nil {
-		panic(errors.Wrap(err, "starting command"))
-	}
-
-	// confirm
-	_, err = io.WriteString(stdin, "y\n")
-	if err != nil {
-		panic(errors.Wrap(err, "writing to stdin"))
-	}
-
-	err = cmd.Wait()
-	if err != nil {
-		panic(errors.Wrapf(err, "running command %s", stderr.String()))
-	}
+	testutils.WaitDnoteCmd(t, ctx, testutils.UserConfirm, binaryName, "remove", "js", "1")
 
 	// Test
 	db := ctx.DB
@@ -333,32 +279,7 @@ func TestRemoveBook(t *testing.T) {
 	testutils.Setup2(t, ctx)
 
 	// Execute
-	cmd, stderr, err := newDnoteCmd(ctx, "remove", "-b", "js")
-	if err != nil {
-		panic(errors.Wrap(err, "getting command"))
-	}
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		panic(errors.Wrap(err, "getting stdin %s"))
-	}
-	defer stdin.Close()
-
-	// Start the program
-	err = cmd.Start()
-	if err != nil {
-		panic(errors.Wrap(err, "starting command"))
-	}
-
-	// confirm
-	_, err = io.WriteString(stdin, "y\n")
-	if err != nil {
-		panic(errors.Wrap(err, "writing to stdin"))
-	}
-
-	err = cmd.Wait()
-	if err != nil {
-		panic(errors.Wrapf(err, "running command %s", stderr.String()))
-	}
+	testutils.WaitDnoteCmd(t, ctx, testutils.UserConfirm, binaryName, "remove", "-b", "js")
 
 	// Test
 	db := ctx.DB
@@ -386,7 +307,7 @@ func TestRemoveBook(t *testing.T) {
 		db.QueryRow("SELECT type, schema, data FROM actions WHERE type = ?", actions.ActionRemoveBook), &action.Type, &action.Schema, &action.Data)
 
 	var actionData actions.RemoveBookDataV1
-	if err = json.Unmarshal(action.Data, &actionData); err != nil {
+	if err := json.Unmarshal(action.Data, &actionData); err != nil {
 		log.Fatalf("unmarshalling the action data: %s", err)
 	}
 

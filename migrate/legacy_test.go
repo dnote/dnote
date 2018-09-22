@@ -65,7 +65,7 @@ func TestMigrateToV2(t *testing.T) {
 	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.WriteFile(ctx, "./fixtures/2-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/2-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV2(ctx); err != nil {
@@ -99,7 +99,7 @@ func TestMigrateToV3(t *testing.T) {
 	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.WriteFile(ctx, "./fixtures/3-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/3-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV3(ctx); err != nil {
@@ -134,7 +134,7 @@ func TestMigrateToV4(t *testing.T) {
 	defer testutils.TeardownEnv(ctx)
 	defer os.Setenv("EDITOR", "")
 
-	testutils.WriteFile(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
+	testutils.CopyFixture(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
 
 	// execute
 	os.Setenv("EDITOR", "vim")
@@ -158,7 +158,7 @@ func TestMigrateToV5(t *testing.T) {
 	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.WriteFile(ctx, "./fixtures/5-pre-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/5-pre-actions.json", "actions")
 
 	// execute
 	if err := migrateToV5(ctx); err != nil {
@@ -255,7 +255,7 @@ func TestMigrateToV6(t *testing.T) {
 	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.WriteFile(ctx, "./fixtures/6-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/6-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV6(ctx); err != nil {
@@ -285,7 +285,7 @@ func TestMigrateToV7(t *testing.T) {
 	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.WriteFile(ctx, "./fixtures/7-pre-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/7-pre-actions.json", "actions")
 
 	// execute
 	if err := migrateToV7(ctx); err != nil {
@@ -320,11 +320,11 @@ func TestMigrateToV8(t *testing.T) {
 	defer testutils.TeardownEnv(ctx)
 
 	// set up
-	testutils.WriteFile(ctx, "./fixtures/8-actions.json", "actions")
-	testutils.WriteFile(ctx, "./fixtures/8-dnote.json", "dnote")
-	testutils.WriteFile(ctx, "./fixtures/8-dnoterc.yaml", "dnoterc")
-	testutils.WriteFile(ctx, "./fixtures/8-schema.yaml", "schema")
-	testutils.WriteFile(ctx, "./fixtures/8-timestamps.yaml", "timestamps")
+	testutils.CopyFixture(ctx, "./fixtures/8-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/8-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/8-dnoterc.yaml", "dnoterc")
+	testutils.CopyFixture(ctx, "./fixtures/8-schema.yaml", "schema")
+	testutils.CopyFixture(ctx, "./fixtures/8-timestamps.yaml", "timestamps")
 
 	// execute
 	if err := migrateToV8(ctx); err != nil {

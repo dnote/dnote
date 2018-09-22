@@ -75,7 +75,7 @@ func LogActionAddBook(tx *sql.Tx, name string) error {
 	}
 
 	ts := time.Now().Unix()
-	if err := LogAction(tx, 2, actions.ActionAddBook, string(b), ts); err != nil {
+	if err := LogAction(tx, 1, actions.ActionAddBook, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
 
