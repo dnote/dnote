@@ -11,34 +11,44 @@ import (
 
 func TestLogActionEditNote(t *testing.T) {
 	// Setup
-	ctx := testutils.InitCtx("../tmp")
+	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	defer testutils.TeardownEnv(ctx)
 
-	testutils.SetupTmp(ctx)
-	defer testutils.ClearTmp(ctx)
-	testutils.WriteFile(ctx, "../testutils/fixtures/dnote3.json", "dnote")
-	InitFiles(ctx)
+	// Execute
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		panic(errors.Wrap(err, "beginning a transaction"))
+	}
 
-	if err := LogActionEditNote(ctx, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "js", "updated content", 1536168581); err != nil {
+	if err := LogActionEditNote(tx, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "js", "updated content", 1536168581); err != nil {
 		t.Fatalf("Failed to perform %s", err.Error())
 	}
 
-	b := testutils.ReadFile(ctx, "actions")
-	var got []actions.Action
+	tx.Commit()
 
-	if err := json.Unmarshal(b, &got); err != nil {
-		panic(errors.Wrap(err, "unmarshalling actions"))
+	// Test
+	var actionCount int
+	if err := db.QueryRow("SELECT count(*) FROM actions;").Scan(&actionCount); err != nil {
+		panic(errors.Wrap(err, "counting actions"))
 	}
-
+	var action actions.Action
+	if err := db.QueryRow("SELECT uuid, schema, type, timestamp, data FROM actions").
+		Scan(&action.UUID, &action.Schema, &action.Type, &action.Timestamp, &action.Data); err != nil {
+		panic(errors.Wrap(err, "querying action"))
+	}
 	var actionData actions.EditNoteDataV2
-	if err := json.Unmarshal(got[0].Data, &actionData); err != nil {
+	if err := json.Unmarshal(action.Data, &actionData); err != nil {
 		panic(errors.Wrap(err, "unmarshalling action data"))
 	}
 
-	testutils.AssertEqual(t, len(got), 1, "action length mismatch")
-	testutils.AssertNotEqual(t, got[0].UUID, "", "action uuid mismatch")
-	testutils.AssertEqual(t, got[0].Schema, 2, "action schema mismatch")
-	testutils.AssertEqual(t, got[0].Type, actions.ActionEditNote, "action type mismatch")
-	testutils.AssertNotEqual(t, got[0].Timestamp, 0, "action timestamp mismatch")
+	if actionCount != 1 {
+		t.Fatalf("action count mismatch. got %d", actionCount)
+	}
+	testutils.AssertNotEqual(t, action.UUID, "", "action uuid mismatch")
+	testutils.AssertEqual(t, action.Schema, 2, "action schema mismatch")
+	testutils.AssertEqual(t, action.Type, actions.ActionEditNote, "action type mismatch")
+	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
 	testutils.AssertEqual(t, actionData.FromBook, "js", "action data from_book mismatch")
 	testutils.AssertEqual(t, *actionData.Content, "updated content", "action data content mismatch")

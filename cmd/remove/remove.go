@@ -1,8 +1,8 @@
 package remove
 
 import (
+	"database/sql"
 	"fmt"
-	"strconv"
 
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
@@ -39,111 +39,109 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if targetBookName != "" {
-			err := book(ctx, targetBookName)
-			if err != nil {
-				return errors.Wrap(err, "Failed to delete the book")
-			}
-		} else {
-			if len(args) < 2 {
-				return errors.New("Missing argument")
+			if err := removeBook(ctx, targetBookName); err != nil {
+				return errors.Wrap(err, "removing the book")
 			}
 
-			targetBook := args[0]
-			noteIndex, err := strconv.Atoi(args[1])
-			if err != nil {
-				return err
-			}
+			return nil
+		}
 
-			err = note(ctx, noteIndex, targetBook)
-			if err != nil {
-				return errors.Wrap(err, "Failed to delete the note")
-			}
+		if len(args) < 2 {
+			return errors.New("Missing argument")
+		}
+
+		targetBook := args[0]
+		noteID := args[1]
+
+		if err := removeNote(ctx, noteID, targetBook); err != nil {
+			return errors.Wrap(err, "removing the note")
 		}
 
 		return nil
 	}
 }
 
-// note deletes the note in a certain index.
-func note(ctx infra.DnoteCtx, index int, bookName string) error {
-	dnote, err := core.GetDnote(ctx)
+func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
+	db := ctx.DB
+
+	bookUUID, err := core.GetBookUUID(ctx, bookLabel)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get dnote")
+		return errors.Wrap(err, "finding book uuid")
 	}
 
-	book, exists := dnote[bookName]
-	if !exists {
-		return errors.Errorf("Book with the name '%s' does not exist", bookName)
-	}
-	notes := book.Notes
-
-	if len(notes)-1 < index {
-		fmt.Println("Error : The note with that index is not found.")
-		return nil
+	var noteUUID, noteContent string
+	err = db.QueryRow("SELECT uuid, content FROM notes WHERE id = ? AND book_uuid = ?", noteID, bookUUID).Scan(&noteUUID, &noteContent)
+	if err == sql.ErrNoRows {
+		return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+	} else if err != nil {
+		return errors.Wrap(err, "querying the book")
 	}
 
-	content := notes[index].Content
-	log.Printf("content: \"%s\"\n", content)
+	// todo: multiline
+	log.Printf("content: \"%s\"\n", noteContent)
 
 	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
-		return errors.Wrap(err, "Failed to get confirmation")
+		return errors.Wrap(err, "getting confirmation")
 	}
 	if !ok {
 		log.Warnf("aborted by user\n")
 		return nil
 	}
 
-	note := notes[index]
-	dnote[bookName] = core.GetUpdatedBook(dnote[bookName], append(notes[:index], notes[index+1:]...))
-
-	err = core.LogActionRemoveNote(ctx, note.UUID, book.Name)
+	tx, err := db.Begin()
 	if err != nil {
-		return errors.Wrap(err, "Failed to log action")
+		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	err = core.WriteDnote(ctx, dnote)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write dnote")
+	if _, err = tx.Exec("DELETE FROM notes WHERE uuid = ? AND book_uuid = ?", noteUUID, bookUUID); err != nil {
+		return errors.Wrap(err, "removing the note")
 	}
+	if err = core.LogActionRemoveNote(tx, noteUUID, bookLabel); err != nil {
+		return errors.Wrap(err, "logging the remove_note action")
+	}
+	tx.Commit()
 
-	log.Successf("removed from %s\n", bookName)
+	log.Successf("removed from %s\n", bookLabel)
+
 	return nil
 }
 
-// book deletes a book with the given name
-func book(ctx infra.DnoteCtx, bookName string) error {
-	ok, err := utils.AskConfirmation(fmt.Sprintf("delete book '%s' and all its notes?", bookName), false)
+func removeBook(ctx infra.DnoteCtx, bookLabel string) error {
+	db := ctx.DB
+
+	bookUUID, err := core.GetBookUUID(ctx, bookLabel)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "finding book uuid")
+	}
+
+	ok, err := utils.AskConfirmation(fmt.Sprintf("delete book '%s' and all its notes?", bookLabel), false)
+	if err != nil {
+		return errors.Wrap(err, "getting confirmation")
 	}
 	if !ok {
 		log.Warnf("aborted by user\n")
 		return nil
 	}
 
-	dnote, err := core.GetDnote(ctx)
+	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	for n, book := range dnote {
-		if n == bookName {
-			delete(dnote, n)
-
-			err = core.LogActionRemoveBook(ctx, book.Name)
-			if err != nil {
-				return errors.Wrap(err, "Failed to log action")
-			}
-			err := core.WriteDnote(ctx, dnote)
-			if err != nil {
-				return err
-			}
-
-			log.Success("removed book\n")
-			return nil
-		}
+	if _, err = tx.Exec("DELETE FROM notes WHERE book_uuid = ?", bookUUID); err != nil {
+		return errors.Wrap(err, "removing notes in the book")
+	}
+	if _, err = tx.Exec("DELETE FROM books WHERE uuid = ?", bookUUID); err != nil {
+		return errors.Wrap(err, "removing the book")
+	}
+	if err = core.LogActionRemoveBook(tx, bookLabel); err != nil {
+		return errors.Wrap(err, "loging the remove_book action")
 	}
 
-	return errors.Errorf("Book '%s' was not found", bookName)
+	tx.Commit()
+
+	log.Success("removed book\n")
+
+	return nil
 }

@@ -27,18 +27,21 @@ func Execute() error {
 
 // Prepare initializes necessary files
 func Prepare(ctx infra.DnoteCtx) error {
-	err := core.MigrateToDnoteDir(ctx)
-	if err != nil {
-		return errors.Wrap(err, "initializing dnote dir")
+	if err := core.InitFiles(ctx); err != nil {
+		return errors.Wrap(err, "initializing files")
 	}
 
-	err = core.InitFiles(ctx)
-	if err != nil {
-		return errors.Wrap(err, "initiating files")
+	if err := infra.InitDB(ctx); err != nil {
+		return errors.Wrap(err, "initializing database")
+	}
+	if err := infra.InitSystem(ctx); err != nil {
+		return errors.Wrap(err, "initializing system data")
 	}
 
-	err = migrate.Migrate(ctx)
-	if err != nil {
+	if err := migrate.Legacy(ctx); err != nil {
+		return errors.Wrap(err, "running legacy migration")
+	}
+	if err := migrate.Run(ctx); err != nil {
 		return errors.Wrap(err, "running migration")
 	}
 

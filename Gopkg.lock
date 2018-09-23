@@ -58,6 +58,14 @@
   version = "v0.0.3"
 
 [[projects]]
+  digest = "1:bc03901fc8f0965ccba8bc453eae21a9b04f95999eab664c7de6dc7290f4e8f4"
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  pruneopts = ""
+  revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
+  version = "v1.9.0"
+
+[[projects]]
   digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -112,6 +120,7 @@
     "github.com/dnote/actions",
     "github.com/fatih/color",
     "github.com/google/go-github/github",
+    "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
     "github.com/satori/go.uuid",
     "github.com/spf13/cobra",

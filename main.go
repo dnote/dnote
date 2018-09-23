@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/user"
 
 	"github.com/dnote/cli/cmd/root"
-	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 
 	// commands
@@ -17,6 +15,7 @@ import (
 	"github.com/dnote/cli/cmd/edit"
 	"github.com/dnote/cli/cmd/login"
 	"github.com/dnote/cli/cmd/ls"
+
 	"github.com/dnote/cli/cmd/remove"
 	"github.com/dnote/cli/cmd/sync"
 	"github.com/dnote/cli/cmd/version"
@@ -28,14 +27,14 @@ var apiEndpoint string
 var versionTag = "master"
 
 func main() {
-	ctx, err := newCtx()
+	ctx, err := infra.NewCtx(apiEndpoint, versionTag)
 	if err != nil {
-		panic(errors.Wrap(err, "Failed to initialize the dnote context"))
+		panic(errors.Wrap(err, "initializing context"))
 	}
+	defer ctx.DB.Close()
 
-	err = root.Prepare(ctx)
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to prepare dnote run"))
+	if err := root.Prepare(ctx); err != nil {
+		panic(errors.Wrap(err, "preparing dnote run"))
 	}
 
 	root.Register(remove.NewCmd(ctx))
@@ -52,48 +51,4 @@ func main() {
 		log.Errorf("%s\n", err.Error())
 		os.Exit(1)
 	}
-}
-
-func newCtx() (infra.DnoteCtx, error) {
-	homeDir, err := getHomeDir()
-	if err != nil {
-		return infra.DnoteCtx{}, errors.Wrap(err, "Failed to get home dir")
-	}
-	dnoteDir := getDnoteDir(homeDir)
-
-	ret := infra.DnoteCtx{
-		HomeDir:     homeDir,
-		DnoteDir:    dnoteDir,
-		APIEndpoint: apiEndpoint,
-		Version:     versionTag,
-	}
-
-	return ret, nil
-}
-
-func getDnoteDir(homeDir string) string {
-	var ret string
-
-	dnoteDirEnv := os.Getenv("DNOTE_DIR")
-	if dnoteDirEnv == "" {
-		ret = fmt.Sprintf("%s/%s", homeDir, core.DnoteDirName)
-	} else {
-		ret = dnoteDirEnv
-	}
-
-	return ret
-}
-
-func getHomeDir() (string, error) {
-	homeDirEnv := os.Getenv("DNOTE_HOME_DIR")
-	if homeDirEnv != "" {
-		return homeDirEnv, nil
-	}
-
-	usr, err := user.Current()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get current user")
-	}
-
-	return usr.HomeDir, nil
 }

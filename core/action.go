@@ -1,16 +1,16 @@
 package core
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
 	"github.com/dnote/actions"
-	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 )
 
-func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, timestamp int64) error {
+// LogActionAddNote logs an action for adding a note
+func LogActionAddNote(tx *sql.Tx, noteUUID, bookName, content string, timestamp int64) error {
 	b, err := json.Marshal(actions.AddNoteDataV2{
 		NoteUUID: noteUUID,
 		BookName: bookName,
@@ -19,113 +19,79 @@ func LogActionAddNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ti
 		Public: false,
 	})
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data into JSON")
+		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	action := actions.Action{
-		UUID:      uuid.NewV4().String(),
-		Schema:    2,
-		Type:      actions.ActionAddNote,
-		Data:      b,
-		Timestamp: timestamp,
-	}
-
-	if err := LogAction(ctx, action); err != nil {
-		return errors.Wrapf(err, "Failed to log action type %s", actions.ActionAddNote)
+	if err := LogAction(tx, 2, actions.ActionAddNote, string(b), timestamp); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
 
 	return nil
 }
 
-func LogActionRemoveNote(ctx infra.DnoteCtx, noteUUID, bookName string) error {
+// LogActionRemoveNote logs an action for removing a book
+func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 	b, err := json.Marshal(actions.RemoveNoteDataV1{
 		NoteUUID: noteUUID,
 		BookName: bookName,
 	})
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data into JSON")
+		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	action := actions.Action{
-		UUID:      uuid.NewV4().String(),
-		Schema:    1,
-		Type:      actions.ActionRemoveNote,
-		Data:      b,
-		Timestamp: time.Now().Unix(),
-	}
-
-	if err := LogAction(ctx, action); err != nil {
-		return errors.Wrapf(err, "Failed to log action type %s", actions.ActionRemoveNote)
+	ts := time.Now().Unix()
+	if err := LogAction(tx, 1, actions.ActionRemoveNote, string(b), ts); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
 
 	return nil
 }
 
-func LogActionEditNote(ctx infra.DnoteCtx, noteUUID, bookName, content string, ts int64) error {
+// LogActionEditNote logs an action for editing a note
+func LogActionEditNote(tx *sql.Tx, noteUUID, bookName, content string, ts int64) error {
 	b, err := json.Marshal(actions.EditNoteDataV2{
 		NoteUUID: noteUUID,
 		FromBook: bookName,
 		Content:  &content,
 	})
-
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data into JSON")
+		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	action := actions.Action{
-		UUID:      uuid.NewV4().String(),
-		Schema:    2,
-		Type:      actions.ActionEditNote,
-		Data:      b,
-		Timestamp: ts,
-	}
-
-	if err := LogAction(ctx, action); err != nil {
-		return errors.Wrapf(err, "Failed to log action type %s", actions.ActionEditNote)
+	if err := LogAction(tx, 2, actions.ActionEditNote, string(b), ts); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
 
 	return nil
 }
 
-func LogActionAddBook(ctx infra.DnoteCtx, name string) error {
+// LogActionAddBook logs an action for adding a book
+func LogActionAddBook(tx *sql.Tx, name string) error {
 	b, err := json.Marshal(actions.AddBookDataV1{
 		BookName: name,
 	})
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data into JSON")
+		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	action := actions.Action{
-		UUID:      uuid.NewV4().String(),
-		Schema:    1,
-		Type:      actions.ActionAddBook,
-		Data:      b,
-		Timestamp: time.Now().Unix(),
-	}
-
-	if err := LogAction(ctx, action); err != nil {
-		return errors.Wrapf(err, "Failed to log action type %s", actions.ActionAddBook)
+	ts := time.Now().Unix()
+	if err := LogAction(tx, 1, actions.ActionAddBook, string(b), ts); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
 
 	return nil
 }
 
-func LogActionRemoveBook(ctx infra.DnoteCtx, name string) error {
+// LogActionRemoveBook logs an action for removing book
+func LogActionRemoveBook(tx *sql.Tx, name string) error {
 	b, err := json.Marshal(actions.RemoveBookDataV1{BookName: name})
 	if err != nil {
-		return errors.Wrap(err, "Failed to marshal data into JSON")
+		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	action := actions.Action{
-		UUID:      uuid.NewV4().String(),
-		Schema:    1,
-		Type:      actions.ActionRemoveBook,
-		Data:      b,
-		Timestamp: time.Now().Unix(),
-	}
-
-	if err := LogAction(ctx, action); err != nil {
-		return errors.Wrapf(err, "Failed to log action type %s", actions.ActionRemoveBook)
+	ts := time.Now().Unix()
+	if err := LogAction(tx, 1, actions.ActionRemoveBook, string(b), ts); err != nil {
+		return errors.Wrapf(err, "logging action")
 	}
 
 	return nil

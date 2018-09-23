@@ -3,6 +3,7 @@ package sync
 import (
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ import (
 var example = `
   dnote sync`
 
+// NewCmd returns a new sync command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "sync",
@@ -44,38 +46,42 @@ type syncPayload struct {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		db := ctx.DB
+
 		config, err := core.ReadConfig(ctx)
 		if err != nil {
-			return errors.Wrap(err, "Failed to read the config")
+			return errors.Wrap(err, "reading the config")
 		}
-		timestamp, err := core.ReadTimestamp(ctx)
-		if err != nil {
-			return errors.Wrap(err, "Failed to read the timestamp")
-		}
-		actions, err := core.ReadActionLog(ctx)
-		if err != nil {
-			return errors.Wrap(err, "Failed to read the action log")
-		}
-
 		if config.APIKey == "" {
 			log.Error("login required. please run `dnote login`\n")
 			return nil
 		}
 
-		payload, err := getPayload(actions, timestamp)
+		var bookmark int
+		err = db.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
 		if err != nil {
-			return errors.Wrap(err, "Failed to get dnote payload")
+			return errors.Wrap(err, "getting bookmark")
+		}
+
+		actions, err := getLocalActions(db)
+		if err != nil {
+			return errors.Wrap(err, "getting local actions")
+		}
+
+		payload, err := newPayload(actions, bookmark)
+		if err != nil {
+			return errors.Wrap(err, "getting the request payload")
 		}
 
 		log.Infof("writing changes (total %d).", len(actions))
 		resp, err := postActions(ctx, config.APIKey, payload)
 		if err != nil {
-			return errors.Wrap(err, "Failed to post to the server ")
+			return errors.Wrap(err, "posting to the server")
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return errors.Wrap(err, "Failed to read failed response body")
+			return errors.Wrap(err, "reading the response body")
 		}
 
 		if resp.StatusCode != http.StatusOK {
@@ -88,34 +94,36 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		fmt.Println(" done.")
 
 		var respData responseData
-		err = json.Unmarshal(body, &respData)
+		if err = json.Unmarshal(body, &respData); err != nil {
+			return errors.Wrap(err, "unmarshalling the payload")
+		}
+
+		// First, remove our actions because server has successfully ingested them
+		if _, err = db.Exec("DELETE FROM actions"); err != nil {
+			return errors.Wrap(err, "deleting actions")
+		}
+
+		tx, err := db.Begin()
 		if err != nil {
-			return errors.Wrap(err, "Failed to unmarshal payload")
+			return errors.Wrap(err, "beginning a transaction")
 		}
 
 		log.Infof("resolving delta (total %d).", len(respData.Actions))
-		err = core.ReduceAll(ctx, respData.Actions)
-		if err != nil {
-			return errors.Wrap(err, "Failed to reduce returned actions")
+		if err := core.ReduceAll(ctx, tx, respData.Actions); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "reducing returned actions")
 		}
+
+		if _, err = tx.Exec("UPDATE system SET value = ? WHERE key = ?", respData.Bookmark, "bookmark"); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "updating the bookmark")
+		}
+
 		fmt.Println(" done.")
 
-		// Update bookmark
-		ts, err := core.ReadTimestamp(ctx)
-		if err != nil {
-			return errors.Wrap(err, "Failed to read the timestamp")
-		}
-		ts.Bookmark = respData.Bookmark
-
-		err = core.WriteTimestamp(ctx, ts)
-		if err != nil {
-			return errors.Wrap(err, "Failed to update bookmark")
-		}
+		tx.Commit()
 
 		log.Success("success\n")
-		if err := core.ClearActionLog(ctx); err != nil {
-			return errors.Wrap(err, "Failed to clear the action log")
-		}
 
 		if err := core.CheckUpdate(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())
@@ -125,20 +133,20 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func getPayload(actions []actions.Action, timestamp infra.Timestamp) (*bytes.Buffer, error) {
+func newPayload(actions []actions.Action, bookmark int) (*bytes.Buffer, error) {
 	compressedActions, err := compressActions(actions)
 	if err != nil {
-		return &bytes.Buffer{}, errors.Wrap(err, "Failed to compress actions")
+		return &bytes.Buffer{}, errors.Wrap(err, "compressing actions")
 	}
 
 	payload := syncPayload{
-		Bookmark: timestamp.Bookmark,
+		Bookmark: bookmark,
 		Actions:  compressedActions,
 	}
 
 	b, err := json.Marshal(payload)
 	if err != nil {
-		return &bytes.Buffer{}, errors.Wrap(err, "Failed to marshal paylaod into JSON")
+		return &bytes.Buffer{}, errors.Wrap(err, "marshalling paylaod into JSON")
 	}
 
 	ret := bytes.NewBuffer(b)
@@ -148,7 +156,7 @@ func getPayload(actions []actions.Action, timestamp infra.Timestamp) (*bytes.Buf
 func compressActions(actions []actions.Action) ([]byte, error) {
 	b, err := json.Marshal(&actions)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal actions into JSON")
+		return nil, errors.Wrap(err, "marshalling actions into JSON")
 	}
 
 	var buf bytes.Buffer
@@ -156,11 +164,11 @@ func compressActions(actions []actions.Action) ([]byte, error) {
 
 	_, err = g.Write(b)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to write to gzip writer")
+		return nil, errors.Wrap(err, "writing to gzip writer")
 	}
 
 	if err = g.Close(); err != nil {
-		return nil, errors.Wrap(err, "Failed to close gzip writer")
+		return nil, errors.Wrap(err, "closing gzip writer")
 	}
 
 	return buf.Bytes(), nil
@@ -170,7 +178,7 @@ func postActions(ctx infra.DnoteCtx, APIKey string, payload io.Reader) (*http.Re
 	endpoint := fmt.Sprintf("%s/v1/sync", ctx.APIEndpoint)
 	req, err := http.NewRequest("POST", endpoint, payload)
 	if err != nil {
-		return &http.Response{}, errors.Wrap(err, "Failed to construct HTTP request")
+		return &http.Response{}, errors.Wrap(err, "forming an HTTP request")
 	}
 
 	req.Header.Set("Authorization", APIKey)
@@ -179,8 +187,36 @@ func postActions(ctx infra.DnoteCtx, APIKey string, payload io.Reader) (*http.Re
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return &http.Response{}, errors.Wrap(err, "Failed to make request")
+		return &http.Response{}, errors.Wrap(err, "making a request")
 	}
 
 	return resp, nil
+}
+
+func getLocalActions(db *sql.DB) ([]actions.Action, error) {
+	ret := []actions.Action{}
+
+	rows, err := db.Query("SELECT uuid, schema, type, data, timestamp FROM actions")
+	if err != nil {
+		return ret, errors.Wrap(err, "querying actions")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var action actions.Action
+
+		err = rows.Scan(&action.UUID, &action.Schema, &action.Type, &action.Data, &action.Timestamp)
+		if err != nil {
+			return ret, errors.Wrap(err, "scanning a row")
+		}
+
+		ret = append(ret, action)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return ret, errors.Wrap(err, "scanning rows")
+	}
+
+	return ret, nil
 }

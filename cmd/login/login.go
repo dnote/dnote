@@ -13,6 +13,7 @@ import (
 var example = `
   dnote login`
 
+// NewCmd returns a new login command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "login",

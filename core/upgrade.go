@@ -17,27 +17,26 @@ var upgradeInterval int64 = 86400 * 7 * 3
 
 // shouldCheckUpdate checks if update should be checked
 func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
-	timestamp, err := ReadTimestamp(ctx)
+	db := ctx.DB
+
+	var lastUpgrade int64
+	err := db.QueryRow("SELECT value FROM system WHERE key = ?", "last_upgrade").Scan(&lastUpgrade)
 	if err != nil {
-		return false, errors.Wrap(err, "Failed to get timestamp content")
+		return false, errors.Wrap(err, "getting last_udpate")
 	}
 
 	now := time.Now().Unix()
 
-	return now-timestamp.LastUpgrade > upgradeInterval, nil
+	return now-lastUpgrade > upgradeInterval, nil
 }
 
 func touchLastUpgrade(ctx infra.DnoteCtx) error {
-	timestamp, err := ReadTimestamp(ctx)
-	if err != nil {
-		return errors.Wrap(err, "Failed to get timestamp content")
-	}
+	db := ctx.DB
 
 	now := time.Now().Unix()
-	timestamp.LastUpgrade = now
-
-	if err := WriteTimestamp(ctx, timestamp); err != nil {
-		return errors.Wrap(err, "Failed to write the updated timestamp to the file")
+	_, err := db.Exec("UPDATE system SET value = ? WHERE key = ?", now, "last_upgrade")
+	if err != nil {
+		return errors.Wrap(err, "updating last_upgrade")
 	}
 
 	return nil

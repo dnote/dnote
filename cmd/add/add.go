@@ -1,12 +1,14 @@
 package add
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -28,6 +30,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// NewCmd returns a new add command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add <content>",
@@ -61,8 +64,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		ts := time.Now().Unix()
-		note := core.NewNote(content, ts)
-		err := writeNote(ctx, bookName, note, ts)
+		err := writeNote(ctx, bookName, content, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
@@ -80,38 +82,45 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func writeNote(ctx infra.DnoteCtx, bookName string, note infra.Note, ts int64) error {
-	dnote, err := core.GetDnote(ctx)
+func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) error {
+	tx, err := ctx.DB.Begin()
 	if err != nil {
-		return errors.Wrap(err, "Failed to get dnote")
+		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	var book infra.Book
-
-	book, ok := dnote[bookName]
-	if ok {
-		notes := append(dnote[bookName].Notes, note)
-		dnote[bookName] = core.GetUpdatedBook(dnote[bookName], notes)
-	} else {
-		book = core.NewBook(bookName)
-		book.Notes = []infra.Note{note}
-		dnote[bookName] = book
-
-		err = core.LogActionAddBook(ctx, bookName)
+	var bookUUID string
+	err = tx.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
+	if err == sql.ErrNoRows {
+		bookUUID = utils.GenerateUUID()
+		_, err = tx.Exec("INSERT INTO books (uuid, label) VALUES (?, ?)", bookUUID, bookLabel)
 		if err != nil {
-			return errors.Wrap(err, "Failed to log action")
+			tx.Rollback()
+			return errors.Wrap(err, "creating the book")
 		}
+
+		err = core.LogActionAddBook(tx, bookLabel)
+		if err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "logging action")
+		}
+	} else if err != nil {
+		return errors.Wrap(err, "finding the book")
 	}
 
-	err = core.LogActionAddNote(ctx, note.UUID, book.Name, note.Content, ts)
+	noteUUID := utils.GenerateUUID()
+	_, err = tx.Exec(`INSERT INTO notes (uuid, book_uuid, content, added_on, public)
+		VALUES (?, ?, ?, ?, ?);`, noteUUID, bookUUID, content, ts, false)
 	if err != nil {
-		return errors.Wrap(err, "Failed to log action")
+		tx.Rollback()
+		return errors.Wrap(err, "creating the note")
+	}
+	err = core.LogActionAddNote(tx, noteUUID, bookLabel, content, ts)
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "logging action")
 	}
 
-	err = core.WriteDnote(ctx, dnote)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write to dnote file")
-	}
+	tx.Commit()
 
 	return nil
 }

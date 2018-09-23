@@ -4,3 +4,4 @@
 # https://stackoverflow.com/questions/23715302/go-how-to-run-tests-for-multiple-packages
 
 go test ./... -p 1
+
