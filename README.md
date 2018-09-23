@@ -11,6 +11,9 @@ On macOS, you can install using Homebrew:
 ```sh
 brew tap dnote/dnote
 brew install dnote
+
+# to upgrade to the latest version
+brew upgrade dnote
 ```
 
 On Linux or macOS, you can use the installation script:
@@ -35,13 +38,14 @@ Write technical notes without getting distracted from programming. The reasons a
 - Add a note to a book named `linux`
 
 ```
-$ dnote add linux -c "find - recursively walk the directory"
+dnote add linux -c "find - recursively walk the directory"
 ```
 
 - See the notes in a book
 
 ```
-$ dnote view linux
+dnote view linux
+
 • on book linux
 (0) find - recursively walk the directory
 ```
@@ -53,7 +57,7 @@ Please refer to [commands](/COMMANDS.md).
 ## Links
 
 - [Dnote](https://dnote.io)
-- [Dnote Cloud](https://dnote.io/cloud)
+- [Dnote Cloud](https://dnote.io/pricing)
 - [Browser Extension](https://github.com/dnote/browser-extension)
 
 ## License
