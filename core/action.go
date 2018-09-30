@@ -49,16 +49,17 @@ func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 
 // LogActionEditNote logs an action for editing a note
 func LogActionEditNote(tx *sql.Tx, noteUUID, bookName, content string, ts int64) error {
-	b, err := json.Marshal(actions.EditNoteDataV2{
+	b, err := json.Marshal(actions.EditNoteDataV3{
 		NoteUUID: noteUUID,
-		FromBook: bookName,
 		Content:  &content,
+		BookName: nil,
+		Public:   nil,
 	})
 	if err != nil {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	if err := LogAction(tx, 2, actions.ActionEditNote, string(b), ts); err != nil {
+	if err := LogAction(tx, 3, actions.ActionEditNote, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
 

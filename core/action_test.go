@@ -37,7 +37,7 @@ func TestLogActionEditNote(t *testing.T) {
 		Scan(&action.UUID, &action.Schema, &action.Type, &action.Timestamp, &action.Data); err != nil {
 		panic(errors.Wrap(err, "querying action"))
 	}
-	var actionData actions.EditNoteDataV2
+	var actionData actions.EditNoteDataV3
 	if err := json.Unmarshal(action.Data, &actionData); err != nil {
 		panic(errors.Wrap(err, "unmarshalling action data"))
 	}
@@ -46,16 +46,11 @@ func TestLogActionEditNote(t *testing.T) {
 		t.Fatalf("action count mismatch. got %d", actionCount)
 	}
 	testutils.AssertNotEqual(t, action.UUID, "", "action uuid mismatch")
-	testutils.AssertEqual(t, action.Schema, 2, "action schema mismatch")
+	testutils.AssertEqual(t, action.Schema, 3, "action schema mismatch")
 	testutils.AssertEqual(t, action.Type, actions.ActionEditNote, "action type mismatch")
 	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
-	testutils.AssertEqual(t, actionData.FromBook, "js", "action data from_book mismatch")
 	testutils.AssertEqual(t, *actionData.Content, "updated content", "action data content mismatch")
-	if actionData.ToBook != nil {
-		t.Errorf("action data to_book mismatch. Expected %+v. Got %+v", nil, actionData.ToBook)
-	}
-	if actionData.Public != nil {
-		t.Errorf("action data public mismatch. Expected %+v. Got %+v", nil, actionData.ToBook)
-	}
+	testutils.AssertEqual(t, actionData.BookName, (*string)(nil), "action data book_name mismatch")
+	testutils.AssertEqual(t, actionData.Public, (*bool)(nil), "action data public mismatch")
 }
