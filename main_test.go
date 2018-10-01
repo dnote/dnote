@@ -259,10 +259,9 @@ func TestRemoveNote(t *testing.T) {
 
 	testutils.AssertEqual(t, b1.Name, "js", "b1 label mismatch")
 	testutils.AssertEqual(t, b2.Name, "linux", "b2 label mismatch")
-	testutils.AssertEqual(t, noteAction.Schema, 1, "action schema mismatch")
+	testutils.AssertEqual(t, noteAction.Schema, 2, "action schema mismatch")
 	testutils.AssertEqual(t, noteAction.Type, actions.ActionRemoveNote, "action type mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
-	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
 	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "Note content mismatch")

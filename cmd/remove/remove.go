@@ -21,6 +21,7 @@ var example = `
   * Delete a book
   dnote delete -b js`
 
+// NewCmd returns a new remove command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "remove",

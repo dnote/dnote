@@ -31,16 +31,15 @@ func LogActionAddNote(tx *sql.Tx, noteUUID, bookName, content string, timestamp 
 
 // LogActionRemoveNote logs an action for removing a book
 func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
-	b, err := json.Marshal(actions.RemoveNoteDataV1{
+	b, err := json.Marshal(actions.RemoveNoteDataV2{
 		NoteUUID: noteUUID,
-		BookName: bookName,
 	})
 	if err != nil {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
 	ts := time.Now().UnixNano()
-	if err := LogAction(tx, 1, actions.ActionRemoveNote, string(b), ts); err != nil {
+	if err := LogAction(tx, 2, actions.ActionRemoveNote, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
 
