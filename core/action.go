@@ -39,7 +39,7 @@ func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().Unix()
+	ts := time.Now().UnixNano()
 	if err := LogAction(tx, 1, actions.ActionRemoveNote, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
@@ -75,7 +75,7 @@ func LogActionAddBook(tx *sql.Tx, name string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().Unix()
+	ts := time.Now().UnixNano()
 	if err := LogAction(tx, 1, actions.ActionAddBook, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
@@ -90,7 +90,7 @@ func LogActionRemoveBook(tx *sql.Tx, name string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().Unix()
+	ts := time.Now().UnixNano()
 	if err := LogAction(tx, 1, actions.ActionRemoveBook, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
