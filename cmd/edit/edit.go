@@ -2,6 +2,7 @@ package edit
 
 import (
 	"database/sql"
+	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -106,8 +107,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		tx.Commit()
 
-		log.Printf("new content: %s\n", newContent)
 		log.Success("edited the note\n")
+		fmt.Printf("\n------------------------content------------------------\n")
+		fmt.Printf("%s", newContent)
+		fmt.Printf("\n-------------------------------------------------------\n")
 
 		return nil
 	}
