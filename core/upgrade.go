@@ -52,7 +52,17 @@ func checkVersion(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "fetching releases")
 	}
 
-	latest := releases[0]
+	var latest = nil
+	for _, release := range releases {
+		if release.GetPrerelease() == false {
+			latest = release
+		}
+	}
+
+	if latest == nil {
+		return errors.Wrap(err, "no stable release")
+	}
+
 	latestVersion := (*latest.TagName)[1:]
 
 	log.Infof("latest version is %s\n", latestVersion)
