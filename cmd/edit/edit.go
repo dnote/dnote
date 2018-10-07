@@ -84,7 +84,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.New("Nothing changed")
 		}
 
-		ts := time.Now().Unix()
+		ts := time.Now().UnixNano()
 		newContent = core.SanitizeContent(newContent)
 
 		tx, err := db.Begin()
