@@ -17,6 +17,9 @@ import (
 var (
 	// DnoteDirName is the name of the directory containing dnote files
 	DnoteDirName = ".dnote"
+
+	// SystemSchema is the key for schema in the system table
+	SystemSchema = "schema"
 )
 
 // DnoteCtx is a context holding the information of the current runtime

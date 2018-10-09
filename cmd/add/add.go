@@ -63,7 +63,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.New("Empty content")
 		}
 
-		ts := time.Now().Unix()
+		ts := time.Now().UnixNano()
 		err := writeNote(ctx, bookName, content, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
