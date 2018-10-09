@@ -192,15 +192,18 @@ func TestEditNote_ContentFlag(t *testing.T) {
 		db.QueryRow("SELECT data, type, schema FROM actions where type = ?", actions.ActionEditNote),
 		&noteAction.Data, &noteAction.Type, &noteAction.Schema)
 
-	var actionData actions.EditNoteDataV3
+	var actionData actions.EditNoteDataV2
 	if err := json.Unmarshal(noteAction.Data, &actionData); err != nil {
 		log.Fatalf("Failed to unmarshal the action data: %s", err)
 	}
 
 	testutils.AssertEqual(t, noteAction.Type, actions.ActionEditNote, "action type mismatch")
-	testutils.AssertEqual(t, noteAction.Schema, 3, "action schema mismatch")
+	testutils.AssertEqual(t, noteAction.Schema, 2, "action schema mismatch")
 	testutils.AssertEqual(t, *actionData.Content, "foo bar", "action data name mismatch")
-	testutils.AssertEqual(t, actionData.BookName, (*string)(nil), "action data book_name mismatch")
+	testutils.AssertEqual(t, actionData.FromBook, "js", "action data from_book mismatch")
+	if actionData.ToBook != nil {
+		t.Errorf("action data to_book mismatch. Expected %+v. Got %+v", nil, actionData.ToBook)
+	}
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
 	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
@@ -259,9 +262,10 @@ func TestRemoveNote(t *testing.T) {
 
 	testutils.AssertEqual(t, b1.Name, "js", "b1 label mismatch")
 	testutils.AssertEqual(t, b2.Name, "linux", "b2 label mismatch")
-	testutils.AssertEqual(t, noteAction.Schema, 2, "action schema mismatch")
+	testutils.AssertEqual(t, noteAction.Schema, 1, "action schema mismatch")
 	testutils.AssertEqual(t, noteAction.Type, actions.ActionRemoveNote, "action type mismatch")
 	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
+	testutils.AssertEqual(t, actionData.BookName, "js", "action data book_name mismatch")
 	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
 	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "Note content mismatch")

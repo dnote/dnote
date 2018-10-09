@@ -27,7 +27,6 @@ CREATE TABLE system
 			value text NOT NULL
 		);
 CREATE UNIQUE INDEX idx_books_label ON books(label);
-CREATE UNIQUE INDEX idx_notes_uuid ON notes(uuid);
-CREATE UNIQUE INDEX idx_books_uuid ON books(uuid);
-CREATE UNIQUE INDEX idx_notes_id ON notes(id);
+CREATE INDEX idx_books_uuid ON books(uuid);
+CREATE INDEX idx_notes_id ON notes(id);
 CREATE INDEX idx_notes_book_uuid ON notes(book_uuid);

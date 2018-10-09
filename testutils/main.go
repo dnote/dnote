@@ -303,23 +303,3 @@ func UserConfirm(stdin io.WriteCloser) error {
 
 	return nil
 }
-
-// MustMarshalJSON marshalls the given interface into JSON.
-// If there is any error, it fails the test.
-func MustMarshalJSON(t *testing.T, v interface{}) []byte {
-	b, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("%s: marshalling data", t.Name())
-	}
-
-	return b
-}
-
-// MustUnmarshalJSON marshalls the given interface into JSON.
-// If there is any error, it fails the test.
-func MustUnmarshalJSON(t *testing.T, data []byte, v interface{}) {
-	err := json.Unmarshal(data, v)
-	if err != nil {
-		t.Fatalf("%s: unmarshalling data", t.Name())
-	}
-}

@@ -43,7 +43,7 @@
 
 [[constraint]]
   name = "github.com/dnote/actions"
-  branch = "master"
+  version = "0.1.0"
 
 [[constraint]]
   name = "github.com/mattn/go-sqlite3"
