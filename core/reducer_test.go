@@ -18,15 +18,13 @@ func TestReduceAddNote(t *testing.T) {
 	testutils.Setup1(t, ctx)
 
 	// Execute
-	b, err := json.Marshal(&actions.AddNoteDataV2{
+	b, err := json.Marshal(&actions.AddNoteDataV1{
 		Content:  "new content",
 		BookName: "js",
 		NoteUUID: "06896551-8a06-4996-89cc-0d866308b0f6",
-		Public:   false,
 	})
 	action := actions.Action{
 		Type:      actions.ActionAddNote,
-		Schema:    2,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -70,12 +68,12 @@ func TestReduceRemoveNote(t *testing.T) {
 	testutils.Setup2(t, ctx)
 
 	// Execute
-	b, err := json.Marshal(&actions.RemoveNoteDataV2{
+	b, err := json.Marshal(&actions.RemoveNoteDataV1{
+		BookName: "js",
 		NoteUUID: "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 	})
 	action := actions.Action{
 		Type:      actions.ActionRemoveNote,
-		Schema:    2,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -124,7 +122,7 @@ func TestReduceEditNote(t *testing.T) {
 		expectedLinuxNoteCount int
 	}{
 		{
-			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "content": "updated content"}`,
+			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "content": "updated content"}`,
 			expectedNoteUUID:       "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 			expectedNoteBookUUID:   "js-book-uuid",
 			expectedNoteContent:    "updated content",
@@ -135,7 +133,7 @@ func TestReduceEditNote(t *testing.T) {
 			expectedLinuxNoteCount: 1,
 		},
 		{
-			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "public": true}`,
+			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "public": true}`,
 			expectedNoteUUID:       "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 			expectedNoteBookUUID:   "js-book-uuid",
 			expectedNoteContent:    "Date object implements mathematical comparisons",
@@ -146,7 +144,7 @@ func TestReduceEditNote(t *testing.T) {
 			expectedLinuxNoteCount: 1,
 		},
 		{
-			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "book_name": "linux", "content": "updated content"}`,
+			data:                   `{"note_uuid": "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "from_book": "js", "to_book": "linux", "content": "updated content"}`,
 			expectedNoteUUID:       "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f",
 			expectedNoteBookUUID:   "linux-book-uuid",
 			expectedNoteContent:    "updated content",
@@ -170,7 +168,7 @@ func TestReduceEditNote(t *testing.T) {
 			action := actions.Action{
 				Type:      actions.ActionEditNote,
 				Data:      json.RawMessage(tc.data),
-				Schema:    3,
+				Schema:    2,
 				Timestamp: 1517629805,
 			}
 
@@ -227,7 +225,6 @@ func TestReduceAddBook(t *testing.T) {
 	b, err := json.Marshal(&actions.AddBookDataV1{BookName: "new_book"})
 	action := actions.Action{
 		Type:      actions.ActionAddBook,
-		Schema:    1,
 		Data:      b,
 		Timestamp: 1517629805,
 	}
@@ -262,7 +259,6 @@ func TestReduceRemoveBook(t *testing.T) {
 	b, err := json.Marshal(&actions.RemoveBookDataV1{BookName: "linux"})
 	action := actions.Action{
 		Type:      actions.ActionRemoveBook,
-		Schema:    1,
 		Data:      b,
 		Timestamp: 1517629805,
 	}

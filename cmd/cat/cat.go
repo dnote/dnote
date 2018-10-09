@@ -53,7 +53,6 @@ type noteInfo struct {
 	EditedOn  int64
 }
 
-// NewRun returns a new run function
 func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
@@ -82,9 +81,9 @@ func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		log.Infof("book name: %s\n", info.BookLabel)
 		log.Infof("note uuid: %s\n", info.UUID)
-		log.Infof("created at: %s\n", time.Unix(0, info.AddedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+		log.Infof("created at: %s\n", time.Unix(info.AddedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
 		if info.EditedOn != 0 {
-			log.Infof("updated at: %s\n", time.Unix(0, info.EditedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+			log.Infof("updated at: %s\n", time.Unix(info.EditedOn, 0).Format("Jan 2, 2006 3:04pm (MST)"))
 		}
 		fmt.Printf("\n------------------------content------------------------\n")
 		fmt.Printf("%s", info.Content)

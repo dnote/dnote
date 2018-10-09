@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:cd0089a5b5d872ac1b772087c7ee0ff2e71de50aa3a51826be64a63963a85287"
+  digest = "1:97242fd82dcd5574a59c31685652a4de519934674a9fa21159604fdd5a005e7c"
   name = "github.com/dnote/actions"
   packages = ["."]
   pruneopts = ""
-  revision = "a1050f3f457804215c4ad50d92fbe1dd2e6b587c"
+  revision = "e646839669907194077733897c26ce2bb9856896"
+  version = "v0.1.0"
 
 [[projects]]
   digest = "1:e988ed0ca0d81f4d28772760c02ee95084961311291bdfefc1b04617c178b722"
@@ -19,19 +19,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b4074c4585d29ae58161b728c7f64709b8a856fd724722e8159c7d5f9c6ab511"
+  digest = "1:9f100ae40cada79ca20c068dc8510ad2d8decc49d84f27f9a45892cef3504557"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = ""
-  revision = "71b7a374a5fcfdca56ba35925f6ddba8b890fe60"
+  revision = "d7732128a00e8e95e8fe896017da18ee20b2180d"
 
 [[projects]]
-  digest = "1:cea4aa2038169ee558bf507d5ea02c94ca85bcca28a4c7bb99fd59b31e43a686"
+  branch = "master"
+  digest = "1:9abc49f39e3e23e262594bb4fb70abf74c0c99e94f99153f43b143805e850719"
   name = "github.com/google/go-querystring"
   packages = ["query"]
   pruneopts = ""
-  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
-  version = "v1.0.0"
+  revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
@@ -50,12 +50,12 @@
   version = "v0.0.9"
 
 [[projects]]
-  digest = "1:3140e04675a6a91d2a20ea9d10bdadf6072085502e6def6768361260aee4b967"
+  digest = "1:78229b46ddb7434f881390029bd1af7661294af31f6802e0e1bedaad4ab0af3c"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
   pruneopts = ""
-  revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
-  version = "v0.0.4"
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
 
 [[projects]]
   digest = "1:bc03901fc8f0965ccba8bc453eae21a9b04f95999eab664c7de6dc7290f4e8f4"
@@ -74,12 +74,12 @@
   version = "v0.8.0"
 
 [[projects]]
-  digest = "1:7f569d906bdd20d906b606415b7d794f798f91a62fcfb6a4daa6d50690fb7a3f"
+  digest = "1:6b55df4b0517a459af9d3879c99330af4367adcf45f3d0d37ded80a6272ae057"
   name = "github.com/satori/go.uuid"
   packages = ["."]
   pruneopts = ""
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
+  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:a1403cc8a94b8d7956ee5e9694badef0e7b051af289caad1cf668331e3ffa4f6"
@@ -99,11 +99,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:149a432fabebb8221a80f77731b1cd63597197ded4f14af606ebe3a0959004ec"
+  digest = "1:7a5f7a1206de6b90f67cb465e489eac3298e95afa7262813b542df4fab38952f"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "e4b3c5e9061176387e7cea65e4dc5853801f3fb7"
+  revision = "4910a1d54f876d7b22162a85f4d066d3ee649450"
 
 [[projects]]
   branch = "v2"

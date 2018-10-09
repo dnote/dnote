@@ -31,15 +31,16 @@ func LogActionAddNote(tx *sql.Tx, noteUUID, bookName, content string, timestamp 
 
 // LogActionRemoveNote logs an action for removing a book
 func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
-	b, err := json.Marshal(actions.RemoveNoteDataV2{
+	b, err := json.Marshal(actions.RemoveNoteDataV1{
 		NoteUUID: noteUUID,
+		BookName: bookName,
 	})
 	if err != nil {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().UnixNano()
-	if err := LogAction(tx, 2, actions.ActionRemoveNote, string(b), ts); err != nil {
+	ts := time.Now().Unix()
+	if err := LogAction(tx, 1, actions.ActionRemoveNote, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
 
@@ -48,17 +49,16 @@ func LogActionRemoveNote(tx *sql.Tx, noteUUID, bookName string) error {
 
 // LogActionEditNote logs an action for editing a note
 func LogActionEditNote(tx *sql.Tx, noteUUID, bookName, content string, ts int64) error {
-	b, err := json.Marshal(actions.EditNoteDataV3{
+	b, err := json.Marshal(actions.EditNoteDataV2{
 		NoteUUID: noteUUID,
+		FromBook: bookName,
 		Content:  &content,
-		BookName: nil,
-		Public:   nil,
 	})
 	if err != nil {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	if err := LogAction(tx, 3, actions.ActionEditNote, string(b), ts); err != nil {
+	if err := LogAction(tx, 2, actions.ActionEditNote, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
 
@@ -74,7 +74,7 @@ func LogActionAddBook(tx *sql.Tx, name string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().UnixNano()
+	ts := time.Now().Unix()
 	if err := LogAction(tx, 1, actions.ActionAddBook, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
@@ -89,7 +89,7 @@ func LogActionRemoveBook(tx *sql.Tx, name string) error {
 		return errors.Wrap(err, "marshalling data into JSON")
 	}
 
-	ts := time.Now().UnixNano()
+	ts := time.Now().Unix()
 	if err := LogAction(tx, 1, actions.ActionRemoveBook, string(b), ts); err != nil {
 		return errors.Wrapf(err, "logging action")
 	}
