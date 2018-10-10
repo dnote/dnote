@@ -1,89 +1,203 @@
 #!/bin/sh
 #
-# This script downloads the latest Dnote release from github
-# into /usr/bin/local.
+# This script installs Dnote into your PATH (/usr/bin/local)
+# Use it like this:
+# $ curl https://raw.githubusercontent.com/dnote/cli/master/install.sh | sh
 #
 
 set -eu
 
-not_supported() {
-  echo "OS not supported: ${UNAME}"
-  echo "Please compile manually from https://github.com/dnote/cli"
-  exit 1
+BLACK='\033[30;1m'
+RED='\033[91;1m'
+GREEN='\033[32;1m'
+RESET='\033[0m'
+
+print_step() {
+  printf "$BLACK%s$RESET\n" "$1"
 }
 
-get_platform() {
-  UNAME=$(uname)
-
-  if [ "$UNAME" != "Linux" -a "$UNAME" != "Darwin" -a "$UNAME" != "OpenBSD" ] ; then
-    not_supported
-  fi
-
-  if [ "$UNAME" = "Darwin" ]; then
-    OSX_ARCH=$(uname -m)
-    if [ "${OSX_ARCH}" = "x86_64" ]; then
-      platform="darwin_amd64"
-    else
-      not_supported
-    fi
-  elif [ "$UNAME" = "Linux" ]; then
-    LINUX_ARCH=$(uname -m)
-    if [ "${LINUX_ARCH}" = "x86_64" ]; then
-      platform="linux_amd64"
-    elif [ "${LINUX_ARCH}" = "i686" ]; then
-      platform="linux_386"
-    else
-      not_supported
-    fi
-  elif [ "$UNAME" = "OpenBSD" ]; then
-    OPENBSD_ARCH=$(uname -m)
-    if [ "${OPENBSD_ARCH}" = "x86_64" ]; then
-      platform="openbsd_amd64"
-    elif [ "${OPENBSD_ARCH}" = "i686" ]; then
-      platform="openbsd_386"
-    else
-      not_supported
-    fi
-  fi
-
-  echo $platform
+print_error() {
+  printf "$RED%s$RESET\n" "$1"
 }
 
-get_version() {
-  LATEST=$(curl -s https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/tags | grep -Eo '"name":[ ]*"v[0-9]*\.[0-9]*\.[0-9]*",' | head -n 1 | sed 's/[," ]//g' | cut -d ':' -f 2)
-  if [ -z $LATEST ]; then
-    echo "Error fetching latest version. Please try again."
+print_success() {
+  printf "$GREEN%s$RESET\n" "$1"
+}
+
+is_command () {
+  command -v "$1" >/dev/null 2>&1;
+}
+
+http_get() {
+  url=$1
+
+  if is_command curl; then
+    cmd='curl --fail -sSL'
+  elif is_command wget; then
+    cmd='wget -q'
+  else
+    print_error "unable to find wget or curl. please install and try again."
+    exit 1
+  fi
+
+  $cmd "$url"
+}
+
+http_download() {
+  dest=$1
+  srcURL=$2
+
+  if is_command curl; then
+    cmd='curl -L --progress-bar'
+    destflag='-o'
+  elif is_command wget; then
+    cmd='wget -q --show-progress'
+    destflag='-O'
+  else
+    print_error "unable to find wget or curl. please install and try again."
+    exit 1
+  fi
+
+  $cmd $destflag "$dest" "$srcURL"
+}
+
+uname_os() {
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  echo "$os"
+}
+
+uname_arch() {
+  arch=$(uname -m)
+  case $arch in 
+    x86_64) arch="amd64" ;;
+    x86) arch="386" ;;
+    i686) arch="386" ;;
+    i386) arch="386" ;;
+  esac
+
+  echo "$arch"
+}
+
+check_platform() {
+  os=$1
+  arch=$2
+  platform="$os/$arch"
+
+  found=1
+  case "$platform" in
+    darwin/amd64) found=0;;
+    darwin/386) found=0 ;;
+    linux/amd64) found=0 ;;
+    linux/386) found=0 ;;
+    freebsd/amd64) found=0 ;;
+    freebsd/386) found=0 ;;
+    openbsd/amd64) found=0 ;;
+    openbsd/386) found=0 ;;
+  esac
+
+  return $found
+}
+
+hash_sha256() {
+  TARGET=${1:-/dev/stdin}
+  if is_command gsha256sum; then
+    hash=$(gsha256sum "$TARGET")
+    echo "$hash" | cut -d ' ' -f 1
+  elif is_command sha256sum; then
+    hash=$(sha256sum "$TARGET")
+    echo "$hash" | cut -d ' ' -f 1
+  elif is_command shasum; then
+    hash=$(shasum -a 256 "$TARGET" 2>/dev/null)
+    echo "$hash" | cut -d ' ' -f 1
+  elif is_command openssl; then
+    hash=$(openssl -dst openssl dgst -sha256 "$TARGET")
+    echo "$hash" | cut -d ' ' -f a
+  else
+    print_error "could not find a command to compute sha256 hash and verify checksum"
+    exit 1
+  fi
+}
+
+verify_checksum() {
+  binary_path=$1
+  filename=$2
+  checksums=$3
+
+  want=$(grep "${filename}" "${checksums}" 2>/dev/null | cut -d ' ' -f 1)
+  if [ -z "$want" ]; then
+    print_error "unable to find checksum for '${filename}' in '${checksums}'"
+    exit 1
+  fi
+  got=$(hash_sha256 "$binary_path")
+  if [ "$want" != "$got" ]; then
+    print_error "checksum for '$binary_path' did not verify ${want} vs $got"
+    exit 1
+  fi
+}
+
+install_dnote() {
+  os=$(uname_os)
+  arch=$(uname_arch)
+
+  if ! check_platform "$os" "$arch"; then
+    print_error "System not supported: $os/$arch"
+    print_error "Please compile manually from https://github.com/dnote/cli"
+    exit 1
+  fi
+
+  binary=dnote
+  owner=sungwoncho
+  repo=goreleaser-issue
+  github_download="https://github.com/${owner}/${repo}/releases/download"
+  tmpdir="$(mktemp -d)"
+  bindir=${bindir:-/usr/local/bin}
+
+
+  # get the latest version
+  resp=$(http_get "https://api.github.com/repos/$owner/$repo/tags")
+  version=$(echo "$resp" | tr ',' '\n' | grep -m 1 "\"name\":" | cut -f4 -d'"')
+
+  if [ -z "$version" ]; then
+    print_error "Error fetching latest version. Please try again."
     exit 1
   fi
 
   # remove the preceding 'v'
-  echo ${LATEST#v}
+  version="${version#v}"
+
+  checksum=${binary}_${version}_checksums.txt
+  filename=${binary}_${version}_${os}_${arch}
+  tarball="${filename}.tar.gz"
+  binary_url="${github_download}/v${version}/${tarball}"
+  checksum_url="${github_download}/v${version}/${checksum}"
+
+  print_step "Latest release version is v$version."
+
+  print_step "Downloading $binary_url."
+  http_download "$tmpdir/$tarball" "$binary_url"
+
+  print_step "Downloading the checksum file for v$version"
+  http_download "$tmpdir/$checksum" "$checksum_url"
+
+  # unzip tar
+  print_step "Inflating the binary."
+  (cd "${tmpdir}" && tar -xzf "${tarball}")
+
+  print_step "Comparing checksums for binaries."
+  verify_checksum "${tmpdir}/${binary}" "$filename" "$tmpdir/$checksum"
+
+  install -d "${bindir}"
+  install "${tmpdir}/${binary}" "${bindir}/"
+
+  print_success "dnote v${version} was successfully installed in $bindir."
 }
 
-execute() {
-  echo "downloading Dnote v${LATEST}..."
-  echo ${URL}
-  if curl -L --progress-bar $URL -o "${TMPDIR}/${TARBALL}"; then
-    (cd "${TMPDIR}" && tar -xzf "${TARBALL}")
 
-    install -d "${BINDIR}"
-    install "${TMPDIR}/${BINARY}" "${BINDIR}/"
-
-    echo "Successfully installed Dnote"
-  else
-    echo "Installation failed. You might need elevated permission."
-    exit 1
+exit_error() {
+  if [ "$?" -ne 0 ]; then
+    print_error "A problem occurred while installing Dnote. Please report it on https://github.com/dnote/cli/issues so that we can help you."
   fi
 }
 
-REPO_OWNER=dnote
-REPO_NAME=cli
-PLATFORM=$(get_platform)
-LATEST=$(get_version)
-TARBALL="dnote_${LATEST}_${PLATFORM}.tar.gz"
-URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/v${LATEST}/${TARBALL}"
-TMPDIR="$(mktemp -d)"
-BINDIR=${BINDIR:-/usr/local/bin}
-BINARY=dnote
-
-execute
+trap exit_error EXIT
+install_dnote
