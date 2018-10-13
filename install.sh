@@ -34,7 +34,7 @@ http_get() {
   if is_command curl; then
     cmd='curl --fail -sSL'
   elif is_command wget; then
-    cmd='wget -q'
+    cmd='wget -qO -'
   else
     print_error "unable to find wget or curl. please install and try again."
     exit 1

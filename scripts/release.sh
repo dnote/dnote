@@ -43,7 +43,7 @@ for os in "${goos[@]}"; do
     filename="${binary}_${version}_${os}_${arch}"
     echo "* building $filename"
 
-    goos="$os" goarch="$arch" go build \
+    GOOS="$os" GOARCH="$arch" go build \
       -o "./release/$filename" \
       -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version"
 
