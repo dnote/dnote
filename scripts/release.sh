@@ -45,8 +45,7 @@ for os in "${goos[@]}"; do
 
     goos="$os" goarch="$arch" go build \
       -o "./release/$filename" \
-      -ldflags "-X main.apiEndpoint=https://api.dnote.io" \
-      -ldflags "-X main.versionTag=$version"
+      -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version"
 
     pushd ./release > /dev/null
     cp "$filename" dnote
