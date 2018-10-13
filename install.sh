@@ -146,8 +146,8 @@ install_dnote() {
   fi
 
   binary=dnote
-  owner=sungwoncho
-  repo=goreleaser-issue
+  owner=dnote
+  repo=cli
   github_download="https://github.com/${owner}/${repo}/releases/download"
   tmpdir="$(mktemp -d)"
   bindir=${bindir:-/usr/local/bin}
