@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -47,18 +47,18 @@ var migrationSequence = []int{
 }
 
 type schema struct {
-	currentVersion int `yaml:"current_version"`
+	CurrentVersion int `yaml:"current_version"`
 }
 
 func makeSchema(complete bool) schema {
 	s := schema{}
 
-	var currentVersion int
+	var CurrentVersion int
 	if complete {
-		currentVersion = len(migrationSequence)
+		CurrentVersion = len(migrationSequence)
 	}
 
-	s.currentVersion = currentVersion
+	s.CurrentVersion = CurrentVersion
 
 	return s
 }
@@ -76,9 +76,10 @@ func Legacy(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to get unrun migrations")
 	}
 
-	for _, mid := range unrunMigrations {
-		if err := performMigration(ctx, mid); err != nil {
-			return errors.Wrapf(err, "running migration #%d", mid)
+	for _, mig := range unrunMigrations {
+		log.Debug("running legacy migration %d\n", mig)
+		if err := performMigration(ctx, mig); err != nil {
+			return errors.Wrapf(err, "running migration #%d", mig)
 		}
 	}
 
@@ -194,22 +195,6 @@ func getSchemaPath(ctx infra.DnoteCtx) string {
 	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename)
 }
 
-// initSchemaFile creates a migration file
-func initSchemaFile(ctx infra.DnoteCtx, pristine bool) error {
-	path := getSchemaPath(ctx)
-	if utils.FileExists(path) {
-		return nil
-	}
-
-	s := makeSchema(pristine)
-	err := writeSchema(ctx, s)
-	if err != nil {
-		return errors.Wrap(err, "Failed to write schema")
-	}
-
-	return nil
-}
-
 func readSchema(ctx infra.DnoteCtx) (schema, error) {
 	var ret schema
 
@@ -250,11 +235,13 @@ func getUnrunMigrations(ctx infra.DnoteCtx) ([]int, error) {
 		return ret, errors.Wrap(err, "Failed to read schema")
 	}
 
-	if schema.currentVersion == len(migrationSequence) {
+	log.Debug("current legacy schema: %d\n", schema.CurrentVersion)
+
+	if schema.CurrentVersion == len(migrationSequence) {
 		return ret, nil
 	}
 
-	nextVersion := schema.currentVersion
+	nextVersion := schema.CurrentVersion
 	ret = migrationSequence[nextVersion:]
 
 	return ret, nil
@@ -266,7 +253,7 @@ func updateSchemaVersion(ctx infra.DnoteCtx, mID int) error {
 		return errors.Wrap(err, "Failed to read schema")
 	}
 
-	s.currentVersion = mID
+	s.CurrentVersion = mID
 
 	err = writeSchema(ctx, s)
 	if err != nil {
