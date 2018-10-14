@@ -40,7 +40,7 @@ VERSION=0.4.8 make release
 * Build, without releasing, for all target platforms
 
 ```sh
-VERSION=0.4.8 make build
+VERSION=0.4.8 make
 ```
 
 **Note**

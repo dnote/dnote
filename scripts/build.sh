@@ -72,7 +72,7 @@ build_tarball() {
 
   cp "$basedir/LICENSE" .
   cp "$basedir/README.md" .
-  tar -zcvf "../dnote-$os-amd64.tar.gz" ./*
+  tar -zcvf "../dnote_${version}_${os}_amd64.tar.gz" ./*
 
   popd
 }
