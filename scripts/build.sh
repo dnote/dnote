@@ -59,20 +59,34 @@ build() {
   popd
 }
 
+get_buildname() {
+  os=$1
+
+  echo "dnote_${version}_${os}_amd64"
+}
+
 calc_checksum() {
   os=$1
 
-  shasum -a 256 "$TMP/$os/dnote" >> "$TMP/dnote_${version}_checksums.txt"
+  pushd "$TMP/$os"
+
+  buildname=$(get_buildname "$os")
+  mv dnote "$buildname"
+  shasum -a 256 "$buildname" >> "$TMP/dnote_${version}_checksums.txt"
+  mv "$buildname" dnote
+
+  popd
 }
 
 build_tarball() {
   os=$1
+  buildname=$(get_buildname "$os")
 
   pushd "$TMP/$os"
 
   cp "$basedir/LICENSE" .
   cp "$basedir/README.md" .
-  tar -zcvf "../dnote_${version}_${os}_amd64.tar.gz" ./*
+  tar -zcvf "../${buildname}.tar.gz" ./*
 
   popd
 }
