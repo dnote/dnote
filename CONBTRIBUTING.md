@@ -30,13 +30,17 @@ Run Dnote with `DNOTE_DEBUG=1` to print debugging statements.
 
 ## Release
 
-This project uses [goreleaser](https://github.com/goreleaser/goreleaser) to automate the release process.
-
-The following will tag, push the tag, create release on GitHub, build artifacts, upload them, and
-push a commit to [Dnote Homebrew tap](https://github.com/dnote/homebrew-dnote).
+* Build for all target platforms, tag, push tags
+* Release on GitHub and [Dnote Homebrew tap](https://github.com/dnote/homebrew-dnote).
 
 ```sh
-VERSION=v0.4.2 make
+VERSION=0.4.8 make release
+```
+
+* Build, without releasing, for all target platforms
+
+```sh
+VERSION=0.4.8 make
 ```
 
 **Note**

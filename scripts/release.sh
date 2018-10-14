@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# release.sh releases the tarballs and checksum in the build directory
+# to GitHub and brew. It is important to build those files using build.sh
+# use: ./scripts/release.sh v0.4.8
 
 set -eu
 
@@ -19,49 +23,17 @@ if ! command_exists hub; then
   echo "please install hub"
   exit 1
 fi
-if ! command_exists shasum; then
-  echo "please install shasum"
-  exit 1
-fi
 
-binary=dnote
+# 1. push tag
 version=$1
 version_tag="v$version"
-goos=("linux" "openbsd" "freebsd" "darwin" "windows")
-goarch=("386" "amd64")
 
-rm -rf ./release
-mkdir ./release
-cp LICENSE ./release/LICENSE
-cp README.md ./release/README.md
-
-echo "* release $version"
-
-# 1. build
-for os in "${goos[@]}"; do
-  for arch in "${goarch[@]}"; do
-    filename="${binary}_${version}_${os}_${arch}"
-    echo "* building $filename"
-
-    GOOS="$os" GOARCH="$arch" go build \
-      -o "./release/$filename" \
-      -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version"
-
-    pushd ./release > /dev/null
-    cp "$filename" dnote
-    tar -czvf "$filename.tar.gz" dnote LICENSE README.md
-    shasum -a 256 "$filename" >> "dnote_${version}_checksums.txt"
-    popd > /dev/null
-  done
-done
-
-# 2. push tag
 echo "* tagging and pushing the tag"
 git tag -a "$version_tag" -m "Release $version_tag"
 git push --tags
 
-# 3. create release
-files=(./release/*.tar.gz ./release/*.txt)
+# 2. release on GitHub
+files=(./build/*.tar.gz ./build/*.txt)
 file_args=()
 for file in "${files[@]}"; do
   file_args+=("--attach=$file")
@@ -74,7 +46,6 @@ hub release create \
   --message="$version_tag"\
   "$version_tag"
 
-# 4. release on brew
-
-homebrew_sha256=$(shasum -a 256 "./release/${binary}_${version}_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
+# 3. Release on Homebrew
+homebrew_sha256=$(shasum -a 256 "./build/dnote_${version}_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
 (cd "$GOPATH"/src/github.com/dnote/homebrew-dnote && ./release.sh "$version" "$homebrew_sha256")
