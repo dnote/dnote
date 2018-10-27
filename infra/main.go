@@ -22,6 +22,10 @@ var (
 	SystemSchema = "schema"
 	// SystemRemoteSchema is the key for remote schema in the system table
 	SystemRemoteSchema = "remote_schema"
+	// SystemLastSyncAt is the timestamp of the server at the last sync
+	SystemLastSyncAt = "last_sync_time"
+	// SystemLastMaxUSN is the user's max_usn from the server at the alst sync
+	SystemLastMaxUSN = "last_max_usn"
 )
 
 // DnoteCtx is a context holding the information of the current runtime
@@ -145,18 +149,6 @@ func InitDB(ctx DnoteCtx) error {
 		)`)
 	if err != nil {
 		return errors.Wrap(err, "creating books table")
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS actions
-		(
-			uuid text PRIMARY KEY,
-			schema integer NOT NULL,
-			type text NOT NULL,
-			data text NOT NULL,
-			timestamp integer NOT NULL
-		)`)
-	if err != nil {
-		return errors.Wrap(err, "creating actions table")
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS system

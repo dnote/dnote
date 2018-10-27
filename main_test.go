@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/dnote/actions"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/testutils"
@@ -46,19 +44,16 @@ func TestInit(t *testing.T) {
 
 	db := ctx.DB
 
-	var notesTableCount, booksTableCount, actionsTableCount, systemTableCount int
+	var notesTableCount, booksTableCount, systemTableCount int
 	testutils.MustScan(t, "counting notes",
 		db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type = ? AND name = ?", "table", "notes"), &notesTableCount)
 	testutils.MustScan(t, "counting books",
 		db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type = ? AND name = ?", "table", "books"), &booksTableCount)
-	testutils.MustScan(t, "counting actions",
-		db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type = ? AND name = ?", "table", "actions"), &actionsTableCount)
 	testutils.MustScan(t, "counting system",
 		db.QueryRow("SELECT count(*) FROM sqlite_master WHERE type = ? AND name = ?", "table", "system"), &systemTableCount)
 
 	testutils.AssertEqual(t, notesTableCount, 1, "notes table count mismatch")
 	testutils.AssertEqual(t, booksTableCount, 1, "books table count mismatch")
-	testutils.AssertEqual(t, actionsTableCount, 1, "actions table count mismatch")
 	testutils.AssertEqual(t, systemTableCount, 1, "system table count mismatch")
 }
 
@@ -73,12 +68,10 @@ func TestAddNote_NewBook_ContentFlag(t *testing.T) {
 	// Test
 	db := ctx.DB
 
-	var actionCount, noteCount, bookCount int
-	testutils.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	var noteCount, bookCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	testutils.AssertEqualf(t, actionCount, 2, "action count mismatch")
 	testutils.AssertEqualf(t, bookCount, 1, "book count mismatch")
 	testutils.AssertEqualf(t, noteCount, 1, "note count mismatch")
 
@@ -87,27 +80,7 @@ func TestAddNote_NewBook_ContentFlag(t *testing.T) {
 	var note infra.Note
 	testutils.MustScan(t, "getting note",
 		db.QueryRow("SELECT uuid, content, added_on FROM notes where book_uuid = ?", jsBookUUID), &note.UUID, &note.Content, &note.AddedOn)
-	var bookAction, noteAction actions.Action
-	testutils.MustScan(t, "getting book action",
-		db.QueryRow("SELECT data, timestamp FROM actions where type = ?", actions.ActionAddBook), &bookAction.Data, &bookAction.Timestamp)
-	testutils.MustScan(t, "getting note action",
-		db.QueryRow("SELECT data, timestamp FROM actions where type = ?", actions.ActionAddNote), &noteAction.Data, &noteAction.Timestamp)
 
-	var noteActionData actions.AddNoteDataV1
-	var bookActionData actions.AddBookDataV1
-	if err := json.Unmarshal(bookAction.Data, &bookActionData); err != nil {
-		log.Fatalf("unmarshalling the action data: %s", err)
-	}
-	if err := json.Unmarshal(noteAction.Data, &noteActionData); err != nil {
-		log.Fatalf("unmarshalling the action data: %s", err)
-	}
-
-	testutils.AssertNotEqual(t, bookActionData.BookName, "", "bookAction data note_uuid mismatch")
-	testutils.AssertNotEqual(t, bookAction.Timestamp, 0, "bookAction timestamp mismatch")
-	testutils.AssertEqual(t, noteActionData.Content, "foo", "noteAction data name mismatch")
-	testutils.AssertNotEqual(t, noteActionData.NoteUUID, nil, "noteAction data note_uuid mismatch")
-	testutils.AssertNotEqual(t, noteActionData.BookName, "", "noteAction data note_uuid mismatch")
-	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "noteAction timestamp mismatch")
 	testutils.AssertNotEqual(t, note.UUID, "", "Note should have UUID")
 	testutils.AssertEqual(t, note.Content, "foo", "Note content mismatch")
 	testutils.AssertNotEqual(t, note.AddedOn, int64(0), "Note added_on mismatch")
@@ -126,12 +99,10 @@ func TestAddNote_ExistingBook_ContentFlag(t *testing.T) {
 	// Test
 	db := ctx.DB
 
-	var actionCount, noteCount, bookCount int
-	testutils.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	var noteCount, bookCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	testutils.AssertEqualf(t, actionCount, 1, "action count mismatch")
 	testutils.AssertEqualf(t, bookCount, 1, "book count mismatch")
 	testutils.AssertEqualf(t, noteCount, 2, "note count mismatch")
 
@@ -140,19 +111,7 @@ func TestAddNote_ExistingBook_ContentFlag(t *testing.T) {
 		db.QueryRow("SELECT uuid, content, added_on FROM notes WHERE book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Content, &n1.AddedOn)
 	testutils.MustScan(t, "getting n2",
 		db.QueryRow("SELECT uuid, content, added_on FROM notes WHERE book_uuid = ? AND content = ?", "js-book-uuid", "foo"), &n2.UUID, &n2.Content, &n2.AddedOn)
-	var noteAction actions.Action
-	testutils.MustScan(t, "getting note action",
-		db.QueryRow("SELECT data, timestamp FROM actions WHERE type = ?", actions.ActionAddNote), &noteAction.Data, &noteAction.Timestamp)
 
-	var noteActionData actions.AddNoteDataV1
-	if err := json.Unmarshal(noteAction.Data, &noteActionData); err != nil {
-		log.Fatalf("unmarshalling the action data: %s", err)
-	}
-
-	testutils.AssertEqual(t, noteActionData.Content, "foo", "action data name mismatch")
-	testutils.AssertNotEqual(t, noteActionData.NoteUUID, "", "action data note_uuid mismatch")
-	testutils.AssertEqual(t, noteActionData.BookName, "js", "action data book_name mismatch")
-	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertNotEqual(t, n1.UUID, "", "Note should have UUID")
 	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "Note content mismatch")
 	testutils.AssertEqual(t, n1.AddedOn, int64(1515199943), "Note added_on mismatch")
@@ -173,12 +132,10 @@ func TestEditNote_ContentFlag(t *testing.T) {
 	// Test
 	db := ctx.DB
 
-	var actionCount, noteCount, bookCount int
-	testutils.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	var noteCount, bookCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	testutils.AssertEqualf(t, actionCount, 1, "action count mismatch")
 	testutils.AssertEqualf(t, bookCount, 1, "book count mismatch")
 	testutils.AssertEqualf(t, noteCount, 2, "note count mismatch")
 
@@ -187,22 +144,7 @@ func TestEditNote_ContentFlag(t *testing.T) {
 		db.QueryRow("SELECT uuid, content, added_on FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Content, &n1.AddedOn)
 	testutils.MustScan(t, "getting n2",
 		db.QueryRow("SELECT uuid, content, added_on FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n2.UUID, &n2.Content, &n2.AddedOn)
-	var noteAction actions.Action
-	testutils.MustScan(t, "getting note action",
-		db.QueryRow("SELECT data, type, schema FROM actions where type = ?", actions.ActionEditNote),
-		&noteAction.Data, &noteAction.Type, &noteAction.Schema)
 
-	var actionData actions.EditNoteDataV3
-	if err := json.Unmarshal(noteAction.Data, &actionData); err != nil {
-		log.Fatalf("Failed to unmarshal the action data: %s", err)
-	}
-
-	testutils.AssertEqual(t, noteAction.Type, actions.ActionEditNote, "action type mismatch")
-	testutils.AssertEqual(t, noteAction.Schema, 3, "action schema mismatch")
-	testutils.AssertEqual(t, *actionData.Content, "foo bar", "action data name mismatch")
-	testutils.AssertEqual(t, actionData.BookName, (*string)(nil), "action data book_name mismatch")
-	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuis mismatch")
-	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
 	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "Note content mismatch")
 	testutils.AssertEqual(t, n2.UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
@@ -223,14 +165,12 @@ func TestRemoveNote(t *testing.T) {
 	// Test
 	db := ctx.DB
 
-	var actionCount, noteCount, bookCount, jsNoteCount, linuxNoteCount int
-	testutils.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	var noteCount, bookCount, jsNoteCount, linuxNoteCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 	testutils.MustScan(t, "counting js notes", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "js-book-uuid"), &jsNoteCount)
 	testutils.MustScan(t, "counting linux notes", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "linux-book-uuid"), &linuxNoteCount)
 
-	testutils.AssertEqualf(t, actionCount, 1, "action count mismatch")
 	testutils.AssertEqualf(t, bookCount, 2, "book count mismatch")
 	testutils.AssertEqualf(t, noteCount, 2, "note count mismatch")
 	testutils.AssertEqual(t, jsNoteCount, 1, "Book should have one note")
@@ -248,21 +188,8 @@ func TestRemoveNote(t *testing.T) {
 		db.QueryRow("SELECT uuid, content, added_on FROM notes WHERE book_uuid = ? AND id = ?", "js-book-uuid", 2),
 		&n1.UUID, &n1.Content, &n1.AddedOn)
 
-	var noteAction actions.Action
-	testutils.MustScan(t, "getting note action",
-		db.QueryRow("SELECT type, schema, data FROM actions WHERE type = ?", actions.ActionRemoveNote), &noteAction.Type, &noteAction.Schema, &noteAction.Data)
-
-	var actionData actions.RemoveNoteDataV1
-	if err := json.Unmarshal(noteAction.Data, &actionData); err != nil {
-		log.Fatalf("unmarshalling the action data: %s", err)
-	}
-
 	testutils.AssertEqual(t, b1.Name, "js", "b1 label mismatch")
 	testutils.AssertEqual(t, b2.Name, "linux", "b2 label mismatch")
-	testutils.AssertEqual(t, noteAction.Schema, 2, "action schema mismatch")
-	testutils.AssertEqual(t, noteAction.Type, actions.ActionRemoveNote, "action type mismatch")
-	testutils.AssertEqual(t, actionData.NoteUUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "action data note_uuid mismatch")
-	testutils.AssertNotEqual(t, noteAction.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "Note should have UUID")
 	testutils.AssertEqual(t, n1.Content, "Booleans have toString()", "Note content mismatch")
 }
@@ -280,14 +207,12 @@ func TestRemoveBook(t *testing.T) {
 	// Test
 	db := ctx.DB
 
-	var actionCount, noteCount, bookCount, jsNoteCount, linuxNoteCount int
-	testutils.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	var noteCount, bookCount, jsNoteCount, linuxNoteCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 	testutils.MustScan(t, "counting js notes", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "js-book-uuid"), &jsNoteCount)
 	testutils.MustScan(t, "counting linux notes", db.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ?", "linux-book-uuid"), &linuxNoteCount)
 
-	testutils.AssertEqualf(t, actionCount, 1, "action count mismatch")
 	testutils.AssertEqualf(t, bookCount, 1, "book count mismatch")
 	testutils.AssertEqualf(t, noteCount, 1, "note count mismatch")
 	testutils.AssertEqual(t, jsNoteCount, 0, "some notes in book were not deleted")
@@ -298,17 +223,5 @@ func TestRemoveBook(t *testing.T) {
 		db.QueryRow("SELECT label FROM books WHERE uuid = ?", "linux-book-uuid"),
 		&b1.Name)
 
-	var action actions.Action
-	testutils.MustScan(t, "getting an action",
-		db.QueryRow("SELECT type, schema, data FROM actions WHERE type = ?", actions.ActionRemoveBook), &action.Type, &action.Schema, &action.Data)
-
-	var actionData actions.RemoveBookDataV1
-	if err := json.Unmarshal(action.Data, &actionData); err != nil {
-		log.Fatalf("unmarshalling the action data: %s", err)
-	}
-
-	testutils.AssertEqual(t, action.Type, actions.ActionRemoveBook, "action type mismatch")
-	testutils.AssertEqual(t, actionData.BookName, "js", "action data name mismatch")
-	testutils.AssertNotEqual(t, action.Timestamp, 0, "action timestamp mismatch")
 	testutils.AssertEqual(t, b1.Name, "linux", "Remaining book name mismatch")
 }

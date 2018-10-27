@@ -98,9 +98,6 @@ func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
 	if _, err = tx.Exec("DELETE FROM notes WHERE uuid = ? AND book_uuid = ?", noteUUID, bookUUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
-	if err = core.LogActionRemoveNote(tx, noteUUID, bookLabel); err != nil {
-		return errors.Wrap(err, "logging the remove_note action")
-	}
 	tx.Commit()
 
 	log.Successf("removed from %s\n", bookLabel)
@@ -135,9 +132,6 @@ func removeBook(ctx infra.DnoteCtx, bookLabel string) error {
 	}
 	if _, err = tx.Exec("DELETE FROM books WHERE uuid = ?", bookUUID); err != nil {
 		return errors.Wrap(err, "removing the book")
-	}
-	if err = core.LogActionRemoveBook(tx, bookLabel); err != nil {
-		return errors.Wrap(err, "loging the remove_book action")
 	}
 
 	tx.Commit()

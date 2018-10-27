@@ -1,20 +1,20 @@
 package sync
 
 import (
-	"bytes"
-	"compress/gzip"
-	"database/sql"
+	//"database/sql"
+	//"io"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
+	"net/url"
+	"strconv"
+	"time"
 
-	"github.com/dnote/actions"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/dnote/cli/migrate"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -36,19 +36,174 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 type responseData struct {
-	Actions  []actions.Action `json:"actions"`
-	Bookmark int              `json:"bookmark"`
+	Bookmark int `json:"bookmark"`
 }
 
 type syncPayload struct {
-	Bookmark int    `json:"bookmark"`
-	Actions  []byte `json:"actions"` // gziped
+	Bookmark int `json:"bookmark"`
+}
+
+func getLastSyncAt(ctx infra.DnoteCtx) (int, error) {
+	ret := 0
+
+	db := ctx.DB
+
+	var count int
+	err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", infra.SystemLastSyncAt).Scan(&count)
+	if err != nil {
+		return ret, errors.Wrap(err, "counting last sync time")
+	}
+
+	if count == 0 {
+		return ret, nil
+	}
+
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", infra.SystemLastSyncAt).Scan(&ret)
+	if err != nil {
+		return ret, errors.Wrap(err, "querying last sync time")
+	}
+
+	return ret, nil
+}
+
+func getLastMaxUSN(ctx infra.DnoteCtx) (int, error) {
+	ret := 0
+
+	db := ctx.DB
+
+	var count int
+	err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", infra.SystemLastMaxUSN).Scan(&count)
+	if err != nil {
+		return ret, errors.Wrap(err, "counting last user max_usn")
+	}
+
+	if count == 0 {
+		return ret, nil
+	}
+
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", infra.SystemLastMaxUSN).Scan(&ret)
+	if err != nil {
+		return ret, errors.Wrap(err, "querying last user max_usn")
+	}
+
+	return ret, nil
+}
+
+type syncStateResp struct {
+	FullSyncBefore int `json:"full_sync_before"`
+	MaxUSN         int `json:"max_usn"`
+}
+
+func getSyncState(apiKey string, ctx infra.DnoteCtx) (syncStateResp, error) {
+	var ret syncStateResp
+
+	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", "/v1/sync/state", "")
+	if err != nil {
+		return ret, errors.Wrap(err, "constructing http request")
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return ret, errors.Wrap(err, "reading the response body")
+	}
+
+	if err = json.Unmarshal(body, &ret); err != nil {
+		return ret, errors.Wrap(err, "unmarshalling the payload")
+	}
+
+	return ret, nil
+}
+
+// syncFragNote represents a note in a sync fragment and contains only the necessary information
+// for the client to sync the note locally
+type syncFragNote struct {
+	UUID      string    `json:"uuid"`
+	BookUUID  string    `json:"book_uuid"`
+	USN       int       `json:"usn"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	AddedOn   int64     `json:"added_on"`
+	EditedOn  int64     `json:"edited_on"`
+	Content   string    `json:"content"`
+	Public    bool      `json:"public"`
+	Deleted   bool      `json:"deleted"`
+}
+
+// syncFragBook represents a book in a sync fragment and contains only the necessary information
+// for the client to sync the note locally
+type syncFragBook struct {
+	UUID      string    `json:"uuid"`
+	USN       int       `json:"usn"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	AddedOn   int64     `json:"added_on"`
+	Label     string    `json:"label"`
+	Deleted   bool      `json:"deleted"`
+}
+
+// syncFragment contains a piece of information about the server's state.
+type syncFragment struct {
+	FragMaxUSN       int            `json:"frag_max_usn"`
+	UserMaxUSN       int            `json:"user_max_usn"`
+	CurrentTime      int64          `json:"current_time"`
+	Notes            []syncFragNote `json:"notes"`
+	Books            []syncFragBook `json:"books"`
+	DeletedNoteUUIDs []string       `json:"deleted_note_uuids"`
+	DeletedBookUUIDs []string       `json:"deleted_book_uuids"`
+}
+
+type getSyncFragmentResp struct {
+	Fragment syncFragment `json:"fragment"`
+}
+
+func getSyncFragments(ctx infra.DnoteCtx, apiKey string, afterUSN int) ([]syncFragment, error) {
+	var buf []syncFragment
+
+	nextAfterUSN := afterUSN
+
+	for {
+		v := url.Values{}
+		v.Set("after_usn", strconv.Itoa(nextAfterUSN))
+		queryStr := v.Encode()
+
+		path := fmt.Sprintf("/v1/sync/fragment?%s", queryStr)
+		res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", path, "")
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return buf, errors.Wrap(err, "reading the response body")
+		}
+
+		var resp getSyncFragmentResp
+		if err = json.Unmarshal(body, &resp); err != nil {
+			return buf, errors.Wrap(err, "unmarshalling the payload")
+		}
+
+		frag := resp.Fragment
+		buf = append(buf, frag)
+
+		nextAfterUSN = frag.FragMaxUSN
+
+		// if there is no more data, break
+		if nextAfterUSN == 0 {
+			break
+		}
+	}
+
+	return buf, nil
+}
+
+func fullSync(ctx infra.DnoteCtx, apiKey string, afterUSN int) error {
+	//	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", "/v1/sync/state", "")
+	//	if err != nil {
+	//
+	//	}
+
+	return nil
 }
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		db := ctx.DB
-
 		config, err := core.ReadConfig(ctx)
 		if err != nil {
 			return errors.Wrap(err, "reading the config")
@@ -62,71 +217,26 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return errors.Wrap(err, "running remote migrations")
 		}
 
-		var bookmark int
-		err = db.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
+		syncState, err := getSyncState(config.APIKey, ctx)
 		if err != nil {
-			return errors.Wrap(err, "getting bookmark")
+			return errors.Wrap(err, "getting the sync state from the server")
 		}
-
-		actions, err := getLocalActions(db)
+		lastSyncAt, err := getLastSyncAt(ctx)
 		if err != nil {
-			return errors.Wrap(err, "getting local actions")
+			return errors.Wrap(err, "getting the last sync time")
 		}
-
-		payload, err := newPayload(actions, bookmark)
+		lastMaxUSN, err := getLastMaxUSN(ctx)
 		if err != nil {
-			return errors.Wrap(err, "getting the request payload")
+			return errors.Wrap(err, "getting the last max_usn")
 		}
 
-		log.Infof("writing changes (total %d).", len(actions))
-		resp, err := postActions(ctx, config.APIKey, payload)
-		if err != nil {
-			return errors.Wrap(err, "posting to the server")
+		if lastSyncAt < syncState.FullSyncBefore {
+			// full sync
+		} else if lastMaxUSN == syncState.MaxUSN {
+			// skip to send changes
+		} else {
+			// incremental sync
 		}
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return errors.Wrap(err, "reading the response body")
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			bodyStr := string(body)
-
-			fmt.Println("")
-			return errors.Errorf("Server error: %s", bodyStr)
-		}
-
-		fmt.Println(" done.")
-
-		var respData responseData
-		if err = json.Unmarshal(body, &respData); err != nil {
-			return errors.Wrap(err, "unmarshalling the payload")
-		}
-
-		// First, remove our actions because server has successfully ingested them
-		if _, err = db.Exec("DELETE FROM actions"); err != nil {
-			return errors.Wrap(err, "deleting actions")
-		}
-
-		tx, err := db.Begin()
-		if err != nil {
-			return errors.Wrap(err, "beginning a transaction")
-		}
-
-		log.Infof("resolving delta (total %d).", len(respData.Actions))
-		if err := core.ReduceAll(ctx, tx, respData.Actions); err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "reducing returned actions")
-		}
-
-		if _, err = tx.Exec("UPDATE system SET value = ? WHERE key = ?", respData.Bookmark, "bookmark"); err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "updating the bookmark")
-		}
-
-		fmt.Println(" done.")
-
-		tx.Commit()
 
 		log.Success("success\n")
 
@@ -136,92 +246,4 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		return nil
 	}
-}
-
-func newPayload(actions []actions.Action, bookmark int) (*bytes.Buffer, error) {
-	compressedActions, err := compressActions(actions)
-	if err != nil {
-		return &bytes.Buffer{}, errors.Wrap(err, "compressing actions")
-	}
-
-	payload := syncPayload{
-		Bookmark: bookmark,
-		Actions:  compressedActions,
-	}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return &bytes.Buffer{}, errors.Wrap(err, "marshalling paylaod into JSON")
-	}
-
-	ret := bytes.NewBuffer(b)
-	return ret, nil
-}
-
-func compressActions(actions []actions.Action) ([]byte, error) {
-	b, err := json.Marshal(&actions)
-	if err != nil {
-		return nil, errors.Wrap(err, "marshalling actions into JSON")
-	}
-
-	var buf bytes.Buffer
-	g := gzip.NewWriter(&buf)
-
-	_, err = g.Write(b)
-	if err != nil {
-		return nil, errors.Wrap(err, "writing to gzip writer")
-	}
-
-	if err = g.Close(); err != nil {
-		return nil, errors.Wrap(err, "closing gzip writer")
-	}
-
-	return buf.Bytes(), nil
-}
-
-func postActions(ctx infra.DnoteCtx, APIKey string, payload io.Reader) (*http.Response, error) {
-	endpoint := fmt.Sprintf("%s/v1/sync", ctx.APIEndpoint)
-	req, err := http.NewRequest("POST", endpoint, payload)
-	if err != nil {
-		return &http.Response{}, errors.Wrap(err, "forming an HTTP request")
-	}
-
-	req.Header.Set("Authorization", APIKey)
-	req.Header.Set("CLI-Version", ctx.Version)
-
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return &http.Response{}, errors.Wrap(err, "making a request")
-	}
-
-	return resp, nil
-}
-
-func getLocalActions(db *sql.DB) ([]actions.Action, error) {
-	ret := []actions.Action{}
-
-	rows, err := db.Query("SELECT uuid, schema, type, data, timestamp FROM actions")
-	if err != nil {
-		return ret, errors.Wrap(err, "querying actions")
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var action actions.Action
-
-		err = rows.Scan(&action.UUID, &action.Schema, &action.Type, &action.Data, &action.Timestamp)
-		if err != nil {
-			return ret, errors.Wrap(err, "scanning a row")
-		}
-
-		ret = append(ret, action)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return ret, errors.Wrap(err, "scanning rows")
-	}
-
-	return ret, nil
 }

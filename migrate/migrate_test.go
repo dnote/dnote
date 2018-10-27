@@ -550,6 +550,11 @@ func TestRemoteMigration1(t *testing.T) {
 					UUID:  newCSSBookUUID,
 					Label: "css",
 				},
+				// book that only exists on the server. client must ignore.
+				{
+					UUID:  "golang-book-uuid",
+					Label: "golang",
+				},
 			}
 
 			if err := json.NewEncoder(w).Encode(res); err != nil {

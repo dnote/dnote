@@ -11,6 +11,7 @@ import (
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 )
 
@@ -193,6 +194,8 @@ var rm1 = migration{
 			return errors.Wrap(err, "unmarshalling the payload")
 		}
 
+		log.Debug("book details from the server: %+v\n", resData)
+
 		UUIDMap := map[string]string{}
 
 		for _, book := range resData {
@@ -208,10 +211,37 @@ var rm1 = migration{
 
 		for _, book := range resData {
 			// update uuid in the books table
-			fmt.Println("Updating", book.UUID, book.Label)
+			log.Debug("Updating book %s\n", book.Label)
+
+			//todo if does not exist, then continue loop
+			var count int
+			if err := tx.
+				QueryRow("SELECT count(*) FROM books WHERE label = ?", book.Label).
+				Scan(&count); err != nil {
+				return errors.Wrapf(err, "checking if book exists: %s", book.Label)
+			}
+
+			if count == 0 {
+				continue
+			}
+
+			var originalUUID string
+			if err := tx.
+				QueryRow("SELECT uuid FROM books WHERE label = ?", book.Label).
+				Scan(&originalUUID); err != nil {
+				return errors.Wrapf(err, "scanning the orignal uuid of the book %s", book.Label)
+			}
+			log.Debug("original uuid: %s. new_uuid %s\n", originalUUID, book.UUID)
+
 			_, err := tx.Exec("UPDATE books SET uuid = ? WHERE label = ?", book.UUID, book.Label)
 			if err != nil {
 				return errors.Wrapf(err, "updating book '%s'", book.Label)
+			}
+
+			_, err = tx.Exec("UPDATE notes SET book_uuid = ? WHERE book_uuid = ?", book.UUID, originalUUID)
+			if err != nil {
+				return errors.Wrapf(err, "updating book_uuids of notes")
+
 			}
 		}
 
