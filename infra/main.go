@@ -20,6 +20,8 @@ var (
 
 	// SystemSchema is the key for schema in the system table
 	SystemSchema = "schema"
+	// SystemRemoteSchema is the key for remote schema in the system table
+	SystemRemoteSchema = "remote_schema"
 )
 
 // DnoteCtx is a context holding the information of the current runtime

@@ -3,8 +3,13 @@ package migrate
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 
 	"github.com/dnote/actions"
+	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
 )
@@ -142,6 +147,71 @@ var lm3 = migration{
 			_, err = tx.Exec("UPDATE actions SET data = ?, schema = ? WHERE uuid = ?", string(b), 2, uuid)
 			if err != nil {
 				return errors.Wrap(err, "updating a row")
+			}
+		}
+
+		return nil
+	},
+}
+
+var rm1 = migration{
+	name: "sync-book-uuids-from-server",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		config, err := core.ReadConfig(ctx)
+		if err != nil {
+			return errors.Wrap(err, "reading the config")
+		}
+		if config.APIKey == "" {
+			return errors.New("login required")
+		}
+
+		endpoint := fmt.Sprintf("%s/v1/books", ctx.APIEndpoint)
+		req, err := http.NewRequest("GET", endpoint, strings.NewReader(""))
+		if err != nil {
+			return errors.Wrap(err, "constructing http request")
+		}
+
+		req.Header.Set("Authorization", config.APIKey)
+		req.Header.Set("CLI-Version", ctx.Version)
+
+		hc := http.Client{}
+		res, err := hc.Do(req)
+		if err != nil {
+			return errors.Wrap(err, "making http request")
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return errors.Wrap(err, "reading the response body")
+		}
+
+		resData := []struct {
+			UUID  string `json:"uuid"`
+			Label string `json:"label"`
+		}{}
+		if err = json.Unmarshal(body, &resData); err != nil {
+			return errors.Wrap(err, "unmarshalling the payload")
+		}
+
+		UUIDMap := map[string]string{}
+
+		for _, book := range resData {
+			// Build a map from uuid to label
+			UUIDMap[book.Label] = book.UUID
+		}
+
+		rows, err := tx.Query("SELECT uuid, schema, type, data FROM actions")
+		if err != nil {
+			return errors.Wrap(err, "querying actions")
+		}
+		defer rows.Close()
+
+		for _, book := range resData {
+			// update uuid in the books table
+			fmt.Println("Updating", book.UUID, book.Label)
+			_, err := tx.Exec("UPDATE books SET uuid = ? WHERE label = ?", book.UUID, book.Label)
+			if err != nil {
+				return errors.Wrapf(err, "updating book '%s'", book.Label)
 			}
 		}
 
