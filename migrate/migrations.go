@@ -155,6 +155,33 @@ var lm3 = migration{
 	},
 }
 
+var lm4 = migration{
+	name: "add-dirty-and-usn-to-notes-and-books",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		_, err := tx.Exec("ALTER TABLE books ADD COLUMN dirty bool DEFAULT false")
+		if err != nil {
+			return errors.Wrap(err, "adding dirty column to books")
+		}
+
+		_, err = tx.Exec("ALTER TABLE books ADD COLUMN usn int DEFAULT 0 NOT NULL")
+		if err != nil {
+			return errors.Wrap(err, "adding usn column to books")
+		}
+
+		_, err = tx.Exec("ALTER TABLE notes ADD COLUMN dirty bool DEFAULT false")
+		if err != nil {
+			return errors.Wrap(err, "adding dirty column to notes")
+		}
+
+		_, err = tx.Exec("ALTER TABLE notes ADD COLUMN usn int DEFAULT 0 NOT NULL")
+		if err != nil {
+			return errors.Wrap(err, "adding usn column to notes")
+		}
+
+		return nil
+	},
+}
+
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
@@ -241,7 +268,6 @@ var rm1 = migration{
 			_, err = tx.Exec("UPDATE notes SET book_uuid = ? WHERE book_uuid = ?", book.UUID, originalUUID)
 			if err != nil {
 				return errors.Wrapf(err, "updating book_uuids of notes")
-
 			}
 		}
 

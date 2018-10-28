@@ -1,7 +1,7 @@
 package sync
 
 import (
-	//"database/sql"
+	"database/sql"
 	//"io"
 	"encoding/json"
 	"fmt"
@@ -143,13 +143,17 @@ type syncFragBook struct {
 
 // syncFragment contains a piece of information about the server's state.
 type syncFragment struct {
-	FragMaxUSN       int            `json:"frag_max_usn"`
-	UserMaxUSN       int            `json:"user_max_usn"`
-	CurrentTime      int64          `json:"current_time"`
-	Notes            []syncFragNote `json:"notes"`
-	Books            []syncFragBook `json:"books"`
-	DeletedNoteUUIDs []string       `json:"deleted_note_uuids"`
-	DeletedBookUUIDs []string       `json:"deleted_book_uuids"`
+	FragMaxUSN  int            `json:"frag_max_usn"`
+	UserMaxUSN  int            `json:"user_max_usn"`
+	CurrentTime int64          `json:"current_time"`
+	Notes       []syncFragNote `json:"notes"`
+	Books       []syncFragBook `json:"books"`
+}
+
+// syncList is an aggregation of resources represented in the sync fragments
+type syncList struct {
+	Notes []syncFragNote
+	Books []syncFragBook
 }
 
 type getSyncFragmentResp struct {
@@ -193,11 +197,69 @@ func getSyncFragments(ctx infra.DnoteCtx, apiKey string, afterUSN int) ([]syncFr
 	return buf, nil
 }
 
+func getSyncList(fragments []syncFragment) syncList {
+	var notes []syncFragNote
+	var books []syncFragBook
+
+	for _, fragment := range fragments {
+		notes = append(notes, fragment.Notes...)
+		books = append(books, fragment.Books...)
+	}
+
+	return syncList{
+		Notes: notes,
+		Books: books,
+	}
+}
+
+func resolveNotes(tx *sql.Tx, fragNotes []syncFragNote) error {
+	for _, n := range fragNotes {
+		var localUSN int
+		var dirty bool
+		err := tx.QueryRow("SELECT usn, dirty FROM notes WHERE uuid = ?", n.UUID).Scan(&localUSN, &dirty)
+		if err != nil && err != sql.ErrNoRows {
+			return errors.Wrapf(err, "getting local note %s", n.UUID)
+		}
+
+		// if note exists in the server and does not exist in the client, insert the note.
+		if err == sql.ErrNoRows {
+			if _, err := tx.Exec("INSERT INTO notes (uuid, content, usn, added_on) VALUES (?, ?, ?, ?, ?)",
+				n.UUID, n.Content, n.USN, n.AddedOn); err != nil {
+				return errors.Wrapf(err, "inserting note with uuid %s", n.UUID)
+			}
+		} else if n.USN > localUSN {
+			// automatically resolve conflicts by letting server overwrite local changes
+			// IDEA: if needed, report conflict instead of overwriting
+			if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, content = ?, edited_on = ?, deleted = ? WHERE uuid = ?",
+				localUSN, n.BookUUID, n.Content, n.EditedOn, n.Deleted, n.UUID); err != nil {
+				return errors.Wrapf(err, "updating local note %s", n.UUID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func fullSync(ctx infra.DnoteCtx, apiKey string, afterUSN int) error {
-	//	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", "/v1/sync/state", "")
-	//	if err != nil {
-	//
-	//	}
+	fragments, err := getSyncFragments(ctx, apiKey, afterUSN)
+	if err != nil {
+		return errors.Wrap(err, "getting sync fragments")
+	}
+
+	list := getSyncList(fragments)
+
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	if err := resolveNotes(tx, list.Notes); err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "resolving notes")
+	}
+
+	tx.Commit()
 
 	return nil
 }

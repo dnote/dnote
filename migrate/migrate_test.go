@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/infra"
@@ -523,6 +524,45 @@ func TestLocalMigration3(t *testing.T) {
 	testutils.AssertEqual(t, a3.Type, "remove_note", "a3 type mismatch")
 	testutils.AssertEqual(t, a3.Timestamp, int64(1537829463), "a3 timestamp mismatch")
 	testutils.AssertEqual(t, a3Data.NoteUUID, "note-2-uuid", "a3 data note_uuid mismatch")
+}
+
+func TestLocalMigration4(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv("../tmp", "./fixtures/4-pre-schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
+	n1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n1UUID, b1UUID, "n1 content", time.Now().UnixNano())
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm4.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var n1Dirty, b1Dirty bool
+	var n1USN, b1USN int
+	testutils.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty, usn FROM notes WHERE uuid = ?", n1UUID), &n1Dirty, &n1USN)
+	testutils.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty, usn FROM books WHERE uuid = ?", b1UUID), &b1Dirty, &b1USN)
+
+	testutils.AssertEqual(t, n1Dirty, false, "n1 dirty flag should be false by default")
+	testutils.AssertEqual(t, b1Dirty, false, "n1 dirty flag should be false by default")
+
+	testutils.AssertEqual(t, n1USN, 0, "n1 usn flag should be 0 by default")
+	testutils.AssertEqual(t, b1USN, 0, "n1 usn flag should be 0 by default")
 }
 
 func TestRemoteMigration1(t *testing.T) {
