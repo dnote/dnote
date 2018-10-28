@@ -1,4 +1,4 @@
--- 4-pre-schema.sql is the schema in which 'dirty' flags do not exist
+-- local-1-pre-schema.sql is the schema in which 'dirty' flags do not exist
 
 CREATE TABLE notes
 		(

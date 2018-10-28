@@ -1,4 +1,4 @@
--- 5-pre-schema.sql is the schema in which the actions table is present
+-- local-5-pre-schema.sql is the schema in which the actions table is present
 
 CREATE TABLE notes
 		(

@@ -22,6 +22,7 @@ var LocalSequence = []migration{
 	lm3,
 	lm4,
 	lm5,
+	lm6,
 }
 
 // RemoteSequence is a list of remote migrations to be run
@@ -83,7 +84,7 @@ func execute(ctx infra.DnoteCtx, m migration, schemaKey string) error {
 	err = m.run(ctx, tx)
 	if err != nil {
 		tx.Rollback()
-		return errors.Wrapf(err, "running migration '%s'", m.name)
+		return errors.Wrapf(err, "running '%s'", m.name)
 	}
 
 	var currentSchema int
@@ -122,7 +123,7 @@ func Run(ctx infra.DnoteCtx, migrations []migration, mode int) error {
 
 	for _, m := range toRun {
 		if err := execute(ctx, m, schemaKey); err != nil {
-			return errors.Wrapf(err, "running migration %s", m.name)
+			return errors.Wrap(err, "running migration")
 		}
 	}
 

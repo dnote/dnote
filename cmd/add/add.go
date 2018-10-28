@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var reservedBookNames = []string{"trash", "conflicts"}
+
 var content string
 
 var example = `
@@ -47,9 +49,23 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
+func isReservedName(name string) bool {
+	for _, n := range reservedBookNames {
+		if name == n {
+			return true
+		}
+	}
+
+	return false
+}
+
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		bookName := args[0]
+
+		if isReservedName(bookName) {
+			return errors.Errorf("book name '%s' is reserved", bookName)
+		}
 
 		if content == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
@@ -92,7 +108,9 @@ func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) e
 	err = tx.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
 	if err == sql.ErrNoRows {
 		bookUUID = utils.GenerateUUID()
-		_, err = tx.Exec("INSERT INTO books (uuid, label) VALUES (?, ?)", bookUUID, bookLabel)
+
+		b := core.NewBook(bookUUID, bookLabel, 0, false, true)
+		err = b.Insert(tx)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "creating the book")
@@ -102,8 +120,9 @@ func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) e
 	}
 
 	noteUUID := utils.GenerateUUID()
-	_, err = tx.Exec(`INSERT INTO notes (uuid, book_uuid, content, added_on, public)
-		VALUES (?, ?, ?, ?, ?);`, noteUUID, bookUUID, content, ts, false)
+	n := core.NewNote(noteUUID, bookUUID, content, ts, 0, 0, false, false, true)
+
+	err = n.Insert(tx)
 	if err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "creating the note")

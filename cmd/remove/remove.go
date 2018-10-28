@@ -95,7 +95,7 @@ func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("DELETE FROM notes WHERE uuid = ? AND book_uuid = ?", noteUUID, bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, content = ? WHERE uuid = ? AND book_uuid = ?", true, true, "", noteUUID, bookUUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
 	tx.Commit()
@@ -127,10 +127,13 @@ func removeBook(ctx infra.DnoteCtx, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("DELETE FROM notes WHERE book_uuid = ?", bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, content = ? WHERE book_uuid = ?", true, true, "", bookUUID); err != nil {
 		return errors.Wrap(err, "removing notes in the book")
 	}
-	if _, err = tx.Exec("DELETE FROM books WHERE uuid = ?", bookUUID); err != nil {
+
+	// override the label with a random string
+	uniqLabel := utils.GenerateUUID()
+	if _, err = tx.Exec("UPDATE books SET deleted = ?, dirty = ?, label = ? WHERE uuid = ?", true, true, uniqLabel, bookUUID); err != nil {
 		return errors.Wrap(err, "removing the book")
 	}
 

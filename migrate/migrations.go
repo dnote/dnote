@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
 
 	"github.com/dnote/actions"
+	"github.com/dnote/cli/client"
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
@@ -156,7 +154,7 @@ var lm3 = migration{
 }
 
 var lm4 = migration{
-	name: "add-dirty-and-usn-to-notes-and-books",
+	name: "add-dirty-usn-deleted-to-notes-and-books",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
 		_, err := tx.Exec("ALTER TABLE books ADD COLUMN dirty bool DEFAULT false")
 		if err != nil {
@@ -166,6 +164,11 @@ var lm4 = migration{
 		_, err = tx.Exec("ALTER TABLE books ADD COLUMN usn int DEFAULT 0 NOT NULL")
 		if err != nil {
 			return errors.Wrap(err, "adding usn column to books")
+		}
+
+		_, err = tx.Exec("ALTER TABLE books ADD COLUMN deleted bool DEFAULT false")
+		if err != nil {
+			return errors.Wrap(err, "adding deleted column to books")
 		}
 
 		_, err = tx.Exec("ALTER TABLE notes ADD COLUMN dirty bool DEFAULT false")
@@ -178,16 +181,130 @@ var lm4 = migration{
 			return errors.Wrap(err, "adding usn column to notes")
 		}
 
+		_, err = tx.Exec("ALTER TABLE notes ADD COLUMN deleted bool DEFAULT false")
+		if err != nil {
+			return errors.Wrap(err, "adding deleted column to notes")
+		}
+
 		return nil
 	},
 }
 
 var lm5 = migration{
+	name: "mark-action-targets-dirty",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		rows, err := tx.Query("SELECT uuid, data, type FROM actions")
+		if err != nil {
+			return errors.Wrap(err, "querying rows")
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var uuid, dat, actionType string
+
+			err = rows.Scan(&uuid, &dat, &actionType)
+			if err != nil {
+				return errors.Wrap(err, "scanning a row")
+			}
+
+			// removed notes and removed books cannot be reliably derived retrospectively
+			// because books did not use to have uuid. Users will find locally deleted
+			// notes and books coming back to existence if they have not synced the change.
+			// But there will be no data loss.
+			switch actionType {
+			case "add_note":
+				var data actions.AddNoteDataV2
+				err = json.Unmarshal([]byte(dat), &data)
+				if err != nil {
+					return errors.Wrap(err, "unmarshalling existing data")
+				}
+
+				_, err := tx.Exec("UPDATE notes SET dirty = true WHERE uuid = ?", data.NoteUUID)
+				if err != nil {
+					return errors.Wrapf(err, "markig note dirty '%s'", data.NoteUUID)
+				}
+			case "edit_note":
+				var data actions.EditNoteDataV3
+				err = json.Unmarshal([]byte(dat), &data)
+				if err != nil {
+					return errors.Wrap(err, "unmarshalling existing data")
+				}
+
+				_, err := tx.Exec("UPDATE notes SET dirty = true WHERE uuid = ?", data.NoteUUID)
+				if err != nil {
+					return errors.Wrapf(err, "markig note dirty '%s'", data.NoteUUID)
+				}
+			case "add_book":
+				var data actions.AddBookDataV1
+				err = json.Unmarshal([]byte(dat), &data)
+				if err != nil {
+					return errors.Wrap(err, "unmarshalling existing data")
+				}
+
+				_, err := tx.Exec("UPDATE books SET dirty = true WHERE label = ?", data.BookName)
+				if err != nil {
+					return errors.Wrapf(err, "markig note dirty '%s'", data.BookName)
+				}
+			}
+		}
+
+		return nil
+	},
+}
+
+var lm6 = migration{
 	name: "drop-actions",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
 		_, err := tx.Exec("DROP TABLE actions;")
 		if err != nil {
 			return errors.Wrap(err, "dropping the actions table")
+		}
+
+		return nil
+	},
+}
+
+var lm7 = migration{
+	name: "resolve-conflicts-with-reserved-book-names",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		migrateBook := func(name string) error {
+			var uuid string
+
+			err := tx.QueryRow("SELECT uuid FROM books WHERE label = ?", name).Scan(&uuid)
+			if err == sql.ErrNoRows {
+				// if not found, noop
+				return nil
+			} else if err != nil {
+				return errors.Wrap(err, "finding trash book")
+			}
+
+			for i := 2; ; i++ {
+				candidate := fmt.Sprintf("%s (%d)", name, i)
+
+				var count int
+				err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", candidate).Scan(&count)
+				if err != nil {
+					return errors.Wrap(err, "counting candidate")
+				}
+
+				if count == 0 {
+					_, err := tx.Exec("UPDATE books SET label = ?, dirty = ? WHERE uuid = ?", candidate, true, uuid)
+					if err != nil {
+						return errors.Wrapf(err, "updating book '%s'", name)
+					}
+
+					break
+				}
+			}
+
+			return nil
+		}
+
+		if err := migrateBook("trash"); err != nil {
+			return errors.Wrap(err, "migrating trash book")
+		}
+		if err := migrateBook("conflicts"); err != nil {
+			return errors.Wrap(err, "migrating conflicts book")
 		}
 
 		return nil
@@ -205,44 +322,19 @@ var rm1 = migration{
 			return errors.New("login required")
 		}
 
-		endpoint := fmt.Sprintf("%s/v1/books", ctx.APIEndpoint)
-		req, err := http.NewRequest("GET", endpoint, strings.NewReader(""))
+		resp, err := client.GetBooks(ctx, config.APIKey)
 		if err != nil {
-			return errors.Wrap(err, "constructing http request")
+			return errors.Wrap(err, "getting books from the server")
 		}
-
-		req.Header.Set("Authorization", config.APIKey)
-		req.Header.Set("CLI-Version", ctx.Version)
-
-		hc := http.Client{}
-		res, err := hc.Do(req)
-		if err != nil {
-			return errors.Wrap(err, "making http request")
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return errors.Wrap(err, "reading the response body")
-		}
-
-		resData := []struct {
-			UUID  string `json:"uuid"`
-			Label string `json:"label"`
-		}{}
-		if err = json.Unmarshal(body, &resData); err != nil {
-			return errors.Wrap(err, "unmarshalling the payload")
-		}
-
-		log.Debug("book details from the server: %+v\n", resData)
+		log.Debug("book details from the server: %+v\n", resp)
 
 		UUIDMap := map[string]string{}
-
-		for _, book := range resData {
+		for _, book := range resp {
 			// Build a map from uuid to label
 			UUIDMap[book.Label] = book.UUID
 		}
 
-		for _, book := range resData {
+		for _, book := range resp {
 			// update uuid in the books table
 			log.Debug("Updating book %s\n", book.Label)
 

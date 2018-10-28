@@ -31,7 +31,7 @@ func TestExecute_bump_schema(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", false)
 			defer testutils.TeardownEnv(ctx)
 
 			db := ctx.DB
@@ -86,7 +86,7 @@ func TestRun_nonfresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", false)
 			defer testutils.TeardownEnv(ctx)
 
 			db := ctx.DB
@@ -166,7 +166,7 @@ func TestRun_fresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", false)
 			defer testutils.TeardownEnv(ctx)
 
 			db := ctx.DB
@@ -238,7 +238,7 @@ func TestRun_up_to_date(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", false)
 			defer testutils.TeardownEnv(ctx)
 
 			db := ctx.DB
@@ -291,7 +291,7 @@ func TestRun_up_to_date(t *testing.T) {
 
 func TestLocalMigration1(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -368,7 +368,7 @@ func TestLocalMigration1(t *testing.T) {
 
 func TestLocalMigration2(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -454,7 +454,7 @@ func TestLocalMigration2(t *testing.T) {
 
 func TestLocalMigration3(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -528,7 +528,7 @@ func TestLocalMigration3(t *testing.T) {
 
 func TestLocalMigration4(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -554,20 +554,85 @@ func TestLocalMigration4(t *testing.T) {
 
 	// Test
 	var n1Dirty, b1Dirty bool
+	var n1Deleted, b1Deleted bool
 	var n1USN, b1USN int
-	testutils.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty, usn FROM notes WHERE uuid = ?", n1UUID), &n1Dirty, &n1USN)
-	testutils.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty, usn FROM books WHERE uuid = ?", b1UUID), &b1Dirty, &b1USN)
+	testutils.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty, deleted, usn FROM notes WHERE uuid = ?", n1UUID), &n1Dirty, &n1Deleted, &n1USN)
+	testutils.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty, deleted, usn FROM books WHERE uuid = ?", b1UUID), &b1Dirty, &b1Deleted, &b1USN)
 
 	testutils.AssertEqual(t, n1Dirty, false, "n1 dirty flag should be false by default")
-	testutils.AssertEqual(t, b1Dirty, false, "n1 dirty flag should be false by default")
+	testutils.AssertEqual(t, b1Dirty, false, "b1 dirty flag should be false by default")
+
+	testutils.AssertEqual(t, n1Deleted, false, "n1 deleted flag should be false by default")
+	testutils.AssertEqual(t, b1Deleted, false, "b1 deleted flag should be false by default")
 
 	testutils.AssertEqual(t, n1USN, 0, "n1 usn flag should be 0 by default")
-	testutils.AssertEqual(t, b1USN, 0, "n1 usn flag should be 0 by default")
+	testutils.AssertEqual(t, b1USN, 0, "b1 usn flag should be 0 by default")
 }
 
 func TestLocalMigration5(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-5-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-5-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
+	b2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting js book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "js")
+
+	n1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n1UUID, b1UUID, "n1 content", time.Now().UnixNano())
+	n2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n2UUID, b1UUID, "n2 content", time.Now().UnixNano())
+	n3UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n3UUID, b1UUID, "n3 content", time.Now().UnixNano())
+
+	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
+	testutils.MustExec(t, "inserting a1", db,
+		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", "a1-uuid", 1, "add_book", string(data), 1537829463)
+
+	data = testutils.MustMarshalJSON(t, actions.AddNoteDataV2{NoteUUID: n1UUID, BookName: "css", Content: "n1 content", Public: false})
+	testutils.MustExec(t, "inserting a2", db,
+		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", "a2-uuid", 1, "add_note", string(data), 1537829463)
+
+	updatedContent := "updated content"
+	data = testutils.MustMarshalJSON(t, actions.EditNoteDataV3{NoteUUID: n2UUID, BookName: (*string)(nil), Content: &updatedContent, Public: (*bool)(nil)})
+	testutils.MustExec(t, "inserting a3", db,
+		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", "a3-uuid", 1, "edit_note", string(data), 1537829463)
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm5.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var b1Dirty, b2Dirty, n1Dirty, n2Dirty, n3Dirty bool
+	testutils.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b1UUID), &b1Dirty)
+	testutils.MustScan(t, "scanning the newly added dirty flag of b2", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b2UUID), &b2Dirty)
+	testutils.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n1UUID), &n1Dirty)
+	testutils.MustScan(t, "scanning the newly added dirty flag of n2", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n2UUID), &n2Dirty)
+	testutils.MustScan(t, "scanning the newly added dirty flag of n3", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n3UUID), &n3Dirty)
+
+	testutils.AssertEqual(t, b1Dirty, false, "b1 dirty flag should be false by default")
+	testutils.AssertEqual(t, b2Dirty, true, "b2 dirty flag should be false by default")
+	testutils.AssertEqual(t, n1Dirty, true, "n1 dirty flag should be false by default")
+	testutils.AssertEqual(t, n2Dirty, true, "n2 dirty flag should be false by default")
+	testutils.AssertEqual(t, n3Dirty, false, "n3 dirty flag should be false by default")
+}
+
+func TestLocalMigration6(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-5-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -597,9 +662,110 @@ func TestLocalMigration5(t *testing.T) {
 	testutils.AssertEqual(t, count, 0, "actions table should have been deleted")
 }
 
+func TestLocalMigration7_trash(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-7-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting trash book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "trash")
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm7.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var b1Label string
+	var b1Dirty bool
+	testutils.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	testutils.AssertEqual(t, b1Label, "trash (2)", "b1 label was not migrated")
+	testutils.AssertEqual(t, b1Dirty, true, "b1 was not marked dirty")
+}
+
+func TestLocalMigration7_conflicts(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-7-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm7.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var b1Label string
+	var b1Dirty bool
+	testutils.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	testutils.AssertEqual(t, b1Label, "conflicts (2)", "b1 label was not migrated")
+	testutils.AssertEqual(t, b1Dirty, true, "b1 was not marked dirty")
+}
+
+func TestLocalMigration7_conflicts_dup(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-7-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
+	b2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "conflicts (2)")
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm7.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var b1Label, b2Label string
+	var b1Dirty, b2Dirty bool
+	testutils.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	testutils.MustScan(t, "scanning b2 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	testutils.AssertEqual(t, b1Label, "conflicts (3)", "b1 label was not migrated")
+	testutils.AssertEqual(t, b2Label, "conflicts (2)", "b1 label was not migrated")
+	testutils.AssertEqual(t, b1Dirty, true, "b1 was not marked dirty")
+	testutils.AssertEqual(t, b2Dirty, false, "b2 should not have been marked dirty")
+}
+
 func TestRemoteMigration1(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/remote-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/remote-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	JSBookUUID := "existing-js-book-uuid"

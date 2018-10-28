@@ -34,7 +34,7 @@ func Prepare(ctx infra.DnoteCtx) error {
 	if err := infra.InitDB(ctx); err != nil {
 		return errors.Wrap(err, "initializing database")
 	}
-	if err := infra.InitSystem(ctx); err != nil {
+	if err := core.InitSystem(ctx); err != nil {
 		return errors.Wrap(err, "initializing system data")
 	}
 

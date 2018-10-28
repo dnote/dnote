@@ -91,9 +91,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if err != nil {
 			return errors.Wrap(err, "beginning a transaction")
 		}
+
 		_, err = tx.Exec(`UPDATE notes
-			SET content = ?, edited_on = ?
-			WHERE id = ? AND book_uuid = ?`, newContent, ts, noteID, bookUUID)
+			SET content = ?, edited_on = ?, dirty = ?
+			WHERE id = ? AND book_uuid = ?`, newContent, ts, true, noteID, bookUUID)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "updating the note")

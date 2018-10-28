@@ -19,7 +19,7 @@ func TestMigrateToV1(t *testing.T) {
 
 	t.Run("yaml exists", func(t *testing.T) {
 		// set up
-		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
@@ -41,7 +41,7 @@ func TestMigrateToV1(t *testing.T) {
 
 	t.Run("yaml does not exist", func(t *testing.T) {
 		// set up
-		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
@@ -62,7 +62,7 @@ func TestMigrateToV1(t *testing.T) {
 }
 
 func TestMigrateToV2(t *testing.T) {
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.CopyFixture(ctx, "./fixtures/legacy-2-pre-dnote.json", "dnote")
@@ -96,7 +96,7 @@ func TestMigrateToV2(t *testing.T) {
 
 func TestMigrateToV3(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.CopyFixture(ctx, "./fixtures/legacy-3-pre-dnote.json", "dnote")
@@ -130,7 +130,7 @@ func TestMigrateToV3(t *testing.T) {
 
 func TestMigrateToV4(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 	defer os.Setenv("EDITOR", "")
 
@@ -155,7 +155,7 @@ func TestMigrateToV4(t *testing.T) {
 
 func TestMigrateToV5(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.CopyFixture(ctx, "./fixtures/legacy-5-pre-actions.json", "actions")
@@ -252,7 +252,7 @@ func TestMigrateToV5(t *testing.T) {
 
 func TestMigrateToV6(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.CopyFixture(ctx, "./fixtures/legacy-6-pre-dnote.json", "dnote")
@@ -282,7 +282,7 @@ func TestMigrateToV6(t *testing.T) {
 
 func TestMigrateToV7(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.CopyFixture(ctx, "./fixtures/legacy-7-pre-actions.json", "actions")
@@ -316,7 +316,7 @@ func TestMigrateToV7(t *testing.T) {
 }
 
 func TestMigrateToV8(t *testing.T) {
-	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	// set up
