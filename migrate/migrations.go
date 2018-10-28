@@ -182,6 +182,18 @@ var lm4 = migration{
 	},
 }
 
+var lm5 = migration{
+	name: "drop-actions",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		_, err := tx.Exec("DROP TABLE actions;")
+		if err != nil {
+			return errors.Wrap(err, "dropping the actions table")
+		}
+
+		return nil
+	},
+}
+
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
@@ -229,12 +241,6 @@ var rm1 = migration{
 			// Build a map from uuid to label
 			UUIDMap[book.Label] = book.UUID
 		}
-
-		rows, err := tx.Query("SELECT uuid, schema, type, data FROM actions")
-		if err != nil {
-			return errors.Wrap(err, "querying actions")
-		}
-		defer rows.Close()
 
 		for _, book := range resData {
 			// update uuid in the books table

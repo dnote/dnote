@@ -291,7 +291,7 @@ func TestRun_up_to_date(t *testing.T) {
 
 func TestLocalMigration1(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -368,7 +368,7 @@ func TestLocalMigration1(t *testing.T) {
 
 func TestLocalMigration2(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -454,7 +454,7 @@ func TestLocalMigration2(t *testing.T) {
 
 func TestLocalMigration3(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -528,7 +528,7 @@ func TestLocalMigration3(t *testing.T) {
 
 func TestLocalMigration4(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "./fixtures/4-pre-schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -565,9 +565,41 @@ func TestLocalMigration4(t *testing.T) {
 	testutils.AssertEqual(t, b1USN, 0, "n1 usn flag should be 0 by default")
 }
 
+func TestLocalMigration5(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-5-pre-schema.sql")
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
+	a1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting action", db,
+		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 1, "add_book", string(data), 1537829463)
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm5.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var count int
+	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name = ?;", "actions").Scan(&count)
+	testutils.AssertEqual(t, count, 0, "actions table should have been deleted")
+}
+
 func TestRemoteMigration1(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/remote-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	JSBookUUID := "existing-js-book-uuid"

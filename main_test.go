@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 
 func TestInit(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("./tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	// Execute
@@ -59,7 +59,7 @@ func TestInit(t *testing.T) {
 
 func TestAddNote_NewBook_ContentFlag(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	// Execute
@@ -88,7 +88,7 @@ func TestAddNote_NewBook_ContentFlag(t *testing.T) {
 
 func TestAddNote_ExistingBook_ContentFlag(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.Setup3(t, ctx)
@@ -121,7 +121,7 @@ func TestAddNote_ExistingBook_ContentFlag(t *testing.T) {
 
 func TestEditNote_ContentFlag(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.Setup4(t, ctx)
@@ -154,7 +154,7 @@ func TestEditNote_ContentFlag(t *testing.T) {
 
 func TestRemoveNote(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.Setup2(t, ctx)
@@ -196,7 +196,7 @@ func TestRemoveNote(t *testing.T) {
 
 func TestRemoveBook(t *testing.T) {
 	// Set up
-	ctx := testutils.InitEnv("../tmp", "./testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./migrate/fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	testutils.Setup2(t, ctx)

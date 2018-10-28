@@ -160,6 +160,18 @@ func InitDB(ctx DnoteCtx) error {
 		return errors.Wrap(err, "creating system table")
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS actions
+		(
+			uuid text PRIMARY KEY,
+			schema integer NOT NULL,
+			type text NOT NULL,
+			data text NOT NULL,
+			timestamp integer NOT NULL
+		)`)
+	if err != nil {
+		return errors.Wrap(err, "creating actions table")
+	}
+
 	_, err = db.Exec(`
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_books_label ON books(label);
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_notes_uuid ON notes(uuid);

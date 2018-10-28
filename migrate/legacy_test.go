@@ -316,7 +316,7 @@ func TestMigrateToV7(t *testing.T) {
 }
 
 func TestMigrateToV8(t *testing.T) {
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv("../tmp", "./fixtures/local-1-pre-schema.sql")
 	defer testutils.TeardownEnv(ctx)
 
 	// set up
