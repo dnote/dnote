@@ -612,6 +612,8 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 			return isBehind, errors.Wrap(err, "scanning a syncable book")
 		}
 
+		log.Debug("sending book %s\n", book.UUID)
+
 		var respUSN int
 
 		// if new, create it in the server, or else, update.
@@ -673,6 +675,8 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 			return isBehind, errors.Wrap(err, "getting last max usn")
 		}
 
+		log.Debug("sent book %s. response USN %d. last max usn: %d\n", book.UUID, respUSN, lastMaxUSN)
+
 		if respUSN == lastMaxUSN+1 {
 			err = updateLastMaxUSN(tx, lastMaxUSN+1)
 			if err != nil {
@@ -701,6 +705,8 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Content, &note.Public, &note.Deleted, &note.USN); err != nil {
 			return isBehind, errors.Wrap(err, "scanning a syncable note")
 		}
+
+		log.Debug("sending note %s\n", note.UUID)
 
 		var respUSN int
 
@@ -736,10 +742,6 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 					return isBehind, errors.Wrap(err, "deleting a note")
 				}
 
-				// TODO: server-side, DELETE endpoint should not return error in case note does not exist
-				// rather rpely with 202 or something and handle here accordingly. reason is if the program
-				// fails after sending DELETE http call, the note will not be expunged locally and cli will try to
-				// delete again
 				err = note.Expunge(tx)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "expunging a note locally")
@@ -768,6 +770,8 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 			return isBehind, errors.Wrap(err, "getting last max usn")
 		}
 
+		log.Debug("sent note %s. response USN %d. last max usn: %d\n", note.UUID, respUSN, lastMaxUSN)
+
 		if respUSN == lastMaxUSN+1 {
 			err = updateLastMaxUSN(tx, lastMaxUSN+1)
 			if err != nil {
@@ -787,17 +791,19 @@ func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 	log.Infof("sending changes (total %d).", delta)
 
-	isBehind, err := sendBooks(ctx, tx, apiKey)
+	behind1, err := sendBooks(ctx, tx, apiKey)
 	if err != nil {
-		return isBehind, errors.Wrap(err, "sending books")
+		return behind1, errors.Wrap(err, "sending books")
 	}
 
-	isBehind, err = sendNotes(ctx, tx, apiKey)
+	behind2, err := sendNotes(ctx, tx, apiKey)
 	if err != nil {
-		return isBehind, errors.Wrap(err, "sending notes")
+		return behind2, errors.Wrap(err, "sending notes")
 	}
 
 	fmt.Println(" done.")
+
+	isBehind := behind1 || behind2
 
 	return isBehind, nil
 }
