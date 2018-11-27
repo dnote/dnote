@@ -123,7 +123,6 @@ type RespBook struct {
 // CreateBookPayload is a payload for creating a book
 type CreateBookPayload struct {
 	Name string `json:"name"`
-	UUID string `json:"uuid"`
 }
 
 // CreateBookResp is the response from create book api
@@ -149,10 +148,9 @@ func checkRespErr(res *http.Response) (bool, string, error) {
 }
 
 // CreateBook creates a new book in the server
-func CreateBook(ctx infra.DnoteCtx, apiKey, label, uuid string) (CreateBookResp, error) {
+func CreateBook(ctx infra.DnoteCtx, apiKey, label string) (CreateBookResp, error) {
 	payload := CreateBookPayload{
 		Name: label,
-		UUID: uuid,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -251,8 +249,8 @@ func DeleteBook(ctx infra.DnoteCtx, apiKey, uuid string) (DeleteBookResp, error)
 	return resp, nil
 }
 
-type createNotePayload struct {
-	UUID     string `json:"uuid"`
+// CreateNotePayload is a payload for creating a note
+type CreateNotePayload struct {
 	BookUUID string `json:"book_uuid"`
 	Content  string `json:"content"`
 }
@@ -285,9 +283,8 @@ type RespNote struct {
 }
 
 // CreateNote creates a note in the server
-func CreateNote(ctx infra.DnoteCtx, apiKey, uuid, bookUUID, content string) (CreateNoteResp, error) {
-	payload := createNotePayload{
-		UUID:     uuid,
+func CreateNote(ctx infra.DnoteCtx, apiKey, bookUUID, content string) (CreateNoteResp, error) {
+	payload := CreateNotePayload{
 		BookUUID: bookUUID,
 		Content:  content,
 	}

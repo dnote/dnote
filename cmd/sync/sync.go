@@ -626,9 +626,14 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				continue
 			} else {
-				resp, err := client.CreateBook(ctx, apiKey, book.Label, book.UUID)
+				resp, err := client.CreateBook(ctx, apiKey, book.Label)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "creating a book")
+				}
+
+				_, err = tx.Exec("UPDATE notes SET book_uuid = ? WHERE book_uuid = ?", resp.Book.UUID, book.UUID)
+				if err != nil {
+					return isBehind, errors.Wrap(err, "updating book_uuids of notes")
 				}
 
 				book.Dirty = false
@@ -636,6 +641,11 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 				err = book.Update(tx)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "marking book dirty")
+				}
+
+				err = book.UpdateUUID(tx, resp.Book.UUID)
+				if err != nil {
+					return isBehind, errors.Wrap(err, "updating book uuid")
 				}
 
 				respUSN = resp.Book.USN
@@ -721,7 +731,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				continue
 			} else {
-				resp, err := client.CreateNote(ctx, apiKey, note.UUID, note.BookUUID, note.Content)
+				resp, err := client.CreateNote(ctx, apiKey, note.BookUUID, note.Content)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "creating a note")
 				}
@@ -731,6 +741,11 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 				err = note.Update(tx)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "marking note dirty")
+				}
+
+				err = note.UpdateUUID(tx, resp.Result.UUID)
+				if err != nil {
+					return isBehind, errors.Wrap(err, "updating note uuid")
 				}
 
 				respUSN = resp.Result.USN

@@ -68,6 +68,19 @@ func (n Note) Update(tx *sql.Tx) error {
 	return nil
 }
 
+// UpdateUUID updates the uuid of a book
+func (n *Note) UpdateUUID(tx *sql.Tx, newUUID string) error {
+	_, err := tx.Exec("UPDATE notes SET uuid = ? WHERE uuid = ?", newUUID, n.UUID)
+
+	if err != nil {
+		return errors.Wrapf(err, "updating note uuid from '%s' to '%s'", n.UUID, newUUID)
+	}
+
+	n.UUID = newUUID
+
+	return nil
+}
+
 // Expunge hard-deletes the note from the database
 func (n Note) Expunge(tx *sql.Tx) error {
 	_, err := tx.Exec("DELETE FROM notes WHERE uuid = ?", n.UUID)
@@ -109,6 +122,19 @@ func (b Book) Update(tx *sql.Tx) error {
 	if err != nil {
 		return errors.Wrapf(err, "updating the book with uuid %s", b.UUID)
 	}
+
+	return nil
+}
+
+// UpdateUUID updates the uuid of a book
+func (b *Book) UpdateUUID(tx *sql.Tx, newUUID string) error {
+	_, err := tx.Exec("UPDATE books SET uuid = ? WHERE uuid = ?", newUUID, b.UUID)
+
+	if err != nil {
+		return errors.Wrapf(err, "updating book uuid from '%s' to '%s'", b.UUID, newUUID)
+	}
+
+	b.UUID = newUUID
 
 	return nil
 }

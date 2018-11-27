@@ -1807,7 +1807,8 @@ func TestSaveServerState(t *testing.T) {
 }
 
 // TestSendBooks tests that books are put to correct 'buckets' by running a test server and recording the
-// uuid from the incoming data.
+// uuid from the incoming data. It also tests that the uuid of the created books and book_uuids of their notes
+// are updated accordingly based on the server response.
 func TestSendBooks(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
@@ -1831,8 +1832,18 @@ func TestSendBooks(t *testing.T) {
 	testutils.MustExec(t, "inserting b7", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b7-uuid", "b7-label", 11, false, true)
 	testutils.MustExec(t, "inserting b8", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b8-uuid", "b8-label", 18, false, true)
 
-	var createdUUIDs []string
-	var updatedUUIDs []string
+	// some random notes
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 10, "n1 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b5-uuid", 10, "n2 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b6-uuid", 10, "n3 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", "b7-uuid", 10, "n4 content", 1541108743, false, false)
+	// notes that belong to the created book. Their book_uuid should be updated.
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", "b3-uuid", 10, "n5 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", "b3-uuid", 10, "n6 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", "b4-uuid", 10, "n7 content", 1541108743, false, false)
+
+	var createdLabels []string
+	var updatesUUIDs []string
 	var deletedUUIDs []string
 
 	// fire up a test server
@@ -1846,10 +1857,19 @@ func TestSendBooks(t *testing.T) {
 				return
 			}
 
-			createdUUIDs = append(createdUUIDs, payload.UUID)
+			createdLabels = append(createdLabels, payload.Name)
+
+			resp := client.CreateBookResp{
+				Book: client.RespBook{
+					UUID: fmt.Sprintf("server-%s-uuid", payload.Name),
+				},
+			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("{}"))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 
@@ -1857,7 +1877,7 @@ func TestSendBooks(t *testing.T) {
 		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
 			if r.Method == "PATCH" {
 				uuid := p[3]
-				updatedUUIDs = append(updatedUUIDs, uuid)
+				updatesUUIDs = append(updatesUUIDs, uuid)
 
 				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
@@ -1891,32 +1911,55 @@ func TestSendBooks(t *testing.T) {
 
 	tx.Commit()
 
-	sort.SliceStable(createdUUIDs, func(i, j int) bool {
-		return strings.Compare(createdUUIDs[i], createdUUIDs[j]) < 0
+	sort.SliceStable(createdLabels, func(i, j int) bool {
+		return strings.Compare(createdLabels[i], createdLabels[j]) < 0
 	})
 
-	testutils.AssertDeepEqual(t, createdUUIDs, []string{"b3-uuid", "b4-uuid"}, "createdUUIDs mismatch")
-	testutils.AssertDeepEqual(t, updatedUUIDs, []string{"b7-uuid", "b8-uuid"}, "updatedUUIDs mismatch")
+	testutils.AssertDeepEqual(t, createdLabels, []string{"b3-label", "b4-label"}, "createdLabels mismatch")
+	testutils.AssertDeepEqual(t, updatesUUIDs, []string{"b7-uuid", "b8-uuid"}, "updatesUUIDs mismatch")
 	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"b6-uuid"}, "deletedUUIDs mismatch")
 
 	var b1, b2, b3, b4, b7, b8 core.Book
-	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b1-uuid"), &b1.Dirty)
-	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b2-uuid"), &b2.Dirty)
-	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b3-uuid"), &b3.Dirty)
-	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b4-uuid"), &b4.Dirty)
-	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b7-uuid"), &b7.Dirty)
-	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", "b8-uuid"), &b8.Dirty)
+	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b1-label"), &b1.UUID, &b1.Dirty)
+	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b2-label"), &b2.UUID, &b2.Dirty)
+	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b3-label"), &b3.UUID, &b3.Dirty)
+	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b4-label"), &b4.UUID, &b4.Dirty)
+	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b7-label"), &b7.UUID, &b7.Dirty)
+	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b8-label"), &b8.UUID, &b8.Dirty)
 
 	var bookCount int
 	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	testutils.AssertEqualf(t, bookCount, 6, "book count mismatch")
 
-	testutils.AssertEqualf(t, b1.Dirty, false, "b1 dirty mismatch")
-	testutils.AssertEqualf(t, b2.Dirty, false, "b2 dirty mismatch")
-	testutils.AssertEqualf(t, b3.Dirty, false, "b3 dirty mismatch")
-	testutils.AssertEqualf(t, b4.Dirty, false, "b4 dirty mismatch")
-	testutils.AssertEqualf(t, b7.Dirty, false, "b7 dirty mismatch")
-	testutils.AssertEqualf(t, b8.Dirty, false, "b8 dirty mismatch")
+	testutils.AssertEqual(t, b1.Dirty, false, "b1 Dirty mismatch")
+	testutils.AssertEqual(t, b2.Dirty, false, "b2 Dirty mismatch")
+	testutils.AssertEqual(t, b3.Dirty, false, "b3 Dirty mismatch")
+	testutils.AssertEqual(t, b4.Dirty, false, "b4 Dirty mismatch")
+	testutils.AssertEqual(t, b7.Dirty, false, "b7 Dirty mismatch")
+	testutils.AssertEqual(t, b8.Dirty, false, "b8 Dirty mismatch")
+	testutils.AssertEqual(t, b1.UUID, "b1-uuid", "b1 UUID mismatch")
+	testutils.AssertEqual(t, b2.UUID, "b2-uuid", "b2 UUID mismatch")
+	// uuids of created books should have been updated
+	testutils.AssertEqual(t, b3.UUID, "server-b3-label-uuid", "b3 UUID mismatch")
+	testutils.AssertEqual(t, b4.UUID, "server-b4-label-uuid", "b4 UUID mismatch")
+	testutils.AssertEqual(t, b7.UUID, "b7-uuid", "b7 UUID mismatch")
+	testutils.AssertEqual(t, b8.UUID, "b8-uuid", "b8 UUID mismatch")
+
+	var n1, n2, n3, n4, n5, n6, n7 core.Note
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n1 content"), &n1.BookUUID)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n2 content"), &n2.BookUUID)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n3 content"), &n3.BookUUID)
+	testutils.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n4 content"), &n4.BookUUID)
+	testutils.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n5 content"), &n5.BookUUID)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n6 content"), &n6.BookUUID)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n7 content"), &n7.BookUUID)
+	testutils.AssertEqual(t, n1.BookUUID, "b1-uuid", "n1 bookUUID mismatch")
+	testutils.AssertEqual(t, n2.BookUUID, "b5-uuid", "n2 bookUUID mismatch")
+	testutils.AssertEqual(t, n3.BookUUID, "b6-uuid", "n3 bookUUID mismatch")
+	testutils.AssertEqual(t, n4.BookUUID, "b7-uuid", "n4 bookUUID mismatch")
+	testutils.AssertEqual(t, n5.BookUUID, "server-b3-label-uuid", "n5 bookUUID mismatch")
+	testutils.AssertEqual(t, n6.BookUUID, "server-b3-label-uuid", "n6 bookUUID mismatch")
+	testutils.AssertEqual(t, n7.BookUUID, "server-b4-label-uuid", "n7 bookUUID mismatch")
 }
 
 func TestSendBooks_isBehind(t *testing.T) {
@@ -2136,34 +2179,34 @@ func TestSendNotes(t *testing.T) {
 	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 1, false, false)
 
 	// should be ignored
-	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1-content", 1541108743, false, false)
 	// should be created
-	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2-content", 1541108743, false, true)
 	// should be updated
-	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3-content", 1541108743, false, true)
 	// should be only expunged locally without syncing to server
-	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4 content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4-content", 1541108743, true, true)
 	// should be deleted
-	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5 content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5-content", 1541108743, true, true)
 	// should be created
-	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6-content", 1541108743, false, true)
 	// should be ignored
-	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7-content", 1541108743, false, false)
 	// should be updated
-	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8-content", 1541108743, false, true)
 	// should be deleted
-	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9 content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9-content", 1541108743, true, true)
 	// should be created
-	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10-content", 1541108743, false, true)
 
-	var createdUUIDs []string
+	var createdContents []string
 	var updatedUUIDs []string
 	var deletedUUIDs []string
 
 	// fire up a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
-			var payload client.CreateBookPayload
+			var payload client.CreateNotePayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
@@ -2171,10 +2214,19 @@ func TestSendNotes(t *testing.T) {
 				return
 			}
 
-			createdUUIDs = append(createdUUIDs, payload.UUID)
+			createdContents = append(createdContents, payload.Content)
+
+			resp := client.CreateNoteResp{
+				Result: client.RespNote{
+					UUID: fmt.Sprintf("server-%s-uuid", payload.Content),
+				},
+			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte("{}"))
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 
@@ -2217,11 +2269,11 @@ func TestSendNotes(t *testing.T) {
 	tx.Commit()
 
 	// test
-	sort.SliceStable(createdUUIDs, func(i, j int) bool {
-		return strings.Compare(createdUUIDs[i], createdUUIDs[j]) < 0
+	sort.SliceStable(createdContents, func(i, j int) bool {
+		return strings.Compare(createdContents[i], createdContents[j]) < 0
 	})
 
-	testutils.AssertDeepEqual(t, createdUUIDs, []string{"n10-uuid", "n2-uuid", "n6-uuid"}, "createdUUIDs mismatch")
+	testutils.AssertDeepEqual(t, createdContents, []string{"n10-content", "n2-content", "n6-content"}, "createdContents mismatch")
 	testutils.AssertDeepEqual(t, updatedUUIDs, []string{"n3-uuid", "n8-uuid"}, "updatedUUIDs mismatch")
 	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"n5-uuid", "n9-uuid"}, "deletedUUIDs mismatch")
 
@@ -2230,23 +2282,32 @@ func TestSendNotes(t *testing.T) {
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
 	var n1, n2, n3, n6, n7, n8, n10 core.Note
-	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n1-uuid"), &n1.Dirty)
-	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n2-uuid"), &n2.Dirty)
-	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n3-uuid"), &n3.Dirty)
-	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n6-uuid"), &n6.Dirty)
-	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n7-uuid"), &n7.Dirty)
-	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n8-uuid"), &n8.Dirty)
-	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n10-uuid"), &n10.Dirty)
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n1-content"), &n1.UUID, &n1.Dirty)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n2-content"), &n2.UUID, &n2.Dirty)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n3-content"), &n3.UUID, &n3.Dirty)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n6-content"), &n6.UUID, &n6.Dirty)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n7-content"), &n7.UUID, &n7.Dirty)
+	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n8-content"), &n8.UUID, &n8.Dirty)
+	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n10-content"), &n10.UUID, &n10.Dirty)
 
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
-	testutils.AssertEqualf(t, n1.Dirty, false, "n1 dirty mismatch")
-	testutils.AssertEqualf(t, n2.Dirty, false, "n2 dirty mismatch")
-	testutils.AssertEqualf(t, n3.Dirty, false, "n3 dirty mismatch")
-	testutils.AssertEqualf(t, n6.Dirty, false, "n6 dirty mismatch")
-	testutils.AssertEqualf(t, n7.Dirty, false, "n7 dirty mismatch")
-	testutils.AssertEqualf(t, n8.Dirty, false, "n8 dirty mismatch")
-	testutils.AssertEqualf(t, n10.Dirty, false, "n10 dirty mismatch")
+	testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
+	testutils.AssertEqual(t, n2.Dirty, false, "n2 Dirty mismatch")
+	testutils.AssertEqual(t, n3.Dirty, false, "n3 Dirty mismatch")
+	testutils.AssertEqual(t, n6.Dirty, false, "n6 Dirty mismatch")
+	testutils.AssertEqual(t, n7.Dirty, false, "n7 Dirty mismatch")
+	testutils.AssertEqual(t, n8.Dirty, false, "n8 Dirty mismatch")
+	testutils.AssertEqual(t, n10.Dirty, false, "n10 Dirty mismatch")
+
+	// UUIDs of created notes should have been updated with those from the server response
+	testutils.AssertEqual(t, n1.UUID, "n1-uuid", "n1 UUID mismatch")
+	testutils.AssertEqual(t, n2.UUID, "server-n2-content-uuid", "n2 UUID mismatch")
+	testutils.AssertEqual(t, n3.UUID, "n3-uuid", "n3 UUID mismatch")
+	testutils.AssertEqual(t, n6.UUID, "server-n6-content-uuid", "n6 UUID mismatch")
+	testutils.AssertEqual(t, n7.UUID, "n7-uuid", "n7 UUID mismatch")
+	testutils.AssertEqual(t, n8.UUID, "n8-uuid", "n8 UUID mismatch")
+	testutils.AssertEqual(t, n10.UUID, "server-n10-content-uuid", "n10 UUID mismatch")
 }
 
 func TestSendNotes_isBehind(t *testing.T) {

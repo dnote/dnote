@@ -329,6 +329,75 @@ func TestNoteUpdate(t *testing.T) {
 	}
 }
 
+func TestNoteUpdateUUID(t *testing.T) {
+	testCases := []struct {
+		newUUID string
+	}{
+		{
+			newUUID: "n1-new-uuid",
+		},
+		{
+			newUUID: "n2-new-uuid",
+		},
+	}
+
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
+			// Setup
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
+			defer testutils.TeardownEnv(ctx)
+
+			n1 := Note{
+				UUID:     "n1-uuid",
+				BookUUID: "b1-uuid",
+				AddedOn:  1542058874,
+				Content:  "n1-content",
+				USN:      1,
+				Deleted:  true,
+				Dirty:    false,
+			}
+			n2 := Note{
+				UUID:     "n2-uuid",
+				BookUUID: "b1-uuid",
+				AddedOn:  1542058874,
+				Content:  "n2-content",
+				USN:      1,
+				Deleted:  true,
+				Dirty:    false,
+			}
+
+			db := ctx.DB
+			testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, content, added_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.Content, n1.AddedOn, n1.USN, n1.Deleted, n1.Dirty)
+			testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, content, added_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.Content, n2.AddedOn, n2.USN, n2.Deleted, n2.Dirty)
+
+			// execute
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			}
+			if err := n1.UpdateUUID(tx, tc.newUUID); err != nil {
+				tx.Rollback()
+				t.Fatalf(errors.Wrap(err, "executing").Error())
+			}
+
+			tx.Commit()
+
+			// test
+			var n1Record, n2Record Note
+			testutils.MustScan(t, "getting n1",
+				db.QueryRow("SELECT uuid, content, usn, deleted, dirty FROM notes WHERE content = ?", "n1-content"),
+				&n1Record.UUID, &n1Record.Content, &n1Record.USN, &n1Record.Deleted, &n1Record.Dirty)
+			testutils.MustScan(t, "getting n2",
+				db.QueryRow("SELECT uuid, content, usn, deleted, dirty FROM notes WHERE content = ?", "n2-content"),
+				&n2Record.UUID, &n2Record.Content, &n2Record.USN, &n2Record.Deleted, &n2Record.Dirty)
+
+			testutils.AssertEqual(t, n1.UUID, tc.newUUID, "n1 original reference uuid mismatch")
+			testutils.AssertEqual(t, n1Record.UUID, tc.newUUID, "n1 uuid mismatch")
+			testutils.AssertEqual(t, n2Record.UUID, n2.UUID, "n2 uuid mismatch")
+		})
+	}
+}
+
 func TestNoteExpunge(t *testing.T) {
 	// Setup
 	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
@@ -601,6 +670,72 @@ func TestBookUpdate(t *testing.T) {
 			testutils.AssertEqual(t, b2Record.Deleted, b2.Deleted, fmt.Sprintf("b2 deleted mismatch for test case %d", idx))
 			testutils.AssertEqual(t, b2Record.Dirty, b2.Dirty, fmt.Sprintf("b2 dirty mismatch for test case %d", idx))
 		}()
+	}
+}
+
+func TestBookUpdateUUID(t *testing.T) {
+	testCases := []struct {
+		newUUID string
+	}{
+		{
+			newUUID: "b1-new-uuid",
+		},
+		{
+			newUUID: "b2-new-uuid",
+		},
+	}
+
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
+
+			// Setup
+			ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
+			defer testutils.TeardownEnv(ctx)
+
+			b1 := Book{
+				UUID:    "b1-uuid",
+				Label:   "b1-label",
+				USN:     1,
+				Deleted: true,
+				Dirty:   false,
+			}
+			b2 := Book{
+				UUID:    "b2-uuid",
+				Label:   "b2-label",
+				USN:     1,
+				Deleted: true,
+				Dirty:   false,
+			}
+
+			db := ctx.DB
+			testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1.UUID, b1.Label, b1.USN, b1.Deleted, b1.Dirty)
+			testutils.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2.UUID, b2.Label, b2.USN, b2.Deleted, b2.Dirty)
+
+			// execute
+			tx, err := db.Begin()
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			}
+			if err := b1.UpdateUUID(tx, tc.newUUID); err != nil {
+				tx.Rollback()
+				t.Fatalf(errors.Wrap(err, "executing").Error())
+			}
+
+			tx.Commit()
+
+			// test
+			var b1Record, b2Record Book
+			testutils.MustScan(t, "getting b1",
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b1-label"),
+				&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Deleted, &b1Record.Dirty)
+			testutils.MustScan(t, "getting b2",
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b2-label"),
+				&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Deleted, &b2Record.Dirty)
+
+			testutils.AssertEqual(t, b1.UUID, tc.newUUID, "b1 original reference uuid mismatch")
+			testutils.AssertEqual(t, b1Record.UUID, tc.newUUID, "b1 uuid mismatch")
+			testutils.AssertEqual(t, b2Record.UUID, b2.UUID, "b2 uuid mismatch")
+		})
 	}
 }
 
