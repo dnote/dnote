@@ -19,7 +19,7 @@ func TestMigrateToV1(t *testing.T) {
 
 	t.Run("yaml exists", func(t *testing.T) {
 		// set up
-		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
@@ -41,7 +41,7 @@ func TestMigrateToV1(t *testing.T) {
 
 	t.Run("yaml does not exist", func(t *testing.T) {
 		// set up
-		ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+		ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 		defer testutils.TeardownEnv(ctx)
 
 		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
@@ -62,10 +62,10 @@ func TestMigrateToV1(t *testing.T) {
 }
 
 func TestMigrateToV2(t *testing.T) {
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.CopyFixture(ctx, "./fixtures/2-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-2-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV2(ctx); err != nil {
@@ -96,10 +96,10 @@ func TestMigrateToV2(t *testing.T) {
 
 func TestMigrateToV3(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.CopyFixture(ctx, "./fixtures/3-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-3-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV3(ctx); err != nil {
@@ -130,11 +130,11 @@ func TestMigrateToV3(t *testing.T) {
 
 func TestMigrateToV4(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 	defer os.Setenv("EDITOR", "")
 
-	testutils.CopyFixture(ctx, "./fixtures/4-pre-dnoterc.yaml", "dnoterc")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-4-pre-dnoterc.yaml", "dnoterc")
 
 	// execute
 	os.Setenv("EDITOR", "vim")
@@ -155,10 +155,10 @@ func TestMigrateToV4(t *testing.T) {
 
 func TestMigrateToV5(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.CopyFixture(ctx, "./fixtures/5-pre-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-5-pre-actions.json", "actions")
 
 	// execute
 	if err := migrateToV5(ctx); err != nil {
@@ -167,7 +167,7 @@ func TestMigrateToV5(t *testing.T) {
 
 	// test
 	var oldActions []migrateToV5PreAction
-	testutils.ReadJSON("./fixtures/5-pre-actions.json", &oldActions)
+	testutils.ReadJSON("./fixtures/legacy-5-pre-actions.json", &oldActions)
 
 	b := testutils.ReadFile(ctx, "actions")
 	var migratedActions []migrateToV5PostAction
@@ -252,10 +252,10 @@ func TestMigrateToV5(t *testing.T) {
 
 func TestMigrateToV6(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.CopyFixture(ctx, "./fixtures/6-pre-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-6-pre-dnote.json", "dnote")
 
 	// execute
 	if err := migrateToV6(ctx); err != nil {
@@ -269,7 +269,7 @@ func TestMigrateToV6(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
 	}
 
-	b = testutils.ReadFileAbs("./fixtures/6-post-dnote.json")
+	b = testutils.ReadFileAbs("./fixtures/legacy-6-post-dnote.json")
 	var expected migrateToV6PostDnote
 	if err := json.Unmarshal(b, &expected); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
@@ -282,10 +282,10 @@ func TestMigrateToV6(t *testing.T) {
 
 func TestMigrateToV7(t *testing.T) {
 	// set up
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
 
-	testutils.CopyFixture(ctx, "./fixtures/7-pre-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-7-pre-actions.json", "actions")
 
 	// execute
 	if err := migrateToV7(ctx); err != nil {
@@ -299,7 +299,7 @@ func TestMigrateToV7(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "unmarshalling the result").Error())
 	}
 
-	b2 := testutils.ReadFileAbs("./fixtures/7-post-actions.json")
+	b2 := testutils.ReadFileAbs("./fixtures/legacy-7-post-actions.json")
 	var expected []migrateToV7Action
 	if err := json.Unmarshal(b, &expected); err != nil {
 		t.Fatal(errors.Wrap(err, "unmarshalling the result into Dnote").Error())
@@ -316,15 +316,15 @@ func TestMigrateToV7(t *testing.T) {
 }
 
 func TestMigrateToV8(t *testing.T) {
-	ctx := testutils.InitEnv("../tmp", "../testutils/fixtures/schema.sql")
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-1-pre-schema.sql", false)
 	defer testutils.TeardownEnv(ctx)
 
 	// set up
-	testutils.CopyFixture(ctx, "./fixtures/8-actions.json", "actions")
-	testutils.CopyFixture(ctx, "./fixtures/8-dnote.json", "dnote")
-	testutils.CopyFixture(ctx, "./fixtures/8-dnoterc.yaml", "dnoterc")
-	testutils.CopyFixture(ctx, "./fixtures/8-schema.yaml", "schema")
-	testutils.CopyFixture(ctx, "./fixtures/8-timestamps.yaml", "timestamps")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-8-actions.json", "actions")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-8-dnote.json", "dnote")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-8-dnoterc.yaml", "dnoterc")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-8-schema.yaml", "schema")
+	testutils.CopyFixture(ctx, "./fixtures/legacy-8-timestamps.yaml", "timestamps")
 
 	// execute
 	if err := migrateToV8(ctx); err != nil {

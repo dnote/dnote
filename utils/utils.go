@@ -2,11 +2,15 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -141,4 +145,25 @@ func CopyDir(src, dest string) error {
 	}
 
 	return nil
+}
+
+// DoAuthorizedReq does a http request to the given path in the api endpoint as a user,
+// with the appropriate headers. The given path should include the preceding slash.
+func DoAuthorizedReq(ctx infra.DnoteCtx, apiKey, method, path, body string) (*http.Response, error) {
+	endpoint := fmt.Sprintf("%s%s", ctx.APIEndpoint, path)
+	req, err := http.NewRequest(method, endpoint, strings.NewReader(body))
+	if err != nil {
+		return nil, errors.Wrap(err, "constructing http request")
+	}
+
+	req.Header.Set("Authorization", apiKey)
+	req.Header.Set("CLI-Version", ctx.Version)
+
+	hc := http.Client{}
+	res, err := hc.Do(req)
+	if err != nil {
+		return res, errors.Wrap(err, "making http request")
+	}
+
+	return res, nil
 }

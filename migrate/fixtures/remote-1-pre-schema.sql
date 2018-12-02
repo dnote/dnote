@@ -1,3 +1,5 @@
+-- 5-pre-schema.sql is the schema in which the actions table is present
+
 CREATE TABLE notes
 		(
 			id integer PRIMARY KEY AUTOINCREMENT,
@@ -7,12 +9,20 @@ CREATE TABLE notes
 			added_on integer NOT NULL,
 			edited_on integer DEFAULT 0,
 			public bool DEFAULT false
-		, dirty bool DEFAULT false, usn int DEFAULT 0 NOT NULL, deleted bool DEFAULT false);
+		, dirty bool DEFAULT false, usn int DEFAULT 0 NOT NULL);
 CREATE TABLE books
 		(
 			uuid text PRIMARY KEY,
 			label text NOT NULL
-		, dirty bool DEFAULT false, usn int DEFAULT 0 NOT NULL, deleted bool DEFAULT false);
+		, dirty bool DEFAULT false, usn int DEFAULT 0 NOT NULL);
+CREATE TABLE actions
+		(
+			uuid text PRIMARY KEY,
+			schema integer NOT NULL,
+			type text NOT NULL,
+			data text NOT NULL,
+			timestamp integer NOT NULL
+		);
 CREATE TABLE system
 		(
 			key string NOT NULL,

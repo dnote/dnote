@@ -21,30 +21,41 @@ import (
 )
 
 // InitEnv sets up a test env and returns a new dnote context
-func InitEnv(relPath string, relFixturePath string) infra.DnoteCtx {
+func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool) infra.DnoteCtx {
 	path, err := filepath.Abs(relPath)
 	if err != nil {
-		panic(errors.Wrap(err, "pasrsing path").Error())
+		t.Fatal(errors.Wrap(err, "pasrsing path"))
 	}
 
 	os.Setenv("DNOTE_HOME_DIR", path)
 	ctx, err := infra.NewCtx("", "")
 	if err != nil {
-		panic(errors.Wrap(err, "getting new ctx").Error())
+		t.Fatal(errors.Wrap(err, "getting new ctx"))
 	}
 
-	// set up directory and db
+	// set up directory
 	if err := os.MkdirAll(ctx.DnoteDir, 0755); err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
+	// set up db
 	b := ReadFileAbs(relFixturePath)
 	setupSQL := string(b)
 
 	db := ctx.DB
-	_, err = db.Exec(setupSQL)
-	if err != nil {
-		panic(errors.Wrap(err, "running schema sql").Error())
+	if _, err := db.Exec(setupSQL); err != nil {
+		t.Fatal(errors.Wrap(err, "running schema sql"))
+	}
+
+	if migrated {
+		// mark migrations as done. When adding new migrations, bump the numbers here.
+		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemSchema, 6); err != nil {
+			t.Fatal(errors.Wrap(err, "inserting schema"))
+		}
+
+		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemRemoteSchema, 1); err != nil {
+			t.Fatal(errors.Wrap(err, "inserting remote schema"))
+		}
 	}
 
 	return ctx

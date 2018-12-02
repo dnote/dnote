@@ -20,7 +20,7 @@ func shouldCheckUpdate(ctx infra.DnoteCtx) (bool, error) {
 	db := ctx.DB
 
 	var lastUpgrade int64
-	err := db.QueryRow("SELECT value FROM system WHERE key = ?", "last_upgrade").Scan(&lastUpgrade)
+	err := db.QueryRow("SELECT value FROM system WHERE key = ?", infra.SystemLastUpgrade).Scan(&lastUpgrade)
 	if err != nil {
 		return false, errors.Wrap(err, "getting last_udpate")
 	}
@@ -34,7 +34,7 @@ func touchLastUpgrade(ctx infra.DnoteCtx) error {
 	db := ctx.DB
 
 	now := time.Now().Unix()
-	_, err := db.Exec("UPDATE system SET value = ? WHERE key = ?", now, "last_upgrade")
+	_, err := db.Exec("UPDATE system SET value = ? WHERE key = ?", now, infra.SystemLastUpgrade)
 	if err != nil {
 		return errors.Wrap(err, "updating last_upgrade")
 	}

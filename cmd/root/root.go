@@ -34,14 +34,14 @@ func Prepare(ctx infra.DnoteCtx) error {
 	if err := infra.InitDB(ctx); err != nil {
 		return errors.Wrap(err, "initializing database")
 	}
-	if err := infra.InitSystem(ctx); err != nil {
+	if err := core.InitSystem(ctx); err != nil {
 		return errors.Wrap(err, "initializing system data")
 	}
 
 	if err := migrate.Legacy(ctx); err != nil {
 		return errors.Wrap(err, "running legacy migration")
 	}
-	if err := migrate.Run(ctx, migrate.LocalSequence); err != nil {
+	if err := migrate.Run(ctx, migrate.LocalSequence, migrate.LocalMode); err != nil {
 		return errors.Wrap(err, "running migration")
 	}
 

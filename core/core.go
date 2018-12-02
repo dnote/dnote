@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
@@ -257,6 +259,50 @@ func GetEditorInput(ctx infra.DnoteCtx, fpath string, content *string) error {
 	c := SanitizeContent(raw)
 
 	*content = c
+
+	return nil
+}
+
+func initSystemKV(tx *sql.Tx, key string, val string) error {
+	var count int
+	if err := tx.QueryRow("SELECT count(*) FROM system WHERE key = ?", key).Scan(&count); err != nil {
+		return errors.Wrapf(err, "counting %s", key)
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	if _, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", key, val); err != nil {
+		tx.Rollback()
+		return errors.Wrapf(err, "inserting %s %s", key, val)
+
+	}
+
+	return nil
+}
+
+// InitSystem inserts system data if missing
+func InitSystem(ctx infra.DnoteCtx) error {
+	db := ctx.DB
+
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	nowStr := strconv.FormatInt(time.Now().Unix(), 10)
+	if err := initSystemKV(tx, infra.SystemLastUpgrade, nowStr); err != nil {
+		return errors.Wrapf(err, "initializing system config for %s", infra.SystemLastUpgrade)
+	}
+	if err := initSystemKV(tx, infra.SystemLastMaxUSN, "0"); err != nil {
+		return errors.Wrapf(err, "initializing system config for %s", infra.SystemLastMaxUSN)
+	}
+	if err := initSystemKV(tx, infra.SystemLastSyncAt, "0"); err != nil {
+		return errors.Wrapf(err, "initializing system config for %s", infra.SystemLastSyncAt)
+	}
+
+	tx.Commit()
 
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"time"
 
 	// use sqlite
 	_ "github.com/mattn/go-sqlite3"
@@ -20,6 +19,14 @@ var (
 
 	// SystemSchema is the key for schema in the system table
 	SystemSchema = "schema"
+	// SystemRemoteSchema is the key for remote schema in the system table
+	SystemRemoteSchema = "remote_schema"
+	// SystemLastSyncAt is the timestamp of the server at the last sync
+	SystemLastSyncAt = "last_sync_time"
+	// SystemLastMaxUSN is the user's max_usn from the server at the alst sync
+	SystemLastMaxUSN = "last_max_usn"
+	// SystemLastUpgrade is the timestamp at which the system more recently checked for an upgrade
+	SystemLastUpgrade = "last_upgrade"
 )
 
 // DnoteCtx is a context holding the information of the current runtime
@@ -35,33 +42,6 @@ type DnoteCtx struct {
 type Config struct {
 	Editor string
 	APIKey string
-}
-
-// Dnote holds the whole dnote data
-type Dnote map[string]Book
-
-// Book holds a metadata and its notes
-type Book struct {
-	Name  string `json:"name"`
-	Notes []Note `json:"notes"`
-}
-
-// Note represents a single microlesson
-type Note struct {
-	UUID     string `json:"uuid"`
-	Content  string `json:"content"`
-	AddedOn  int64  `json:"added_on"`
-	EditedOn int64  `json:"edited_on"`
-	Public   bool   `json:"public"`
-}
-
-// Timestamp holds time information
-type Timestamp struct {
-	LastUpgrade int64 `yaml:"last_upgrade"`
-	// id of the most recent action synced from the server
-	Bookmark int `yaml:"bookmark"`
-	// timestamp of the most recent action performed by the cli
-	LastAction int64 `yaml:"last_action"`
 }
 
 // NewCtx returns a new dnote context
@@ -145,6 +125,15 @@ func InitDB(ctx DnoteCtx) error {
 		return errors.Wrap(err, "creating books table")
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS system
+		(
+			key string NOT NULL,
+			value text NOT NULL
+		)`)
+	if err != nil {
+		return errors.Wrap(err, "creating system table")
+	}
+
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS actions
 		(
 			uuid text PRIMARY KEY,
@@ -157,15 +146,6 @@ func InitDB(ctx DnoteCtx) error {
 		return errors.Wrap(err, "creating actions table")
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS system
-		(
-			key string NOT NULL,
-			value text NOT NULL
-		)`)
-	if err != nil {
-		return errors.Wrap(err, "creating system table")
-	}
-
 	_, err = db.Exec(`
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_books_label ON books(label);
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_notes_uuid ON notes(uuid);
@@ -175,46 +155,6 @@ func InitDB(ctx DnoteCtx) error {
 	if err != nil {
 		return errors.Wrap(err, "creating indices")
 	}
-
-	return nil
-}
-
-// InitSystem inserts system data if missing
-func InitSystem(ctx DnoteCtx) error {
-	db := ctx.DB
-
-	tx, err := db.Begin()
-	if err != nil {
-		return errors.Wrap(err, "beginning a transaction")
-	}
-
-	var bookmarkCount, lastUpgradeCount int
-	if err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", "bookmark").
-		Scan(&bookmarkCount); err != nil {
-		return errors.Wrap(err, "counting bookmarks")
-	}
-	if bookmarkCount == 0 {
-		_, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", "bookmark", 0)
-		if err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "inserting bookmark")
-		}
-	}
-
-	if err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", "last_upgrade").
-		Scan(&lastUpgradeCount); err != nil {
-		return errors.Wrap(err, "counting last_upgrade")
-	}
-	if lastUpgradeCount == 0 {
-		now := time.Now().Unix()
-		_, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", "last_upgrade", now)
-		if err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "inserting bookmark")
-		}
-	}
-
-	tx.Commit()
 
 	return nil
 }
