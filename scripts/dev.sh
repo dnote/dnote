@@ -5,6 +5,6 @@
 sudo rm "$(which dnote)" $GOPATH/bin/cli
 
 # change tags to darwin if on macos
-go install -ldflags "-X main.apiEndpoint=http://127.0.0.1:5000" --tags "linux" .
+go install -ldflags "-X main.apiEndpoint=http://127.0.0.1:5000" --tags "linux fts5" .
 
 sudo ln -s $GOPATH/bin/cli /usr/local/bin/dnote

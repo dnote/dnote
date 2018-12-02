@@ -20,7 +20,7 @@ var example = `
  dnote ls javascript
  `
 
-var deprecationWarning = `and "view" will replace it in v0.5.0.
+var deprecationWarning = `and "view" will replace it in v1.0.0.
 
 Run "dnote view --help" for more information.
 `
@@ -48,6 +48,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
+// NewRun returns a new run function for ls
 func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -75,8 +76,8 @@ type bookInfo struct {
 
 // noteInfo is an information about the note to be printed on screen
 type noteInfo struct {
-	ID      int
-	Content string
+	RowID int
+	Body  string
 }
 
 // getNewlineIdx returns the index of newline character in a string
@@ -92,18 +93,18 @@ func getNewlineIdx(str string) int {
 	return ret
 }
 
-// formatContent returns an excerpt of the given raw note content and a boolean
+// formatBody returns an excerpt of the given raw note content and a boolean
 // indicating if the returned string has been excertped
-func formatContent(noteContent string) (string, bool) {
-	newlineIdx := getNewlineIdx(noteContent)
+func formatBody(noteBody string) (string, bool) {
+	newlineIdx := getNewlineIdx(noteBody)
 
 	if newlineIdx > -1 {
-		ret := strings.Trim(noteContent[0:newlineIdx], " ")
+		ret := strings.Trim(noteBody[0:newlineIdx], " ")
 
 		return ret, true
 	}
 
-	return strings.Trim(noteContent, " "), false
+	return strings.Trim(noteBody, " "), false
 }
 
 func printBooks(ctx infra.DnoteCtx) error {
@@ -148,7 +149,7 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
-	rows, err := db.Query(`SELECT id, content FROM notes WHERE book_uuid = ? ORDER BY added_on ASC;`, bookUUID)
+	rows, err := db.Query(`SELECT rowid, body FROM notes WHERE book_uuid = ? ORDER BY added_on ASC;`, bookUUID)
 	if err != nil {
 		return errors.Wrap(err, "querying notes")
 	}
@@ -157,7 +158,7 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 	infos := []noteInfo{}
 	for rows.Next() {
 		var info noteInfo
-		err = rows.Scan(&info.ID, &info.Content)
+		err = rows.Scan(&info.RowID, &info.Body)
 		if err != nil {
 			return errors.Wrap(err, "scanning a row")
 		}
@@ -168,14 +169,14 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 	log.Infof("on book %s\n", bookName)
 
 	for _, info := range infos {
-		content, isExcerpt := formatContent(info.Content)
+		body, isExcerpt := formatBody(info.Body)
 
-		index := log.SprintfYellow("(%d)", info.ID)
+		rowid := log.SprintfYellow("(%d)", info.RowID)
 		if isExcerpt {
-			content = fmt.Sprintf("%s %s", content, log.SprintfYellow("[---More---]"))
+			body = fmt.Sprintf("%s %s", body, log.SprintfYellow("[---More---]"))
 		}
 
-		log.Plainf("%s %s\n", index, content)
+		log.Plainf("%s %s\n", rowid, body)
 	}
 
 	return nil

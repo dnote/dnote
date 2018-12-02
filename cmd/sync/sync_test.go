@@ -157,17 +157,17 @@ func TestSyncDeleteNote(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
-		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, true)
-		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 11, "n2 content", 1541108743, false, true)
+		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
+		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 11, "n2 body", 1541108743, false, true)
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Content, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -193,19 +193,19 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1Record core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
-			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Content, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Content, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, n1Record.UUID, n1.UUID, "n1 UUID mismatch for test case")
 		testutils.AssertEqual(t, n1Record.BookUUID, n1.BookUUID, "n1 BookUUID mismatch for test case")
 		testutils.AssertEqual(t, n1Record.USN, n1.USN, "n1 USN mismatch for test case")
 		testutils.AssertEqual(t, n1Record.AddedOn, n1.AddedOn, "n1 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.EditedOn, n1.EditedOn, "n1 EditedOn mismatch for test case")
-		testutils.AssertEqual(t, n1Record.Content, n1.Content, "n1 Content mismatch for test case")
+		testutils.AssertEqual(t, n1Record.Body, n1.Body, "n1 Body mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Public, n1.Public, "n1 Public mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Deleted, n1.Deleted, "n1 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Dirty, n1.Dirty, "n1 Dirty mismatch for test case")
@@ -215,7 +215,7 @@ func TestSyncDeleteNote(t *testing.T) {
 		testutils.AssertEqual(t, n2Record.USN, n2.USN, "n2 USN mismatch for test case")
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Content, n2.Content, "n2 Content mismatch for test case")
+		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
@@ -231,17 +231,17 @@ func TestSyncDeleteNote(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
-		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, false)
-		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 11, "n2 content", 1541108743, false, false)
+		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
+		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 11, "n2 body", 1541108743, false, false)
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Content, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -266,15 +266,15 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Content, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, n2Record.UUID, n2.UUID, "n2 UUID mismatch for test case")
 		testutils.AssertEqual(t, n2Record.BookUUID, n2.BookUUID, "n2 BookUUID mismatch for test case")
 		testutils.AssertEqual(t, n2Record.USN, n2.USN, "n2 USN mismatch for test case")
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Content, n2.Content, "n2 Content mismatch for test case")
+		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
@@ -337,7 +337,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 12, true)
-		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, true)
+		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
 
 		var b1 core.Book
 		testutils.MustScan(t, "getting b1 for test case",
@@ -345,8 +345,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -376,8 +376,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		var n1Record core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
-			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Content, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
 
 		testutils.AssertEqual(t, b1Record.UUID, b1.UUID, "b1 UUID mismatch for test case")
 		testutils.AssertEqual(t, b1Record.Label, b1.Label, "b1 Label mismatch for test case")
@@ -389,7 +389,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		testutils.AssertEqual(t, n1Record.USN, n1.USN, "n1 USN mismatch for test case")
 		testutils.AssertEqual(t, n1Record.AddedOn, n1.AddedOn, "n1 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.EditedOn, n1.EditedOn, "n1 EditedOn mismatch for test case")
-		testutils.AssertEqual(t, n1Record.Content, n1.Content, "n1 Content mismatch for test case")
+		testutils.AssertEqual(t, n1Record.Body, n1.Body, "n1 Body mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Public, n1.Public, "n1 Public mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Deleted, n1.Deleted, "n1 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Dirty, n1.Dirty, "n1 Dirty mismatch for test case")
@@ -406,9 +406,9 @@ func TestSyncDeleteBook(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
-		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, false)
+		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
 		testutils.MustExec(t, "inserting b2 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
-		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b2UUID, 11, "n2 content", 1541108743, false, false)
+		testutils.MustExec(t, "inserting n2 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b2UUID, 11, "n2 body", 1541108743, false, false)
 
 		var b2 core.Book
 		testutils.MustScan(t, "getting b2 for test case",
@@ -416,8 +416,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b2.UUID, &b2.Label, &b2.USN, &b2.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Content, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -446,8 +446,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Content, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, b2Record.UUID, b2.UUID, "b2 UUID mismatch for test case")
 		testutils.AssertEqual(t, b2Record.Label, b2.Label, "b2 Label mismatch for test case")
@@ -459,7 +459,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		testutils.AssertEqual(t, n2Record.USN, n2.USN, "n2 USN mismatch for test case")
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Content, n2.Content, "n2 Content mismatch for test case")
+		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
@@ -475,7 +475,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
-		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, true)
+		testutils.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
 
 		// execute
 		tx, err := db.Begin()
@@ -503,8 +503,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		var n1Record core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, content,deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.Content, &n1Record.Deleted, &n1Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, body,deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 
 		testutils.AssertEqual(t, b1Record.UUID, b1UUID, "b1 UUID mismatch for test case")
 		testutils.AssertEqual(t, b1Record.Label, "b1-label", "b1 Label mismatch for test case")
@@ -514,7 +514,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		testutils.AssertEqual(t, n1Record.BookUUID, b1UUID, "n1 BookUUID mismatch for test case")
 		testutils.AssertEqual(t, n1Record.USN, 10, "n1 USN mismatch for test case")
 		testutils.AssertEqual(t, n1Record.AddedOn, int64(1541108743), "n1 AddedOn mismatch for test case")
-		testutils.AssertEqual(t, n1Record.Content, "n1 content", "n1 Content mismatch for test case")
+		testutils.AssertEqual(t, n1Record.Body, "n1 body", "n1 Body mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Deleted, false, "n1 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Dirty, true, "n1 Dirty mismatch for test case")
 	})
@@ -543,7 +543,7 @@ func TestFullSyncNote(t *testing.T) {
 			USN:      128,
 			AddedOn:  1541232118,
 			EditedOn: 1541219321,
-			Content:  "n1-content",
+			Body:     "n1-body",
 			Public:   true,
 			Deleted:  false,
 		}
@@ -565,15 +565,15 @@ func TestFullSyncNote(t *testing.T) {
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 
 		testutils.AssertEqual(t, n1.UUID, n.UUID, "n1 UUID mismatch")
 		testutils.AssertEqual(t, n1.BookUUID, n.BookUUID, "n1 BookUUID mismatch")
 		testutils.AssertEqual(t, n1.USN, n.USN, "n1 USN mismatch")
 		testutils.AssertEqual(t, n1.AddedOn, n.AddedOn, "n1 AddedOn mismatch")
 		testutils.AssertEqual(t, n1.EditedOn, n.EditedOn, "n1 EditedOn mismatch")
-		testutils.AssertEqual(t, n1.Content, n.Content, "n1 Content mismatch")
+		testutils.AssertEqual(t, n1.Body, n.Body, "n1 Body mismatch")
 		testutils.AssertEqual(t, n1.Public, n.Public, "n1 Public mismatch")
 		testutils.AssertEqual(t, n1.Deleted, n.Deleted, "n1 Deleted mismatch")
 		testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
@@ -587,21 +587,21 @@ func TestFullSyncNote(t *testing.T) {
 			addedOn          int64
 			clientUSN        int
 			clientEditedOn   int64
-			clientContent    string
+			clientBody       string
 			clientPublic     bool
 			clientDeleted    bool
 			clientBookUUID   string
 			clientDirty      bool
 			serverUSN        int
 			serverEditedOn   int64
-			serverContent    string
+			serverBody       string
 			serverPublic     bool
 			serverDeleted    bool
 			serverBookUUID   string
 			expectedUSN      int
 			expectedAddedOn  int64
 			expectedEditedOn int64
-			expectedContent  string
+			expectedBody     string
 			expectedPublic   bool
 			expectedDeleted  bool
 			expectedBookUUID string
@@ -612,21 +612,21 @@ func TestFullSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        1,
 				clientEditedOn:   0,
-				clientContent:    "n1 content",
+				clientBody:       "n1 body",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content edited",
+				serverBody:       "n1 body edited",
 				serverPublic:     true,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content edited",
+				expectedBody:     "n1 body edited",
 				expectedPublic:   true,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -637,21 +637,21 @@ func TestFullSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        1,
 				clientEditedOn:   0,
-				clientContent:    "",
+				clientBody:       "",
 				clientPublic:     false,
 				clientDeleted:    true,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content server",
+				serverBody:       "n1 body server",
 				serverPublic:     false,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content server",
+				expectedBody:     "n1 body server",
 				expectedPublic:   false,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -662,21 +662,21 @@ func TestFullSyncNote(t *testing.T) {
 				clientDirty:      false,
 				clientUSN:        1,
 				clientEditedOn:   0,
-				clientContent:    "n1 content",
+				clientBody:       "n1 body",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content edited",
+				serverBody:       "n1 body edited",
 				serverPublic:     true,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content edited",
+				expectedBody:     "n1 body edited",
 				expectedPublic:   true,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -687,21 +687,21 @@ func TestFullSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        21,
 				clientEditedOn:   1541219321,
-				clientContent:    "n1 content",
+				clientBody:       "n1 body",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b2UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content",
+				serverBody:       "n1 body",
 				serverPublic:     false,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content",
+				expectedBody:     "n1 body",
 				expectedPublic:   false,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -714,21 +714,21 @@ func TestFullSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        21,
 				clientEditedOn:   1541219320,
-				clientContent:    "n1 content client",
+				clientBody:       "n1 body client",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b2UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content server",
+				serverBody:       "n1 body server",
 				serverPublic:     true,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219320,
-				expectedContent:  "n1 content client",
+				expectedBody:     "n1 body client",
 				expectedPublic:   false,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -747,7 +747,7 @@ func TestFullSyncNote(t *testing.T) {
 				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				testutils.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
 				n1UUID := utils.GenerateUUID()
-				testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientContent, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
+				testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
 
 				// execute
 				tx, err := db.Begin()
@@ -762,7 +762,7 @@ func TestFullSyncNote(t *testing.T) {
 					USN:      tc.serverUSN,
 					AddedOn:  tc.addedOn,
 					EditedOn: tc.serverEditedOn,
-					Content:  tc.serverContent,
+					Body:     tc.serverBody,
 					Public:   tc.serverPublic,
 					Deleted:  tc.serverDeleted,
 				}
@@ -784,15 +784,15 @@ func TestFullSyncNote(t *testing.T) {
 
 				var n1 core.Note
 				testutils.MustScan(t, fmt.Sprintf("getting n1 for test case %d", idx),
-					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
-					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 
 				testutils.AssertEqual(t, n1.UUID, n.UUID, fmt.Sprintf("n1 UUID mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.BookUUID, tc.expectedBookUUID, fmt.Sprintf("n1 BookUUID mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.USN, tc.expectedUSN, fmt.Sprintf("n1 USN mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.AddedOn, tc.expectedAddedOn, fmt.Sprintf("n1 AddedOn mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.EditedOn, tc.expectedEditedOn, fmt.Sprintf("n1 EditedOn mismatch for test case %d", idx))
-				testutils.AssertEqual(t, n1.Content, tc.expectedContent, fmt.Sprintf("n1 Content mismatch for test case %d", idx))
+				testutils.AssertEqual(t, n1.Body, tc.expectedBody, fmt.Sprintf("n1 Body mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Public, tc.expectedPublic, fmt.Sprintf("n1 Public mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Deleted, tc.expectedDeleted, fmt.Sprintf("n1 Deleted mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Dirty, tc.expectedDirty, fmt.Sprintf("n1 Dirty mismatch for test case %d", idx))
@@ -1020,7 +1020,7 @@ func TestStepSyncNote(t *testing.T) {
 			USN:      128,
 			AddedOn:  1541232118,
 			EditedOn: 1541219321,
-			Content:  "n1-content",
+			Body:     "n1-body",
 			Public:   true,
 			Deleted:  false,
 		}
@@ -1042,15 +1042,15 @@ func TestStepSyncNote(t *testing.T) {
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 
 		testutils.AssertEqual(t, n1.UUID, n.UUID, "n1 UUID mismatch")
 		testutils.AssertEqual(t, n1.BookUUID, n.BookUUID, "n1 BookUUID mismatch")
 		testutils.AssertEqual(t, n1.USN, n.USN, "n1 USN mismatch")
 		testutils.AssertEqual(t, n1.AddedOn, n.AddedOn, "n1 AddedOn mismatch")
 		testutils.AssertEqual(t, n1.EditedOn, n.EditedOn, "n1 EditedOn mismatch")
-		testutils.AssertEqual(t, n1.Content, n.Content, "n1 Content mismatch")
+		testutils.AssertEqual(t, n1.Body, n.Body, "n1 Body mismatch")
 		testutils.AssertEqual(t, n1.Public, n.Public, "n1 Public mismatch")
 		testutils.AssertEqual(t, n1.Deleted, n.Deleted, "n1 Deleted mismatch")
 		testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
@@ -1064,21 +1064,21 @@ func TestStepSyncNote(t *testing.T) {
 			addedOn          int64
 			clientUSN        int
 			clientEditedOn   int64
-			clientContent    string
+			clientBody       string
 			clientPublic     bool
 			clientDeleted    bool
 			clientBookUUID   string
 			clientDirty      bool
 			serverUSN        int
 			serverEditedOn   int64
-			serverContent    string
+			serverBody       string
 			serverPublic     bool
 			serverDeleted    bool
 			serverBookUUID   string
 			expectedUSN      int
 			expectedAddedOn  int64
 			expectedEditedOn int64
-			expectedContent  string
+			expectedBody     string
 			expectedPublic   bool
 			expectedDeleted  bool
 			expectedBookUUID string
@@ -1088,21 +1088,21 @@ func TestStepSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        1,
 				clientEditedOn:   0,
-				clientContent:    "n1 content",
+				clientBody:       "n1 body",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content edited",
+				serverBody:       "n1 body edited",
 				serverPublic:     true,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content edited",
+				expectedBody:     "n1 body edited",
 				expectedPublic:   true,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -1113,21 +1113,21 @@ func TestStepSyncNote(t *testing.T) {
 				clientDirty:      true,
 				clientUSN:        1,
 				clientEditedOn:   1541219321,
-				clientContent:    "",
+				clientBody:       "",
 				clientPublic:     false,
 				clientDeleted:    true,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content edited",
+				serverBody:       "n1 body edited",
 				serverPublic:     false,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content edited",
+				expectedBody:     "n1 body edited",
 				expectedPublic:   false,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -1137,21 +1137,21 @@ func TestStepSyncNote(t *testing.T) {
 				clientDirty:      false,
 				clientUSN:        1,
 				clientEditedOn:   0,
-				clientContent:    "n1 content",
+				clientBody:       "n1 body",
 				clientPublic:     false,
 				clientDeleted:    false,
 				clientBookUUID:   b1UUID,
 				addedOn:          1541232118,
 				serverUSN:        21,
 				serverEditedOn:   1541219321,
-				serverContent:    "n1 content edited",
+				serverBody:       "n1 body edited",
 				serverPublic:     true,
 				serverDeleted:    false,
 				serverBookUUID:   b2UUID,
 				expectedUSN:      21,
 				expectedAddedOn:  1541232118,
 				expectedEditedOn: 1541219321,
-				expectedContent:  "n1 content edited",
+				expectedBody:     "n1 body edited",
 				expectedPublic:   true,
 				expectedDeleted:  false,
 				expectedBookUUID: b2UUID,
@@ -1170,7 +1170,7 @@ func TestStepSyncNote(t *testing.T) {
 				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				testutils.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
 				n1UUID := utils.GenerateUUID()
-				testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientContent, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
+				testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
 
 				// execute
 				tx, err := db.Begin()
@@ -1185,7 +1185,7 @@ func TestStepSyncNote(t *testing.T) {
 					USN:      tc.serverUSN,
 					AddedOn:  tc.addedOn,
 					EditedOn: tc.serverEditedOn,
-					Content:  tc.serverContent,
+					Body:     tc.serverBody,
 					Public:   tc.serverPublic,
 					Deleted:  tc.serverDeleted,
 				}
@@ -1207,15 +1207,15 @@ func TestStepSyncNote(t *testing.T) {
 
 				var n1 core.Note
 				testutils.MustScan(t, fmt.Sprintf("getting n1 for test case %d", idx),
-					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
-					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Content, &n1.Public, &n1.Deleted, &n1.Dirty)
+					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
 
 				testutils.AssertEqual(t, n1.UUID, n.UUID, fmt.Sprintf("n1 UUID mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.BookUUID, tc.expectedBookUUID, fmt.Sprintf("n1 BookUUID mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.USN, tc.expectedUSN, fmt.Sprintf("n1 USN mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.AddedOn, tc.expectedAddedOn, fmt.Sprintf("n1 AddedOn mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.EditedOn, tc.expectedEditedOn, fmt.Sprintf("n1 EditedOn mismatch for test case %d", idx))
-				testutils.AssertEqual(t, n1.Content, tc.expectedContent, fmt.Sprintf("n1 Content mismatch for test case %d", idx))
+				testutils.AssertEqual(t, n1.Body, tc.expectedBody, fmt.Sprintf("n1 Body mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Public, tc.expectedPublic, fmt.Sprintf("n1 Public mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Deleted, tc.expectedDeleted, fmt.Sprintf("n1 Deleted mismatch for test case %d", idx))
 				testutils.AssertEqual(t, n1.Dirty, tc.expectedDirty, fmt.Sprintf("n1 Dirty mismatch for test case %d", idx))
@@ -1833,14 +1833,14 @@ func TestSendBooks(t *testing.T) {
 	testutils.MustExec(t, "inserting b8", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b8-uuid", "b8-label", 18, false, true)
 
 	// some random notes
-	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 10, "n1 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b5-uuid", 10, "n2 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b6-uuid", 10, "n3 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", "b7-uuid", 10, "n4 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 10, "n1 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b5-uuid", 10, "n2 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b6-uuid", 10, "n3 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", "b7-uuid", 10, "n4 body", 1541108743, false, false)
 	// notes that belong to the created book. Their book_uuid should be updated.
-	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", "b3-uuid", 10, "n5 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", "b3-uuid", 10, "n6 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", "b4-uuid", 10, "n7 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", "b3-uuid", 10, "n5 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", "b3-uuid", 10, "n6 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", "b4-uuid", 10, "n7 body", 1541108743, false, false)
 
 	var createdLabels []string
 	var updatesUUIDs []string
@@ -1865,7 +1865,7 @@ func TestSendBooks(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Body-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1879,14 +1879,14 @@ func TestSendBooks(t *testing.T) {
 				uuid := p[3]
 				updatesUUIDs = append(updatesUUIDs, uuid)
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -1946,13 +1946,13 @@ func TestSendBooks(t *testing.T) {
 	testutils.AssertEqual(t, b8.UUID, "b8-uuid", "b8 UUID mismatch")
 
 	var n1, n2, n3, n4, n5, n6, n7 core.Note
-	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n1 content"), &n1.BookUUID)
-	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n2 content"), &n2.BookUUID)
-	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n3 content"), &n3.BookUUID)
-	testutils.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n4 content"), &n4.BookUUID)
-	testutils.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n5 content"), &n5.BookUUID)
-	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n6 content"), &n6.BookUUID)
-	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE content = ?", "n7 content"), &n7.BookUUID)
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n1 body"), &n1.BookUUID)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n2 body"), &n2.BookUUID)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n3 body"), &n3.BookUUID)
+	testutils.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n4 body"), &n4.BookUUID)
+	testutils.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n5 body"), &n5.BookUUID)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n6 body"), &n6.BookUUID)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n7 body"), &n7.BookUUID)
 	testutils.AssertEqual(t, n1.BookUUID, "b1-uuid", "n1 bookUUID mismatch")
 	testutils.AssertEqual(t, n2.BookUUID, "b5-uuid", "n2 bookUUID mismatch")
 	testutils.AssertEqual(t, n3.BookUUID, "b6-uuid", "n3 bookUUID mismatch")
@@ -1979,7 +1979,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Body-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1996,7 +1996,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2009,7 +2009,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2179,27 +2179,27 @@ func TestSendNotes(t *testing.T) {
 	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 1, false, false)
 
 	// should be ignored
-	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1-content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1-body", 1541108743, false, false)
 	// should be created
-	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2-content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2-body", 1541108743, false, true)
 	// should be updated
-	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3-content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3-body", 1541108743, false, true)
 	// should be only expunged locally without syncing to server
-	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4-content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4-body", 1541108743, true, true)
 	// should be deleted
-	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5-content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5-body", 1541108743, true, true)
 	// should be created
-	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6-content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6-body", 1541108743, false, true)
 	// should be ignored
-	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7-content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7-body", 1541108743, false, false)
 	// should be updated
-	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8-content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8-body", 1541108743, false, true)
 	// should be deleted
-	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9-content", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9-body", 1541108743, true, true)
 	// should be created
-	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10-content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10-body", 1541108743, false, true)
 
-	var createdContents []string
+	var createdBodys []string
 	var updatedUUIDs []string
 	var deletedUUIDs []string
 
@@ -2214,15 +2214,15 @@ func TestSendNotes(t *testing.T) {
 				return
 			}
 
-			createdContents = append(createdContents, payload.Content)
+			createdBodys = append(createdBodys, payload.Body)
 
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
-					UUID: fmt.Sprintf("server-%s-uuid", payload.Content),
+					UUID: fmt.Sprintf("server-%s-uuid", payload.Body),
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Body-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2236,14 +2236,14 @@ func TestSendNotes(t *testing.T) {
 				uuid := p[3]
 				updatedUUIDs = append(updatedUUIDs, uuid)
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -2269,11 +2269,11 @@ func TestSendNotes(t *testing.T) {
 	tx.Commit()
 
 	// test
-	sort.SliceStable(createdContents, func(i, j int) bool {
-		return strings.Compare(createdContents[i], createdContents[j]) < 0
+	sort.SliceStable(createdBodys, func(i, j int) bool {
+		return strings.Compare(createdBodys[i], createdBodys[j]) < 0
 	})
 
-	testutils.AssertDeepEqual(t, createdContents, []string{"n10-content", "n2-content", "n6-content"}, "createdContents mismatch")
+	testutils.AssertDeepEqual(t, createdBodys, []string{"n10-body", "n2-body", "n6-body"}, "createdBodys mismatch")
 	testutils.AssertDeepEqual(t, updatedUUIDs, []string{"n3-uuid", "n8-uuid"}, "updatedUUIDs mismatch")
 	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"n5-uuid", "n9-uuid"}, "deletedUUIDs mismatch")
 
@@ -2282,13 +2282,13 @@ func TestSendNotes(t *testing.T) {
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
 	var n1, n2, n3, n6, n7, n8, n10 core.Note
-	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n1-content"), &n1.UUID, &n1.Dirty)
-	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n2-content"), &n2.UUID, &n2.Dirty)
-	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n3-content"), &n3.UUID, &n3.Dirty)
-	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n6-content"), &n6.UUID, &n6.Dirty)
-	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n7-content"), &n7.UUID, &n7.Dirty)
-	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n8-content"), &n8.UUID, &n8.Dirty)
-	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE content = ?", "n10-content"), &n10.UUID, &n10.Dirty)
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.Dirty)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.Dirty)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.Dirty)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.Dirty)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.Dirty)
+	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.Dirty)
+	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.Dirty)
 
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
@@ -2302,12 +2302,12 @@ func TestSendNotes(t *testing.T) {
 
 	// UUIDs of created notes should have been updated with those from the server response
 	testutils.AssertEqual(t, n1.UUID, "n1-uuid", "n1 UUID mismatch")
-	testutils.AssertEqual(t, n2.UUID, "server-n2-content-uuid", "n2 UUID mismatch")
+	testutils.AssertEqual(t, n2.UUID, "server-n2-body-uuid", "n2 UUID mismatch")
 	testutils.AssertEqual(t, n3.UUID, "n3-uuid", "n3 UUID mismatch")
-	testutils.AssertEqual(t, n6.UUID, "server-n6-content-uuid", "n6 UUID mismatch")
+	testutils.AssertEqual(t, n6.UUID, "server-n6-body-uuid", "n6 UUID mismatch")
 	testutils.AssertEqual(t, n7.UUID, "n7-uuid", "n7 UUID mismatch")
 	testutils.AssertEqual(t, n8.UUID, "n8-uuid", "n8 UUID mismatch")
-	testutils.AssertEqual(t, n10.UUID, "server-n10-content-uuid", "n10 UUID mismatch")
+	testutils.AssertEqual(t, n10.UUID, "server-n10-body-uuid", "n10 UUID mismatch")
 }
 
 func TestSendNotes_isBehind(t *testing.T) {
@@ -2327,7 +2327,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Body-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2344,7 +2344,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2357,7 +2357,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Body-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2396,7 +2396,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 
 				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
 				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1, "n1 content", 1541108743, false, true)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1, "n1 body", 1541108743, false, true)
 
 				// execute
 				tx, err := db.Begin()
@@ -2444,7 +2444,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 
 				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
 				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 2, "n1 content", 1541108743, true, true)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 2, "n1 body", 1541108743, true, true)
 
 				// execute
 				tx, err := db.Begin()
@@ -2492,7 +2492,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 
 				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
 				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 8, "n1 content", 1541108743, false, true)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 8, "n1 body", 1541108743, false, true)
 
 				// execute
 				tx, err := db.Begin()
@@ -2523,21 +2523,21 @@ func TestMergeNote(t *testing.T) {
 		addedOn          int64
 		clientUSN        int
 		clientEditedOn   int64
-		clientContent    string
+		clientBody       string
 		clientPublic     bool
 		clientDeleted    bool
 		clientBookUUID   string
 		clientDirty      bool
 		serverUSN        int
 		serverEditedOn   int64
-		serverContent    string
+		serverBody       string
 		serverPublic     bool
 		serverDeleted    bool
 		serverBookUUID   string
 		expectedUSN      int
 		expectedAddedOn  int64
 		expectedEditedOn int64
-		expectedContent  string
+		expectedBody     string
 		expectedPublic   bool
 		expectedDeleted  bool
 		expectedBookUUID string
@@ -2547,21 +2547,21 @@ func TestMergeNote(t *testing.T) {
 			clientDirty:      false,
 			clientUSN:        1,
 			clientEditedOn:   0,
-			clientContent:    "n1 content",
+			clientBody:       "n1 body",
 			clientPublic:     false,
 			clientDeleted:    false,
 			clientBookUUID:   b1UUID,
 			addedOn:          1541232118,
 			serverUSN:        21,
 			serverEditedOn:   1541219321,
-			serverContent:    "n1 content edited",
+			serverBody:       "n1 body edited",
 			serverPublic:     true,
 			serverDeleted:    false,
 			serverBookUUID:   b2UUID,
 			expectedUSN:      21,
 			expectedAddedOn:  1541232118,
 			expectedEditedOn: 1541219321,
-			expectedContent:  "n1 content edited",
+			expectedBody:     "n1 body edited",
 			expectedPublic:   true,
 			expectedDeleted:  false,
 			expectedBookUUID: b2UUID,
@@ -2572,21 +2572,21 @@ func TestMergeNote(t *testing.T) {
 			clientDirty:      true,
 			clientUSN:        1,
 			clientEditedOn:   1541219321,
-			clientContent:    "",
+			clientBody:       "",
 			clientPublic:     false,
 			clientDeleted:    true,
 			clientBookUUID:   b1UUID,
 			addedOn:          1541232118,
 			serverUSN:        21,
 			serverEditedOn:   1541219321,
-			serverContent:    "n1 content edited",
+			serverBody:       "n1 body edited",
 			serverPublic:     false,
 			serverDeleted:    false,
 			serverBookUUID:   b2UUID,
 			expectedUSN:      21,
 			expectedAddedOn:  1541232118,
 			expectedEditedOn: 1541219321,
-			expectedContent:  "n1 content edited",
+			expectedBody:     "n1 body edited",
 			expectedPublic:   false,
 			expectedDeleted:  false,
 			expectedBookUUID: b2UUID,
@@ -2605,7 +2605,7 @@ func TestMergeNote(t *testing.T) {
 			testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 5, false)
 			testutils.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b2UUID, "b2-label", 6, false)
 			n1UUID := utils.GenerateUUID()
-			testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, b1UUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientContent, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
+			testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, b1UUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientPublic, tc.clientDeleted, tc.clientDirty)
 
 			// execute
 			tx, err := db.Begin()
@@ -2620,14 +2620,14 @@ func TestMergeNote(t *testing.T) {
 				USN:      tc.serverUSN,
 				AddedOn:  tc.addedOn,
 				EditedOn: tc.serverEditedOn,
-				Content:  tc.serverContent,
+				Body:     tc.serverBody,
 				Public:   tc.serverPublic,
 				Deleted:  tc.serverDeleted,
 			}
 			var localNote core.Note
 			testutils.MustScan(t, fmt.Sprintf("getting localNote for test case %d", idx),
-				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
-				&localNote.UUID, &localNote.BookUUID, &localNote.USN, &localNote.AddedOn, &localNote.EditedOn, &localNote.Content, &localNote.Public, &localNote.Deleted, &localNote.Dirty)
+				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
+				&localNote.UUID, &localNote.BookUUID, &localNote.USN, &localNote.AddedOn, &localNote.EditedOn, &localNote.Body, &localNote.Public, &localNote.Deleted, &localNote.Dirty)
 
 			if err := mergeNote(tx, fragNote, localNote); err != nil {
 				tx.Rollback()
@@ -2646,8 +2646,8 @@ func TestMergeNote(t *testing.T) {
 
 			var n1Record core.Note
 			testutils.MustScan(t, fmt.Sprintf("getting n1Record for test case %d", idx),
-				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, content, public, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
-				&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Content, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
+				&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
 			var b1Record core.Book
 			testutils.MustScan(t, "getting b1Record for test case",
 				db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
@@ -2672,7 +2672,7 @@ func TestMergeNote(t *testing.T) {
 			testutils.AssertEqual(t, n1Record.USN, tc.expectedUSN, fmt.Sprintf("n1Record USN mismatch for test case %d", idx))
 			testutils.AssertEqual(t, n1Record.AddedOn, tc.expectedAddedOn, fmt.Sprintf("n1Record AddedOn mismatch for test case %d", idx))
 			testutils.AssertEqual(t, n1Record.EditedOn, tc.expectedEditedOn, fmt.Sprintf("n1Record EditedOn mismatch for test case %d", idx))
-			testutils.AssertEqual(t, n1Record.Content, tc.expectedContent, fmt.Sprintf("n1Record Content mismatch for test case %d", idx))
+			testutils.AssertEqual(t, n1Record.Body, tc.expectedBody, fmt.Sprintf("n1Record Body mismatch for test case %d", idx))
 			testutils.AssertEqual(t, n1Record.Public, tc.expectedPublic, fmt.Sprintf("n1Record Public mismatch for test case %d", idx))
 			testutils.AssertEqual(t, n1Record.Deleted, tc.expectedDeleted, fmt.Sprintf("n1Record Deleted mismatch for test case %d", idx))
 			testutils.AssertEqual(t, n1Record.Dirty, tc.expectedDirty, fmt.Sprintf("n1Record Dirty mismatch for test case %d", idx))
@@ -2689,11 +2689,11 @@ func TestCheckBookPristine(t *testing.T) {
 
 	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b1-uuid", "b1-label", 5, false)
 	testutils.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b2-uuid", "b2-label", 6, false)
-	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, added_on, content, dirty) VALUES (?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1541108743, "n1 content", false)
-	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, added_on, content, dirty) VALUES (?, ?, ?, ?, ?)", "n2-uuid", "b1-uuid", 1541108743, "n2 content", false)
-	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, added_on, content, dirty) VALUES (?, ?, ?, ?, ?)", "n3-uuid", "b1-uuid", 1541108743, "n3 content", true)
-	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, added_on, content, dirty) VALUES (?, ?, ?, ?, ?)", "n4-uuid", "b2-uuid", 1541108743, "n4 content", false)
-	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, added_on, content, dirty) VALUES (?, ?, ?, ?, ?)", "n5-uuid", "b2-uuid", 1541108743, "n5 content", false)
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, added_on, body, dirty) VALUES (?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1541108743, "n1 body", false)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, added_on, body, dirty) VALUES (?, ?, ?, ?, ?)", "n2-uuid", "b1-uuid", 1541108743, "n2 body", false)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, added_on, body, dirty) VALUES (?, ?, ?, ?, ?)", "n3-uuid", "b1-uuid", 1541108743, "n3 body", true)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, added_on, body, dirty) VALUES (?, ?, ?, ?, ?)", "n4-uuid", "b2-uuid", 1541108743, "n4 body", false)
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, added_on, body, dirty) VALUES (?, ?, ?, ?, ?)", "n5-uuid", "b2-uuid", 1541108743, "n5 body", false)
 
 	t.Run("b1", func(t *testing.T) {
 		// execute
@@ -2896,15 +2896,15 @@ func TestCleanLocalNotes(t *testing.T) {
 	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 1, false, false)
 
 	// exists in the list
-	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 content", 1541108743, false, false)
-	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2 body", 1541108743, false, true)
 	// non-existent in the list but in valid state
 	// (created in the cli and hasn't been uploaded)
-	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6 content", 1541108743, false, true)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6 body", 1541108743, false, true)
 	// non-existent in the list and in an invalid state
-	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 7, "n5 content", 1541108743, true, true)
-	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9 content", 1541108743, true, false)
-	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, content, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10 content", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 7, "n5 body", 1541108743, true, true)
+	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9 body", 1541108743, true, false)
+	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10 body", 1541108743, false, false)
 
 	// execute
 	tx, err := db.Begin()

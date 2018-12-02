@@ -13,9 +13,9 @@ import (
 	"github.com/dnote/cli/cmd/add"
 	"github.com/dnote/cli/cmd/cat"
 	"github.com/dnote/cli/cmd/edit"
+	"github.com/dnote/cli/cmd/find"
 	"github.com/dnote/cli/cmd/login"
 	"github.com/dnote/cli/cmd/ls"
-
 	"github.com/dnote/cli/cmd/remove"
 	"github.com/dnote/cli/cmd/sync"
 	"github.com/dnote/cli/cmd/version"
@@ -46,6 +46,7 @@ func main() {
 	root.Register(version.NewCmd(ctx))
 	root.Register(cat.NewCmd(ctx))
 	root.Register(view.NewCmd(ctx))
+	root.Register(find.NewCmd(ctx))
 
 	if err := root.Execute(); err != nil {
 		log.Errorf("%s\n", err.Error())

@@ -311,6 +311,81 @@ var lm7 = migration{
 	},
 }
 
+var lm8 = migration{
+	name: "drop-note-id-and-rename-content-to-body",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		_, err := tx.Exec(`CREATE TABLE notes_tmp
+		(
+			uuid text NOT NULL,
+			book_uuid text NOT NULL,
+			body text NOT NULL,
+			added_on integer NOT NULL,
+			edited_on integer DEFAULT 0,
+			public bool DEFAULT false,
+			dirty bool DEFAULT false,
+			usn int DEFAULT 0 NOT NULL,
+			deleted bool DEFAULT false
+		);`)
+		if err != nil {
+			return errors.Wrap(err, "creating temporary notes table for migration")
+		}
+
+		_, err = tx.Exec(`INSERT INTO notes_tmp
+			SELECT uuid, book_uuid, content, added_on, edited_on, public, dirty, usn, deleted FROM notes;`)
+		if err != nil {
+			return errors.Wrap(err, "copying data to new table")
+		}
+
+		_, err = tx.Exec(`DROP TABLE notes;`)
+		if err != nil {
+			return errors.Wrap(err, "dropping the notes table")
+		}
+
+		_, err = tx.Exec(`ALTER TABLE notes_tmp RENAME to notes;`)
+		if err != nil {
+			return errors.Wrap(err, "renaming the temporary notes table")
+		}
+
+		return nil
+	},
+}
+
+var lm9 = migration{
+	name: "create-fts-index",
+	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+		_, err := tx.Exec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5(content=notes, body, tokenize="porter unicode61 categories 'L* N* Co Ps Pe'");`)
+		if err != nil {
+			return errors.Wrap(err, "creating note_fts")
+		}
+
+		// Create triggers to keep the indices in note_fts in sync with notes
+		_, err = tx.Exec(`
+			CREATE TRIGGER notes_after_insert AFTER INSERT ON notes BEGIN
+				INSERT INTO note_fts(rowid, body) VALUES (new.rowid, new.body);
+			END;
+			CREATE TRIGGER notes_after_delete AFTER DELETE ON notes BEGIN
+				INSERT INTO note_fts(note_fts, rowid, body) VALUES ('delete', old.rowid, old.body);
+			END;
+			CREATE TRIGGER notes_after_update AFTER UPDATE ON notes BEGIN
+				INSERT INTO note_fts(note_fts, rowid, body) VALUES ('delete', old.rowid, old.body);
+				INSERT INTO note_fts(rowid, body) VALUES (new.rowid, new.body);
+			END;
+		`)
+		if err != nil {
+			return errors.Wrap(err, "creating triggers for note_fts")
+		}
+
+		// populate fts indices
+		_, err = tx.Exec(`INSERT INTO note_fts (rowid, body)
+			SELECT rowid, body FROM notes;`)
+		if err != nil {
+			return errors.Wrap(err, "populating note_fts")
+		}
+
+		return nil
+	},
+}
+
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {

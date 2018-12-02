@@ -49,7 +49,7 @@ func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool)
 
 	if migrated {
 		// mark migrations as done. When adding new migrations, bump the numbers here.
-		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemSchema, 6); err != nil {
+		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemSchema, 9); err != nil {
 			t.Fatal(errors.Wrap(err, "inserting schema"))
 		}
 

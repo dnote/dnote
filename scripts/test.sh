@@ -7,5 +7,6 @@
 rm -rf ./tmp
 
 # run test
-go test ./... -p 1
-
+go test ./... \
+  -p 1\
+  --tags "fts5"

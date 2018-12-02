@@ -52,9 +52,9 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		targetBook := args[0]
-		noteID := args[1]
+		noteRowID := args[1]
 
-		if err := removeNote(ctx, noteID, targetBook); err != nil {
+		if err := removeNote(ctx, noteRowID, targetBook); err != nil {
 			return errors.Wrap(err, "removing the note")
 		}
 
@@ -62,7 +62,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
+func removeNote(ctx infra.DnoteCtx, noteRowID, bookLabel string) error {
 	db := ctx.DB
 
 	bookUUID, err := core.GetBookUUID(ctx, bookLabel)
@@ -71,15 +71,15 @@ func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
 	}
 
 	var noteUUID, noteContent string
-	err = db.QueryRow("SELECT uuid, content FROM notes WHERE id = ? AND book_uuid = ?", noteID, bookUUID).Scan(&noteUUID, &noteContent)
+	err = db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND book_uuid = ?", noteRowID, bookUUID).Scan(&noteUUID, &noteContent)
 	if err == sql.ErrNoRows {
-		return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+		return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
 	} else if err != nil {
 		return errors.Wrap(err, "querying the book")
 	}
 
 	// todo: multiline
-	log.Printf("content: \"%s\"\n", noteContent)
+	log.Printf("body: \"%s\"\n", noteContent)
 
 	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
@@ -95,7 +95,7 @@ func removeNote(ctx infra.DnoteCtx, noteID, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, content = ? WHERE uuid = ? AND book_uuid = ?", true, true, "", noteUUID, bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ? AND book_uuid = ?", true, true, "", noteUUID, bookUUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
 	tx.Commit()
@@ -127,7 +127,7 @@ func removeBook(ctx infra.DnoteCtx, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, content = ? WHERE book_uuid = ?", true, true, "", bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE book_uuid = ?", true, true, "", bookUUID); err != nil {
 		return errors.Wrap(err, "removing notes in the book")
 	}
 

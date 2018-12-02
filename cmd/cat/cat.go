@@ -58,7 +58,7 @@ func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
 		bookLabel := args[0]
-		noteID := args[1]
+		noteRowID := args[1]
 
 		var bookUUID string
 		err := db.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
@@ -69,13 +69,13 @@ func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		var info noteInfo
-		err = db.QueryRow(`SELECT books.label, notes.uuid, notes.content, notes.added_on, notes.edited_on
+		err = db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on
 			FROM notes
 			INNER JOIN books ON books.uuid = notes.book_uuid
-			WHERE notes.id = ? AND books.uuid = ?`, noteID, bookUUID).
+			WHERE notes.rowid = ? AND books.uuid = ?`, noteRowID, bookUUID).
 			Scan(&info.BookLabel, &info.UUID, &info.Content, &info.AddedOn, &info.EditedOn)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+			return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the note")
 		}
