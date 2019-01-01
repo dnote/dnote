@@ -1,6 +1,7 @@
 package find
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -22,6 +23,8 @@ var example = `
 	dnote find "merge sort" -b algorithm
 	`
 
+var bookName string
+
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("Incorrect number of argument")
@@ -40,6 +43,9 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 		PreRunE: preRun,
 		RunE:    newRun(ctx),
 	}
+
+	f := cmd.Flags()
+	f.StringVarP(&bookName, "book", "b", "", "book name to find notes in")
 
 	return cmd
 }
@@ -84,9 +90,9 @@ func formatFTSSnippet(s string) (string, error) {
 	return fmt.Sprintf(format.String(), args...), nil
 }
 
-// escapeQueryStr escapes the user-supplied FTS keywords by wrapping each term around
+// escapePhrase escapes the user-supplied FTS keywords by wrapping each term around
 // double quotations so that they are treated as 'strings' as defined by SQLite FTS5.
-func escapeQueryStr(s string) (string, error) {
+func escapePhrase(s string) (string, error) {
 	var b strings.Builder
 
 	terms := strings.Fields(s)
@@ -106,23 +112,37 @@ func escapeQueryStr(s string) (string, error) {
 	return b.String(), nil
 }
 
+func doQuery(ctx infra.DnoteCtx, query, bookName string) (*sql.Rows, error) {
+	db := ctx.DB
+
+	sql := `SELECT
+		notes.rowid,
+		books.label AS book_label,
+		snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '...', 28)
+	FROM note_fts
+	INNER JOIN notes ON notes.rowid = note_fts.rowid
+	INNER JOIN books ON notes.book_uuid = books.uuid
+	WHERE note_fts MATCH ?`
+	args := []interface{}{query}
+
+	if bookName != "" {
+		sql = fmt.Sprintf("%s AND books.label = ?", sql)
+		args = append(args, bookName)
+	}
+
+	rows, err := db.Query(sql, args...)
+
+	return rows, err
+}
+
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		db := ctx.DB
-		query, err := escapeQueryStr(args[0])
+		phrase, err := escapePhrase(args[0])
 		if err != nil {
-			return errors.Wrap(err, "escaping query")
+			return errors.Wrap(err, "escaping phrase")
 		}
 
-		rows, err := db.Query(`
-			SELECT
-				notes.rowid,
-				books.label AS book_label,
-				snippet(note_fts, 0, '<dnotehl>', '</dnotehl>', '...', 28)
-			FROM note_fts
-			INNER JOIN notes ON notes.rowid = note_fts.rowid
-			INNER JOIN books ON notes.book_uuid = books.uuid
-			WHERE note_fts MATCH ?`, query)
+		rows, err := doQuery(ctx, phrase, bookName)
 		if err != nil {
 			return errors.Wrap(err, "querying notes")
 		}

@@ -35,7 +35,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 // NewCmd returns a new add command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "add <content>",
+		Use:     "add <book>",
 		Short:   "Add a note",
 		Aliases: []string{"a", "n", "new"},
 		Example: example,
