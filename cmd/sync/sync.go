@@ -506,13 +506,14 @@ func cleanLocalBooks(tx *sql.Tx, fullList *syncList) error {
 
 func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) error {
 	log.Debug("performing a full sync\n")
+	log.Info("resolving delta.")
 
 	list, err := getSyncList(ctx, apiKey, 0)
 	if err != nil {
 		return errors.Wrap(err, "getting sync list")
 	}
 
-	log.Infof("resolving delta (total %d).", list.getLength())
+	fmt.Printf(" (total %d).", list.getLength())
 
 	// clean resources that are in erroneous states
 	if err := cleanLocalNotes(tx, &list); err != nil {
@@ -557,12 +558,14 @@ func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) error {
 func stepSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string, afterUSN int) error {
 	log.Debug("performing a step sync\n")
 
+	log.Info("resolving delta.")
+
 	list, err := getSyncList(ctx, apiKey, afterUSN)
 	if err != nil {
 		return errors.Wrap(err, "getting sync list")
 	}
 
-	log.Infof("resolving delta (total %d).", list.getLength())
+	fmt.Printf(" (total %d).", list.getLength())
 
 	for _, note := range list.Notes {
 		if err := stepSyncNote(tx, note); err != nil {
@@ -801,10 +804,12 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 }
 
 func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
+	log.Info("sending changes.")
+
 	var delta int
 	err := tx.QueryRow("SELECT (SELECT count(*) FROM notes WHERE dirty) + (SELECT count(*) FROM books WHERE dirty)").Scan(&delta)
 
-	log.Infof("sending changes (total %d).", delta)
+	fmt.Printf(" (total %d).", delta)
 
 	behind1, err := sendBooks(ctx, tx, apiKey)
 	if err != nil {
