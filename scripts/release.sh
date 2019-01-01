@@ -31,8 +31,6 @@ if [ ! -d $homebrewRepoDir ]; then
   exit 1
 fi
 
-if [ -d  ]
-
 # 1. push tag
 version=$1
 version_tag="v$version"
