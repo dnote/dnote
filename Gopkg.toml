@@ -47,4 +47,4 @@
 
 [[constraint]]
   name = "github.com/mattn/go-sqlite3"
-  version = "1.9.0"
+  version = "1.10.0"

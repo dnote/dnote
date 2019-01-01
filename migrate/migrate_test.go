@@ -763,6 +763,116 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 	testutils.AssertEqual(t, b2Dirty, false, "b2 should not have been marked dirty")
 }
 
+func TestLocalMigration8(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-8-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
+
+	n1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting n1", db, `INSERT INTO notes
+		(id, uuid, book_uuid, content, added_on, edited_on, public, dirty, usn, deleted) VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 1, n1UUID, b1UUID, "n1 Body", 1, 2, true, true, 20, false)
+	n2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting n2", db, `INSERT INTO notes
+		(id, uuid, book_uuid, content, added_on, edited_on, public, dirty, usn, deleted) VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 2, n2UUID, b1UUID, "", 3, 4, false, true, 21, true)
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm8.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var n1BookUUID, n1Body string
+	var n1AddedOn, n1EditedOn int64
+	var n1USN int
+	var n1Public, n1Dirty, n1Deleted bool
+	testutils.MustScan(t, "scanning n1", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n1UUID), &n1BookUUID, &n1Body, &n1AddedOn, &n1EditedOn, &n1USN, &n1Public, &n1Dirty, &n1Deleted)
+
+	var n2BookUUID, n2Body string
+	var n2AddedOn, n2EditedOn int64
+	var n2USN int
+	var n2Public, n2Dirty, n2Deleted bool
+	testutils.MustScan(t, "scanning n2", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n2UUID), &n2BookUUID, &n2Body, &n2AddedOn, &n2EditedOn, &n2USN, &n2Public, &n2Dirty, &n2Deleted)
+
+	testutils.AssertEqual(t, n1BookUUID, b1UUID, "n1 BookUUID mismatch")
+	testutils.AssertEqual(t, n1Body, "n1 Body", "n1 Body mismatch")
+	testutils.AssertEqual(t, n1AddedOn, int64(1), "n1 AddedOn mismatch")
+	testutils.AssertEqual(t, n1EditedOn, int64(2), "n1 EditedOn mismatch")
+	testutils.AssertEqual(t, n1USN, 20, "n1 USN mismatch")
+	testutils.AssertEqual(t, n1Public, true, "n1 Public mismatch")
+	testutils.AssertEqual(t, n1Dirty, true, "n1 Dirty mismatch")
+	testutils.AssertEqual(t, n1Deleted, false, "n1 Deleted mismatch")
+
+	testutils.AssertEqual(t, n2BookUUID, b1UUID, "n2 BookUUID mismatch")
+	testutils.AssertEqual(t, n2Body, "", "n2 Body mismatch")
+	testutils.AssertEqual(t, n2AddedOn, int64(3), "n2 AddedOn mismatch")
+	testutils.AssertEqual(t, n2EditedOn, int64(4), "n2 EditedOn mismatch")
+	testutils.AssertEqual(t, n2USN, 21, "n2 USN mismatch")
+	testutils.AssertEqual(t, n2Public, false, "n2 Public mismatch")
+	testutils.AssertEqual(t, n2Dirty, true, "n2 Dirty mismatch")
+	testutils.AssertEqual(t, n2Deleted, true, "n2 Deleted mismatch")
+}
+
+func TestLocalMigration9(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-9-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
+
+	n1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting n1", db, `INSERT INTO notes
+		(uuid, book_uuid, body, added_on, edited_on, public, dirty, usn, deleted) VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n1UUID, b1UUID, "n1 Body", 1, 2, true, true, 20, false)
+	n2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting n2", db, `INSERT INTO notes
+		(uuid, book_uuid, body, added_on, edited_on, public, dirty, usn, deleted) VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n2UUID, b1UUID, "n2 Body", 3, 4, false, true, 21, false)
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm9.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+
+	// assert that note_fts was populated with correct values
+	var noteFtsCount int
+	testutils.MustScan(t, "counting note_fts", db.QueryRow("SELECT count(*) FROM note_fts;"), &noteFtsCount)
+	testutils.AssertEqual(t, noteFtsCount, 2, "noteFtsCount mismatch")
+
+	var resCount int
+	testutils.MustScan(t, "counting result", db.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "n1"), &resCount)
+	testutils.AssertEqual(t, resCount, 1, "noteFtsCount mismatch")
+}
+
 func TestRemoteMigration1(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/remote-1-pre-schema.sql", false)

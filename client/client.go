@@ -55,7 +55,7 @@ type SyncFragNote struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	AddedOn   int64     `json:"added_on"`
 	EditedOn  int64     `json:"edited_on"`
-	Content   string    `json:"content"`
+	Body      string    `json:"content"`
 	Public    bool      `json:"public"`
 	Deleted   bool      `json:"deleted"`
 }
@@ -252,7 +252,7 @@ func DeleteBook(ctx infra.DnoteCtx, apiKey, uuid string) (DeleteBookResp, error)
 // CreateNotePayload is a payload for creating a note
 type CreateNotePayload struct {
 	BookUUID string `json:"book_uuid"`
-	Content  string `json:"content"`
+	Body     string `json:"content"`
 }
 
 // CreateNoteResp is the response from create note endpoint
@@ -274,7 +274,7 @@ type RespNote struct {
 	UUID      string       `json:"uuid"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
-	Content   string       `json:"content"`
+	Body      string       `json:"content"`
 	AddedOn   int64        `json:"added_on"`
 	Public    bool         `json:"public"`
 	USN       int          `json:"usn"`
@@ -286,7 +286,7 @@ type RespNote struct {
 func CreateNote(ctx infra.DnoteCtx, apiKey, bookUUID, content string) (CreateNoteResp, error) {
 	payload := CreateNotePayload{
 		BookUUID: bookUUID,
-		Content:  content,
+		Body:     content,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -316,7 +316,7 @@ func CreateNote(ctx infra.DnoteCtx, apiKey, bookUUID, content string) (CreateNot
 
 type updateNotePayload struct {
 	BookUUID *string `json:"book_uuid"`
-	Content  *string `json:"content"`
+	Body     *string `json:"content"`
 	Public   *bool   `json:"public"`
 }
 
@@ -330,7 +330,7 @@ type UpdateNoteResp struct {
 func UpdateNote(ctx infra.DnoteCtx, apiKey, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
 	payload := updateNotePayload{
 		BookUUID: &bookUUID,
-		Content:  &content,
+		Body:     &content,
 		Public:   &public,
 	}
 	b, err := json.Marshal(payload)

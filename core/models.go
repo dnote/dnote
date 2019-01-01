@@ -20,7 +20,7 @@ type Book struct {
 type Note struct {
 	UUID     string `json:"uuid"`
 	BookUUID string `json:"book_uuid"`
-	Content  string `json:"content"`
+	Body     string `json:"content"`
 	AddedOn  int64  `json:"added_on"`
 	EditedOn int64  `json:"edited_on"`
 	USN      int    `json:"usn"`
@@ -30,11 +30,11 @@ type Note struct {
 }
 
 // NewNote constructs a note with the given data
-func NewNote(uuid, bookUUID, content string, addedOn, editedOn int64, usn int, public, deleted, dirty bool) Note {
+func NewNote(uuid, bookUUID, body string, addedOn, editedOn int64, usn int, public, deleted, dirty bool) Note {
 	return Note{
 		UUID:     uuid,
 		BookUUID: bookUUID,
-		Content:  content,
+		Body:     body,
 		AddedOn:  addedOn,
 		EditedOn: editedOn,
 		USN:      usn,
@@ -46,8 +46,8 @@ func NewNote(uuid, bookUUID, content string, addedOn, editedOn int64, usn int, p
 
 // Insert inserts a new note
 func (n Note) Insert(tx *sql.Tx) error {
-	_, err := tx.Exec("INSERT INTO notes (uuid, book_uuid, content, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		n.UUID, n.BookUUID, n.Content, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, n.Dirty)
+	_, err := tx.Exec("INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		n.UUID, n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, n.Dirty)
 
 	if err != nil {
 		return errors.Wrapf(err, "inserting note with uuid %s", n.UUID)
@@ -58,8 +58,8 @@ func (n Note) Insert(tx *sql.Tx) error {
 
 // Update updates the note with the given data
 func (n Note) Update(tx *sql.Tx) error {
-	_, err := tx.Exec("UPDATE notes SET book_uuid = ?, content = ?, added_on = ?, edited_on = ?, usn = ?, public = ?, deleted = ?, dirty = ? WHERE uuid = ?",
-		n.BookUUID, n.Content, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, n.Dirty, n.UUID)
+	_, err := tx.Exec("UPDATE notes SET book_uuid = ?, body = ?, added_on = ?, edited_on = ?, usn = ?, public = ?, deleted = ?, dirty = ? WHERE uuid = ?",
+		n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, n.Dirty, n.UUID)
 
 	if err != nil {
 		return errors.Wrapf(err, "updating the note with uuid %s", n.UUID)

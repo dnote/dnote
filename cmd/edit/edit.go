@@ -51,7 +51,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
 		bookLabel := args[0]
-		noteID := args[1]
+		noteRowID := args[1]
 
 		bookUUID, err := core.GetBookUUID(ctx, bookLabel)
 		if err != nil {
@@ -59,9 +59,9 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		var noteUUID, oldContent string
-		err = db.QueryRow("SELECT uuid, content FROM notes WHERE id = ? AND book_uuid = ?", noteID, bookUUID).Scan(&noteUUID, &oldContent)
+		err = db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND book_uuid = ?", noteRowID, bookUUID).Scan(&noteUUID, &oldContent)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found in the book '%s'", noteID, bookLabel)
+			return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the book")
 		}
@@ -93,8 +93,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		_, err = tx.Exec(`UPDATE notes
-			SET content = ?, edited_on = ?, dirty = ?
-			WHERE id = ? AND book_uuid = ?`, newContent, ts, true, noteID, bookUUID)
+			SET body = ?, edited_on = ?, dirty = ?
+			WHERE rowid = ? AND book_uuid = ?`, newContent, ts, true, noteRowID, bookUUID)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "updating the note")

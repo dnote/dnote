@@ -150,7 +150,6 @@ func InitDB(ctx DnoteCtx) error {
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_books_label ON books(label);
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_notes_uuid ON notes(uuid);
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_books_uuid ON books(uuid);
-		CREATE UNIQUE INDEX IF NOT EXISTS idx_notes_id ON notes(id);
 		CREATE INDEX IF NOT EXISTS idx_notes_book_uuid ON notes(book_uuid);`)
 	if err != nil {
 		return errors.Wrap(err, "creating indices")

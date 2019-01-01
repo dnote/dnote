@@ -6,6 +6,8 @@
 
 set -eu
 
+homebrewRepoDir="$GOPATH"/src/github.com/dnote/homebrew-dnote
+
 command_exists () {
   command -v "$1" >/dev/null 2>&1;
 }
@@ -23,6 +25,13 @@ if ! command_exists hub; then
   echo "please install hub"
   exit 1
 fi
+
+if [ ! -d $homebrewRepoDir ]; then
+  echo "homebrew-dnote not found locally. did you clone it?"
+  exit 1
+fi
+
+if [ -d  ]
 
 # 1. push tag
 version=$1
@@ -48,4 +57,4 @@ hub release create \
 
 # 3. Release on Homebrew
 homebrew_sha256=$(shasum -a 256 "./build/dnote_${version}_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
-(cd "$GOPATH"/src/github.com/dnote/homebrew-dnote && ./release.sh "$version" "$homebrew_sha256")
+(cd $homebrewRepoDir && ./release.sh "$version" "$homebrew_sha256")

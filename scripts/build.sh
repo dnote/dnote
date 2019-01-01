@@ -38,6 +38,8 @@ build() {
 
   pushd "$basedir"
 
+  # TODO: do i need to pass fts5 tag?
+
   # build linux
   xgo --targets="linux/amd64"\
     -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
