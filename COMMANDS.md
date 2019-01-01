@@ -70,7 +70,7 @@ dnote remove -b JS
 
 ## dnote find
 
-_alias: f
+_alias: f_
 
 Find notes by keywords
 
