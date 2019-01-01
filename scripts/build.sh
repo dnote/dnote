@@ -38,22 +38,23 @@ build() {
 
   pushd "$basedir"
 
-  # TODO: do i need to pass fts5 tag?
-
   # build linux
   xgo --targets="linux/amd64"\
+    --tags "linux fts5"\
     -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
   mkdir "$TMP/linux"
   mv cli-linux-amd64 "$TMP/linux/dnote"
 
   # build darwin
   xgo --targets="darwin/amd64"\
+    --tags "darwin fts5"\
     -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
   mkdir "$TMP/darwin"
   mv cli-darwin-10.6-amd64 "$TMP/darwin/dnote"
 
   # build windows
   xgo --targets="windows/amd64"\
+    --tags "fts5"\
     -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
   mkdir "$TMP/windows"
   mv cli-windows-4.0-amd64.exe "$TMP/windows/dnote.exe"
