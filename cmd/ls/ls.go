@@ -132,7 +132,7 @@ func printBooks(ctx infra.DnoteCtx) error {
 	}
 
 	for _, info := range infos {
-		log.Printf("%s %s\n", info.BookLabel, log.SprintfYellow("(%d)", info.NoteCount))
+		log.Printf("%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
 	}
 
 	return nil
@@ -171,9 +171,9 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 	for _, info := range infos {
 		body, isExcerpt := formatBody(info.Body)
 
-		rowid := log.SprintfYellow("(%d)", info.RowID)
+		rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
 		if isExcerpt {
-			body = fmt.Sprintf("%s %s", body, log.SprintfYellow("[---More---]"))
+			body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
 		}
 
 		log.Plainf("%s %s\n", rowid, body)

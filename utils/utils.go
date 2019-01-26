@@ -62,44 +62,6 @@ func FileExists(filepath string) bool {
 	return !os.IsNotExist(err)
 }
 
-// CopyFile copies a file from the src to dest
-func CopyFile(src, dest string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return errors.Wrap(err, "opening the input file")
-	}
-	defer in.Close()
-
-	out, err := os.Create(dest)
-	if err != nil {
-		return errors.Wrap(err, "creating the output file")
-	}
-
-	if _, err = io.Copy(out, in); err != nil {
-		return errors.Wrap(err, "copying the file content")
-	}
-
-	if err = out.Sync(); err != nil {
-		return errors.Wrap(err, "flushing the output file to disk")
-	}
-
-	fi, err := os.Stat(src)
-	if err != nil {
-		return errors.Wrap(err, "getting the file info for the input file")
-	}
-
-	if err = os.Chmod(dest, fi.Mode()); err != nil {
-		return errors.Wrap(err, "copying permission to the output file")
-	}
-
-	// Close the output file
-	if err = out.Close(); err != nil {
-		return errors.Wrap(err, "closing the output file")
-	}
-
-	return nil
-}
-
 // CopyDir copies a directory from src to dest, recursively copying nested
 // directories
 func CopyDir(src, dest string) error {
@@ -166,4 +128,42 @@ func DoAuthorizedReq(ctx infra.DnoteCtx, apiKey, method, path, body string) (*ht
 	}
 
 	return res, nil
+}
+
+// CopyFile copies a file from the src to dest
+func CopyFile(src, dest string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return errors.Wrap(err, "opening the input file")
+	}
+	defer in.Close()
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return errors.Wrap(err, "creating the output file")
+	}
+
+	if _, err = io.Copy(out, in); err != nil {
+		return errors.Wrap(err, "copying the file content")
+	}
+
+	if err = out.Sync(); err != nil {
+		return errors.Wrap(err, "flushing the output file to disk")
+	}
+
+	fi, err := os.Stat(src)
+	if err != nil {
+		return errors.Wrap(err, "getting the file info for the input file")
+	}
+
+	if err = os.Chmod(dest, fi.Mode()); err != nil {
+		return errors.Wrap(err, "copying permission to the output file")
+	}
+
+	// Close the output file
+	if err = out.Close(); err != nil {
+		return errors.Wrap(err, "closing the output file")
+	}
+
+	return nil
 }

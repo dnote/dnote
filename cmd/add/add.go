@@ -2,7 +2,6 @@ package add
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/dnote/cli/core"
@@ -36,7 +35,7 @@ func preRun(cmd *cobra.Command, args []string) error {
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "add <book>",
-		Short:   "Add a note",
+		Short:   "Add a new note",
 		Aliases: []string{"a", "n", "new"},
 		Example: example,
 		PreRunE: preRun,
@@ -86,9 +85,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		log.Successf("added to %s\n", bookName)
-		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", content)
-		fmt.Printf("\n-------------------------------------------------------\n")
+		log.PrintContent(content)
 
 		if err := core.CheckUpdate(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())

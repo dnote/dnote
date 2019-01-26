@@ -59,24 +59,28 @@ func GetBookUUID(ctx infra.DnoteCtx, label string) (string, error) {
 func getEditorCommand() string {
 	editor := os.Getenv("EDITOR")
 
+	var ret string
+
 	switch editor {
 	case "atom":
-		return "atom -w"
+		ret = "atom -w"
 	case "subl":
-		return "subl -n -w"
+		ret = "subl -n -w"
 	case "mate":
-		return "mate -w"
+		ret = "mate -w"
 	case "vim":
-		return "vim"
-	case "nvim":
-		return "nvim"
+		ret = "vim"
 	case "nano":
-		return "nano"
+		ret = "nano"
 	case "emacs":
-		return "emacs"
+		ret = "emacs"
+	case "nvim":
+		ret = "nvim"
 	default:
-		return "vi"
+		ret = "vi"
 	}
+
+	return ret
 }
 
 // InitFiles creates, if necessary, the dnote directory and files inside
