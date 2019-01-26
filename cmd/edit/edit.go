@@ -69,8 +69,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if newContent == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
 
-			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
-			if e != nil {
+			err := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
+			if err != nil {
 				return errors.Wrap(e, "preparing tmp content file")
 			}
 

@@ -34,7 +34,7 @@ func TestInit(t *testing.T) {
 	testutils.RunDnoteCmd(t, ctx, binaryName)
 
 	// Test
-	if !utils.FileExists(ctx.DnoteDir) {
+	if !utils.FileExists(fmt.Sprintf("%s", ctx.DnoteDir)) {
 		t.Errorf("dnote directory was not initialized")
 	}
 	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.ConfigFilename)) {
