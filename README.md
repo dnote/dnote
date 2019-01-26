@@ -52,7 +52,7 @@ dnote view linux
 
 ## Commands
 
-Please refer to [commands](/COMMANDS.md).
+Please refer to ![commands](/COMMANDS.md).
 
 ## Links
 
