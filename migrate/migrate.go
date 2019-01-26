@@ -2,7 +2,6 @@ package migrate
 
 import (
 	"database/sql"
-
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"

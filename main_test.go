@@ -7,12 +7,11 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/pkg/errors"
-
 	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/testutils"
 	"github.com/dnote/cli/utils"
+	"github.com/pkg/errors"
 )
 
 var binaryName = "test-dnote"
