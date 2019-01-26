@@ -2,9 +2,8 @@ package log
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/dnote/color"
+	"os"
 )
 
 var (
