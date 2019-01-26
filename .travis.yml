@@ -1,0 +1,8 @@
+language: go
+go:
+  - 1.11.x
+install:
+  - curl -L https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64 -o ./dep && chmod +x ./dep
+  - ./dep ensure
+script:
+  - ./scripts/test.sh
