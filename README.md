@@ -33,23 +33,6 @@ Write technical notes without getting distracted from programming. The reasons a
 - We forget exponentially unless we write down what we learn and come back.
 - Ideas cannot be grokked unless we can put them down in clear words.
 
-## Examples
-
-- Add a note to a book named `linux`
-
-```
-dnote add linux -c "find - recursively walk the directory"
-```
-
-- See the notes in a book
-
-```
-dnote view linux
-
-• on book linux
-(0) find - recursively walk the directory
-```
-
 ## Commands
 
 Please refer to ![commands](/COMMANDS.md).
