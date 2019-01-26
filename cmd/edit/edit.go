@@ -2,6 +2,7 @@ package edit
 
 import (
 	"database/sql"
+	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -19,7 +20,7 @@ var example = `
   dnote edit js 3
 
 	* Skip the prompt by providing new content directly
-	dntoe edit js 3 -c "new content"`
+	dnote edit js 3 -c "new content"`
 
 // NewCmd returns a new edit command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
@@ -68,8 +69,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		if newContent == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
 
-			err := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
-			if err != nil {
+			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
+			if e != nil {
 				return errors.Wrap(e, "preparing tmp content file")
 			}
 
@@ -102,7 +103,9 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		tx.Commit()
 
 		log.Success("edited the note\n")
-		log.PrintContent(content)
+		fmt.Printf("\n------------------------content------------------------\n")
+		fmt.Printf("%s", newContent)
+		fmt.Printf("\n-------------------------------------------------------\n")
 
 		return nil
 	}

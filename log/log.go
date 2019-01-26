@@ -63,8 +63,8 @@ func Error(msg string) {
 }
 
 // Errorf prints an error message with optional format verbs
-func Errorf(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, ColorRed.Sprint("⨯"), msg)
+func Errorf(msg string, v ...interface{}) {
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorRed.Sprintf("⨯"), fmt.Sprintf(msg, v...))
 }
 
 // Printf prints an normal message

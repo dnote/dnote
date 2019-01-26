@@ -76,7 +76,7 @@ func formatFTSSnippet(s string) (string, error) {
 			buf.Reset()
 		} else if tok.Kind == tokenKindHLEnd {
 			format.WriteString("%s")
-			str := log.SprintfYellow("%s", buf.String())
+			str := log.ColorYellow.Sprintf("%s", buf.String())
 			args = append(args, str)
 
 			buf.Reset()
@@ -169,8 +169,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		for _, info := range infos {
-			bookLabel := log.SprintfYellow("(%s)", info.BookLabel)
-			rowid := log.SprintfYellow("(%d)", info.RowID)
+			bookLabel := log.ColorYellow.Sprintf("(%s)", info.BookLabel)
+			rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
 
 			log.Plainf("%s %s %s\n", bookLabel, rowid, info.Body)
 		}

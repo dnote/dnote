@@ -2,7 +2,6 @@ package add
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/dnote/cli/core"
