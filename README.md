@@ -56,9 +56,8 @@ Please refer to [commands](/COMMANDS.md).
 
 ## Links
 
-- [Dnote](https://dnote.io)
-- [Dnote Cloud](https://dnote.io/pricing)
-- [Browser Extension](https://github.com/dnote/browser-extension)
+* [Website](https://dnote.io)
+* [Making Dnote (blog article)](https://github.com/dnote-io/cli)
 
 ## License
 
