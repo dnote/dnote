@@ -68,8 +68,6 @@ func getEditorCommand() string {
 		return "mate -w"
 	case "vim":
 		return "vim"
-	case "nvim":
-		return "nvim"
 	case "nano":
 		return "nano"
 	case "emacs":
