@@ -86,9 +86,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		log.Successf("added to %s\n", bookName)
-		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", content)
-		fmt.Printf("\n-------------------------------------------------------\n")
+		log.PrintContent(content)
 
 		if err := core.CheckUpdate(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())

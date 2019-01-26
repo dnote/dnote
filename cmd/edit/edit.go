@@ -101,8 +101,8 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		tx.Commit()
 
-		log.Printf("new content: %s\n", newContent)
 		log.Success("edited the note\n")
+		log.PrintContent(content)
 
 		return nil
 	}
