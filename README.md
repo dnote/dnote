@@ -35,15 +35,12 @@ Write technical notes without getting distracted from programming. The reasons a
 
 ## Commands
 
-Please refer to ![commands](/COMMANDS.md).
+Please refer to [commands](/COMMANDS.md).
 
 ## Links
 
-* [Website](https://dnote.io)
-* [Making Dnote (blog article)](https://github.com/dnote-io/cli)
-
-## License
-
-MIT
+- [Dnote](https://dnote.io)
+- [Dnote Cloud](https://dnote.io/pricing)
+- [Browser Extension](https://github.com/dnote/browser-extension)
 
 [![Build Status](https://travis-ci.org/dnote/cli.svg?branch=master)](https://travis-ci.org/dnote/cli)
