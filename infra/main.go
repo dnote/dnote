@@ -27,21 +27,28 @@ var (
 	SystemLastMaxUSN = "last_max_usn"
 	// SystemLastUpgrade is the timestamp at which the system more recently checked for an upgrade
 	SystemLastUpgrade = "last_upgrade"
+	// SystemEncKey is the encryption key
+	SystemEncKey = "enc_key"
+	// SystemSessionKey is the session key
+	SystemSessionKey = "session_token"
+	// SystemSessionKeyExpiry is the timestamp at which the session key will expire
+	SystemSessionKeyExpiry = "session_token_expiry"
 )
 
 // DnoteCtx is a context holding the information of the current runtime
 type DnoteCtx struct {
-	HomeDir     string
-	DnoteDir    string
-	APIEndpoint string
-	Version     string
-	DB          *sql.DB
+	HomeDir          string
+	DnoteDir         string
+	APIEndpoint      string
+	Version          string
+	DB               *sql.DB
+	SessionKey       string
+	SessionKeyExpiry int64
 }
 
 // Config holds dnote configuration
 type Config struct {
 	Editor string
-	APIKey string
 }
 
 // NewCtx returns a new dnote context

@@ -914,14 +914,13 @@ func TestRemoteMigration1(t *testing.T) {
 
 	ctx.APIEndpoint = server.URL
 
-	confStr := fmt.Sprintf("apikey: mock_api_key")
-	testutils.WriteFile(ctx, []byte(confStr), "dnoterc")
-
 	db := ctx.DB
 
 	testutils.MustExec(t, "inserting js book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", JSBookUUID, "js")
 	testutils.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", CSSBookUUID, "css")
 	testutils.MustExec(t, "inserting linux book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", linuxBookUUID, "linux")
+	testutils.MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKey, "someSessionKey")
+	testutils.MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
 
 	tx, err := db.Begin()
 	if err != nil {

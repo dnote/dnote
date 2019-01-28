@@ -15,6 +15,7 @@ import (
 	"github.com/dnote/cli/cmd/edit"
 	"github.com/dnote/cli/cmd/find"
 	"github.com/dnote/cli/cmd/login"
+	"github.com/dnote/cli/cmd/logout"
 	"github.com/dnote/cli/cmd/ls"
 	"github.com/dnote/cli/cmd/remove"
 	"github.com/dnote/cli/cmd/sync"
@@ -40,6 +41,7 @@ func main() {
 	root.Register(remove.NewCmd(ctx))
 	root.Register(edit.NewCmd(ctx))
 	root.Register(login.NewCmd(ctx))
+	root.Register(logout.NewCmd(ctx))
 	root.Register(add.NewCmd(ctx))
 	root.Register(ls.NewCmd(ctx))
 	root.Register(sync.NewCmd(ctx))

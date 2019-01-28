@@ -309,7 +309,7 @@ func WaitDnoteCmd(t *testing.T, ctx infra.DnoteCtx, runFunc func(io.WriteCloser)
 func UserConfirm(stdin io.WriteCloser) error {
 	// confirm
 	if _, err := io.WriteString(stdin, "y\n"); err != nil {
-		return errors.Wrap(err, "confirming deletion")
+		return errors.Wrap(err, "indicating confirmation in stdin")
 	}
 
 	return nil

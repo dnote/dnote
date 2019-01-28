@@ -1,11 +1,14 @@
 package login
 
 import (
-	"fmt"
+	"strconv"
 
+	"github.com/dnote/cli/client"
 	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/crypt"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
+	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -25,36 +28,70 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
+// Do dervies credentials on the client side and requests a session token from the server
+func Do(ctx infra.DnoteCtx, email, password string) error {
+	presigninResp, err := client.GetPresignin(ctx, email)
+	if err != nil {
+		return errors.Wrap(err, "getting presiginin")
+	}
+
+	encKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
+	if err != nil {
+		return errors.Wrap(err, "making keys")
+	}
+
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	signinResp, err := client.Signin(ctx, email, authKey)
+	if err != nil {
+		return errors.Wrap(err, "requesting session")
+	}
+
+	if err := core.UpsertSystem(tx, infra.SystemEncKey, encKey); err != nil {
+		return errors.Wrap(err, "saving enc key")
+	}
+	if err := core.UpsertSystem(tx, infra.SystemSessionKey, signinResp.Key); err != nil {
+		return errors.Wrap(err, "saving session key")
+	}
+	if err := core.UpsertSystem(tx, infra.SystemSessionKeyExpiry, strconv.FormatInt(signinResp.ExpiresAt, 10)); err != nil {
+		return errors.Wrap(err, "saving session key")
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		log.Plain("\n")
-		log.Plain("   _(  )_( )_\n")
-		log.Plain("  (_   _    _)\n")
-		log.Plain("    (_) (__)\n\n")
-		log.Plain("Welcome to Dnote Cloud :)\n\n")
-		log.Plain("A home for your engineering microlessons\n")
-		log.Plain("You can register at https://dnote.io/cloud\n\n")
-		log.Printf("API key: ")
-
-		var apiKey string
-		fmt.Scanln(&apiKey)
-
-		if apiKey == "" {
-			return errors.New("Empty API key")
+		var email, password string
+		if err := utils.PromptInput("email", &email); err != nil {
+			return errors.Wrap(err, "getting email input")
+		}
+		if email == "" {
+			return errors.New("Email is empty")
 		}
 
-		config, err := core.ReadConfig(ctx)
-		if err != nil {
-			return err
+		if err := utils.PromptPassword("password", &password); err != nil {
+			return errors.Wrap(err, "getting password input")
+		}
+		if password == "" {
+			return errors.New("Password is empty")
 		}
 
-		config.APIKey = apiKey
-		err = core.WriteConfig(ctx, config)
-		if err != nil {
-			return errors.Wrap(err, "Failed to write to config file")
+		err := Do(ctx, email, password)
+		if errors.Cause(err) == client.ErrInvalidLogin {
+			log.Error("wrong login")
+			return nil
+		} else if err != nil {
+			return errors.Wrap(err, "logging in")
 		}
 
-		log.Success("configured\n")
+		log.Success("logged in\n")
 
 		return nil
 	}

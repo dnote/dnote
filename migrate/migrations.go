@@ -389,15 +389,15 @@ var lm9 = migration{
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
-		config, err := core.ReadConfig(ctx)
+		sessionKey, ok, err := core.GetValidSession(tx)
 		if err != nil {
-			return errors.Wrap(err, "reading the config")
+			return errors.Wrap(err, "getting session locally")
 		}
-		if config.APIKey == "" {
-			return errors.New("login required")
+		if !ok {
+			return nil
 		}
 
-		resp, err := client.GetBooks(ctx, config.APIKey)
+		resp, err := client.GetBooks(ctx, sessionKey)
 		if err != nil {
 			return errors.Wrap(err, "getting books from the server")
 		}

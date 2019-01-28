@@ -9,11 +9,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // GenerateUUID returns a uid
@@ -28,7 +30,38 @@ func getInput() (string, error) {
 		return "", errors.Wrap(err, "reading stdin")
 	}
 
-	return input, nil
+	return strings.Trim(input, "\r\n"), nil
+}
+
+// PromptInput prompts the user input and saves the result to the destination
+func PromptInput(message string, dest *string) error {
+	log.Askf(message, false)
+
+	input, err := getInput()
+	if err != nil {
+		return errors.Wrap(err, "getting user input")
+	}
+
+	*dest = input
+
+	return nil
+}
+
+// PromptPassword prompts the user input a password and saves the result to the destination.
+// The input is masked, meaning it is not echoed on the terminal.
+func PromptPassword(message string, dest *string) error {
+	log.Askf(message, true)
+
+	password, err := terminal.ReadPassword(syscall.Stdin)
+	if err != nil {
+		return errors.Wrap(err, "getting user input")
+	}
+
+	fmt.Println("")
+
+	*dest = string(password)
+
+	return nil
 }
 
 // AskConfirmation prompts for user input to confirm a choice
@@ -40,17 +73,17 @@ func AskConfirmation(question string, optimistic bool) (bool, error) {
 		choices = "(y/N)"
 	}
 
-	log.Printf("%s %s: ", question, choices)
+	message := fmt.Sprintf("%s %s", question, choices)
 
-	res, err := getInput()
-	if err != nil {
+	var input string
+	if err := PromptInput(message, &input); err != nil {
 		return false, errors.Wrap(err, "Failed to get user input")
 	}
 
-	confirmed := res == "y\n" || res == "y\r\n"
+	confirmed := input == "y"
 
 	if optimistic {
-		confirmed = confirmed || res == "\n" || res == "\r\n"
+		confirmed = confirmed || input == ""
 	}
 
 	return confirmed, nil
@@ -109,17 +142,43 @@ func CopyDir(src, dest string) error {
 	return nil
 }
 
-// DoAuthorizedReq does a http request to the given path in the api endpoint as a user,
-// with the appropriate headers. The given path should include the preceding slash.
-func DoAuthorizedReq(ctx infra.DnoteCtx, apiKey, method, path, body string) (*http.Response, error) {
+func getReq(ctx infra.DnoteCtx, path, method, body string) (*http.Request, error) {
 	endpoint := fmt.Sprintf("%s%s", ctx.APIEndpoint, path)
 	req, err := http.NewRequest(method, endpoint, strings.NewReader(body))
 	if err != nil {
 		return nil, errors.Wrap(err, "constructing http request")
 	}
 
-	req.Header.Set("Authorization", apiKey)
 	req.Header.Set("CLI-Version", ctx.Version)
+
+	return req, nil
+}
+
+// DoAuthorizedReq does a http request to the given path in the api endpoint as a user,
+// with the appropriate headers. The given path should include the preceding slash.
+func DoAuthorizedReq(ctx infra.DnoteCtx, hc http.Client, sessionKey, method, path, body string) (*http.Response, error) {
+	req, err := getReq(ctx, path, method, body)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting request")
+	}
+
+	credential := fmt.Sprintf("Bearer %s", sessionKey)
+	req.Header.Set("Authorization", credential)
+
+	res, err := hc.Do(req)
+	if err != nil {
+		return res, errors.Wrap(err, "making http request")
+	}
+
+	return res, nil
+}
+
+// DoReq does a http request to the given path in the api endpoint
+func DoReq(ctx infra.DnoteCtx, method, path, body string) (*http.Response, error) {
+	req, err := getReq(ctx, path, method, body)
+	if err != nil {
+		return nil, errors.Wrap(err, "getting request")
+	}
 
 	hc := http.Client{}
 	res, err := hc.Do(req)

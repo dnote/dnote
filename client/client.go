@@ -17,6 +17,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrInvalidLogin is an error for invalid credentials for login
+var ErrInvalidLogin = errors.New("wrong credentials")
+
 // GetSyncStateResp is the response get sync state endpoint
 type GetSyncStateResp struct {
 	FullSyncBefore int   `json:"full_sync_before"`
@@ -25,10 +28,11 @@ type GetSyncStateResp struct {
 }
 
 // GetSyncState gets the sync state response from the server
-func GetSyncState(apiKey string, ctx infra.DnoteCtx) (GetSyncStateResp, error) {
+func GetSyncState(sessionKey string, ctx infra.DnoteCtx) (GetSyncStateResp, error) {
 	var ret GetSyncStateResp
 
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", "/v1/sync/state", "")
+	hc := http.Client{}
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", "/v1/sync/state", "")
 	if err != nil {
 		return ret, errors.Wrap(err, "constructing http request")
 	}
@@ -89,13 +93,14 @@ type GetSyncFragmentResp struct {
 }
 
 // GetSyncFragment gets a sync fragment response from the server
-func GetSyncFragment(ctx infra.DnoteCtx, apiKey string, afterUSN int) (GetSyncFragmentResp, error) {
+func GetSyncFragment(ctx infra.DnoteCtx, sessionKey string, afterUSN int) (GetSyncFragmentResp, error) {
 	v := url.Values{}
 	v.Set("after_usn", strconv.Itoa(afterUSN))
 	queryStr := v.Encode()
 
 	path := fmt.Sprintf("/v1/sync/fragment?%s", queryStr)
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", path, "")
+	hc := http.Client{}
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", path, "")
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -148,7 +153,7 @@ func checkRespErr(res *http.Response) (bool, string, error) {
 }
 
 // CreateBook creates a new book in the server
-func CreateBook(ctx infra.DnoteCtx, apiKey, label string) (CreateBookResp, error) {
+func CreateBook(ctx infra.DnoteCtx, sessionKey, label string) (CreateBookResp, error) {
 	payload := CreateBookPayload{
 		Name: label,
 	}
@@ -157,16 +162,17 @@ func CreateBook(ctx infra.DnoteCtx, apiKey, label string) (CreateBookResp, error
 		return CreateBookResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "POST", "/v1/books", string(b))
+	hc := http.Client{}
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/books", string(b))
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return CreateBookResp{}, errors.New(message)
 	}
 
@@ -188,7 +194,7 @@ type UpdateBookResp struct {
 }
 
 // UpdateBook updates a book in the server
-func UpdateBook(ctx infra.DnoteCtx, apiKey, label, uuid string) (UpdateBookResp, error) {
+func UpdateBook(ctx infra.DnoteCtx, sessionKey, label, uuid string) (UpdateBookResp, error) {
 	payload := updateBookPayload{
 		Name: &label,
 	}
@@ -197,17 +203,18 @@ func UpdateBook(ctx infra.DnoteCtx, apiKey, label, uuid string) (UpdateBookResp,
 		return UpdateBookResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
+	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "PATCH", endpoint, string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "PATCH", endpoint, string(b))
 	if err != nil {
 		return UpdateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return UpdateBookResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return UpdateBookResp{}, errors.New(message)
 	}
 
@@ -226,18 +233,19 @@ type DeleteBookResp struct {
 }
 
 // DeleteBook deletes a book in the server
-func DeleteBook(ctx infra.DnoteCtx, apiKey, uuid string) (DeleteBookResp, error) {
+func DeleteBook(ctx infra.DnoteCtx, sessionKey, uuid string) (DeleteBookResp, error) {
+	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "DELETE", endpoint, "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "DELETE", endpoint, "")
 	if err != nil {
 		return DeleteBookResp{}, errors.Wrap(err, "deleting a book in the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return DeleteBookResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return DeleteBookResp{}, errors.New(message)
 	}
 
@@ -283,7 +291,7 @@ type RespNote struct {
 }
 
 // CreateNote creates a note in the server
-func CreateNote(ctx infra.DnoteCtx, apiKey, bookUUID, content string) (CreateNoteResp, error) {
+func CreateNote(ctx infra.DnoteCtx, sessionKey, bookUUID, content string) (CreateNoteResp, error) {
 	payload := CreateNotePayload{
 		BookUUID: bookUUID,
 		Body:     content,
@@ -293,16 +301,17 @@ func CreateNote(ctx infra.DnoteCtx, apiKey, bookUUID, content string) (CreateNot
 		return CreateNoteResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "POST", "/v1/notes", string(b))
+	hc := http.Client{}
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/notes", string(b))
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "posting a book to the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return CreateNoteResp{}, errors.New(message)
 	}
 
@@ -327,7 +336,7 @@ type UpdateNoteResp struct {
 }
 
 // UpdateNote updates a note in the server
-func UpdateNote(ctx infra.DnoteCtx, apiKey, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
+func UpdateNote(ctx infra.DnoteCtx, sessionKey, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
 	payload := updateNotePayload{
 		BookUUID: &bookUUID,
 		Body:     &content,
@@ -338,17 +347,18 @@ func UpdateNote(ctx infra.DnoteCtx, apiKey, uuid, bookUUID, content string, publ
 		return UpdateNoteResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
+	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "PATCH", endpoint, string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "PATCH", endpoint, string(b))
 	if err != nil {
 		return UpdateNoteResp{}, errors.Wrap(err, "patching a note to the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return UpdateNoteResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return UpdateNoteResp{}, errors.New(message)
 	}
 
@@ -367,18 +377,19 @@ type DeleteNoteResp struct {
 }
 
 // DeleteNote removes a note in the server
-func DeleteNote(ctx infra.DnoteCtx, apiKey, uuid string) (DeleteNoteResp, error) {
+func DeleteNote(ctx infra.DnoteCtx, sessionKey, uuid string) (DeleteNoteResp, error) {
+	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "DELETE", endpoint, "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "DELETE", endpoint, "")
 	if err != nil {
 		return DeleteNoteResp{}, errors.Wrap(err, "patching a note to the server")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return DeleteNoteResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return DeleteNoteResp{}, errors.New(message)
 	}
 
@@ -397,17 +408,18 @@ type GetBooksResp []struct {
 }
 
 // GetBooks gets books from the server
-func GetBooks(ctx infra.DnoteCtx, apiKey string) (GetBooksResp, error) {
-	res, err := utils.DoAuthorizedReq(ctx, apiKey, "GET", "/v1/books", "")
+func GetBooks(ctx infra.DnoteCtx, sessionKey string) (GetBooksResp, error) {
+	hc := http.Client{}
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", "/v1/books", "")
 	if err != nil {
 		return GetBooksResp{}, errors.Wrap(err, "making http request")
 	}
 
-	ok, message, err := checkRespErr(res)
+	hasErr, message, err := checkRespErr(res)
 	if err != nil {
 		return GetBooksResp{}, errors.Wrap(err, "checking repsonse error")
 	}
-	if ok {
+	if hasErr {
 		return GetBooksResp{}, errors.New(message)
 	}
 
@@ -417,4 +429,104 @@ func GetBooks(ctx infra.DnoteCtx, apiKey string) (GetBooksResp, error) {
 	}
 
 	return resp, nil
+}
+
+// PresigninResponse is a reponse from /v1/presignin endpoint
+type PresigninResponse struct {
+	Iteration int `json:"iteration"`
+}
+
+// GetPresignin gets presignin credentials
+func GetPresignin(ctx infra.DnoteCtx, email string) (PresigninResponse, error) {
+	res, err := utils.DoReq(ctx, "GET", fmt.Sprintf("/v1/presignin?email=%s", email), "")
+	if err != nil {
+		return PresigninResponse{}, errors.Wrap(err, "making http request")
+	}
+
+	hasErr, message, err := checkRespErr(res)
+	if err != nil {
+		return PresigninResponse{}, errors.Wrap(err, "checking repsonse error")
+	}
+	if hasErr {
+		return PresigninResponse{}, errors.New(message)
+	}
+
+	var resp PresigninResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return PresigninResponse{}, errors.Wrap(err, "decoding payload")
+	}
+
+	return resp, nil
+}
+
+// SigninPayload is a payload for /v1/signin
+type SigninPayload struct {
+	Email   string `json:"email"`
+	AuthKey string `json:"auth_key"`
+}
+
+// SigninResponse is a response from /v1/signin endpoint
+type SigninResponse struct {
+	Key       string `json:"key"`
+	ExpiresAt int64  `json:"expires_at"`
+}
+
+// Signin requests a session token
+func Signin(ctx infra.DnoteCtx, email, authKey string) (SigninResponse, error) {
+	payload := SigninPayload{
+		Email:   email,
+		AuthKey: authKey,
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return SigninResponse{}, errors.Wrap(err, "marshaling payload")
+	}
+	res, err := utils.DoReq(ctx, "POST", "/v1/signin", string(b))
+	if err != nil {
+		return SigninResponse{}, errors.Wrap(err, "making http request")
+	}
+
+	if res.StatusCode == http.StatusUnauthorized {
+		return SigninResponse{}, ErrInvalidLogin
+	}
+
+	hasErr, message, err := checkRespErr(res)
+	if err != nil {
+		return SigninResponse{}, errors.Wrap(err, "checking repsonse error")
+	}
+	if hasErr {
+		return SigninResponse{}, errors.New(message)
+	}
+
+	var resp SigninResponse
+	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
+		return SigninResponse{}, errors.Wrap(err, "decoding payload")
+	}
+
+	return resp, nil
+}
+
+// Signout deletes a user session on the server side
+func Signout(ctx infra.DnoteCtx, sessionKey string) error {
+	hc := http.Client{
+		// No need to follow redirect
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/signout", "")
+	if err != nil {
+		return errors.Wrap(err, "making http request")
+	}
+
+	hasErr, message, err := checkRespErr(res)
+	if err != nil {
+		return errors.Wrap(err, "checking repsonse error")
+	}
+	if hasErr {
+		return errors.New(message)
+	}
+
+	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -309,4 +310,29 @@ func InitSystem(ctx infra.DnoteCtx) error {
 	tx.Commit()
 
 	return nil
+}
+
+// GetValidSession returns a session key from the local storage if one exists and is not expired
+// If one does not exist or is expired, it prints out an instruction and returns false
+func GetValidSession(tx *sql.Tx) (string, bool, error) {
+	var sessionKey string
+	var sessionKeyExpires int64
+
+	if err := GetSystem(tx, infra.SystemSessionKey, &sessionKey); err != nil {
+		return "", false, errors.Wrap(err, "getting session key")
+	}
+	if err := GetSystem(tx, infra.SystemSessionKeyExpiry, &sessionKeyExpires); err != nil {
+		return "", false, errors.Wrap(err, "getting session key expiry")
+	}
+
+	if sessionKey == "" {
+		log.Error("login required. please run `dnote login`\n")
+		return "", false, nil
+	}
+	if sessionKeyExpires < time.Now().Unix() {
+		log.Error("sesison expired. please run `dnote login`\n")
+		return "", false, nil
+	}
+
+	return sessionKey, true, nil
 }

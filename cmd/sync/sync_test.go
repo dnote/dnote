@@ -1865,7 +1865,7 @@ func TestSendBooks(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1879,14 +1879,14 @@ func TestSendBooks(t *testing.T) {
 				uuid := p[3]
 				updatesUUIDs = append(updatesUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -1979,7 +1979,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1996,7 +1996,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2009,7 +2009,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2222,7 +2222,7 @@ func TestSendNotes(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2236,14 +2236,14 @@ func TestSendNotes(t *testing.T) {
 				uuid := p[3]
 				updatedUUIDs = append(updatedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -2327,7 +2327,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2344,7 +2344,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2357,7 +2357,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
