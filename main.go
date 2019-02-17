@@ -38,6 +38,11 @@ func main() {
 		panic(errors.Wrap(err, "preparing dnote run"))
 	}
 
+	ctx, err = infra.SetupCtx(ctx)
+	if err != nil {
+		panic(errors.Wrap(err, "setting up context"))
+	}
+
 	root.Register(remove.NewCmd(ctx))
 	root.Register(edit.NewCmd(ctx))
 	root.Register(login.NewCmd(ctx))

@@ -50,7 +50,7 @@ func Do(ctx infra.DnoteCtx) error {
 		return errors.Wrap(err, "requesting logout")
 	}
 
-	if err := core.DeleteSystem(tx, infra.SystemEncKey); err != nil {
+	if err := core.DeleteSystem(tx, infra.SystemCipherKey); err != nil {
 		return errors.Wrap(err, "deleting enc key")
 	}
 	if err := core.DeleteSystem(tx, infra.SystemSessionKey); err != nil {

@@ -2,7 +2,9 @@ package core
 
 import (
 	"database/sql"
+	"encoding/base64"
 
+	"github.com/dnote/cli/infra"
 	"github.com/pkg/errors"
 )
 
@@ -44,6 +46,18 @@ func UpdateSystem(tx *sql.Tx, key, val interface{}) error {
 	return nil
 }
 
+// TODO: make DB struct that abstracts sql.Tx and sql.DB
+// Use the DB strcut in GetSystem instead of *sql.Tx.
+// From sync.go, simply pass DB to GetCipherKey and GetValidSession after calling StartTx
+// Remove SetupCtx
+type DB struct {
+	IsTx bool
+}
+
+func StartTx(ctx infra.DnoteCtx) DB {
+
+}
+
 // GetSystem scans the given system configuration record onto the destination
 func GetSystem(tx *sql.Tx, key string, dest interface{}) error {
 	if err := tx.QueryRow("SELECT value FROM system WHERE key = ?", key).Scan(dest); err != nil {
@@ -60,4 +74,26 @@ func DeleteSystem(tx *sql.Tx, key string) error {
 	}
 
 	return nil
+}
+
+// GetCipherKey retrieves the cipher key and decode the base64 into bytes.
+func GetCipherKey(ctx infra.DnoteCtx) ([]byte, error) {
+	db := ctx.DB
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, errors.Wrap(err, "beginning transaction")
+	}
+
+	var cipherKeyB64 string
+	err = GetSystem(tx, infra.SystemCipherKey, &cipherKeyB64)
+	if err != nil {
+		return []byte{}, errors.Wrap(err, "getting enc key")
+	}
+
+	cipherKey, err := base64.StdEncoding.DecodeString(cipherKeyB64)
+	if err != nil {
+		return nil, errors.Wrap(err, "decoding cipherKey from base64")
+	}
+
+	return cipherKey, nil
 }

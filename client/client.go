@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dnote/cli/crypt"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
@@ -153,9 +154,14 @@ func checkRespErr(res *http.Response) (bool, string, error) {
 }
 
 // CreateBook creates a new book in the server
-func CreateBook(ctx infra.DnoteCtx, sessionKey, label string) (CreateBookResp, error) {
+func CreateBook(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, label string) (CreateBookResp, error) {
+	encLabel, err := crypt.AesGcmEncrypt(cipherKey, []byte(label))
+	if err != nil {
+		return CreateBookResp{}, errors.Wrap(err, "encrypting the label")
+	}
+
 	payload := CreateBookPayload{
-		Name: label,
+		Name: encLabel,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -163,7 +169,7 @@ func CreateBook(ctx infra.DnoteCtx, sessionKey, label string) (CreateBookResp, e
 	}
 
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/books", string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v2/books", string(b))
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
@@ -291,10 +297,15 @@ type RespNote struct {
 }
 
 // CreateNote creates a note in the server
-func CreateNote(ctx infra.DnoteCtx, sessionKey, bookUUID, content string) (CreateNoteResp, error) {
+func CreateNote(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, bookUUID, content string) (CreateNoteResp, error) {
+	encBody, err := crypt.AesGcmEncrypt(cipherKey, []byte(content))
+	if err != nil {
+		return CreateNoteResp{}, errors.Wrap(err, "encrypting the content")
+	}
+
 	payload := CreateNotePayload{
 		BookUUID: bookUUID,
-		Body:     content,
+		Body:     encBody,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -302,7 +313,7 @@ func CreateNote(ctx infra.DnoteCtx, sessionKey, bookUUID, content string) (Creat
 	}
 
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/notes", string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v2/notes", string(b))
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "posting a book to the server")
 	}

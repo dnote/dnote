@@ -35,7 +35,7 @@ func Do(ctx infra.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "getting presiginin")
 	}
 
-	encKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
+	cipherKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
 	if err != nil {
 		return errors.Wrap(err, "making keys")
 	}
@@ -51,7 +51,7 @@ func Do(ctx infra.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "requesting session")
 	}
 
-	if err := core.UpsertSystem(tx, infra.SystemEncKey, encKey); err != nil {
+	if err := core.UpsertSystem(tx, infra.SystemCipherKey, cipherKey); err != nil {
 		return errors.Wrap(err, "saving enc key")
 	}
 	if err := core.UpsertSystem(tx, infra.SystemSessionKey, signinResp.Key); err != nil {
