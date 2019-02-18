@@ -42,7 +42,7 @@ type DnoteCtx struct {
 	DnoteDir         string
 	APIEndpoint      string
 	Version          string
-	DB               *sql.DB
+	DB               *DB
 	SessionKey       string
 	SessionKeyExpiry int64
 	CipherKey        []byte
@@ -62,7 +62,7 @@ func NewCtx(apiEndpoint, versionTag string) (DnoteCtx, error) {
 	dnoteDir := getDnoteDir(homeDir)
 
 	dnoteDBPath := fmt.Sprintf("%s/dnote.db", dnoteDir)
-	db, err := sql.Open("sqlite3", dnoteDBPath)
+	db, err := OpenDB(dnoteDBPath)
 	if err != nil {
 		return DnoteCtx{}, errors.Wrap(err, "conntecting to db")
 	}

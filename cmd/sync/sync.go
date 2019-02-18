@@ -40,7 +40,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func getLastSyncAt(tx *sql.Tx) (int, error) {
+func getLastSyncAt(tx *infra.DB) (int, error) {
 	var ret int
 
 	if err := core.GetSystem(tx, infra.SystemLastSyncAt, &ret); err != nil {
@@ -50,7 +50,7 @@ func getLastSyncAt(tx *sql.Tx) (int, error) {
 	return ret, nil
 }
 
-func getLastMaxUSN(tx *sql.Tx) (int, error) {
+func getLastMaxUSN(tx *infra.DB) (int, error) {
 	var ret int
 
 	if err := core.GetSystem(tx, infra.SystemLastMaxUSN, &ret); err != nil {
@@ -177,7 +177,7 @@ func getSyncFragments(ctx infra.DnoteCtx, sessionKey string, afterUSN int) ([]cl
 
 // resolveLabel resolves a book label conflict by repeatedly appending an increasing integer
 // to the label until it finds a unique label. It returns the first non-conflicting label.
-func resolveLabel(tx *sql.Tx, label string) (string, error) {
+func resolveLabel(tx *infra.DB, label string) (string, error) {
 	var ret string
 
 	for i := 2; ; i++ {
@@ -198,7 +198,7 @@ func resolveLabel(tx *sql.Tx, label string) (string, error) {
 
 // mergeBook inserts or updates the given book in the local database.
 // If a book with a duplicate label exists locally, it renames the duplicate by appending a number.
-func mergeBook(tx *sql.Tx, b client.SyncFragBook, mode int) error {
+func mergeBook(tx *infra.DB, b client.SyncFragBook, mode int) error {
 	var count int
 	if err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", b.Label).Scan(&count); err != nil {
 		return errors.Wrapf(err, "checking for books with a duplicate label %s", b.Label)
@@ -232,7 +232,7 @@ func mergeBook(tx *sql.Tx, b client.SyncFragBook, mode int) error {
 	return nil
 }
 
-func stepSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
+func stepSyncBook(tx *infra.DB, b client.SyncFragBook) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", b.UUID).Scan(&localUSN, &dirty)
@@ -256,7 +256,7 @@ func stepSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
 	return nil
 }
 
-func mergeNote(tx *sql.Tx, serverNote client.SyncFragNote, localNote core.Note) error {
+func mergeNote(tx *infra.DB, serverNote client.SyncFragNote, localNote core.Note) error {
 	var bookDeleted bool
 	err := tx.QueryRow("SELECT deleted FROM books WHERE uuid = ?", localNote.BookUUID).Scan(&bookDeleted)
 	if err != nil {
@@ -287,7 +287,7 @@ func mergeNote(tx *sql.Tx, serverNote client.SyncFragNote, localNote core.Note) 
 	return nil
 }
 
-func stepSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
+func stepSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
 	err := tx.QueryRow("SELECT usn, book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
 		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
@@ -311,7 +311,7 @@ func stepSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
 	return nil
 }
 
-func fullSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
+func fullSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
 	err := tx.QueryRow("SELECT usn,book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
 		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
@@ -335,7 +335,7 @@ func fullSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
 	return nil
 }
 
-func syncDeleteNote(tx *sql.Tx, noteUUID string) error {
+func syncDeleteNote(tx *infra.DB, noteUUID string) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM notes WHERE uuid = ?", noteUUID).Scan(&localUSN, &dirty)
@@ -360,7 +360,7 @@ func syncDeleteNote(tx *sql.Tx, noteUUID string) error {
 }
 
 // checkNotesPristine checks that none of the notes in the given book are dirty
-func checkNotesPristine(tx *sql.Tx, bookUUID string) (bool, error) {
+func checkNotesPristine(tx *infra.DB, bookUUID string) (bool, error) {
 	var count int
 	if err := tx.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ? AND dirty = ?", bookUUID, true).Scan(&count); err != nil {
 		return false, errors.Wrapf(err, "counting notes that are dirty in book %s", bookUUID)
@@ -373,7 +373,7 @@ func checkNotesPristine(tx *sql.Tx, bookUUID string) (bool, error) {
 	return true, nil
 }
 
-func syncDeleteBook(tx *sql.Tx, bookUUID string) error {
+func syncDeleteBook(tx *infra.DB, bookUUID string) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", bookUUID).Scan(&localUSN, &dirty)
@@ -419,7 +419,7 @@ func syncDeleteBook(tx *sql.Tx, bookUUID string) error {
 	return nil
 }
 
-func fullSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
+func fullSyncBook(tx *infra.DB, b client.SyncFragBook) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", b.UUID).Scan(&localUSN, &dirty)
@@ -471,7 +471,7 @@ func checkBookInList(uuid string, list *syncList) bool {
 // judging by the full list of resources in the server. Concretely, the only acceptable
 // situation in which a local note is not present in the server is if it is new and has not been
 // uploaded (i.e. dirty and usn is 0). Otherwise, it is a result of some kind of error and should be cleaned.
-func cleanLocalNotes(tx *sql.Tx, fullList *syncList) error {
+func cleanLocalNotes(tx *infra.DB, fullList *syncList) error {
 	rows, err := tx.Query("SELECT uuid, usn, dirty FROM notes")
 	if err != nil {
 		return errors.Wrap(err, "getting local notes")
@@ -497,7 +497,7 @@ func cleanLocalNotes(tx *sql.Tx, fullList *syncList) error {
 }
 
 // cleanLocalBooks deletes from the local database any books that are in invalid state
-func cleanLocalBooks(tx *sql.Tx, fullList *syncList) error {
+func cleanLocalBooks(tx *infra.DB, fullList *syncList) error {
 	rows, err := tx.Query("SELECT uuid, usn, dirty FROM books")
 	if err != nil {
 		return errors.Wrap(err, "getting local books")
@@ -522,7 +522,7 @@ func cleanLocalBooks(tx *sql.Tx, fullList *syncList) error {
 	return nil
 }
 
-func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byte) error {
+func fullSync(ctx infra.DnoteCtx, tx *infra.DB, sessionKey string, cipherKey []byte) error {
 	log.Debug("performing a full sync\n")
 	log.Info("resolving delta.")
 
@@ -573,7 +573,7 @@ func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byt
 	return nil
 }
 
-func stepSync(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byte, afterUSN int) error {
+func stepSync(ctx infra.DnoteCtx, tx *infra.DB, sessionKey string, cipherKey []byte, afterUSN int) error {
 	log.Debug("performing a step sync\n")
 
 	log.Info("resolving delta.")
@@ -617,7 +617,7 @@ func stepSync(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byt
 	return nil
 }
 
-func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byte) (bool, error) {
+func sendBooks(ctx infra.DnoteCtx, tx *infra.DB, sessionKey string, cipherKey []byte) (bool, error) {
 	isBehind := false
 
 	rows, err := tx.Query("SELECT uuid, label, usn, deleted FROM books WHERE dirty")
@@ -721,7 +721,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []by
 	return isBehind, nil
 }
 
-func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byte) (bool, error) {
+func sendNotes(ctx infra.DnoteCtx, tx *infra.DB, sessionKey string, cipherKey []byte) (bool, error) {
 	isBehind := false
 
 	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn FROM notes WHERE dirty")
@@ -821,7 +821,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []by
 	return isBehind, nil
 }
 
-func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []byte) (bool, error) {
+func sendChanges(ctx infra.DnoteCtx, tx *infra.DB, sessionKey string, cipherKey []byte) (bool, error) {
 	log.Info("sending changes.")
 
 	var delta int
@@ -846,7 +846,7 @@ func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, sessionKey string, cipherKey []
 	return isBehind, nil
 }
 
-func updateLastMaxUSN(tx *sql.Tx, val int) error {
+func updateLastMaxUSN(tx *infra.DB, val int) error {
 	if err := core.UpdateSystem(tx, infra.SystemLastMaxUSN, val); err != nil {
 		return errors.Wrapf(err, "updating %s", infra.SystemLastMaxUSN)
 	}
@@ -854,7 +854,7 @@ func updateLastMaxUSN(tx *sql.Tx, val int) error {
 	return nil
 }
 
-func updateLastSyncAt(tx *sql.Tx, val int64) error {
+func updateLastSyncAt(tx *infra.DB, val int64) error {
 	if err := core.UpdateSystem(tx, infra.SystemLastSyncAt, val); err != nil {
 		return errors.Wrapf(err, "updating %s", infra.SystemLastSyncAt)
 	}
@@ -862,7 +862,7 @@ func updateLastSyncAt(tx *sql.Tx, val int64) error {
 	return nil
 }
 
-func saveSyncState(tx *sql.Tx, serverTime int64, serverMaxUSN int) error {
+func saveSyncState(tx *infra.DB, serverTime int64, serverMaxUSN int) error {
 	if err := updateLastMaxUSN(tx, serverMaxUSN); err != nil {
 		return errors.Wrap(err, "updating last max usn")
 	}

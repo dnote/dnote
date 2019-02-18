@@ -15,12 +15,12 @@ import (
 
 type migration struct {
 	name string
-	run  func(ctx infra.DnoteCtx, tx *sql.Tx) error
+	run  func(ctx infra.DnoteCtx, tx *infra.DB) error
 }
 
 var lm1 = migration{
 	name: "upgrade-edit-note-from-v1-to-v3",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		rows, err := tx.Query("SELECT uuid, data FROM actions WHERE type = ? AND schema = ?", "edit_note", 1)
 		if err != nil {
 			return errors.Wrap(err, "querying rows")
@@ -68,7 +68,7 @@ var lm1 = migration{
 
 var lm2 = migration{
 	name: "upgrade-edit-note-from-v2-to-v3",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		rows, err := tx.Query("SELECT uuid, data FROM actions WHERE type = ? AND schema = ?", "edit_note", 2)
 		if err != nil {
 			return errors.Wrap(err, "querying rows")
@@ -113,7 +113,7 @@ var lm2 = migration{
 
 var lm3 = migration{
 	name: "upgrade-remove-note-from-v1-to-v2",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		rows, err := tx.Query("SELECT uuid, data FROM actions WHERE type = ? AND schema = ?", "remove_note", 1)
 		if err != nil {
 			return errors.Wrap(err, "querying rows")
@@ -155,7 +155,7 @@ var lm3 = migration{
 
 var lm4 = migration{
 	name: "add-dirty-usn-deleted-to-notes-and-books",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		_, err := tx.Exec("ALTER TABLE books ADD COLUMN dirty bool DEFAULT false")
 		if err != nil {
 			return errors.Wrap(err, "adding dirty column to books")
@@ -192,7 +192,7 @@ var lm4 = migration{
 
 var lm5 = migration{
 	name: "mark-action-targets-dirty",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		rows, err := tx.Query("SELECT uuid, data, type FROM actions")
 		if err != nil {
 			return errors.Wrap(err, "querying rows")
@@ -254,7 +254,7 @@ var lm5 = migration{
 
 var lm6 = migration{
 	name: "drop-actions",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		_, err := tx.Exec("DROP TABLE actions;")
 		if err != nil {
 			return errors.Wrap(err, "dropping the actions table")
@@ -266,7 +266,7 @@ var lm6 = migration{
 
 var lm7 = migration{
 	name: "resolve-conflicts-with-reserved-book-names",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		migrateBook := func(name string) error {
 			var uuid string
 
@@ -313,7 +313,7 @@ var lm7 = migration{
 
 var lm8 = migration{
 	name: "drop-note-id-and-rename-content-to-body",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		_, err := tx.Exec(`CREATE TABLE notes_tmp
 		(
 			uuid text NOT NULL,
@@ -352,7 +352,7 @@ var lm8 = migration{
 
 var lm9 = migration{
 	name: "create-fts-index",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		_, err := tx.Exec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts5(content=notes, body, tokenize="porter unicode61 categories 'L* N* Co Ps Pe'");`)
 		if err != nil {
 			return errors.Wrap(err, "creating note_fts")
@@ -388,8 +388,8 @@ var lm9 = migration{
 
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
-	run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
-		sessionKey, ok, err := core.GetValidSession(tx)
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
+		sessionKey, ok, err := core.GetValidSession(ctx)
 		if err != nil {
 			return errors.Wrap(err, "getting session locally")
 		}
