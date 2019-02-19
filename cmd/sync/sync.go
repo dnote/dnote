@@ -74,9 +74,9 @@ func (l syncList) getLength() int {
 	return len(l.Notes) + len(l.Books) + len(l.ExpungedNotes) + len(l.ExpungedBooks)
 }
 
-// newSyncList categorizes items in sync fragments into a sync list. It also decrypts any
+// processFragments categorizes items in sync fragments into a sync list. It also decrypts any
 // encrypted data in sync fragments.
-func newSyncList(fragments []client.SyncFragment, cipherKey []byte) (syncList, error) {
+func processFragments(fragments []client.SyncFragment, cipherKey []byte) (syncList, error) {
 	notes := map[string]client.SyncFragNote{}
 	books := map[string]client.SyncFragBook{}
 	expungedNotes := map[string]bool{}
@@ -138,7 +138,7 @@ func getSyncList(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, afterU
 		return syncList{}, errors.Wrap(err, "getting sync fragments")
 	}
 
-	ret, err := newSyncList(fragments, cipherKey)
+	ret, err := processFragments(fragments, cipherKey)
 	if err != nil {
 		return syncList{}, errors.Wrap(err, "making sync list")
 	}
@@ -875,18 +875,8 @@ func saveSyncState(tx *infra.DB, serverTime int64, serverMaxUSN int) error {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		cipherKey, err := core.GetCipherKey(ctx)
-		if err != nil {
-			return errors.Wrap(err, "getting enc key")
-		}
-
-		sessionKey, ok, err := core.GetValidSession(ctx)
-		if err != nil {
-			return errors.Wrap(err, "getting session locally")
-		}
-		if !ok {
-			return nil
-		}
+		sessionKey := ctx.SessionKey
+		cipherKey := ctx.CipherKey
 
 		if err := migrate.Run(ctx, migrate.RemoteSequence, migrate.RemoteMode); err != nil {
 			return errors.Wrap(err, "running remote migrations")

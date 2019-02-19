@@ -1,23 +1,26 @@
 package sync
 
 import (
-	//	"encoding/json"
+	"encoding/json"
 	"fmt"
-	//	"net/http"
-	//	"net/http/httptest"
-	//	"sort"
-	//"strings"
+	"net/http"
+	"net/http/httptest"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/dnote/cli/client"
 	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/crypt"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/testutils"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 )
 
-func TestNewSyncList(t *testing.T) {
+var cipherKey = []byte("AES256Key-32Characters1234567890")
+
+func TestProcessFragments(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
 	defer testutils.TeardownEnv(ctx)
@@ -29,26 +32,56 @@ func TestNewSyncList(t *testing.T) {
 			CurrentTime: 1550436136,
 			Notes: []client.SyncFragNote{
 				client.SyncFragNote{
-					UUID: "blahl",
-					Body: "a",
+					UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
+					Body: "7GgIppDdxDn+4DUoVoLXbncZDRqXGwbDVNF/eCssu+1BXMdq+HAziJHGgK7drdcIBtYDDXj0OwHz9dQDDOyWeNqkLWEIQ2Roygs229dRxdO3Z6ST+qSOr/9TTjDlFxydF5Ps7nAXdN9KVxH8FKIZDsxJ45qeLKpQK/6poAM39BCOiysqAXJQz9ngOJiqImAuftS6d/XhwX77QvnM91VCKK0tFmsMdDDw0J9QMwnlYU1CViHy1Hdhhcf9Ea38Mj4SCrWMPscXyP2fpAu5ukbIK3vS2pvbnH5vC8ZuvihrQif1BsiwfYmN981mLYs069Dn4B72qcXPwU7qrN3V0k57JGcAlTiEoOD5QowyraensQlR1doorLb43SjTiJLItougn5K5QPRiHuNxfv39pa7A0gKA1n/3UhG/SBuCpDuPYjwmBkvkzCKJNgpbLQ8p29JXMQcWrm4e9GfnVjMhAEtxttIta3MN6EcYG7cB1dJ04OLYVcJuRA==",
+				},
+				client.SyncFragNote{
+					UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
+					Body: "WGzcYA6kLuUFEU7HLTDJt7UWF7fEmbCPHfC16VBrAyfT2wDejXbIuFpU5L7g0aU=",
 				},
 			},
-			Books:         []client.SyncFragBook{},
+			Books: []client.SyncFragBook{
+				client.SyncFragBook{
+					UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
+					Label: "qBrSrAcnTUHu51bIrv6jSA/dNffr/kRlIg+MklxeQQ==",
+				},
+				client.SyncFragBook{
+					UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
+					Label: "uHWoBFdKT78gTkFR7qhyzZkrn59c8ktEa8idrLkksKzIQ3VVAXxq0QZp7Uc=",
+				},
+			},
 			ExpungedNotes: []string{},
 			ExpungedBooks: []string{},
 		},
 	}
-	cipherKey := []byte("AES256Key-32Characters1234567890")
 
 	// exec
-	sl, err := newSyncList(fragments, cipherKey)
+	sl, err := processFragments(fragments, cipherKey)
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
 
 	expected := syncList{
-		Notes:          map[string]client.SyncFragNote{},
-		Books:          map[string]client.SyncFragBook{},
+		Notes: map[string]client.SyncFragNote{
+			"45546de0-40ed-45cf-9bfc-62ce729a7d3d": client.SyncFragNote{
+				UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
+				Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n Donec ac libero efficitur, posuere dui non, egestas lectus.\n Aliquam urna ligula, sagittis eu volutpat vel, consequat et augue.\n\n Ut mi urna, dignissim a ex eget, venenatis accumsan sem. Praesent facilisis, ligula hendrerit auctor varius, mauris metus hendrerit dolor, sit amet pulvinar.",
+			},
+			"a25a5336-afe9-46c4-b881-acab911c0bc3": client.SyncFragNote{
+				UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
+				Body: "foo bar baz quz\nqux",
+			},
+		},
+		Books: map[string]client.SyncFragBook{
+			"e8ac6f25-d95b-435a-9fae-094f7506a5ac": client.SyncFragBook{
+				UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
+				Label: "foo",
+			},
+			"05fd8b95-ddcd-4071-9380-4358ffb8a436": client.SyncFragBook{
+				UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
+				Label: "foo-bar-baz-1000",
+			},
+		},
 		ExpungedNotes:  map[string]bool{},
 		ExpungedBooks:  map[string]bool{},
 		MaxUSN:         10,
@@ -1851,711 +1884,724 @@ func TestSaveServerState(t *testing.T) {
 // TestSendBooks tests that books are put to correct 'buckets' by running a test server and recording the
 // uuid from the incoming data. It also tests that the uuid of the created books and book_uuids of their notes
 // are updated accordingly based on the server response.
-//func TestSendBooks(t *testing.T) {
-//	// set up
-//	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//	defer testutils.TeardownEnv(ctx)
-//
-//	db := ctx.DB
-//
-//	testutils.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, 0)
-//
-//	// should be ignored
-//	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-//	testutils.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b2-uuid", "b2-label", 2, false, false)
-//	// should be created
-//	testutils.MustExec(t, "inserting b3", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b3-uuid", "b3-label", 0, false, true)
-//	testutils.MustExec(t, "inserting b4", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b4-uuid", "b4-label", 0, false, true)
-//	// should be only expunged locally without syncing to server
-//	testutils.MustExec(t, "inserting b5", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b5-uuid", "b5-label", 0, true, true)
-//	// should be deleted
-//	testutils.MustExec(t, "inserting b6", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b6-uuid", "b6-label", 10, true, true)
-//	// should be updated
-//	testutils.MustExec(t, "inserting b7", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b7-uuid", "b7-label", 11, false, true)
-//	testutils.MustExec(t, "inserting b8", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b8-uuid", "b8-label", 18, false, true)
-//
-//	// some random notes
-//	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 10, "n1 body", 1541108743, false, false)
-//	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b5-uuid", 10, "n2 body", 1541108743, false, false)
-//	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b6-uuid", 10, "n3 body", 1541108743, false, false)
-//	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", "b7-uuid", 10, "n4 body", 1541108743, false, false)
-//	// notes that belong to the created book. Their book_uuid should be updated.
-//	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", "b3-uuid", 10, "n5 body", 1541108743, false, false)
-//	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", "b3-uuid", 10, "n6 body", 1541108743, false, false)
-//	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", "b4-uuid", 10, "n7 body", 1541108743, false, false)
-//
-//	var createdLabels []string
-//	var updatesUUIDs []string
-//	var deletedUUIDs []string
-//
-//	// fire up a test server
-//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		if r.URL.String() == "/v1/books" && r.Method == "POST" {
-//			var payload client.CreateBookPayload
-//
-//			err := json.NewDecoder(r.Body).Decode(&payload)
-//			if err != nil {
-//				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
-//				return
-//			}
-//
-//			createdLabels = append(createdLabels, payload.Name)
-//
-//			resp := client.CreateBookResp{
-//				Book: client.RespBook{
-//					UUID: fmt.Sprintf("server-%s-uuid", payload.Name),
-//				},
-//			}
-//
-//			w.Header().Set("Content-Type", "application/json")
-//			if err := json.NewEncoder(w).Encode(resp); err != nil {
-//				http.Error(w, err.Error(), http.StatusInternalServerError)
-//				return
-//			}
-//			return
-//		}
-//
-//		p := strings.Split(r.URL.Path, "/")
-//		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
-//			if r.Method == "PATCH" {
-//				uuid := p[3]
-//				updatesUUIDs = append(updatesUUIDs, uuid)
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				w.Write([]byte("{}"))
-//				return
-//			} else if r.Method == "DELETE" {
-//				uuid := p[3]
-//				deletedUUIDs = append(deletedUUIDs, uuid)
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				w.Write([]byte("{}"))
-//				return
-//			}
-//		}
-//
-//		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
-//	}))
-//	defer ts.Close()
-//
-//	ctx.APIEndpoint = ts.URL
-//
-//	// execute
-//	tx, err := db.Begin()
-//	if err != nil {
-//		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
-//	}
-//
-//	if _, err := sendBooks(ctx, tx, "mockSessionKey"); err != nil {
-//		tx.Rollback()
-//		t.Fatalf(errors.Wrap(err, "executing").Error())
-//	}
-//
-//	tx.Commit()
-//
-//	sort.SliceStable(createdLabels, func(i, j int) bool {
-//		return strings.Compare(createdLabels[i], createdLabels[j]) < 0
-//	})
-//
-//	testutils.AssertDeepEqual(t, createdLabels, []string{"b3-label", "b4-label"}, "createdLabels mismatch")
-//	testutils.AssertDeepEqual(t, updatesUUIDs, []string{"b7-uuid", "b8-uuid"}, "updatesUUIDs mismatch")
-//	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"b6-uuid"}, "deletedUUIDs mismatch")
-//
-//	var b1, b2, b3, b4, b7, b8 core.Book
-//	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b1-label"), &b1.UUID, &b1.Dirty)
-//	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b2-label"), &b2.UUID, &b2.Dirty)
-//	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b3-label"), &b3.UUID, &b3.Dirty)
-//	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b4-label"), &b4.UUID, &b4.Dirty)
-//	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b7-label"), &b7.UUID, &b7.Dirty)
-//	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b8-label"), &b8.UUID, &b8.Dirty)
-//
-//	var bookCount int
-//	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
-//	testutils.AssertEqualf(t, bookCount, 6, "book count mismatch")
-//
-//	testutils.AssertEqual(t, b1.Dirty, false, "b1 Dirty mismatch")
-//	testutils.AssertEqual(t, b2.Dirty, false, "b2 Dirty mismatch")
-//	testutils.AssertEqual(t, b3.Dirty, false, "b3 Dirty mismatch")
-//	testutils.AssertEqual(t, b4.Dirty, false, "b4 Dirty mismatch")
-//	testutils.AssertEqual(t, b7.Dirty, false, "b7 Dirty mismatch")
-//	testutils.AssertEqual(t, b8.Dirty, false, "b8 Dirty mismatch")
-//	testutils.AssertEqual(t, b1.UUID, "b1-uuid", "b1 UUID mismatch")
-//	testutils.AssertEqual(t, b2.UUID, "b2-uuid", "b2 UUID mismatch")
-//	// uuids of created books should have been updated
-//	testutils.AssertEqual(t, b3.UUID, "server-b3-label-uuid", "b3 UUID mismatch")
-//	testutils.AssertEqual(t, b4.UUID, "server-b4-label-uuid", "b4 UUID mismatch")
-//	testutils.AssertEqual(t, b7.UUID, "b7-uuid", "b7 UUID mismatch")
-//	testutils.AssertEqual(t, b8.UUID, "b8-uuid", "b8 UUID mismatch")
-//
-//	var n1, n2, n3, n4, n5, n6, n7 core.Note
-//	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n1 body"), &n1.BookUUID)
-//	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n2 body"), &n2.BookUUID)
-//	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n3 body"), &n3.BookUUID)
-//	testutils.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n4 body"), &n4.BookUUID)
-//	testutils.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n5 body"), &n5.BookUUID)
-//	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n6 body"), &n6.BookUUID)
-//	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n7 body"), &n7.BookUUID)
-//	testutils.AssertEqual(t, n1.BookUUID, "b1-uuid", "n1 bookUUID mismatch")
-//	testutils.AssertEqual(t, n2.BookUUID, "b5-uuid", "n2 bookUUID mismatch")
-//	testutils.AssertEqual(t, n3.BookUUID, "b6-uuid", "n3 bookUUID mismatch")
-//	testutils.AssertEqual(t, n4.BookUUID, "b7-uuid", "n4 bookUUID mismatch")
-//	testutils.AssertEqual(t, n5.BookUUID, "server-b3-label-uuid", "n5 bookUUID mismatch")
-//	testutils.AssertEqual(t, n6.BookUUID, "server-b3-label-uuid", "n6 bookUUID mismatch")
-//	testutils.AssertEqual(t, n7.BookUUID, "server-b4-label-uuid", "n7 bookUUID mismatch")
-//}
+func TestSendBooks(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	defer testutils.TeardownEnv(ctx)
 
-//func TestSendBooks_isBehind(t *testing.T) {
-//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		if r.URL.String() == "/v1/books" && r.Method == "POST" {
-//			var payload client.CreateBookPayload
-//
-//			err := json.NewDecoder(r.Body).Decode(&payload)
-//			if err != nil {
-//				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
-//				return
-//			}
-//
-//			resp := client.CreateBookResp{
-//				Book: client.RespBook{
-//					USN: 11,
-//				},
-//			}
-//
-//			w.Header().Set("Content-Type", "application/json")
-//			if err := json.NewEncoder(w).Encode(resp); err != nil {
-//				http.Error(w, err.Error(), http.StatusInternalServerError)
-//				return
-//			}
-//			return
-//		}
-//
-//		p := strings.Split(r.URL.Path, "/")
-//		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
-//			if r.Method == "PATCH" {
-//				resp := client.UpdateBookResp{
-//					Book: client.RespBook{
-//						USN: 11,
-//					},
-//				}
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				if err := json.NewEncoder(w).Encode(resp); err != nil {
-//					http.Error(w, err.Error(), http.StatusInternalServerError)
-//					return
-//				}
-//				return
-//			} else if r.Method == "DELETE" {
-//				resp := client.DeleteBookResp{
-//					Book: client.RespBook{
-//						USN: 11,
-//					},
-//				}
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				if err := json.NewEncoder(w).Encode(resp); err != nil {
-//					http.Error(w, err.Error(), http.StatusInternalServerError)
-//					return
-//				}
-//				return
-//			}
-//		}
-//
-//		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
-//	}))
-//	defer ts.Close()
-//
-//	t.Run("create book", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 0, false, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendBooks(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//
-//	t.Run("delete book", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, true, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendBooks(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//
-//	t.Run("update book", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 11, false, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendBooks(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//}
+	db := ctx.DB
+
+	testutils.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, 0)
+
+	// should be ignored
+	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
+	testutils.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b2-uuid", "b2-label", 2, false, false)
+	// should be created
+	testutils.MustExec(t, "inserting b3", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b3-uuid", "b3-label", 0, false, true)
+	testutils.MustExec(t, "inserting b4", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b4-uuid", "b4-label", 0, false, true)
+	// should be only expunged locally without syncing to server
+	testutils.MustExec(t, "inserting b5", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b5-uuid", "b5-label", 0, true, true)
+	// should be deleted
+	testutils.MustExec(t, "inserting b6", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b6-uuid", "b6-label", 10, true, true)
+	// should be updated
+	testutils.MustExec(t, "inserting b7", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b7-uuid", "b7-label", 11, false, true)
+	testutils.MustExec(t, "inserting b8", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b8-uuid", "b8-label", 18, false, true)
+
+	// some random notes
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 10, "n1 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b5-uuid", 10, "n2 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b6-uuid", 10, "n3 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", "b7-uuid", 10, "n4 body", 1541108743, false, false)
+	// notes that belong to the created book. Their book_uuid should be updated.
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", "b3-uuid", 10, "n5 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", "b3-uuid", 10, "n6 body", 1541108743, false, false)
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", "b4-uuid", 10, "n7 body", 1541108743, false, false)
+
+	var createdLabels []string
+	var updatesUUIDs []string
+	var deletedUUIDs []string
+
+	// fire up a test server. It decrypts the payload for test purposes.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/v2/books" && r.Method == "POST" {
+			var payload client.CreateBookPayload
+
+			err := json.NewDecoder(r.Body).Decode(&payload)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				return
+			}
+
+			decLabel, err := crypt.AesGcmDecrypt(cipherKey, payload.Name)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decrypting label").Error())
+			}
+
+			createdLabels = append(createdLabels, decLabel)
+
+			resp := client.CreateBookResp{
+				Book: client.RespBook{
+					UUID: fmt.Sprintf("server-%s-uuid", decLabel),
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+
+		p := strings.Split(r.URL.Path, "/")
+		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
+			if r.Method == "PATCH" {
+				uuid := p[3]
+				updatesUUIDs = append(updatesUUIDs, uuid)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte("{}"))
+				return
+			} else if r.Method == "DELETE" {
+				uuid := p[3]
+				deletedUUIDs = append(deletedUUIDs, uuid)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte("{}"))
+				return
+			}
+		}
+
+		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	ctx.APIEndpoint = ts.URL
+
+	// execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+	}
+
+	if _, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey); err != nil {
+		tx.Rollback()
+		t.Fatalf(errors.Wrap(err, "executing").Error())
+	}
+
+	tx.Commit()
+
+	// test
+
+	// First, decrypt data so that they can be asserted
+	sort.SliceStable(createdLabels, func(i, j int) bool {
+		return strings.Compare(createdLabels[i], createdLabels[j]) < 0
+	})
+
+	testutils.AssertDeepEqual(t, createdLabels, []string{"b3-label", "b4-label"}, "createdLabels mismatch")
+	testutils.AssertDeepEqual(t, updatesUUIDs, []string{"b7-uuid", "b8-uuid"}, "updatesUUIDs mismatch")
+	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"b6-uuid"}, "deletedUUIDs mismatch")
+
+	var b1, b2, b3, b4, b7, b8 core.Book
+	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b1-label"), &b1.UUID, &b1.Dirty)
+	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b2-label"), &b2.UUID, &b2.Dirty)
+	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b3-label"), &b3.UUID, &b3.Dirty)
+	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b4-label"), &b4.UUID, &b4.Dirty)
+	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b7-label"), &b7.UUID, &b7.Dirty)
+	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b8-label"), &b8.UUID, &b8.Dirty)
+
+	var bookCount int
+	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	testutils.AssertEqualf(t, bookCount, 6, "book count mismatch")
+
+	testutils.AssertEqual(t, b1.Dirty, false, "b1 Dirty mismatch")
+	testutils.AssertEqual(t, b2.Dirty, false, "b2 Dirty mismatch")
+	testutils.AssertEqual(t, b3.Dirty, false, "b3 Dirty mismatch")
+	testutils.AssertEqual(t, b4.Dirty, false, "b4 Dirty mismatch")
+	testutils.AssertEqual(t, b7.Dirty, false, "b7 Dirty mismatch")
+	testutils.AssertEqual(t, b8.Dirty, false, "b8 Dirty mismatch")
+	testutils.AssertEqual(t, b1.UUID, "b1-uuid", "b1 UUID mismatch")
+	testutils.AssertEqual(t, b2.UUID, "b2-uuid", "b2 UUID mismatch")
+	// uuids of created books should have been updated
+	testutils.AssertEqual(t, b3.UUID, "server-b3-label-uuid", "b3 UUID mismatch")
+	testutils.AssertEqual(t, b4.UUID, "server-b4-label-uuid", "b4 UUID mismatch")
+	testutils.AssertEqual(t, b7.UUID, "b7-uuid", "b7 UUID mismatch")
+	testutils.AssertEqual(t, b8.UUID, "b8-uuid", "b8 UUID mismatch")
+
+	var n1, n2, n3, n4, n5, n6, n7 core.Note
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n1 body"), &n1.BookUUID)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n2 body"), &n2.BookUUID)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n3 body"), &n3.BookUUID)
+	testutils.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n4 body"), &n4.BookUUID)
+	testutils.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n5 body"), &n5.BookUUID)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n6 body"), &n6.BookUUID)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n7 body"), &n7.BookUUID)
+	testutils.AssertEqual(t, n1.BookUUID, "b1-uuid", "n1 bookUUID mismatch")
+	testutils.AssertEqual(t, n2.BookUUID, "b5-uuid", "n2 bookUUID mismatch")
+	testutils.AssertEqual(t, n3.BookUUID, "b6-uuid", "n3 bookUUID mismatch")
+	testutils.AssertEqual(t, n4.BookUUID, "b7-uuid", "n4 bookUUID mismatch")
+	testutils.AssertEqual(t, n5.BookUUID, "server-b3-label-uuid", "n5 bookUUID mismatch")
+	testutils.AssertEqual(t, n6.BookUUID, "server-b3-label-uuid", "n6 bookUUID mismatch")
+	testutils.AssertEqual(t, n7.BookUUID, "server-b4-label-uuid", "n7 bookUUID mismatch")
+}
+
+func TestSendBooks_isBehind(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/v2/books" && r.Method == "POST" {
+			var payload client.CreateBookPayload
+
+			err := json.NewDecoder(r.Body).Decode(&payload)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				return
+			}
+
+			resp := client.CreateBookResp{
+				Book: client.RespBook{
+					USN: 11,
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+
+		p := strings.Split(r.URL.Path, "/")
+		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
+			if r.Method == "PATCH" {
+				resp := client.UpdateBookResp{
+					Book: client.RespBook{
+						USN: 11,
+					},
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(resp); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				return
+			} else if r.Method == "DELETE" {
+				resp := client.DeleteBookResp{
+					Book: client.RespBook{
+						USN: 11,
+					},
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(resp); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				return
+			}
+		}
+
+		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	t.Run("create book", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 0, false, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+
+	t.Run("delete book", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, true, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+
+	t.Run("update book", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 11, false, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+}
 
 // TestSendNotes tests that notes are put to correct 'buckets' by running a test server and recording the
 // uuid from the incoming data.
-//func TestSendNotes(t *testing.T) {
-//	// set up
-//	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//	defer testutils.TeardownEnv(ctx)
-//
-//	db := ctx.DB
-//
-//	testutils.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, 0)
-//
-//	b1UUID := "b1-uuid"
-//	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 1, false, false)
-//
-//	// should be ignored
-//	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1-body", 1541108743, false, false)
-//	// should be created
-//	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2-body", 1541108743, false, true)
-//	// should be updated
-//	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3-body", 1541108743, false, true)
-//	// should be only expunged locally without syncing to server
-//	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4-body", 1541108743, true, true)
-//	// should be deleted
-//	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5-body", 1541108743, true, true)
-//	// should be created
-//	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6-body", 1541108743, false, true)
-//	// should be ignored
-//	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7-body", 1541108743, false, false)
-//	// should be updated
-//	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8-body", 1541108743, false, true)
-//	// should be deleted
-//	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9-body", 1541108743, true, true)
-//	// should be created
-//	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10-body", 1541108743, false, true)
-//
-//	var createdBodys []string
-//	var updatedUUIDs []string
-//	var deletedUUIDs []string
-//
-//	// fire up a test server
-//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
-//			var payload client.CreateNotePayload
-//
-//			err := json.NewDecoder(r.Body).Decode(&payload)
-//			if err != nil {
-//				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
-//				return
-//			}
-//
-//			createdBodys = append(createdBodys, payload.Body)
-//
-//			resp := client.CreateNoteResp{
-//				Result: client.RespNote{
-//					UUID: fmt.Sprintf("server-%s-uuid", payload.Body),
-//				},
-//			}
-//
-//			w.Header().Set("Content-Type", "application/json")
-//			if err := json.NewEncoder(w).Encode(resp); err != nil {
-//				http.Error(w, err.Error(), http.StatusInternalServerError)
-//				return
-//			}
-//			return
-//		}
-//
-//		p := strings.Split(r.URL.Path, "/")
-//		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
-//			if r.Method == "PATCH" {
-//				uuid := p[3]
-//				updatedUUIDs = append(updatedUUIDs, uuid)
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				w.Write([]byte("{}"))
-//				return
-//			} else if r.Method == "DELETE" {
-//				uuid := p[3]
-//				deletedUUIDs = append(deletedUUIDs, uuid)
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				w.Write([]byte("{}"))
-//				return
-//			}
-//		}
-//
-//		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
-//	}))
-//	defer ts.Close()
-//
-//	ctx.APIEndpoint = ts.URL
-//
-//	// execute
-//	tx, err := db.Begin()
-//	if err != nil {
-//		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
-//	}
-//
-//	if _, err := sendNotes(ctx, tx, "mockSessionKey"); err != nil {
-//		tx.Rollback()
-//		t.Fatalf(errors.Wrap(err, "executing").Error())
-//	}
-//
-//	tx.Commit()
-//
-//	// test
-//	sort.SliceStable(createdBodys, func(i, j int) bool {
-//		return strings.Compare(createdBodys[i], createdBodys[j]) < 0
-//	})
-//
-//	testutils.AssertDeepEqual(t, createdBodys, []string{"n10-body", "n2-body", "n6-body"}, "createdBodys mismatch")
-//	testutils.AssertDeepEqual(t, updatedUUIDs, []string{"n3-uuid", "n8-uuid"}, "updatedUUIDs mismatch")
-//	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"n5-uuid", "n9-uuid"}, "deletedUUIDs mismatch")
-//
-//	var noteCount int
-//	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-//	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
-//
-//	var n1, n2, n3, n6, n7, n8, n10 core.Note
-//	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.Dirty)
-//	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.Dirty)
-//	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.Dirty)
-//	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.Dirty)
-//	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.Dirty)
-//	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.Dirty)
-//	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.Dirty)
-//
-//	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
-//
-//	testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
-//	testutils.AssertEqual(t, n2.Dirty, false, "n2 Dirty mismatch")
-//	testutils.AssertEqual(t, n3.Dirty, false, "n3 Dirty mismatch")
-//	testutils.AssertEqual(t, n6.Dirty, false, "n6 Dirty mismatch")
-//	testutils.AssertEqual(t, n7.Dirty, false, "n7 Dirty mismatch")
-//	testutils.AssertEqual(t, n8.Dirty, false, "n8 Dirty mismatch")
-//	testutils.AssertEqual(t, n10.Dirty, false, "n10 Dirty mismatch")
-//
-//	// UUIDs of created notes should have been updated with those from the server response
-//	testutils.AssertEqual(t, n1.UUID, "n1-uuid", "n1 UUID mismatch")
-//	testutils.AssertEqual(t, n2.UUID, "server-n2-body-uuid", "n2 UUID mismatch")
-//	testutils.AssertEqual(t, n3.UUID, "n3-uuid", "n3 UUID mismatch")
-//	testutils.AssertEqual(t, n6.UUID, "server-n6-body-uuid", "n6 UUID mismatch")
-//	testutils.AssertEqual(t, n7.UUID, "n7-uuid", "n7 UUID mismatch")
-//	testutils.AssertEqual(t, n8.UUID, "n8-uuid", "n8 UUID mismatch")
-//	testutils.AssertEqual(t, n10.UUID, "server-n10-body-uuid", "n10 UUID mismatch")
-//}
+func TestSendNotes(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	defer testutils.TeardownEnv(ctx)
 
-//func TestSendNotes_isBehind(t *testing.T) {
-//	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
-//			var payload client.CreateBookPayload
-//
-//			err := json.NewDecoder(r.Body).Decode(&payload)
-//			if err != nil {
-//				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
-//				return
-//			}
-//
-//			resp := client.CreateNoteResp{
-//				Result: client.RespNote{
-//					USN: 11,
-//				},
-//			}
-//
-//			w.Header().Set("Content-Type", "application/json")
-//			if err := json.NewEncoder(w).Encode(resp); err != nil {
-//				http.Error(w, err.Error(), http.StatusInternalServerError)
-//				return
-//			}
-//			return
-//		}
-//
-//		p := strings.Split(r.URL.Path, "/")
-//		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
-//			if r.Method == "PATCH" {
-//				resp := client.UpdateNoteResp{
-//					Result: client.RespNote{
-//						USN: 11,
-//					},
-//				}
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				if err := json.NewEncoder(w).Encode(resp); err != nil {
-//					http.Error(w, err.Error(), http.StatusInternalServerError)
-//					return
-//				}
-//				return
-//			} else if r.Method == "DELETE" {
-//				resp := client.DeleteNoteResp{
-//					Result: client.RespNote{
-//						USN: 11,
-//					},
-//				}
-//
-//				w.Header().Set("Content-Type", "application/json")
-//				if err := json.NewEncoder(w).Encode(resp); err != nil {
-//					http.Error(w, err.Error(), http.StatusInternalServerError)
-//					return
-//				}
-//				return
-//			}
-//		}
-//
-//		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
-//	}))
-//	defer ts.Close()
-//
-//	t.Run("create note", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-//				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1, "n1 body", 1541108743, false, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendNotes(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//
-//	t.Run("delete note", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-//				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 2, "n1 body", 1541108743, true, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendNotes(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//
-//	t.Run("update note", func(t *testing.T) {
-//		testCases := []struct {
-//			systemLastMaxUSN int
-//			expectedIsBehind bool
-//		}{
-//			{
-//				systemLastMaxUSN: 10,
-//				expectedIsBehind: false,
-//			},
-//			{
-//				systemLastMaxUSN: 9,
-//				expectedIsBehind: true,
-//			},
-//		}
-//
-//		for idx, tc := range testCases {
-//			func() {
-//				// set up
-//				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
-//				ctx.APIEndpoint = ts.URL
-//				defer testutils.TeardownEnv(ctx)
-//
-//				db := ctx.DB
-//
-//				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
-//				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
-//				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 8, "n1 body", 1541108743, false, true)
-//
-//				// execute
-//				tx, err := db.Begin()
-//				if err != nil {
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
-//				}
-//
-//				isBehind, err := sendNotes(ctx, tx, "mockSessionKey")
-//				if err != nil {
-//					tx.Rollback()
-//					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
-//				}
-//
-//				tx.Commit()
-//
-//				// test
-//				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
-//			}()
-//		}
-//	})
-//}
+	db := ctx.DB
+
+	testutils.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, 0)
+
+	b1UUID := "b1-uuid"
+	testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 1, false, false)
+
+	// should be ignored
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1-body", 1541108743, false, false)
+	// should be created
+	testutils.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", b1UUID, 0, "n2-body", 1541108743, false, true)
+	// should be updated
+	testutils.MustExec(t, "inserting n3", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", b1UUID, 11, "n3-body", 1541108743, false, true)
+	// should be only expunged locally without syncing to server
+	testutils.MustExec(t, "inserting n4", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n4-uuid", b1UUID, 0, "n4-body", 1541108743, true, true)
+	// should be deleted
+	testutils.MustExec(t, "inserting n5", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n5-uuid", b1UUID, 17, "n5-body", 1541108743, true, true)
+	// should be created
+	testutils.MustExec(t, "inserting n6", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n6-uuid", b1UUID, 0, "n6-body", 1541108743, false, true)
+	// should be ignored
+	testutils.MustExec(t, "inserting n7", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n7-uuid", b1UUID, 12, "n7-body", 1541108743, false, false)
+	// should be updated
+	testutils.MustExec(t, "inserting n8", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n8-uuid", b1UUID, 17, "n8-body", 1541108743, false, true)
+	// should be deleted
+	testutils.MustExec(t, "inserting n9", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n9-uuid", b1UUID, 17, "n9-body", 1541108743, true, true)
+	// should be created
+	testutils.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10-body", 1541108743, false, true)
+
+	var createdBodys []string
+	var updatedUUIDs []string
+	var deletedUUIDs []string
+
+	// fire up a test server. It decrypts the payload for test purposes.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/v2/notes" && r.Method == "POST" {
+			var payload client.CreateNotePayload
+
+			err := json.NewDecoder(r.Body).Decode(&payload)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				return
+			}
+
+			decBody, err := crypt.AesGcmDecrypt(cipherKey, payload.Body)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decrypting body").Error())
+			}
+
+			createdBodys = append(createdBodys, decBody)
+
+			resp := client.CreateNoteResp{
+				Result: client.RespNote{
+					UUID: fmt.Sprintf("server-%s-uuid", decBody),
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+
+		p := strings.Split(r.URL.Path, "/")
+		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
+			if r.Method == "PATCH" {
+				uuid := p[3]
+				updatedUUIDs = append(updatedUUIDs, uuid)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte("{}"))
+				return
+			} else if r.Method == "DELETE" {
+				uuid := p[3]
+				deletedUUIDs = append(deletedUUIDs, uuid)
+
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte("{}"))
+				return
+			}
+		}
+
+		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	ctx.APIEndpoint = ts.URL
+
+	// execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+	}
+
+	if _, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey); err != nil {
+		tx.Rollback()
+		t.Fatalf(errors.Wrap(err, "executing").Error())
+	}
+
+	tx.Commit()
+
+	// test
+	sort.SliceStable(createdBodys, func(i, j int) bool {
+		return strings.Compare(createdBodys[i], createdBodys[j]) < 0
+	})
+
+	testutils.AssertDeepEqual(t, createdBodys, []string{"n10-body", "n2-body", "n6-body"}, "createdBodys mismatch")
+	testutils.AssertDeepEqual(t, updatedUUIDs, []string{"n3-uuid", "n8-uuid"}, "updatedUUIDs mismatch")
+	testutils.AssertDeepEqual(t, deletedUUIDs, []string{"n5-uuid", "n9-uuid"}, "deletedUUIDs mismatch")
+
+	var noteCount int
+	testutils.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
+
+	var n1, n2, n3, n6, n7, n8, n10 core.Note
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.Dirty)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.Dirty)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.Dirty)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.Dirty)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.Dirty)
+	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.Dirty)
+	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.Dirty)
+
+	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
+
+	testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
+	testutils.AssertEqual(t, n2.Dirty, false, "n2 Dirty mismatch")
+	testutils.AssertEqual(t, n3.Dirty, false, "n3 Dirty mismatch")
+	testutils.AssertEqual(t, n6.Dirty, false, "n6 Dirty mismatch")
+	testutils.AssertEqual(t, n7.Dirty, false, "n7 Dirty mismatch")
+	testutils.AssertEqual(t, n8.Dirty, false, "n8 Dirty mismatch")
+	testutils.AssertEqual(t, n10.Dirty, false, "n10 Dirty mismatch")
+
+	// UUIDs of created notes should have been updated with those from the server response
+	testutils.AssertEqual(t, n1.UUID, "n1-uuid", "n1 UUID mismatch")
+	testutils.AssertEqual(t, n2.UUID, "server-n2-body-uuid", "n2 UUID mismatch")
+	testutils.AssertEqual(t, n3.UUID, "n3-uuid", "n3 UUID mismatch")
+	testutils.AssertEqual(t, n6.UUID, "server-n6-body-uuid", "n6 UUID mismatch")
+	testutils.AssertEqual(t, n7.UUID, "n7-uuid", "n7 UUID mismatch")
+	testutils.AssertEqual(t, n8.UUID, "n8-uuid", "n8 UUID mismatch")
+	testutils.AssertEqual(t, n10.UUID, "server-n10-body-uuid", "n10 UUID mismatch")
+}
+
+func TestSendNotes_isBehind(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
+			var payload client.CreateBookPayload
+
+			err := json.NewDecoder(r.Body).Decode(&payload)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				return
+			}
+
+			resp := client.CreateNoteResp{
+				Result: client.RespNote{
+					USN: 11,
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+
+		p := strings.Split(r.URL.Path, "/")
+		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
+			if r.Method == "PATCH" {
+				resp := client.UpdateNoteResp{
+					Result: client.RespNote{
+						USN: 11,
+					},
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(resp); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				return
+			} else if r.Method == "DELETE" {
+				resp := client.DeleteNoteResp{
+					Result: client.RespNote{
+						USN: 11,
+					},
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(resp); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				return
+			}
+		}
+
+		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	t.Run("create note", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1, "n1 body", 1541108743, false, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+
+	t.Run("delete note", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 2, "n1 body", 1541108743, true, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+
+	t.Run("update note", func(t *testing.T) {
+		testCases := []struct {
+			systemLastMaxUSN int
+			expectedIsBehind bool
+		}{
+			{
+				systemLastMaxUSN: 10,
+				expectedIsBehind: false,
+			},
+			{
+				systemLastMaxUSN: 9,
+				expectedIsBehind: true,
+			},
+		}
+
+		for idx, tc := range testCases {
+			func() {
+				// set up
+				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				ctx.APIEndpoint = ts.URL
+				defer testutils.TeardownEnv(ctx)
+
+				db := ctx.DB
+
+				testutils.MustExec(t, fmt.Sprintf("inserting last max usn for test case %d", idx), db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, tc.systemLastMaxUSN)
+				testutils.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, false, false)
+				testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 8, "n1 body", 1541108743, false, true)
+
+				// execute
+				tx, err := db.Begin()
+				if err != nil {
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				}
+
+				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				if err != nil {
+					tx.Rollback()
+					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				}
+
+				tx.Commit()
+
+				// test
+				testutils.AssertEqual(t, isBehind, tc.expectedIsBehind, fmt.Sprintf("isBehind mismatch for test case %d", idx))
+			}()
+		}
+	})
+}
 
 func TestMergeNote(t *testing.T) {
 	b1UUID := "b1-uuid"

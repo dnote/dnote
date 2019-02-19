@@ -7,7 +7,6 @@ import (
 
 	"github.com/dnote/actions"
 	"github.com/dnote/cli/client"
-	"github.com/dnote/cli/core"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/pkg/errors"
@@ -389,12 +388,9 @@ var lm9 = migration{
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
-		sessionKey, ok, err := core.GetValidSession(ctx)
-		if err != nil {
-			return errors.Wrap(err, "getting session locally")
-		}
-		if !ok {
-			return nil
+		sessionKey := ctx.SessionKey
+		if sessionKey == "" {
+			return errors.New("not logged in")
 		}
 
 		resp, err := client.GetBooks(ctx, sessionKey)

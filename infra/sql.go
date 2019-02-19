@@ -38,10 +38,10 @@ func OpenDB(dbPath string) (*DB, error) {
 	}
 
 	// Send a ping to ensure that the connection is established
-	if err := dbConn.Ping(); err != nil {
-		dbConn.Close()
-		return nil, errors.Wrap(err, "sending a ping")
-	}
+	//	if err := dbConn.Ping(); err != nil {
+	//		dbConn.Close()
+	//		return nil, errors.Wrap(err, "ping")
+	//	}
 
 	db := &DB{
 		Conn: dbConn,

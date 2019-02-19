@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
@@ -59,6 +60,17 @@ func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool)
 	}
 
 	return ctx
+}
+
+// Login simulates a logged in user by inserting credentials in the local database
+func Login(t *testing.T, ctx *infra.DnoteCtx) {
+	db := ctx.DB
+
+	MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKey, "someSessionKey")
+	MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
+
+	ctx.SessionKey = "someSessionKey"
+	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()
 }
 
 // TeardownEnv cleans up the test env represented by the given context
@@ -210,7 +222,7 @@ func IsEqualJSON(s1, s2 []byte) (bool, error) {
 }
 
 // MustExec executes the given SQL query and fails a test if an error occurs
-func MustExec(t *testing.T, message string, db *sql.DB, query string, args ...interface{}) sql.Result {
+func MustExec(t *testing.T, message string, db *infra.DB, query string, args ...interface{}) sql.Result {
 	result, err := db.Exec(query, args...)
 	if err != nil {
 		t.Fatal(errors.Wrap(errors.Wrap(err, "executing sql"), message))
