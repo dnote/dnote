@@ -878,6 +878,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		sessionKey := ctx.SessionKey
 		cipherKey := ctx.CipherKey
 
+		if sessionKey == "" || cipherKey == nil {
+			return errors.New("not logged in")
+		}
+
 		if err := migrate.Run(ctx, migrate.RemoteSequence, migrate.RemoteMode); err != nil {
 			return errors.Wrap(err, "running remote migrations")
 		}
