@@ -68,9 +68,11 @@ func Login(t *testing.T, ctx *infra.DnoteCtx) {
 
 	MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKey, "someSessionKey")
 	MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
+	MustExec(t, "inserting cipherKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemCipherKey, "QUVTMjU2S2V5LTMyQ2hhcmFjdGVyczEyMzQ1Njc4OTA=")
 
 	ctx.SessionKey = "someSessionKey"
 	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()
+	ctx.CipherKey = []byte("AES256Key-32Characters1234567890")
 }
 
 // TeardownEnv cleans up the test env represented by the given context

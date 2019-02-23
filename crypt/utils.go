@@ -54,6 +54,10 @@ func MakeKeys(password, email []byte, iteration int) (string, string, error) {
 // AesGcmEncrypt encrypts the plaintext using AES in a GCM mode. It returns
 // a ciphertext prepended by a 12 byte pseudo-random nonce, encoded in base64.
 func AesGcmEncrypt(key, plaintext []byte) (string, error) {
+	if key == nil {
+		return "", errors.New("no key provided")
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", errors.Wrap(err, "initializing aes")
@@ -78,6 +82,10 @@ func AesGcmEncrypt(key, plaintext []byte) (string, error) {
 // AesGcmDecrypt decrypts the encrypted data using AES in a GCM mode. The data should be
 // a base64 encoded string in the format of 12 byte nonce followed by a ciphertext.
 func AesGcmDecrypt(key []byte, dataB64 string) (string, error) {
+	if key == nil {
+		return "", errors.New("no key provided")
+	}
+
 	data, err := base64.StdEncoding.DecodeString(dataB64)
 	if err != nil {
 		return "", errors.Wrap(err, "decoding base64 data")
@@ -91,6 +99,10 @@ func AesGcmDecrypt(key []byte, dataB64 string) (string, error) {
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return "", errors.Wrap(err, "initializing gcm")
+	}
+
+	if len(data) < aesGcmNonceSize {
+		return "", errors.Wrap(err, "malformed data")
 	}
 
 	nonce, ciphertext := data[:aesGcmNonceSize], data[aesGcmNonceSize:]

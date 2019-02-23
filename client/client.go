@@ -29,11 +29,11 @@ type GetSyncStateResp struct {
 }
 
 // GetSyncState gets the sync state response from the server
-func GetSyncState(sessionKey string, ctx infra.DnoteCtx) (GetSyncStateResp, error) {
+func GetSyncState(ctx infra.DnoteCtx) (GetSyncStateResp, error) {
 	var ret GetSyncStateResp
 
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", "/v1/sync/state", "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "GET", "/v1/sync/state", "")
 	if err != nil {
 		return ret, errors.Wrap(err, "constructing http request")
 	}
@@ -94,14 +94,14 @@ type GetSyncFragmentResp struct {
 }
 
 // GetSyncFragment gets a sync fragment response from the server
-func GetSyncFragment(ctx infra.DnoteCtx, sessionKey string, afterUSN int) (GetSyncFragmentResp, error) {
+func GetSyncFragment(ctx infra.DnoteCtx, afterUSN int) (GetSyncFragmentResp, error) {
 	v := url.Values{}
 	v.Set("after_usn", strconv.Itoa(afterUSN))
 	queryStr := v.Encode()
 
 	path := fmt.Sprintf("/v1/sync/fragment?%s", queryStr)
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", path, "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "GET", path, "")
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -154,8 +154,8 @@ func checkRespErr(res *http.Response) (bool, string, error) {
 }
 
 // CreateBook creates a new book in the server
-func CreateBook(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, label string) (CreateBookResp, error) {
-	encLabel, err := crypt.AesGcmEncrypt(cipherKey, []byte(label))
+func CreateBook(ctx infra.DnoteCtx, label string) (CreateBookResp, error) {
+	encLabel, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(label))
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "encrypting the label")
 	}
@@ -169,7 +169,7 @@ func CreateBook(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, label s
 	}
 
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v2/books", string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, "POST", "/v2/books", string(b))
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
@@ -200,9 +200,14 @@ type UpdateBookResp struct {
 }
 
 // UpdateBook updates a book in the server
-func UpdateBook(ctx infra.DnoteCtx, sessionKey, label, uuid string) (UpdateBookResp, error) {
+func UpdateBook(ctx infra.DnoteCtx, label, uuid string) (UpdateBookResp, error) {
+	encName, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(label))
+	if err != nil {
+		return UpdateBookResp{}, errors.Wrap(err, "encrypting the content")
+	}
+
 	payload := updateBookPayload{
-		Name: &label,
+		Name: &encName,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -211,7 +216,7 @@ func UpdateBook(ctx infra.DnoteCtx, sessionKey, label, uuid string) (UpdateBookR
 
 	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "PATCH", endpoint, string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, "PATCH", endpoint, string(b))
 	if err != nil {
 		return UpdateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
@@ -239,10 +244,10 @@ type DeleteBookResp struct {
 }
 
 // DeleteBook deletes a book in the server
-func DeleteBook(ctx infra.DnoteCtx, sessionKey, uuid string) (DeleteBookResp, error) {
+func DeleteBook(ctx infra.DnoteCtx, uuid string) (DeleteBookResp, error) {
 	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "DELETE", endpoint, "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "DELETE", endpoint, "")
 	if err != nil {
 		return DeleteBookResp{}, errors.Wrap(err, "deleting a book in the server")
 	}
@@ -297,8 +302,8 @@ type RespNote struct {
 }
 
 // CreateNote creates a note in the server
-func CreateNote(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, bookUUID, content string) (CreateNoteResp, error) {
-	encBody, err := crypt.AesGcmEncrypt(cipherKey, []byte(content))
+func CreateNote(ctx infra.DnoteCtx, bookUUID, content string) (CreateNoteResp, error) {
+	encBody, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(content))
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "encrypting the content")
 	}
@@ -313,7 +318,7 @@ func CreateNote(ctx infra.DnoteCtx, sessionKey string, cipherKey []byte, bookUUI
 	}
 
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v2/notes", string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, "POST", "/v2/notes", string(b))
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "posting a book to the server")
 	}
@@ -347,10 +352,15 @@ type UpdateNoteResp struct {
 }
 
 // UpdateNote updates a note in the server
-func UpdateNote(ctx infra.DnoteCtx, sessionKey, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
+func UpdateNote(ctx infra.DnoteCtx, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
+	encBody, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(content))
+	if err != nil {
+		return UpdateNoteResp{}, errors.Wrap(err, "encrypting the content")
+	}
+
 	payload := updateNotePayload{
 		BookUUID: &bookUUID,
-		Body:     &content,
+		Body:     &encBody,
 		Public:   &public,
 	}
 	b, err := json.Marshal(payload)
@@ -360,7 +370,7 @@ func UpdateNote(ctx infra.DnoteCtx, sessionKey, uuid, bookUUID, content string, 
 
 	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "PATCH", endpoint, string(b))
+	res, err := utils.DoAuthorizedReq(ctx, hc, "PATCH", endpoint, string(b))
 	if err != nil {
 		return UpdateNoteResp{}, errors.Wrap(err, "patching a note to the server")
 	}
@@ -388,10 +398,10 @@ type DeleteNoteResp struct {
 }
 
 // DeleteNote removes a note in the server
-func DeleteNote(ctx infra.DnoteCtx, sessionKey, uuid string) (DeleteNoteResp, error) {
+func DeleteNote(ctx infra.DnoteCtx, uuid string) (DeleteNoteResp, error) {
 	hc := http.Client{}
 	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "DELETE", endpoint, "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "DELETE", endpoint, "")
 	if err != nil {
 		return DeleteNoteResp{}, errors.Wrap(err, "patching a note to the server")
 	}
@@ -421,7 +431,7 @@ type GetBooksResp []struct {
 // GetBooks gets books from the server
 func GetBooks(ctx infra.DnoteCtx, sessionKey string) (GetBooksResp, error) {
 	hc := http.Client{}
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "GET", "/v1/books", "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "GET", "/v1/books", "")
 	if err != nil {
 		return GetBooksResp{}, errors.Wrap(err, "making http request")
 	}
@@ -526,7 +536,7 @@ func Signout(ctx infra.DnoteCtx, sessionKey string) error {
 		},
 	}
 
-	res, err := utils.DoAuthorizedReq(ctx, hc, sessionKey, "POST", "/v1/signout", "")
+	res, err := utils.DoAuthorizedReq(ctx, hc, "POST", "/v1/signout", "")
 	if err != nil {
 		return errors.Wrap(err, "making http request")
 	}

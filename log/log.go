@@ -23,7 +23,7 @@ var indent = "  "
 
 // Info prints information
 func Info(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, ColorBlue.Sprint("•"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorBlue.Sprint("•"), msg)
 }
 
 // Infof prints information with optional format verbs
@@ -58,7 +58,7 @@ func Warnf(msg string, v ...interface{}) {
 
 // Error prints an error message
 func Error(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, ColorRed.Sprint("⨯"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorRed.Sprint("⨯"), msg)
 }
 
 // Errorf prints an error message with optional format verbs

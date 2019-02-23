@@ -156,13 +156,17 @@ func getReq(ctx infra.DnoteCtx, path, method, body string) (*http.Request, error
 
 // DoAuthorizedReq does a http request to the given path in the api endpoint as a user,
 // with the appropriate headers. The given path should include the preceding slash.
-func DoAuthorizedReq(ctx infra.DnoteCtx, hc http.Client, sessionKey, method, path, body string) (*http.Response, error) {
+func DoAuthorizedReq(ctx infra.DnoteCtx, hc http.Client, method, path, body string) (*http.Response, error) {
+	if ctx.SessionKey == "" {
+		return nil, errors.New("no session key found")
+	}
+
 	req, err := getReq(ctx, path, method, body)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting request")
 	}
 
-	credential := fmt.Sprintf("Bearer %s", sessionKey)
+	credential := fmt.Sprintf("Bearer %s", ctx.SessionKey)
 	req.Header.Set("Authorization", credential)
 
 	res, err := hc.Do(req)

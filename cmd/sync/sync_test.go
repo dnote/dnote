@@ -1844,6 +1844,7 @@ func TestMergeBook(t *testing.T) {
 func TestSaveServerState(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -1887,6 +1888,7 @@ func TestSaveServerState(t *testing.T) {
 func TestSendBooks(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -1984,7 +1986,7 @@ func TestSendBooks(t *testing.T) {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
-	if _, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey); err != nil {
+	if _, err := sendBooks(ctx, tx); err != nil {
 		tx.Rollback()
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
@@ -2124,6 +2126,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2138,7 +2141,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2171,6 +2174,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2185,7 +2189,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2218,6 +2222,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2232,7 +2237,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2252,6 +2257,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 func TestSendNotes(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -2349,7 +2355,7 @@ func TestSendNotes(t *testing.T) {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
-	if _, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey); err != nil {
+	if _, err := sendNotes(ctx, tx); err != nil {
 		tx.Rollback()
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
@@ -2477,6 +2483,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2492,7 +2499,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2525,6 +2532,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2540,7 +2548,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2573,6 +2581,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2588,7 +2597,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockSessionKey", cipherKey)
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
