@@ -1,6 +1,7 @@
 package login
 
 import (
+	"encoding/base64"
 	"strconv"
 
 	"github.com/dnote/cli/client"
@@ -35,9 +36,20 @@ func Do(ctx infra.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "getting presiginin")
 	}
 
-	cipherKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
+	masterKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
 	if err != nil {
 		return errors.Wrap(err, "making keys")
+	}
+
+	authKeyB64 := base64.StdEncoding.EncodeToString(authKey)
+	signinResp, err := client.Signin(ctx, email, authKeyB64)
+	if err != nil {
+		return errors.Wrap(err, "requesting session")
+	}
+
+	cipherKeyDec, err := crypt.AesGcmDecrypt(masterKey, signinResp.CipherKeyEnc)
+	if err != nil {
+		return errors.Wrap(err, "decrypting cipher key")
 	}
 
 	db := ctx.DB
@@ -46,12 +58,7 @@ func Do(ctx infra.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	signinResp, err := client.Signin(ctx, email, authKey)
-	if err != nil {
-		return errors.Wrap(err, "requesting session")
-	}
-
-	if err := core.UpsertSystem(tx, infra.SystemCipherKey, cipherKey); err != nil {
+	if err := core.UpsertSystem(tx, infra.SystemCipherKey, cipherKeyDec); err != nil {
 		return errors.Wrap(err, "saving enc key")
 	}
 	if err := core.UpsertSystem(tx, infra.SystemSessionKey, signinResp.Key); err != nil {
@@ -85,7 +92,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		err := Do(ctx, email, password)
 		if errors.Cause(err) == client.ErrInvalidLogin {
-			log.Error("wrong login")
+			log.Error("wrong login\n")
 			return nil
 		} else if err != nil {
 			return errors.Wrap(err, "logging in")

@@ -488,8 +488,9 @@ type SigninPayload struct {
 
 // SigninResponse is a response from /v1/signin endpoint
 type SigninResponse struct {
-	Key       string `json:"key"`
-	ExpiresAt int64  `json:"expires_at"`
+	Key          string `json:"key"`
+	ExpiresAt    int64  `json:"expires_at"`
+	CipherKeyEnc string `json:"cipher_key_enc"`
 }
 
 // Signin requests a session token

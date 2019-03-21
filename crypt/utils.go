@@ -31,24 +31,16 @@ func runHkdf(secret, salt, info []byte) ([]byte, error) {
 
 // MakeKeys derives, from the given credential, a key set comprising of an encryption key
 // and an authentication key
-func MakeKeys(password, email []byte, iteration int) (string, string, error) {
+func MakeKeys(password, email []byte, iteration int) ([]byte, []byte, error) {
 	masterKey := pbkdf2.Key([]byte(password), []byte(email), iteration, 32, sha256.New)
 	log.Debug("email: %s, password: %s", email, password)
 
-	cipherKey, err := runHkdf(masterKey, email, []byte("enc"))
-	if err != nil {
-		return "", "", errors.Wrap(err, "deriving enc key")
-	}
-
 	authKey, err := runHkdf(masterKey, email, []byte("auth"))
 	if err != nil {
-		return "", "", errors.Wrap(err, "deriving auth key")
+		return nil, nil, errors.Wrap(err, "deriving auth key")
 	}
 
-	cipherKeyB64 := base64.StdEncoding.EncodeToString(cipherKey)
-	authKeyB64 := base64.StdEncoding.EncodeToString(authKey)
-
-	return cipherKeyB64, authKeyB64, nil
+	return masterKey, authKey, nil
 }
 
 // AesGcmEncrypt encrypts the plaintext using AES in a GCM mode. It returns
@@ -111,5 +103,5 @@ func AesGcmDecrypt(key []byte, dataB64 string) (string, error) {
 		return "", errors.Wrap(err, "decrypting")
 	}
 
-	return string(plaintext), nil
+	return base64.StdEncoding.EncodeToString(plaintext), nil
 }
