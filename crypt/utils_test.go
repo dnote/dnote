@@ -94,7 +94,7 @@ func TestAesGcmDecrypt(t *testing.T) {
 				t.Fatal(errors.Wrap(err, "performing decryption"))
 			}
 
-			testutils.AssertDeepEqual(t, plaintext, tc.expectedPlaintext, "plaintext mismatch")
+			testutils.AssertDeepEqual(t, plaintext, []byte(tc.expectedPlaintext), "plaintext mismatch")
 		})
 	}
 }

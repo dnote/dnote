@@ -52,13 +52,15 @@ func Do(ctx infra.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "decrypting cipher key")
 	}
 
+	cipherKeyDecB64 := base64.StdEncoding.EncodeToString(cipherKeyDec)
+
 	db := ctx.DB
 	tx, err := db.Begin()
 	if err != nil {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if err := core.UpsertSystem(tx, infra.SystemCipherKey, cipherKeyDec); err != nil {
+	if err := core.UpsertSystem(tx, infra.SystemCipherKey, cipherKeyDecB64); err != nil {
 		return errors.Wrap(err, "saving enc key")
 	}
 	if err := core.UpsertSystem(tx, infra.SystemSessionKey, signinResp.Key); err != nil {

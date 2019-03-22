@@ -73,35 +73,35 @@ func AesGcmEncrypt(key, plaintext []byte) (string, error) {
 
 // AesGcmDecrypt decrypts the encrypted data using AES in a GCM mode. The data should be
 // a base64 encoded string in the format of 12 byte nonce followed by a ciphertext.
-func AesGcmDecrypt(key []byte, dataB64 string) (string, error) {
+func AesGcmDecrypt(key []byte, dataB64 string) ([]byte, error) {
 	if key == nil {
-		return "", errors.New("no key provided")
+		return nil, errors.New("no key provided")
 	}
 
 	data, err := base64.StdEncoding.DecodeString(dataB64)
 	if err != nil {
-		return "", errors.Wrap(err, "decoding base64 data")
+		return nil, errors.Wrap(err, "decoding base64 data")
 	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", errors.Wrap(err, "initializing aes")
+		return nil, errors.Wrap(err, "initializing aes")
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", errors.Wrap(err, "initializing gcm")
+		return nil, errors.Wrap(err, "initializing gcm")
 	}
 
 	if len(data) < aesGcmNonceSize {
-		return "", errors.Wrap(err, "malformed data")
+		return nil, errors.Wrap(err, "malformed data")
 	}
 
 	nonce, ciphertext := data[:aesGcmNonceSize], data[aesGcmNonceSize:]
 	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "decrypting")
+		return nil, errors.Wrap(err, "decrypting")
 	}
 
-	return base64.StdEncoding.EncodeToString(plaintext), nil
+	return plaintext, nil
 }

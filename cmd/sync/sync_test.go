@@ -1934,16 +1934,18 @@ func TestSendBooks(t *testing.T) {
 				return
 			}
 
-			decLabel, err := crypt.AesGcmDecrypt(cipherKey, payload.Name)
+			labelDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Name)
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "decrypting label").Error())
 			}
 
-			createdLabels = append(createdLabels, decLabel)
+			labelDecStr := string(labelDec)
+
+			createdLabels = append(createdLabels, labelDecStr)
 
 			resp := client.CreateBookResp{
 				Book: client.RespBook{
-					UUID: fmt.Sprintf("server-%s-uuid", decLabel),
+					UUID: fmt.Sprintf("server-%s-uuid", labelDecStr),
 				},
 			}
 
@@ -2303,16 +2305,17 @@ func TestSendNotes(t *testing.T) {
 				return
 			}
 
-			decBody, err := crypt.AesGcmDecrypt(cipherKey, payload.Body)
+			bodyDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Body)
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "decrypting body").Error())
 			}
+			bodyDecStr := string(bodyDec)
 
-			createdBodys = append(createdBodys, decBody)
+			createdBodys = append(createdBodys, bodyDecStr)
 
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
-					UUID: fmt.Sprintf("server-%s-uuid", decBody),
+					UUID: fmt.Sprintf("server-%s-uuid", bodyDecStr),
 				},
 			}
 

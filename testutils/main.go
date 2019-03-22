@@ -22,13 +22,8 @@ import (
 )
 
 // InitEnv sets up a test env and returns a new dnote context
-func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool) infra.DnoteCtx {
-	path, err := filepath.Abs(relPath)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "pasrsing path"))
-	}
-
-	os.Setenv("DNOTE_HOME_DIR", path)
+func InitEnv(t *testing.T, dnotehomePath string, fixturePath string, migrated bool) infra.DnoteCtx {
+	os.Setenv("DNOTE_HOME_DIR", dnotehomePath)
 	ctx, err := infra.NewCtx("", "")
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting new ctx"))
@@ -40,7 +35,7 @@ func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool)
 	}
 
 	// set up db
-	b := ReadFileAbs(relFixturePath)
+	b := ReadFileAbs(fixturePath)
 	setupSQL := string(b)
 
 	db := ctx.DB
