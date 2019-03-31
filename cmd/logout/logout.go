@@ -69,7 +69,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		err := Do(ctx)
 		if err == ErrNotLoggedIn {
-			log.Error("not logged in")
+			log.Error("not logged in\n")
 			return nil
 		} else if err != nil {
 			return errors.Wrap(err, "logging out")
