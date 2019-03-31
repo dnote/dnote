@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/utils"
@@ -21,13 +22,8 @@ import (
 )
 
 // InitEnv sets up a test env and returns a new dnote context
-func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool) infra.DnoteCtx {
-	path, err := filepath.Abs(relPath)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "pasrsing path"))
-	}
-
-	os.Setenv("DNOTE_HOME_DIR", path)
+func InitEnv(t *testing.T, dnotehomePath string, fixturePath string, migrated bool) infra.DnoteCtx {
+	os.Setenv("DNOTE_HOME_DIR", dnotehomePath)
 	ctx, err := infra.NewCtx("", "")
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting new ctx"))
@@ -39,7 +35,7 @@ func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool)
 	}
 
 	// set up db
-	b := ReadFileAbs(relFixturePath)
+	b := ReadFileAbs(fixturePath)
 	setupSQL := string(b)
 
 	db := ctx.DB
@@ -59,6 +55,19 @@ func InitEnv(t *testing.T, relPath string, relFixturePath string, migrated bool)
 	}
 
 	return ctx
+}
+
+// Login simulates a logged in user by inserting credentials in the local database
+func Login(t *testing.T, ctx *infra.DnoteCtx) {
+	db := ctx.DB
+
+	MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKey, "someSessionKey")
+	MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
+	MustExec(t, "inserting cipherKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemCipherKey, "QUVTMjU2S2V5LTMyQ2hhcmFjdGVyczEyMzQ1Njc4OTA=")
+
+	ctx.SessionKey = "someSessionKey"
+	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()
+	ctx.CipherKey = []byte("AES256Key-32Characters1234567890")
 }
 
 // TeardownEnv cleans up the test env represented by the given context
@@ -210,7 +219,7 @@ func IsEqualJSON(s1, s2 []byte) (bool, error) {
 }
 
 // MustExec executes the given SQL query and fails a test if an error occurs
-func MustExec(t *testing.T, message string, db *sql.DB, query string, args ...interface{}) sql.Result {
+func MustExec(t *testing.T, message string, db *infra.DB, query string, args ...interface{}) sql.Result {
 	result, err := db.Exec(query, args...)
 	if err != nil {
 		t.Fatal(errors.Wrap(errors.Wrap(err, "executing sql"), message))
@@ -309,7 +318,7 @@ func WaitDnoteCmd(t *testing.T, ctx infra.DnoteCtx, runFunc func(io.WriteCloser)
 func UserConfirm(stdin io.WriteCloser) error {
 	// confirm
 	if _, err := io.WriteString(stdin, "y\n"); err != nil {
-		return errors.Wrap(err, "confirming deletion")
+		return errors.Wrap(err, "indicating confirmation in stdin")
 	}
 
 	return nil

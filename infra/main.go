@@ -3,6 +3,7 @@ package infra
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"os/user"
@@ -27,21 +28,29 @@ var (
 	SystemLastMaxUSN = "last_max_usn"
 	// SystemLastUpgrade is the timestamp at which the system more recently checked for an upgrade
 	SystemLastUpgrade = "last_upgrade"
+	// SystemCipherKey is the encryption key
+	SystemCipherKey = "enc_key"
+	// SystemSessionKey is the session key
+	SystemSessionKey = "session_token"
+	// SystemSessionKeyExpiry is the timestamp at which the session key will expire
+	SystemSessionKeyExpiry = "session_token_expiry"
 )
 
 // DnoteCtx is a context holding the information of the current runtime
 type DnoteCtx struct {
-	HomeDir     string
-	DnoteDir    string
-	APIEndpoint string
-	Version     string
-	DB          *sql.DB
+	HomeDir          string
+	DnoteDir         string
+	APIEndpoint      string
+	Version          string
+	DB               *DB
+	SessionKey       string
+	SessionKeyExpiry int64
+	CipherKey        []byte
 }
 
 // Config holds dnote configuration
 type Config struct {
 	Editor string
-	APIKey string
 }
 
 // NewCtx returns a new dnote context
@@ -53,7 +62,7 @@ func NewCtx(apiEndpoint, versionTag string) (DnoteCtx, error) {
 	dnoteDir := getDnoteDir(homeDir)
 
 	dnoteDBPath := fmt.Sprintf("%s/dnote.db", dnoteDir)
-	db, err := sql.Open("sqlite3", dnoteDBPath)
+	db, err := OpenDB(dnoteDBPath)
 	if err != nil {
 		return DnoteCtx{}, errors.Wrap(err, "conntecting to db")
 	}
@@ -64,6 +73,45 @@ func NewCtx(apiEndpoint, versionTag string) (DnoteCtx, error) {
 		APIEndpoint: apiEndpoint,
 		Version:     versionTag,
 		DB:          db,
+	}
+
+	return ret, nil
+}
+
+// SetupCtx populates context and returns a new context
+func SetupCtx(ctx DnoteCtx) (DnoteCtx, error) {
+	db := ctx.DB
+
+	var sessionKey, cipherKeyB64 string
+	var sessionKeyExpiry int64
+
+	err := db.QueryRow("SELECT value FROM system WHERE key = ?", SystemSessionKey).Scan(&sessionKey)
+	if err != nil && err != sql.ErrNoRows {
+		return ctx, errors.Wrap(err, "finding sesison key")
+	}
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", SystemCipherKey).Scan(&cipherKeyB64)
+	if err != nil && err != sql.ErrNoRows {
+		return ctx, errors.Wrap(err, "finding sesison key")
+	}
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", SystemSessionKeyExpiry).Scan(&sessionKeyExpiry)
+	if err != nil && err != sql.ErrNoRows {
+		return ctx, errors.Wrap(err, "finding sesison key expiry")
+	}
+
+	cipherKey, err := base64.StdEncoding.DecodeString(cipherKeyB64)
+	if err != nil {
+		return ctx, errors.Wrap(err, "decoding cipherKey from base64")
+	}
+
+	ret := DnoteCtx{
+		HomeDir:          ctx.HomeDir,
+		DnoteDir:         ctx.DnoteDir,
+		APIEndpoint:      ctx.APIEndpoint,
+		Version:          ctx.Version,
+		DB:               ctx.DB,
+		SessionKey:       sessionKey,
+		SessionKeyExpiry: sessionKeyExpiry,
+		CipherKey:        cipherKey,
 	}
 
 	return ret, nil

@@ -16,14 +16,14 @@ var (
 	// ColorBlue is a blue foreground color
 	ColorBlue = color.New(color.FgBlue)
 	// ColorGray is a gray foreground color
-	ColorGray = color.New(color.FgWhite)
+	ColorGray = color.New(color.FgHiBlack)
 )
 
 var indent = "  "
 
 // Info prints information
 func Info(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, ColorBlue.Sprint("•"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorBlue.Sprint("•"), msg)
 }
 
 // Infof prints information with optional format verbs
@@ -58,7 +58,7 @@ func Warnf(msg string, v ...interface{}) {
 
 // Error prints an error message
 func Error(msg string) {
-	fmt.Fprintf(color.Output, "%s%s %s\n", indent, ColorRed.Sprint("⨯"), msg)
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorRed.Sprint("⨯"), msg)
 }
 
 // Errorf prints an error message with optional format verbs
@@ -69,6 +69,21 @@ func Errorf(msg string, v ...interface{}) {
 // Printf prints an normal message
 func Printf(msg string, v ...interface{}) {
 	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorGray.Sprint("•"), fmt.Sprintf(msg, v...))
+}
+
+// Askf prints an question with optional format verbs. The leading symbol differs in color depending
+// on whether the input is masked.
+func Askf(msg string, masked bool, v ...interface{}) {
+	symbolChar := "[?]"
+
+	var symbol string
+	if masked {
+		symbol = ColorGray.Sprintf(symbolChar)
+	} else {
+		symbol = ColorGreen.Sprintf(symbolChar)
+	}
+
+	fmt.Fprintf(color.Output, "%s%s %s: ", indent, symbol, fmt.Sprintf(msg, v...))
 }
 
 // Debug prints to the console if DNOTE_DEBUG is set

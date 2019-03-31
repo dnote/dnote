@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dnote/cli/infra"
+	"github.com/dnote/cli/log"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -267,9 +268,9 @@ func GetEditorInput(ctx infra.DnoteCtx, fpath string, content *string) error {
 	return nil
 }
 
-func initSystemKV(tx *sql.Tx, key string, val string) error {
+func initSystemKV(db *infra.DB, key string, val string) error {
 	var count int
-	if err := tx.QueryRow("SELECT count(*) FROM system WHERE key = ?", key).Scan(&count); err != nil {
+	if err := db.QueryRow("SELECT count(*) FROM system WHERE key = ?", key).Scan(&count); err != nil {
 		return errors.Wrapf(err, "counting %s", key)
 	}
 
@@ -277,8 +278,8 @@ func initSystemKV(tx *sql.Tx, key string, val string) error {
 		return nil
 	}
 
-	if _, err := tx.Exec("INSERT INTO system (key, value) VALUES (?, ?)", key, val); err != nil {
-		tx.Rollback()
+	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (?, ?)", key, val); err != nil {
+		db.Rollback()
 		return errors.Wrapf(err, "inserting %s %s", key, val)
 
 	}
@@ -309,4 +310,31 @@ func InitSystem(ctx infra.DnoteCtx) error {
 	tx.Commit()
 
 	return nil
+}
+
+// GetValidSession returns a session key from the local storage if one exists and is not expired
+// If one does not exist or is expired, it prints out an instruction and returns false
+func GetValidSession(ctx infra.DnoteCtx) (string, bool, error) {
+	db := ctx.DB
+
+	var sessionKey string
+	var sessionKeyExpires int64
+
+	if err := GetSystem(db, infra.SystemSessionKey, &sessionKey); err != nil {
+		return "", false, errors.Wrap(err, "getting session key")
+	}
+	if err := GetSystem(db, infra.SystemSessionKeyExpiry, &sessionKeyExpires); err != nil {
+		return "", false, errors.Wrap(err, "getting session key expiry")
+	}
+
+	if sessionKey == "" {
+		log.Error("login required. please run `dnote login`\n")
+		return "", false, nil
+	}
+	if sessionKeyExpires < time.Now().Unix() {
+		log.Error("sesison expired. please run `dnote login`\n")
+		return "", false, nil
+	}
+
+	return sessionKey, true, nil
 }

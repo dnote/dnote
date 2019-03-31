@@ -6,6 +6,7 @@ import (
 
 	"github.com/dnote/cli/client"
 	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/crypt"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/log"
 	"github.com/dnote/cli/migrate"
@@ -39,22 +40,20 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func getLastSyncAt(tx *sql.Tx) (int, error) {
+func getLastSyncAt(tx *infra.DB) (int, error) {
 	var ret int
 
-	err := tx.QueryRow("SELECT value FROM system WHERE key = ?", infra.SystemLastSyncAt).Scan(&ret)
-	if err != nil {
+	if err := core.GetSystem(tx, infra.SystemLastSyncAt, &ret); err != nil {
 		return ret, errors.Wrap(err, "querying last sync time")
 	}
 
 	return ret, nil
 }
 
-func getLastMaxUSN(tx *sql.Tx) (int, error) {
+func getLastMaxUSN(tx *infra.DB) (int, error) {
 	var ret int
 
-	err := tx.QueryRow("SELECT value FROM system WHERE key = ?", infra.SystemLastMaxUSN).Scan(&ret)
-	if err != nil {
+	if err := core.GetSystem(tx, infra.SystemLastMaxUSN, &ret); err != nil {
 		return ret, errors.Wrap(err, "querying last user max_usn")
 	}
 
@@ -75,7 +74,9 @@ func (l syncList) getLength() int {
 	return len(l.Notes) + len(l.Books) + len(l.ExpungedNotes) + len(l.ExpungedBooks)
 }
 
-func newSyncList(fragments []client.SyncFragment) syncList {
+// processFragments categorizes items in sync fragments into a sync list. It also decrypts any
+// encrypted data in sync fragments.
+func processFragments(fragments []client.SyncFragment, cipherKey []byte) (syncList, error) {
 	notes := map[string]client.SyncFragNote{}
 	books := map[string]client.SyncFragBook{}
 	expungedNotes := map[string]bool{}
@@ -85,9 +86,23 @@ func newSyncList(fragments []client.SyncFragment) syncList {
 
 	for _, fragment := range fragments {
 		for _, note := range fragment.Notes {
+			log.Debug("decrypting note %s\n", note.UUID)
+			bodyDec, err := crypt.AesGcmDecrypt(cipherKey, note.Body)
+			if err != nil {
+				return syncList{}, errors.Wrapf(err, "decrypting body for note %s", note.UUID)
+			}
+
+			note.Body = string(bodyDec)
 			notes[note.UUID] = note
 		}
 		for _, book := range fragment.Books {
+			log.Debug("decrypting book %s\n", book.UUID)
+			labelDec, err := crypt.AesGcmDecrypt(cipherKey, book.Label)
+			if err != nil {
+				return syncList{}, errors.Wrapf(err, "decrypting label for book %s", book.UUID)
+			}
+
+			book.Label = string(labelDec)
 			books[book.UUID] = book
 		}
 		for _, uuid := range fragment.ExpungedBooks {
@@ -105,7 +120,7 @@ func newSyncList(fragments []client.SyncFragment) syncList {
 		}
 	}
 
-	return syncList{
+	sl := syncList{
 		Notes:          notes,
 		Books:          books,
 		ExpungedNotes:  expungedNotes,
@@ -113,30 +128,35 @@ func newSyncList(fragments []client.SyncFragment) syncList {
 		MaxUSN:         maxUSN,
 		MaxCurrentTime: maxCurrentTime,
 	}
+
+	return sl, nil
 }
 
 // getSyncList gets a list of all sync fragments after the specified usn
 // and aggregates them into a syncList data structure
-func getSyncList(ctx infra.DnoteCtx, apiKey string, afterUSN int) (syncList, error) {
-	fragments, err := getSyncFragments(ctx, apiKey, afterUSN)
+func getSyncList(ctx infra.DnoteCtx, afterUSN int) (syncList, error) {
+	fragments, err := getSyncFragments(ctx, afterUSN)
 	if err != nil {
 		return syncList{}, errors.Wrap(err, "getting sync fragments")
 	}
 
-	ret := newSyncList(fragments)
+	ret, err := processFragments(fragments, ctx.CipherKey)
+	if err != nil {
+		return syncList{}, errors.Wrap(err, "making sync list")
+	}
 
 	return ret, nil
 }
 
 // getSyncFragments repeatedly gets all sync fragments after the specified usn until there is no more new data
 // remaining and returns the buffered list
-func getSyncFragments(ctx infra.DnoteCtx, apiKey string, afterUSN int) ([]client.SyncFragment, error) {
+func getSyncFragments(ctx infra.DnoteCtx, afterUSN int) ([]client.SyncFragment, error) {
 	var buf []client.SyncFragment
 
 	nextAfterUSN := afterUSN
 
 	for {
-		resp, err := client.GetSyncFragment(ctx, apiKey, nextAfterUSN)
+		resp, err := client.GetSyncFragment(ctx, nextAfterUSN)
 		if err != nil {
 			return buf, errors.Wrap(err, "getting sync fragment")
 		}
@@ -159,7 +179,7 @@ func getSyncFragments(ctx infra.DnoteCtx, apiKey string, afterUSN int) ([]client
 
 // resolveLabel resolves a book label conflict by repeatedly appending an increasing integer
 // to the label until it finds a unique label. It returns the first non-conflicting label.
-func resolveLabel(tx *sql.Tx, label string) (string, error) {
+func resolveLabel(tx *infra.DB, label string) (string, error) {
 	var ret string
 
 	for i := 2; ; i++ {
@@ -180,7 +200,7 @@ func resolveLabel(tx *sql.Tx, label string) (string, error) {
 
 // mergeBook inserts or updates the given book in the local database.
 // If a book with a duplicate label exists locally, it renames the duplicate by appending a number.
-func mergeBook(tx *sql.Tx, b client.SyncFragBook, mode int) error {
+func mergeBook(tx *infra.DB, b client.SyncFragBook, mode int) error {
 	var count int
 	if err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", b.Label).Scan(&count); err != nil {
 		return errors.Wrapf(err, "checking for books with a duplicate label %s", b.Label)
@@ -214,7 +234,7 @@ func mergeBook(tx *sql.Tx, b client.SyncFragBook, mode int) error {
 	return nil
 }
 
-func stepSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
+func stepSyncBook(tx *infra.DB, b client.SyncFragBook) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", b.UUID).Scan(&localUSN, &dirty)
@@ -238,7 +258,7 @@ func stepSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
 	return nil
 }
 
-func mergeNote(tx *sql.Tx, serverNote client.SyncFragNote, localNote core.Note) error {
+func mergeNote(tx *infra.DB, serverNote client.SyncFragNote, localNote core.Note) error {
 	var bookDeleted bool
 	err := tx.QueryRow("SELECT deleted FROM books WHERE uuid = ?", localNote.BookUUID).Scan(&bookDeleted)
 	if err != nil {
@@ -269,7 +289,7 @@ func mergeNote(tx *sql.Tx, serverNote client.SyncFragNote, localNote core.Note) 
 	return nil
 }
 
-func stepSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
+func stepSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
 	err := tx.QueryRow("SELECT usn, book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
 		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
@@ -293,7 +313,7 @@ func stepSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
 	return nil
 }
 
-func fullSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
+func fullSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
 	err := tx.QueryRow("SELECT usn,book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
 		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
@@ -317,7 +337,7 @@ func fullSyncNote(tx *sql.Tx, n client.SyncFragNote) error {
 	return nil
 }
 
-func syncDeleteNote(tx *sql.Tx, noteUUID string) error {
+func syncDeleteNote(tx *infra.DB, noteUUID string) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM notes WHERE uuid = ?", noteUUID).Scan(&localUSN, &dirty)
@@ -342,7 +362,7 @@ func syncDeleteNote(tx *sql.Tx, noteUUID string) error {
 }
 
 // checkNotesPristine checks that none of the notes in the given book are dirty
-func checkNotesPristine(tx *sql.Tx, bookUUID string) (bool, error) {
+func checkNotesPristine(tx *infra.DB, bookUUID string) (bool, error) {
 	var count int
 	if err := tx.QueryRow("SELECT count(*) FROM notes WHERE book_uuid = ? AND dirty = ?", bookUUID, true).Scan(&count); err != nil {
 		return false, errors.Wrapf(err, "counting notes that are dirty in book %s", bookUUID)
@@ -355,7 +375,7 @@ func checkNotesPristine(tx *sql.Tx, bookUUID string) (bool, error) {
 	return true, nil
 }
 
-func syncDeleteBook(tx *sql.Tx, bookUUID string) error {
+func syncDeleteBook(tx *infra.DB, bookUUID string) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", bookUUID).Scan(&localUSN, &dirty)
@@ -401,7 +421,7 @@ func syncDeleteBook(tx *sql.Tx, bookUUID string) error {
 	return nil
 }
 
-func fullSyncBook(tx *sql.Tx, b client.SyncFragBook) error {
+func fullSyncBook(tx *infra.DB, b client.SyncFragBook) error {
 	var localUSN int
 	var dirty bool
 	err := tx.QueryRow("SELECT usn, dirty FROM books WHERE uuid = ?", b.UUID).Scan(&localUSN, &dirty)
@@ -453,7 +473,7 @@ func checkBookInList(uuid string, list *syncList) bool {
 // judging by the full list of resources in the server. Concretely, the only acceptable
 // situation in which a local note is not present in the server is if it is new and has not been
 // uploaded (i.e. dirty and usn is 0). Otherwise, it is a result of some kind of error and should be cleaned.
-func cleanLocalNotes(tx *sql.Tx, fullList *syncList) error {
+func cleanLocalNotes(tx *infra.DB, fullList *syncList) error {
 	rows, err := tx.Query("SELECT uuid, usn, dirty FROM notes")
 	if err != nil {
 		return errors.Wrap(err, "getting local notes")
@@ -479,7 +499,7 @@ func cleanLocalNotes(tx *sql.Tx, fullList *syncList) error {
 }
 
 // cleanLocalBooks deletes from the local database any books that are in invalid state
-func cleanLocalBooks(tx *sql.Tx, fullList *syncList) error {
+func cleanLocalBooks(tx *infra.DB, fullList *syncList) error {
 	rows, err := tx.Query("SELECT uuid, usn, dirty FROM books")
 	if err != nil {
 		return errors.Wrap(err, "getting local books")
@@ -504,11 +524,11 @@ func cleanLocalBooks(tx *sql.Tx, fullList *syncList) error {
 	return nil
 }
 
-func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) error {
+func fullSync(ctx infra.DnoteCtx, tx *infra.DB) error {
 	log.Debug("performing a full sync\n")
 	log.Info("resolving delta.")
 
-	list, err := getSyncList(ctx, apiKey, 0)
+	list, err := getSyncList(ctx, 0)
 	if err != nil {
 		return errors.Wrap(err, "getting sync list")
 	}
@@ -555,12 +575,12 @@ func fullSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) error {
 	return nil
 }
 
-func stepSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string, afterUSN int) error {
+func stepSync(ctx infra.DnoteCtx, tx *infra.DB, afterUSN int) error {
 	log.Debug("performing a step sync\n")
 
 	log.Info("resolving delta.")
 
-	list, err := getSyncList(ctx, apiKey, afterUSN)
+	list, err := getSyncList(ctx, afterUSN)
 	if err != nil {
 		return errors.Wrap(err, "getting sync list")
 	}
@@ -599,7 +619,7 @@ func stepSync(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string, afterUSN int) error
 	return nil
 }
 
-func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
+func sendBooks(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 	isBehind := false
 
 	rows, err := tx.Query("SELECT uuid, label, usn, deleted FROM books WHERE dirty")
@@ -629,7 +649,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				continue
 			} else {
-				resp, err := client.CreateBook(ctx, apiKey, book.Label)
+				resp, err := client.CreateBook(ctx, book.Label)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "creating a book")
 				}
@@ -655,7 +675,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 			}
 		} else {
 			if book.Deleted {
-				resp, err := client.DeleteBook(ctx, apiKey, book.UUID)
+				resp, err := client.DeleteBook(ctx, book.UUID)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "deleting a book")
 				}
@@ -667,7 +687,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				respUSN = resp.Book.USN
 			} else {
-				resp, err := client.UpdateBook(ctx, apiKey, book.Label, book.UUID)
+				resp, err := client.UpdateBook(ctx, book.Label, book.UUID)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "updating a book")
 				}
@@ -703,7 +723,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 	return isBehind, nil
 }
 
-func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
+func sendNotes(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 	isBehind := false
 
 	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn FROM notes WHERE dirty")
@@ -734,7 +754,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				continue
 			} else {
-				resp, err := client.CreateNote(ctx, apiKey, note.BookUUID, note.Body)
+				resp, err := client.CreateNote(ctx, note.BookUUID, note.Body)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "creating a note")
 				}
@@ -755,7 +775,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 			}
 		} else {
 			if note.Deleted {
-				resp, err := client.DeleteNote(ctx, apiKey, note.UUID)
+				resp, err := client.DeleteNote(ctx, note.UUID)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "deleting a note")
 				}
@@ -767,7 +787,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 				respUSN = resp.Result.USN
 			} else {
-				resp, err := client.UpdateNote(ctx, apiKey, note.UUID, note.BookUUID, note.Body, note.Public)
+				resp, err := client.UpdateNote(ctx, note.UUID, note.BookUUID, note.Body, note.Public)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "updating a note")
 				}
@@ -803,7 +823,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 	return isBehind, nil
 }
 
-func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
+func sendChanges(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 	log.Info("sending changes.")
 
 	var delta int
@@ -811,12 +831,12 @@ func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 
 	fmt.Printf(" (total %d).", delta)
 
-	behind1, err := sendBooks(ctx, tx, apiKey)
+	behind1, err := sendBooks(ctx, tx)
 	if err != nil {
 		return behind1, errors.Wrap(err, "sending books")
 	}
 
-	behind2, err := sendNotes(ctx, tx, apiKey)
+	behind2, err := sendNotes(ctx, tx)
 	if err != nil {
 		return behind2, errors.Wrap(err, "sending notes")
 	}
@@ -828,25 +848,23 @@ func sendChanges(ctx infra.DnoteCtx, tx *sql.Tx, apiKey string) (bool, error) {
 	return isBehind, nil
 }
 
-func updateLastMaxUSN(tx *sql.Tx, val int) error {
-	_, err := tx.Exec("UPDATE system SET value = ? WHERE key = ?", val, infra.SystemLastMaxUSN)
-	if err != nil {
+func updateLastMaxUSN(tx *infra.DB, val int) error {
+	if err := core.UpdateSystem(tx, infra.SystemLastMaxUSN, val); err != nil {
 		return errors.Wrapf(err, "updating %s", infra.SystemLastMaxUSN)
 	}
 
 	return nil
 }
 
-func updateLastSyncAt(tx *sql.Tx, val int64) error {
-	_, err := tx.Exec("UPDATE system SET value = ? WHERE key = ?", val, infra.SystemLastSyncAt)
-	if err != nil {
+func updateLastSyncAt(tx *infra.DB, val int64) error {
+	if err := core.UpdateSystem(tx, infra.SystemLastSyncAt, val); err != nil {
 		return errors.Wrapf(err, "updating %s", infra.SystemLastSyncAt)
 	}
 
 	return nil
 }
 
-func saveSyncState(tx *sql.Tx, serverTime int64, serverMaxUSN int) error {
+func saveSyncState(tx *infra.DB, serverTime int64, serverMaxUSN int) error {
 	if err := updateLastMaxUSN(tx, serverMaxUSN); err != nil {
 		return errors.Wrap(err, "updating last max usn")
 	}
@@ -859,26 +877,20 @@ func saveSyncState(tx *sql.Tx, serverTime int64, serverMaxUSN int) error {
 
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		config, err := core.ReadConfig(ctx)
-		if err != nil {
-			return errors.Wrap(err, "reading the config")
-		}
-		if config.APIKey == "" {
-			log.Error("login required. please run `dnote login`\n")
-			return nil
+		if ctx.SessionKey == "" || ctx.CipherKey == nil {
+			return errors.New("not logged in")
 		}
 
 		if err := migrate.Run(ctx, migrate.RemoteSequence, migrate.RemoteMode); err != nil {
 			return errors.Wrap(err, "running remote migrations")
 		}
 
-		db := ctx.DB
-		tx, err := db.Begin()
+		tx, err := ctx.DB.Begin()
 		if err != nil {
 			return errors.Wrap(err, "beginning a transaction")
 		}
 
-		syncState, err := client.GetSyncState(config.APIKey, ctx)
+		syncState, err := client.GetSyncState(ctx)
 		if err != nil {
 			return errors.Wrap(err, "getting the sync state from the server")
 		}
@@ -895,9 +907,9 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		var syncErr error
 		if isFullSync || lastSyncAt < syncState.FullSyncBefore {
-			syncErr = fullSync(ctx, tx, config.APIKey)
+			syncErr = fullSync(ctx, tx)
 		} else if lastMaxUSN != syncState.MaxUSN {
-			syncErr = stepSync(ctx, tx, config.APIKey, lastMaxUSN)
+			syncErr = stepSync(ctx, tx, lastMaxUSN)
 		} else {
 			// if no need to sync from the server, simply update the last sync timestamp and proceed to send changes
 			err = updateLastSyncAt(tx, syncState.CurrentTime)
@@ -907,10 +919,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 		if syncErr != nil {
 			tx.Rollback()
-			return errors.Wrap(err, "syncing changes from the server")
+			return errors.Wrap(syncErr, "syncing changes from the server")
 		}
 
-		isBehind, err := sendChanges(ctx, tx, config.APIKey)
+		isBehind, err := sendChanges(ctx, tx)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "sending changes")
@@ -926,7 +938,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 				return errors.Wrap(err, "getting the new last max_usn")
 			}
 
-			err = stepSync(ctx, tx, config.APIKey, updatedLastMaxUSN)
+			err = stepSync(ctx, tx, updatedLastMaxUSN)
 			if err != nil {
 				tx.Rollback()
 				return errors.Wrap(err, "performing the follow-up step sync")

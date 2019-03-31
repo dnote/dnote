@@ -1,7 +1,6 @@
 package migrate
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,13 +38,13 @@ func TestExecute_bump_schema(t *testing.T) {
 
 			m1 := migration{
 				name: "noop",
-				run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+				run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 					return nil
 				},
 			}
 			m2 := migration{
 				name: "noop",
-				run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+				run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 					return nil
 				},
 			}
@@ -97,28 +96,28 @@ func TestRun_nonfresh(t *testing.T) {
 			sequence := []migration{
 				migration{
 					name: "v1",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
 				migration{
 					name: "v2",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
 				migration{
 					name: "v3",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
 						return nil
 					},
 				},
 				migration{
 					name: "v4",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v4 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v4")
 						return nil
 					},
@@ -176,21 +175,21 @@ func TestRun_fresh(t *testing.T) {
 			sequence := []migration{
 				migration{
 					name: "v1",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
 				migration{
 					name: "v2",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
 				migration{
 					name: "v3",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
 						return nil
 					},
@@ -250,21 +249,21 @@ func TestRun_up_to_date(t *testing.T) {
 			sequence := []migration{
 				migration{
 					name: "v1",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
 				migration{
 					name: "v2",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
 				migration{
 					name: "v3",
-					run: func(ctx infra.DnoteCtx, tx *sql.Tx) error {
+					run: func(ctx infra.DnoteCtx, db *infra.DB) error {
 						testutils.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
 						return nil
 					},
@@ -876,6 +875,7 @@ func TestLocalMigration9(t *testing.T) {
 func TestRemoteMigration1(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/remote-1-pre-schema.sql", false)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	JSBookUUID := "existing-js-book-uuid"
@@ -914,14 +914,13 @@ func TestRemoteMigration1(t *testing.T) {
 
 	ctx.APIEndpoint = server.URL
 
-	confStr := fmt.Sprintf("apikey: mock_api_key")
-	testutils.WriteFile(ctx, []byte(confStr), "dnoterc")
-
 	db := ctx.DB
 
 	testutils.MustExec(t, "inserting js book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", JSBookUUID, "js")
 	testutils.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", CSSBookUUID, "css")
 	testutils.MustExec(t, "inserting linux book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", linuxBookUUID, "linux")
+	testutils.MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKey, "someSessionKey")
+	testutils.MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
 
 	tx, err := db.Begin()
 	if err != nil {

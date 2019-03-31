@@ -5,8 +5,9 @@
 - [edit](#dnote-edit)
 - [remove](#dnote-remove)
 - [find](#dnote-find)
-- [login](#dnote-login)
 - [sync](#dnote-sync)
+- [login](#dnote-login)
+- [logout](#dnote-logout)
 
 ## dnote add
 
@@ -87,7 +88,7 @@ dnote find "merge sort" -b algorithm
 
 ## dnote sync
 
-_Dnote Cloud only_
+_Dnote Pro only_
 
 _alias: s_
 
@@ -95,6 +96,12 @@ Sync notes with Dnote cloud
 
 ## dnote login
 
-_Dnote Cloud only_
+_Dnote Pro only_
 
 Start a login prompt
+
+## dnote logout
+
+_Dnote Pro only_
+
+Log out of Dnote

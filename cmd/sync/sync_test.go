@@ -11,11 +11,86 @@ import (
 
 	"github.com/dnote/cli/client"
 	"github.com/dnote/cli/core"
+	"github.com/dnote/cli/crypt"
 	"github.com/dnote/cli/infra"
 	"github.com/dnote/cli/testutils"
 	"github.com/dnote/cli/utils"
 	"github.com/pkg/errors"
 )
+
+var cipherKey = []byte("AES256Key-32Characters1234567890")
+
+func TestProcessFragments(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	defer testutils.TeardownEnv(ctx)
+
+	fragments := []client.SyncFragment{
+		client.SyncFragment{
+			FragMaxUSN:  10,
+			UserMaxUSN:  10,
+			CurrentTime: 1550436136,
+			Notes: []client.SyncFragNote{
+				client.SyncFragNote{
+					UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
+					Body: "7GgIppDdxDn+4DUoVoLXbncZDRqXGwbDVNF/eCssu+1BXMdq+HAziJHGgK7drdcIBtYDDXj0OwHz9dQDDOyWeNqkLWEIQ2Roygs229dRxdO3Z6ST+qSOr/9TTjDlFxydF5Ps7nAXdN9KVxH8FKIZDsxJ45qeLKpQK/6poAM39BCOiysqAXJQz9ngOJiqImAuftS6d/XhwX77QvnM91VCKK0tFmsMdDDw0J9QMwnlYU1CViHy1Hdhhcf9Ea38Mj4SCrWMPscXyP2fpAu5ukbIK3vS2pvbnH5vC8ZuvihrQif1BsiwfYmN981mLYs069Dn4B72qcXPwU7qrN3V0k57JGcAlTiEoOD5QowyraensQlR1doorLb43SjTiJLItougn5K5QPRiHuNxfv39pa7A0gKA1n/3UhG/SBuCpDuPYjwmBkvkzCKJNgpbLQ8p29JXMQcWrm4e9GfnVjMhAEtxttIta3MN6EcYG7cB1dJ04OLYVcJuRA==",
+				},
+				client.SyncFragNote{
+					UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
+					Body: "WGzcYA6kLuUFEU7HLTDJt7UWF7fEmbCPHfC16VBrAyfT2wDejXbIuFpU5L7g0aU=",
+				},
+			},
+			Books: []client.SyncFragBook{
+				client.SyncFragBook{
+					UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
+					Label: "qBrSrAcnTUHu51bIrv6jSA/dNffr/kRlIg+MklxeQQ==",
+				},
+				client.SyncFragBook{
+					UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
+					Label: "uHWoBFdKT78gTkFR7qhyzZkrn59c8ktEa8idrLkksKzIQ3VVAXxq0QZp7Uc=",
+				},
+			},
+			ExpungedNotes: []string{},
+			ExpungedBooks: []string{},
+		},
+	}
+
+	// exec
+	sl, err := processFragments(fragments, cipherKey)
+	if err != nil {
+		t.Fatalf(errors.Wrap(err, "executing").Error())
+	}
+
+	expected := syncList{
+		Notes: map[string]client.SyncFragNote{
+			"45546de0-40ed-45cf-9bfc-62ce729a7d3d": client.SyncFragNote{
+				UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
+				Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n Donec ac libero efficitur, posuere dui non, egestas lectus.\n Aliquam urna ligula, sagittis eu volutpat vel, consequat et augue.\n\n Ut mi urna, dignissim a ex eget, venenatis accumsan sem. Praesent facilisis, ligula hendrerit auctor varius, mauris metus hendrerit dolor, sit amet pulvinar.",
+			},
+			"a25a5336-afe9-46c4-b881-acab911c0bc3": client.SyncFragNote{
+				UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
+				Body: "foo bar baz quz\nqux",
+			},
+		},
+		Books: map[string]client.SyncFragBook{
+			"e8ac6f25-d95b-435a-9fae-094f7506a5ac": client.SyncFragBook{
+				UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
+				Label: "foo",
+			},
+			"05fd8b95-ddcd-4071-9380-4358ffb8a436": client.SyncFragBook{
+				UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
+				Label: "foo-bar-baz-1000",
+			},
+		},
+		ExpungedNotes:  map[string]bool{},
+		ExpungedBooks:  map[string]bool{},
+		MaxUSN:         10,
+		MaxCurrentTime: 1550436136,
+	}
+
+	// test
+	testutils.AssertDeepEqual(t, sl, expected, "syncList mismatch")
+}
 
 func TestGetLastSyncAt(t *testing.T) {
 	// set up
@@ -1769,6 +1844,7 @@ func TestMergeBook(t *testing.T) {
 func TestSaveServerState(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -1812,6 +1888,7 @@ func TestSaveServerState(t *testing.T) {
 func TestSendBooks(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -1846,9 +1923,9 @@ func TestSendBooks(t *testing.T) {
 	var updatesUUIDs []string
 	var deletedUUIDs []string
 
-	// fire up a test server
+	// fire up a test server. It decrypts the payload for test purposes.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v1/books" && r.Method == "POST" {
+		if r.URL.String() == "/v2/books" && r.Method == "POST" {
 			var payload client.CreateBookPayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -1857,15 +1934,22 @@ func TestSendBooks(t *testing.T) {
 				return
 			}
 
-			createdLabels = append(createdLabels, payload.Name)
+			labelDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Name)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decrypting label").Error())
+			}
+
+			labelDecStr := string(labelDec)
+
+			createdLabels = append(createdLabels, labelDecStr)
 
 			resp := client.CreateBookResp{
 				Book: client.RespBook{
-					UUID: fmt.Sprintf("server-%s-uuid", payload.Name),
+					UUID: fmt.Sprintf("server-%s-uuid", labelDecStr),
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1879,14 +1963,14 @@ func TestSendBooks(t *testing.T) {
 				uuid := p[3]
 				updatesUUIDs = append(updatesUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -1904,13 +1988,16 @@ func TestSendBooks(t *testing.T) {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
-	if _, err := sendBooks(ctx, tx, "mockAPIKey"); err != nil {
+	if _, err := sendBooks(ctx, tx); err != nil {
 		tx.Rollback()
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
 
+	// test
+
+	// First, decrypt data so that they can be asserted
 	sort.SliceStable(createdLabels, func(i, j int) bool {
 		return strings.Compare(createdLabels[i], createdLabels[j]) < 0
 	})
@@ -1964,7 +2051,7 @@ func TestSendBooks(t *testing.T) {
 
 func TestSendBooks_isBehind(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v1/books" && r.Method == "POST" {
+		if r.URL.String() == "/v2/books" && r.Method == "POST" {
 			var payload client.CreateBookPayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -1979,7 +2066,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -1996,7 +2083,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2009,7 +2096,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2041,6 +2128,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2055,7 +2143,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockAPIKey")
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2088,6 +2176,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2102,7 +2191,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockAPIKey")
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2135,6 +2224,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2149,7 +2239,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendBooks(ctx, tx, "mockAPIKey")
+				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2169,6 +2259,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 func TestSendNotes(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
 	defer testutils.TeardownEnv(ctx)
 
 	db := ctx.DB
@@ -2203,9 +2294,9 @@ func TestSendNotes(t *testing.T) {
 	var updatedUUIDs []string
 	var deletedUUIDs []string
 
-	// fire up a test server
+	// fire up a test server. It decrypts the payload for test purposes.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
+		if r.URL.String() == "/v2/notes" && r.Method == "POST" {
 			var payload client.CreateNotePayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -2214,15 +2305,21 @@ func TestSendNotes(t *testing.T) {
 				return
 			}
 
-			createdBodys = append(createdBodys, payload.Body)
+			bodyDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Body)
+			if err != nil {
+				t.Fatalf(errors.Wrap(err, "decrypting body").Error())
+			}
+			bodyDecStr := string(bodyDec)
+
+			createdBodys = append(createdBodys, bodyDecStr)
 
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
-					UUID: fmt.Sprintf("server-%s-uuid", payload.Body),
+					UUID: fmt.Sprintf("server-%s-uuid", bodyDecStr),
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2236,14 +2333,14 @@ func TestSendNotes(t *testing.T) {
 				uuid := p[3]
 				updatedUUIDs = append(updatedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			} else if r.Method == "DELETE" {
 				uuid := p[3]
 				deletedUUIDs = append(deletedUUIDs, uuid)
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte("{}"))
 				return
 			}
@@ -2261,7 +2358,7 @@ func TestSendNotes(t *testing.T) {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
-	if _, err := sendNotes(ctx, tx, "mockAPIKey"); err != nil {
+	if _, err := sendNotes(ctx, tx); err != nil {
 		tx.Rollback()
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
@@ -2327,7 +2424,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				},
 			}
 
-			w.Header().Set("Body-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(resp); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -2344,7 +2441,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2357,7 +2454,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					},
 				}
 
-				w.Header().Set("Body-Type", "application/json")
+				w.Header().Set("Content-Type", "application/json")
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -2389,6 +2486,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2404,7 +2502,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockAPIKey")
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2437,6 +2535,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2452,7 +2551,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockAPIKey")
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
@@ -2485,6 +2584,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 			func() {
 				// set up
 				ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 				defer testutils.TeardownEnv(ctx)
 
@@ -2500,7 +2600,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
-				isBehind, err := sendNotes(ctx, tx, "mockAPIKey")
+				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
