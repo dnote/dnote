@@ -45,7 +45,7 @@ dnote view golang 12
 
 _alias: e_
 
-Edit a note
+Edit a note.
 
 ```bash
 # Launch a text editor to edit a note with the given index.
@@ -59,7 +59,7 @@ dnote edit linux 1 -c "New Content"
 
 _alias: d_
 
-Remove either a note or a book
+Remove either a note or a book.
 
 ```bash
 # Remove the note with `index` in the specified book.
@@ -73,7 +73,7 @@ dnote remove -b JS
 
 _alias: f_
 
-Find notes by keywords
+Find notes by keywords.
 
 ```bash
 # find notes by a keyword
@@ -92,16 +92,16 @@ _Dnote Pro only_
 
 _alias: s_
 
-Sync notes with Dnote cloud
+Sync notes with Dnote server. All your data is encrypted before being sent to the server.
 
 ## dnote login
 
 _Dnote Pro only_
 
-Start a login prompt
+Start a login prompt.
 
 ## dnote logout
 
 _Dnote Pro only_
 
-Log out of Dnote
+Log out of Dnote.

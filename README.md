@@ -1,6 +1,6 @@
 # Dnote CLI
 
-A command line interface for spontaneously capturing the things you learn while coding.
+A command line interface for a simple, encrypted notebook that respects your privacy.
 
 ![Dnote](assets/dnote.gif)
 
@@ -28,10 +28,19 @@ Otherwise, you can download the binary for your platform manually from the [rele
 
 ## Overview
 
-Write technical notes without getting distracted from programming. The reasons are:
+Write down notes in total privacy, without leaving the command line.
 
+Try keeping technical notes using Dnote. The reasons are:
+
+- You are not distracted from programming while using Dnote.
 - We forget exponentially unless we write down what we learn and come back.
 - Ideas cannot be grokked unless we can put them down in clear words.
+
+Sync your notes to Dnote server and receive automated email digests for spaced repetition.
+
+## Security
+
+All your data is encrypted using AES256 when you sync with the server. Dnote has zero knowledge about the contents and cannot decrypt your data.
 
 ## Commands
 
@@ -40,7 +49,7 @@ Please refer to [commands](/COMMANDS.md).
 ## Links
 
 - [Dnote](https://dnote.io)
-- [Dnote Cloud](https://dnote.io/pricing)
-- [Browser Extension](https://github.com/dnote/browser-extension)
+- [Dnote Pro](https://dnote.io/pricing)
+- [Browser extension](https://github.com/dnote/browser-extension)
 
 [![Build Status](https://travis-ci.org/dnote/cli.svg?branch=master)](https://travis-ci.org/dnote/cli)
