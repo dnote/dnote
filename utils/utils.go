@@ -52,7 +52,7 @@ func PromptInput(message string, dest *string) error {
 func PromptPassword(message string, dest *string) error {
 	log.Askf(message, true)
 
-	password, err := terminal.ReadPassword(syscall.Stdin)
+	password, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return errors.Wrap(err, "getting user input")
 	}
