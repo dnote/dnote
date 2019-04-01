@@ -112,7 +112,8 @@ func printBooks(ctx infra.DnoteCtx) error {
 
 	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
 	FROM books
-	INNER JOIN notes ON notes.book_uuid = books.uuid
+	LEFT JOIN notes ON notes.book_uuid = books.uuid AND notes.deleted = false
+	WHERE books.deleted = false
 	GROUP BY books.uuid
 	ORDER BY books.label ASC;`)
 	if err != nil {
@@ -149,7 +150,7 @@ func printNotes(ctx infra.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
-	rows, err := db.Query(`SELECT rowid, body FROM notes WHERE book_uuid = ? ORDER BY added_on ASC;`, bookUUID)
+	rows, err := db.Query(`SELECT rowid, body FROM notes WHERE book_uuid = ? AND deleted = ? ORDER BY added_on ASC;`, bookUUID, false)
 	if err != nil {
 		return errors.Wrap(err, "querying notes")
 	}
