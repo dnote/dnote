@@ -52,4 +52,4 @@ Please refer to [commands](/COMMANDS.md).
 - [Dnote Pro](https://dnote.io/pricing)
 - [Browser extension](https://github.com/dnote/browser-extension)
 
-[![Build Status](https://travis-ci.org/dnote/cli.svg?branch=master)](https://travis-ci.org/dnote/cli)
+[![Build Status](https://semaphoreci.com/api/v1/dnote/cli/branches/master/badge.svg)](https://semaphoreci.com/dnote/cli)

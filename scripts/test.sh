@@ -10,7 +10,7 @@ rm -rf $GOPATH/src/github.com/dnote/cli/tmp
 # run test
 pushd $GOPATH/src/github.com/dnote/cli
 
-go test ./... \
+go test -a ./... \
   -p 1\
   --tags "fts5"
 
