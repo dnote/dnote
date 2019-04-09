@@ -2,6 +2,7 @@
 
 A command line interface for a simple, encrypted notebook that respects your privacy.
 
+
 ![Dnote](assets/dnote.gif)
 
 ## Install
