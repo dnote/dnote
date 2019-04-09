@@ -726,7 +726,7 @@ func sendBooks(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 func sendNotes(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 	isBehind := false
 
-	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn FROM notes WHERE dirty")
+	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn, added_on FROM notes WHERE dirty")
 	if err != nil {
 		return isBehind, errors.Wrap(err, "getting syncable notes")
 	}
@@ -735,7 +735,7 @@ func sendNotes(ctx infra.DnoteCtx, tx *infra.DB) (bool, error) {
 	for rows.Next() {
 		var note core.Note
 
-		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Body, &note.Public, &note.Deleted, &note.USN); err != nil {
+		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Body, &note.Public, &note.Deleted, &note.USN, &note.AddedOn); err != nil {
 			return isBehind, errors.Wrap(err, "scanning a syncable note")
 		}
 

@@ -2379,13 +2379,13 @@ func TestSendNotes(t *testing.T) {
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
 	var n1, n2, n3, n6, n7, n8, n10 core.Note
-	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.Dirty)
-	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.Dirty)
-	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.Dirty)
-	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.Dirty)
-	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.Dirty)
-	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.Dirty)
-	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.Dirty)
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
+	testutils.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.AddedOn, &n2.Dirty)
+	testutils.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.AddedOn, &n3.Dirty)
+	testutils.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.AddedOn, &n6.Dirty)
+	testutils.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.AddedOn, &n7.Dirty)
+	testutils.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.AddedOn, &n8.Dirty)
+	testutils.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.AddedOn, &n10.Dirty)
 
 	testutils.AssertEqualf(t, noteCount, 7, "note count mismatch")
 
@@ -2397,6 +2397,14 @@ func TestSendNotes(t *testing.T) {
 	testutils.AssertEqual(t, n8.Dirty, false, "n8 Dirty mismatch")
 	testutils.AssertEqual(t, n10.Dirty, false, "n10 Dirty mismatch")
 
+	testutils.AssertEqual(t, n1.AddedOn, int64(1541108743), "n1 AddedOn mismatch")
+	testutils.AssertEqual(t, n2.AddedOn, int64(1541108743), "n2 AddedOn mismatch")
+	testutils.AssertEqual(t, n3.AddedOn, int64(1541108743), "n3 AddedOn mismatch")
+	testutils.AssertEqual(t, n6.AddedOn, int64(1541108743), "n6 AddedOn mismatch")
+	testutils.AssertEqual(t, n7.AddedOn, int64(1541108743), "n7 AddedOn mismatch")
+	testutils.AssertEqual(t, n8.AddedOn, int64(1541108743), "n8 AddedOn mismatch")
+	testutils.AssertEqual(t, n10.AddedOn, int64(1541108743), "n10 AddedOn mismatch")
+
 	// UUIDs of created notes should have been updated with those from the server response
 	testutils.AssertEqual(t, n1.UUID, "n1-uuid", "n1 UUID mismatch")
 	testutils.AssertEqual(t, n2.UUID, "server-n2-body-uuid", "n2 UUID mismatch")
@@ -2405,6 +2413,62 @@ func TestSendNotes(t *testing.T) {
 	testutils.AssertEqual(t, n7.UUID, "n7-uuid", "n7 UUID mismatch")
 	testutils.AssertEqual(t, n8.UUID, "n8-uuid", "n8 UUID mismatch")
 	testutils.AssertEqual(t, n10.UUID, "server-n10-body-uuid", "n10 UUID mismatch")
+}
+
+func TestSendNotes_addedOn(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../../tmp", "../../testutils/fixtures/schema.sql", true)
+	testutils.Login(t, &ctx)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	testutils.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", infra.SystemLastMaxUSN, 0)
+
+	// should be created
+	b1UUID := "b1-uuid"
+	testutils.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 0, "n1-body", 1541108743, false, true)
+
+	// fire up a test server. It decrypts the payload for test purposes.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/v2/notes" && r.Method == "POST" {
+			resp := client.CreateNoteResp{
+				Result: client.RespNote{
+					UUID: utils.GenerateUUID(),
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			return
+		}
+
+		t.Fatalf("unrecognized endpoint reached Method: %s Path: %s", r.Method, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	ctx.APIEndpoint = ts.URL
+
+	// execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+	}
+
+	if _, err := sendNotes(ctx, tx); err != nil {
+		tx.Rollback()
+		t.Fatalf(errors.Wrap(err, "executing").Error())
+	}
+
+	tx.Commit()
+
+	// test
+	var n1 core.Note
+	testutils.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
+	testutils.AssertEqual(t, n1.AddedOn, int64(1541108743), "n1 AddedOn mismatch")
 }
 
 func TestSendNotes_isBehind(t *testing.T) {
