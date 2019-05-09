@@ -42,4 +42,4 @@ Instructions are coming soon.
 - [Dnote](https://dnote.io)
 - [Dnote Pro](https://dnote.io/pricing)
 
-[![Build Status](https://semaphoreci.com/api/v1/dnote/dnote/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote)
+[![Build Status](https://semaphoreci.com/api/v1/dnote/dnote-2/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote-2)
