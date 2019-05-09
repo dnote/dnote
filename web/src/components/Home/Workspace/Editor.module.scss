@@ -1,0 +1,20 @@
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  border-right: none;
+
+  @include breakpoint(md) {
+    border-right: 1px solid $border-color;
+  }
+}
+
+.textarea {
+  border: 0;
+  resize: none;
+  max-height: calc(100vh - #{$footer-height});
+  flex-grow: 1;
+  flex-basis: 0;
+}

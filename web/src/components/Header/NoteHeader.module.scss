@@ -1,0 +1,37 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  background: $dark-light3;
+  padding: rem(12px) rem(20px);
+  height: 60px;
+  z-index: 2;
+  position: relative;
+  display: flex;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.brand-name {
+  @include font-size('regular');
+  color: #909090;
+  letter-spacing: 1px;
+  margin-left: rem(12px);
+  vertical-align: middle;
+}

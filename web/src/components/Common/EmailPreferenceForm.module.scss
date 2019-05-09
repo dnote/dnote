@@ -1,0 +1,16 @@
+.heading {
+  font-size: 1.7rem;
+  margin-bottom: 7px;
+}
+
+.radio {
+  display: inline-block;
+
+  & ~ .radio {
+    margin-left: 26px;
+  }
+
+  label {
+    padding-left: 3px;
+  }
+}

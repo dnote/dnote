@@ -1,0 +1,35 @@
+@import '../../App/rem';
+@import '../../App/responsive';
+@import '../../App/variables';
+
+.wrapper {
+  position: relative;
+  overflow: hidden;
+  background: $dark-light3;
+}
+
+.search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  path {
+    fill: $dark-light4;
+  }
+}
+
+.input {
+  width: 100%;
+}
+
+.focused {
+  .input {
+    padding-left: rem(12px);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: -25px;
+  }
+}

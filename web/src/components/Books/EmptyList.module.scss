@@ -1,0 +1,10 @@
+@import '../App/rem';
+@import '../App/font';
+@import '../App/variables';
+
+.wrapper {
+  text-align: center;
+  padding: rem(48px) 0;
+  @include font-size('medium');
+  color: $dark-light5;
+}

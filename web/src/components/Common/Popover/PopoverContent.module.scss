@@ -1,0 +1,47 @@
+@import '../../App/font';
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+.content {
+  position: absolute;
+
+  &.border {
+    background: #fff;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.15);
+  }
+
+  @include breakpoint(md) {
+    left: auto;
+    right: auto;
+  }
+}
+
+.left-align {
+  left: 0;
+}
+.right-align {
+  right: 0;
+}
+.top-align {
+  top: 0;
+}
+.bottom-align {
+  bottom: 0;
+}
+
+.top-direction {
+  bottom: calc(100% + 6px);
+}
+.bottom-direction {
+  top: calc(100% + 6px);
+}
+.left-direction {
+  right: calc(100% + 6px);
+}
+
+.right-direction {
+  left: calc(100% + 6px);
+}

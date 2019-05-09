@@ -1,0 +1,49 @@
+@import '../../App/rem';
+@import '../../App/responsive';
+@import '../../App/variables';
+@import '../../App/font';
+
+.header {
+  background: $dark-light3;
+  border-bottom: 1px solid $border-color;
+
+  @include breakpoint(lg) {
+    background: none;
+    padding: rem(44px) 0 0;
+    border-bottom: none;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: rem(52px);
+  justify-content: space-between;
+
+  @include breakpoint(lg) {
+    height: auto;
+  }
+}
+
+.left {
+  display: flex;
+}
+
+.heading {
+  // fix alignment with the sidebar toggle button on mobile
+  margin-top: 3px;
+  @include breakpoint(md) {
+    margin-top: 0;
+  }
+
+  margin-left: rem(12px);
+  margin-bottom: 0;
+  @include font-size('large');
+  font-weight: 400;
+
+  @include breakpoint(lg) {
+    margin-top: 0;
+    margin-left: 0;
+  }
+}

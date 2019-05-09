@@ -1,0 +1,99 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  @include breakpoint(md) {
+    width: rem(360px);
+  }
+
+  &:first-child {
+    margin-top: rem(40px);
+
+    @include breakpoint(md) {
+      margin-top: 0;
+    }
+  }
+
+  &:not(:first-child) {
+    margin-left: 0;
+
+    @include breakpoint(md) {
+      margin-left: rem(40px);
+    }
+  }
+}
+
+.header {
+  border: 1px solid $border-color;
+  border-top: 8px solid $dark-light5;
+  padding: rem(16px) rem(32px);
+  border-radius: rem(2px);
+
+  &.pro {
+    border-top: 8px solid $third;
+  }
+}
+.header-body {
+  margin-top: rem(20px);
+}
+
+.name {
+  color: $black;
+  margin-bottom: 0;
+  @include font-size('2x-large');
+  font-weight: 600;
+}
+
+.price-wrapper {
+  display: flex;
+  align-items: baseline;
+}
+
+.price {
+  @include font-size('3x-large');
+  font-weight: 600;
+}
+
+.interval {
+  @include font-size('large');
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-left: rem(4px);
+}
+
+.cta-wrapper {
+  margin-top: rem(24px);
+}
+
+.feature-list {
+  list-style: none;
+  margin-bottom: 0;
+  padding-left: 0;
+  padding-top: rem(12px);
+}
+
+.perks {
+  margin-top: rem(12px);
+}
+.perk-value {
+  @include font-size('regular');
+  margin-left: rem(8px);
+}
+.perk-item {
+  display: flex;
+  flex-shrink: 1;
+
+  &:not(:first-child) {
+    margin-top: rem(4px);
+  }
+}
+
+.perk-icon {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: rem(4px);
+}

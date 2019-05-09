@@ -1,0 +1,22 @@
+@import '../App/responsive';
+@import '../App/rem';
+@import '../App/variables';
+
+.wrapper {
+  // min-height: calc(100vh - 57px);
+  background: $dark-light3;
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.inner {
+  display: flex;
+  justify-content: center;
+  padding-top: rem(40px);
+  padding-bottom: rem(40px);
+
+  @include breakpoint(md) {
+    padding-top: rem(52px);
+    padding-bottom: rem(52px);
+  }
+}

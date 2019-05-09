@@ -1,0 +1,32 @@
+@import '../../../App/variables';
+@import '../../../App/responsive';
+@import '../../../App/rem';
+@import '../../../App/font';
+
+.bottom {
+  padding: 0 rem(12px);
+  text-align: center;
+}
+
+.version {
+  @include font-size('small');
+  font-weight: 600;
+  color: #bbb;
+}
+
+.button-wrapper {
+  margin: 0 rem(12px);
+}
+
+.upgrade-wrapper {
+  margin: rem(28px) rem(12px);
+  display: none;
+
+  &.upgrade-wrapper-shown {
+    display: block;
+
+    @include breakpoint(md) {
+      display: none;
+    }
+  }
+}

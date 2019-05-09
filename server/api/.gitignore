@@ -1,0 +1,6 @@
+# Elastic Beanstalk Files
+/tmp
+application.zip
+test-api
+/dump
+api

@@ -1,0 +1,10 @@
+@import '../App/font';
+@import '../App/variables';
+@import '../App/rem';
+
+.footer {
+  @include font-size('small');
+  padding: rem(32px) 0;
+  text-align: center;
+  color: $dark-light5;
+}

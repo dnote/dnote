@@ -1,0 +1,43 @@
+@import '../../../App/variables';
+@import '../../../App/responsive';
+@import '../../../App/rem';
+@import '../../../App/font';
+
+.bottom {
+  padding: 0 rem(12px);
+  text-align: center;
+}
+
+.button-wrapper {
+  margin: 0 rem(12px);
+}
+
+.button-text {
+  // text-transform: uppercase;
+  margin-left: rem(8px);
+}
+
+a.back-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.link {
+  font-weight: 400;
+}
+.link-active {
+  font-weight: 600;
+}
+
+.link-list {
+  margin-top: rem(8px);
+}
+
+.sidebar-heading {
+  display: block;
+  margin-top: rem(20px);
+  padding-left: rem(12px);
+  color: $dark-light5;
+  font-weight: 600;
+}

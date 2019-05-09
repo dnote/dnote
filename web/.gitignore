@@ -1,0 +1,25 @@
+node_modules
+npm-debug.log
+/static/dist
+gin-bin
+/server/api/api
+/server/api/api_prod
+/server/jobs/jobs
+/server/jobs/jobs_prod
+
+.env
+.env.api
+__pycache__
+/dump
+
+app.zip
+/compiled
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+/public
+/web
+/vendor

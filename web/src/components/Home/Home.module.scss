@@ -1,0 +1,13 @@
+@import '../App/responsive';
+
+.note-sidebar-toggle {
+  display: inline-block;
+
+  @include breakpoint(lg) {
+    display: none;
+  }
+}
+
+.wrapper {
+  height: 100%;
+}

@@ -1,0 +1,79 @@
+@import '../../App/rem';
+@import '../../App/font';
+@import '../../App/variables';
+
+.content1 {
+  position: relative;
+  padding: rem(48px) rem(12px);
+}
+
+.content1-line1 {
+  width: rem(140px);
+  height: rem(16px);
+}
+.content1-line2 {
+  width: rem(240px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+.content1-line3 {
+  width: rem(80px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+
+.content2 {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: relative;
+  padding: rem(8px) rem(12px);
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+.content2-line1 {
+  width: rem(120px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+
+.content2-line2 {
+  width: rem(180px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+
+.content2-right {
+  display: flex;
+  align-items: center;
+}
+
+.content3 {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: relative;
+  padding: rem(8px) rem(12px);
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+.content3-line1 {
+  width: rem(120px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+
+.content3-line2 {
+  width: rem(180px);
+  height: rem(16px);
+  margin-top: rem(8px);
+}
+
+.content3-right {
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,41 @@
+@import '../App/responsive';
+@import '../App/rem';
+
+.banner {
+  display: flex;
+  margin-bottom: rem(24px);
+  margin-top: rem(24px);
+  height: auto;
+
+  @include breakpoint(lg) {
+    height: rem(52px);
+  }
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+
+  @include breakpoint(lg) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.address {
+  font-weight: 600;
+  margin: 0 rem(4px);
+}
+
+.form {
+  margin-top: rem(4px);
+  text-align: right;
+
+  @include breakpoint(lg) {
+    margin-top: 0;
+    text-align: initial;
+  }
+}

@@ -1,0 +1,33 @@
+@import '../../App/variables';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  position: relative;
+}
+
+.overlay {
+  @include font-size('small');
+
+  pointer-events: none;
+  max-width: 100%;
+  position: absolute;
+  max-width: 100%;
+  background: $black;
+  color: white;
+  border: none;
+  padding: rem(4px) rem(8px);
+  border-radius: 4px;
+  z-index: 7;
+
+  &.left {
+    left: 0;
+  }
+  &.right {
+    right: 0;
+  }
+}
+
+.backdrop {
+  width: rem(200px);
+}

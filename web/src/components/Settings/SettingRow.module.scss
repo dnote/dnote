@@ -1,0 +1,51 @@
+@import '../App/rem';
+@import '../App/font';
+@import '../App/variables';
+
+.row {
+  padding: rem(12px) rem(12px);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid $border-color;
+  }
+
+  @include breakpoint(md) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.name {
+  font-weight: 400;
+  @include font-size('regular');
+  margin-bottom: 0;
+}
+.desc {
+  margin-bottom: 0;
+  @include font-size('small');
+  color: $dark-light5;
+}
+.action {
+  display: flex;
+  flex-direction: column;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}

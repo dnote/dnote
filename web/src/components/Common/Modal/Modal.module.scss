@@ -1,0 +1,71 @@
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/font';
+
+.content {
+  overflow: auto;
+  background-color: white;
+  margin-left: rem(16px);
+  margin-right: rem(16px);
+  margin-top: rem(52px);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
+
+  @include breakpoint(md) {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &.small {
+    max-width: 100%;
+
+    @include breakpoint(md) {
+      max-width: rem(480px);
+    }
+  }
+  &.regular {
+    max-width: 100%;
+
+    @include breakpoint(md) {
+      max-width: rem(580px);
+    }
+
+    @include breakpoint(lg) {
+      max-width: rem(682px);
+    }
+  }
+}
+
+.overlay {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-color: rgba(0, 0, 0, 0.52);
+  z-index: 4;
+
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+.header {
+  background-color: #f6f8fa;
+  border-bottom: 1px solid #e7e9ec;
+  border-top-right-radius: 3px;
+  border-top-left-radius: 3px;
+
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 4px 9px 16px;
+
+  .header-text {
+    @include font-size('small');
+    font-weight: 600;
+  }
+}
+
+.body {
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}

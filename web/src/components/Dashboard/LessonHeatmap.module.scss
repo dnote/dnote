@@ -1,0 +1,9 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+
+.heatmap {
+  overflow-x: auto;
+  position: relative;
+  z-index: 0;
+}

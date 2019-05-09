@@ -1,0 +1,18 @@
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/variables';
+
+.input {
+  margin-top: rem(8px);
+  width: 100%;
+}
+
+.label {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: rem(8px);
+}

@@ -1,0 +1,24 @@
+@import '../App/responsive';
+@import '../App/font';
+@import '../App/variables';
+@import '../App/rem';
+
+.wrapper {
+  position: relative;
+  flex-grow: 1;
+  background: white;
+
+  &.nopro {
+    display: none;
+
+    @include breakpoint(md) {
+      display: block;
+    }
+  }
+}
+
+.content {
+  padding: rem(40px) rem(16px);
+  text-align: center;
+  color: $dark-light5;
+}

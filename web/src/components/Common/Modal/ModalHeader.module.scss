@@ -1,0 +1,21 @@
+@import '../../App/responsive';
+@import '../../App/variables';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: $dark-light;
+  height: rem(48px);
+  padding-left: rem(16px);
+  border-top-right-radius: 2px;
+  border-top-left-radius: 2px;
+  border-bottom: 1px solid $border-color;
+}
+
+.button {
+  height: 100%;
+}

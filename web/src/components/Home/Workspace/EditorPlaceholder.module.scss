@@ -1,0 +1,79 @@
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+.line {
+  height: rem(16px);
+
+  &:not(:first-child) {
+    margin-top: rem(16px);
+  }
+}
+.linebreak {
+  width: 0;
+  height: rem(16px);
+}
+
+.line1 {
+  width: rem(100px);
+
+  @include breakpoint(md) {
+    width: rem(400px);
+  }
+}
+.line2 {
+  width: rem(200px);
+
+  @include breakpoint(md) {
+    width: rem(180px);
+  }
+}
+.line3 {
+  width: rem(80px);
+
+  @include breakpoint(md) {
+    width: rem(220px);
+  }
+}
+.line4 {
+  width: 100%;
+
+  @include breakpoint(md) {
+    width: rem(420px);
+  }
+}
+.line5 {
+  width: rem(120px);
+
+  @include breakpoint(md) {
+    width: rem(280px);
+  }
+}
+.line6 {
+  width: 100%;
+
+  @include breakpoint(md) {
+    width: rem(200px);
+  }
+}
+.line7 {
+  width: 80%;
+
+  @include breakpoint(md) {
+    width: rem(380px);
+  }
+}
+.line8 {
+  width: 90%;
+
+  @include breakpoint(md) {
+    width: rem(180px);
+  }
+}
+.line9 {
+  width: 20%;
+
+  @include breakpoint(md) {
+    width: rem(120px);
+  }
+}

@@ -1,0 +1,118 @@
+@import './variables';
+@import './rem';
+@import './font';
+
+@mixin button($text-color, $background-color) {
+  color: $text-color;
+  background-color: $background-color;
+
+  &:not(:disabled):hover {
+    color: $text-color;
+    background-color: darken($background-color, 5%);
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+@mixin button-outline($color, $border-color) {
+  background: transparent;
+  border-color: $border-color;
+  border-width: 2px;
+  color: $color;
+
+  &:not(:disabled):hover {
+    color: $color;
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+.button {
+  position: relative;
+  display: inline-block;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  border-image: initial;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:not(.button-no-ui) {
+    padding: rem(8px) rem(16px);
+    @include font-size('small');
+  }
+
+  &:not(:disabled):hover {
+    text-decoration: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: 2px dotted #9c9c9c;
+  }
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-large {
+  &:not(.button-no-ui) {
+    padding: rem(12px) rem(16px);
+  }
+}
+
+.button-first {
+  @include button(#ffffff, #333745);
+}
+
+.button-first-outline {
+  @include button-outline(#333745, #333745);
+}
+
+.button-second {
+  @include button($black, $second);
+}
+
+.button-second-outline {
+  @include button-outline($black, $second);
+}
+
+.button-third {
+  @include button(#ffffff, $third);
+}
+
+.button-third-outline {
+  @include button-outline($third, $third);
+}
+
+.button-danger {
+  @include button-outline($danger-text, $danger-text);
+  font-weight: 600;
+}
+
+.button-stretch {
+  width: 100%;
+}
+
+.button ~ .button {
+  margin-left: rem(8px);
+}
+
+.button-no-ui {
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}

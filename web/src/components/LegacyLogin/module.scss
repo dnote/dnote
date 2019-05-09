@@ -1,0 +1,148 @@
+.auth-page {
+  background: #f3f3f3;
+  text-align: center;
+  min-height: 100vh;
+  padding: 50px 0;
+
+  .logo {
+    width: 90px;
+  }
+
+  .heading {
+    color: #252833;
+    font-size: 2.7rem;
+    font-weight: 300;
+    margin-top: 18px;
+  }
+
+  .referrer-alert {
+    margin-top: 20px;
+  }
+
+  .auth-body {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .auth-footer {
+    margin-top: 20px;
+
+    .auth-callout {
+      color: #7c7c7c;
+      font-size: 1.4rem;
+    }
+    .auth-cta {
+      color: #5c7ded;
+    }
+  }
+
+  .auth-panel {
+    border: 1px solid #ddd;
+    background: #ffffff;
+    border-radius: 2px;
+    margin-top: 20px;
+    padding: 20px;
+  }
+
+  .oauth-button {
+    border: 1px solid #ddd;
+    color: #6a6a6a;
+    width: 100%;
+    justify-content: inherit;
+    background: white;
+
+    &:hover {
+      background: #fefefe;
+      box-shadow: 0 0 4px 2px #f3f3f3;
+    }
+
+    & + .oauth-button {
+      margin-top: 8px;
+      margin-left: 0;
+    }
+
+    .oauth-button-content {
+      display: flex;
+      // width: 100%;
+    }
+
+    .oauth-text {
+      flex: 1;
+    }
+  }
+
+  .provider-logo {
+    width: 18px;
+    height: 18px;
+  }
+
+  .divider-text {
+    width: 100%;
+    text-align: center;
+    background-color: #ffffff;
+    position: relative;
+    color: #ababab;
+    font-size: 1.4rem;
+    font-style: normal;
+    font-weight: 400;
+    z-index: 1;
+    overflow: hidden;
+    padding: 12px 0;
+    margin-top: 5px;
+
+    &::before {
+      margin-left: -52%;
+      text-align: right;
+      width: 50%;
+      top: 51%;
+      overflow: hidden;
+      height: 1px;
+      background-color: #d0d0d0;
+      content: '\a0';
+      position: absolute;
+    }
+    &::after {
+      margin-left: 2%;
+      width: 50%;
+      top: 51%;
+      overflow: hidden;
+      height: 1px;
+      background-color: #d0d0d0;
+      content: '\a0';
+      position: absolute;
+    }
+  }
+
+  .auth-button {
+    margin-top: 15px;
+  }
+  .auth-form {
+    text-align: left;
+  }
+  .input-row {
+    & ~ .input-row {
+      margin-top: 8px;
+    }
+  }
+  .label {
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+}
+
+// specific to '/login page'
+.login-page {
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .reset-cta {
+    font-size: 1.3rem;
+    margin-right: 4px;
+  }
+}
+
+.legacy-login-footer {
+  text-align: left;
+  margin-top: 4rem;
+}

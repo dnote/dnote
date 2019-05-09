@@ -1,0 +1,118 @@
+@import './reboot';
+@import './grid';
+@import './bootstrap';
+@import './buttons';
+@import './responsive';
+@import './select';
+@import './shared';
+@import './marker';
+@import './rem';
+@import './markdown';
+
+html {
+  font-size: 62.5%; /* 1.0 rem = 10px */
+}
+
+html body {
+  font-family: 'Lato';
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+img {
+  max-width: 100%;
+}
+
+// input[type='email'],
+// input[type='password'],
+// input[type='text'] {
+//   &::placeholder {
+//     color: #aaa;
+//   }
+// }
+
+.main-content {
+  padding-top: 24px;
+}
+
+.no-scroll {
+  overflow: hidden;
+
+  // prevent ios safari from scrolling
+  // but it causes page to scroll to top on modal open
+  // position: fixed;
+  // left: 0;
+  // right: 0;
+  // top: 0;
+  // bottom: 0;
+}
+
+.container.mobile-nopadding {
+  @include breakpoint(mdonly) {
+    max-width: 100%;
+  }
+
+  @include breakpoint(mddown) {
+    padding-left: 0;
+    padding-right: 0;
+
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    [class*='col-'] {
+      // Apply to all column(s) inside the row
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}
+
+// START: override bootstrap
+.form-control {
+  font-size: 1.6rem;
+}
+.dropdown {
+  position: inherit;
+}
+// END: override bootstrap
+// START: bootstrap related
+.input-group {
+  input ~ button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+// END: bootstrap related
+
+// .twitter-follow-btn {
+//   position: fixed;
+//   bottom: 0px;
+//   right: 10px;
+// }
+
+.page {
+  //padding: 35px 0;
+  //min-height: calc(100vh - 57px);
+  //min-height: 100vh;
+  // padding-top: rem(48px);
+}
+.page-bgdark {
+  background: #ececec;
+}
+
+// override react-tooltip
+.__react_component_tooltip {
+  &.dnote-tooltip {
+    opacity: 1;
+  }
+}
+
+// Measure scrollbar width for padding body during modal show/hide
+.modal-scrollbar-measure {
+  position: absolute;
+  top: -9999px;
+  width: 50px;
+  height: 50px;
+  overflow: scroll;
+}

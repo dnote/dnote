@@ -1,0 +1,68 @@
+@import '../../App/responsive';
+@import '../../App/variables';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  margin: 0 rem(12px);
+  width: 100%;
+
+  @include breakpoint(sm) {
+    margin: 0 rem(20px);
+  }
+  @include breakpoint(md) {
+    width: rem(600px);
+  }
+  @include breakpoint(lg) {
+    width: rem(800px);
+  }
+
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: rem(12px) rem(16px);
+  border-bottom: 1px solid $border-color;
+}
+
+.book-icon {
+  vertical-align: middle;
+}
+
+.book-label {
+  @include font-size('medium');
+  font-weight: 600;
+  display: inline-block;
+  margin-left: rem(12px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  max-width: rem(200px);
+  @include breakpoint(sm) {
+    max-width: rem(200px);
+  }
+  @include breakpoint(md) {
+    max-width: rem(420px);
+  }
+  @include breakpoint(lg) {
+    max-width: rem(600px);
+  }
+}
+
+.content {
+  word-wrap: break-word;
+  padding: rem(12px) rem(16px);
+}
+
+.footer {
+  padding: rem(12px) rem(16px);
+}
+
+.ts {
+  @include font-size('small');
+  color: #8c8c8c;
+}

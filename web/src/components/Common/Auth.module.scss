@@ -1,0 +1,73 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/font';
+@import '../App/rem';
+
+.page {
+  background: $dark-bg;
+  text-align: center;
+  min-height: 100vh;
+  padding: 50px 0;
+}
+
+.heading {
+  color: $black;
+  @include font-size('2x-large');
+  font-weight: 300;
+  margin-top: rem(12px);
+  margin-bottom: 0;
+}
+
+.body {
+  max-width: rem(420px);
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: rem(20px);
+}
+
+.referrer-flash {
+  margin: rem(24px) 0;
+}
+.error-flash {
+  margin-bottom: rem(24px);
+}
+
+.footer {
+  margin-top: rem(20px);
+  line-height: rem(20px);
+}
+
+.callout {
+  color: #7c7c7c;
+  @include font-size('small');
+}
+.cta {
+  @include font-size('small');
+}
+
+.panel {
+  border: 1px solid $border-color;
+  background: $white;
+  border-radius: 2px;
+  padding: rem(20px);
+}
+
+.form {
+  text-align: left;
+}
+
+.auth-button {
+  margin-top: rem(16px);
+}
+
+.input-row {
+  & ~ .input-row {
+    margin-top: rem(12px);
+  }
+}
+.label {
+  @include font-size('small');
+  font-weight: 600;
+  width: 100%;
+  margin-bottom: 0;
+}

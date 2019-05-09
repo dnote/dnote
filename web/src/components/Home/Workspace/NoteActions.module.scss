@@ -1,0 +1,26 @@
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/font';
+
+.content {
+  width: rem(200px);
+  right: 0;
+}
+
+.action {
+  @include font-size('small');
+  color: $danger-text;
+  padding: rem(8px) rem(14px);
+  width: 100%;
+  display: block;
+
+  &:hover {
+    background: $dark-light3;
+  }
+}
+
+.wrapper {
+  position: relative;
+  margin-left: rem(4px);
+}

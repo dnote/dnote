@@ -1,0 +1,57 @@
+@import '../../App/rem';
+
+.wrapper {
+  position: relative;
+  padding: rem(8px) rem(16px);
+
+  &.border {
+    border: 1px solid transparent;
+  }
+
+  &.dismissable {
+    padding-right: rem(32px);
+  }
+}
+
+.dismiss {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.success {
+  color: #155724;
+  background-color: #d4edda;
+
+  &.border {
+    border-color: #c3e6cb;
+  }
+}
+
+.info {
+  color: #0c5460;
+  background-color: #d1ecf1;
+
+  &.border {
+    border-color: #bee5eb;
+  }
+}
+
+.warning {
+  color: #856404;
+  background-color: #fff3cd;
+
+  &.border {
+    border-color: #ffeeba;
+  }
+}
+
+.danger {
+  color: #721c24;
+  background-color: #f8d7da;
+
+  &.border {
+    border-color: #f5c6cb;
+  }
+}

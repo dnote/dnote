@@ -1,0 +1,21 @@
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/font';
+
+.content {
+  padding: rem(12px) rem(24px);
+  word-break: break-all;
+}
+
+.wrapper {
+  background: white;
+  max-height: calc(100vh - #{$footer-height});
+  overflow-y: scroll;
+  display: none;
+  border-left: 1px solid transparent;
+
+  @include breakpoint(md) {
+    display: block;
+  }
+}

@@ -1,0 +1,76 @@
+@import '../App/responsive';
+@import '../App/font';
+@import '../App/rem';
+
+.wrapper {
+  padding-bottom: rem(80px);
+}
+
+.hero {
+  padding-top: rem(52px);
+  padding-bottom: rem(52px);
+  text-align: center;
+
+  @include breakpoint(md) {
+    padding-top: rem(72px);
+  }
+}
+
+.heading {
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 400;
+  @include font-size('3x-large');
+
+  @include breakpoint(md) {
+    width: rem(520px);
+  }
+
+  @include breakpoint(lg) {
+    width: rem(820px);
+  }
+}
+
+.check-icon {
+  vertical-align: middle;
+}
+
+.transaction-overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.plans-wrapper {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+
+.feature-bold {
+  font-weight: 600;
+}
+
+.pro-plan {
+  order: 0;
+  @include breakpoint(md) {
+    order: initial;
+  }
+}
+.core-plan {
+  order: 1;
+  @include breakpoint(md) {
+    order: initial;
+  }
+}
