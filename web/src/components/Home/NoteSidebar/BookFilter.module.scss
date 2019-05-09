@@ -1,0 +1,49 @@
+@import '../../App/variables';
+@import '../../App/font';
+@import '../../App/rem';
+@import '../../App/responsive';
+
+.content {
+  left: rem(12px);
+  right: rem(12px);
+
+  @include breakpoint(md) {
+    width: auto;
+  }
+}
+
+.trigger {
+  padding: 0;
+  color: $dark-light5;
+}
+
+.button-content {
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper {
+  background: $white;
+}
+
+.button-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: rem(140px);
+
+  @include breakpoint(xl) {
+    max-width: rem(180px);
+  }
+}
+
+.book-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: rem(140px);
+
+  @include breakpoint(xl) {
+    max-width: rem(180px);
+  }
+}

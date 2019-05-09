@@ -1,0 +1,24 @@
+@import '../App/responsive';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  text-align: center;
+  flex-grow: 1;
+  padding: rem(40px) 0;
+
+  // landscape mode on mobile
+  @media (min-height: 600px) {
+    padding: rem(120px) 0;
+  }
+}
+
+.lead {
+  @include font-size('x-large');
+  margin-top: rem(16px);
+  text-align: center;
+}
+
+.actions {
+  margin-top: rem(16px);
+}

@@ -1,0 +1,10 @@
+@import '../App/responsive';
+@import '../App/variables';
+
+.button {
+  padding: 0;
+
+  @media (min-width: $note-sidebar-threshold) {
+    display: none;
+  }
+}

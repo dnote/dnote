@@ -1,0 +1,73 @@
+@import '../App/font';
+@import '../App/responsive';
+@import '../App/rem';
+@import '../App/variables';
+
+.wrapper {
+  background: white;
+  position: relative;
+
+  border-bottom: 1px solid $border-color;
+}
+
+.link {
+  color: $black;
+  display: block;
+  padding: rem(8px) rem(16px);
+  border: 2px solid transparent;
+  height: rem(96px);
+
+  &:hover {
+    text-decoration: none;
+    background: $third-light;
+    color: inherit;
+  }
+}
+
+.meta {
+  line-height: rem(16px);
+}
+
+.book-label {
+  @include font-size('regular');
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: rem(120px);
+  font-weight: 600;
+}
+
+.ts {
+  @include font-size('small');
+  color: #6e6e6e;
+}
+
+.content {
+  @include font-size('small');
+  color: #6e6e6e;
+  margin-top: rem(8px);
+  line-height: rem(16px);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  // white-space: nowrap;
+  // width: rem(calc(#{$note-sidebar-width} - 60px));
+
+  // @include breakpoint(xl) {
+  //   width: rem(calc(#{$xl-note-sidebar-width} - 60px));
+  // }
+}
+
+.active {
+  .link {
+    background: $third-light;
+  }
+}
+
+.error {
+  .link {
+    color: $danger-text;
+    background: $danger-background;
+  }
+}

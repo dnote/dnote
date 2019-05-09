@@ -1,0 +1,1 @@
+CompileDaemon -directory=. -command="./job"

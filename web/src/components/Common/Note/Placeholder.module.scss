@@ -1,0 +1,53 @@
+@import '../../App/responsive';
+@import '../../App/variables';
+@import '../../App/rem';
+@import '../../App/font';
+
+.title {
+  width: rem(200px);
+  height: rem(16px);
+}
+
+.line {
+  height: rem(16px);
+
+  &:not(:first-child) {
+    margin-top: rem(16px);
+  }
+}
+
+.line1 {
+  width: rem(100px);
+
+  @include breakpoint(md) {
+    width: rem(400px);
+  }
+}
+.line2 {
+  width: rem(200px);
+
+  @include breakpoint(md) {
+    width: rem(180px);
+  }
+}
+.line3 {
+  width: rem(80px);
+
+  @include breakpoint(md) {
+    width: rem(220px);
+  }
+}
+.line4 {
+  width: 100%;
+
+  @include breakpoint(md) {
+    width: rem(420px);
+  }
+}
+.line5 {
+  width: rem(120px);
+
+  @include breakpoint(md) {
+    width: rem(280px);
+  }
+}

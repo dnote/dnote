@@ -1,0 +1,40 @@
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/variables';
+
+.actions {
+  margin-top: rem(12px);
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.search-input-wrapper {
+  width: 100%;
+
+  @include breakpoint(lg) {
+    width: auto;
+  }
+}
+
+.search-input {
+  width: 100%;
+  border: 1px solid transparent;
+
+  &:focus {
+    border-color: $third;
+  }
+
+  @include breakpoint(lg) {
+    width: rem(400px);
+    margin-top: 0;
+  }
+}
+
+button.create-book-button {
+  display: none;
+
+  @include breakpoint(lg) {
+    display: inline-block;
+  }
+}

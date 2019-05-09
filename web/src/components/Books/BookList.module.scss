@@ -1,0 +1,13 @@
+@import '../App/rem';
+@import '../App/variables';
+
+.list {
+  background-color: white;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  border-radius: 2px;
+  border: 1px solid $border-color;
+
+  margin: rem(12px) 0;
+}

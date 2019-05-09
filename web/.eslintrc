@@ -1,0 +1,60 @@
+{ "extends": ["eslint-config-airbnb", "prettier"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "parser": "babel-eslint",
+  "rules": {
+    "strict": 0,
+    "react/no-multi-comp": 0,
+    "import/default": 0,
+    "import/no-duplicates": 0,
+    "import/named": 0,
+    "import/namespace": 0,
+    "import/no-unresolved": 0,
+    "import/no-named-as-default": 2,
+    "import/prefer-default-export": 0,
+    "comma-dangle": 0,  // not sure why airbnb turned this on. gross!
+    "indent": [2, 2, {"SwitchCase": 1}],
+    "no-console": 0,
+    "no-alert": 0,
+    "arrow-body-style": 0,
+    "react/prop-types": 0,
+    "react/jsx-filename-extension": 0,
+    "react/prefer-stateless-function": 0,
+    "jsx-a11y/anchor-is-valid": 0,
+    "no-mixed-operators": 0,
+    "no-plusplus": 0,
+    "no-underscore-dangle": 0,
+    "prettier/prettier": "error",
+    "jsx-a11y/no-autofocus": 0,
+    "jsx-a11y/label-has-for": 0,
+    "prefer-destructuring": 0,
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/jsx-wrap-multilines": ["error", {"declaration": false, "assignment": false}],
+    "react/jsx-one-expression-per-line": 0
+  },
+  "plugins": [
+    "react", "react-hooks", "import", "prettier"
+  ],
+  "settings": {
+    "import/parser": "babel-eslint",
+    "import/resolve": {
+      "moduleDirectory": ["node_modules", "src"]
+    }
+  },
+  "globals": {
+    "__DEVELOPMENT__": true,
+    "__PRODUCTION__": true,
+    "__DISABLE_SSR__": true,
+    "__DEVTOOLS__": true,
+    "__DOMAIN__": true,
+    "__BASE_URL__": true,
+    "__BASE_NAME__": true,
+    "socket": true,
+    "webpackIsomorphicTools": true,
+    "StripeCheckout": true
+  }
+}

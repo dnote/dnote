@@ -1,0 +1,120 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: rem(20px) rem(16px);
+  background: $first;
+  z-index: 3;
+  position: relative;
+
+  @include breakpoint(lg) {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.content {
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+    width: auto;
+  }
+
+  @include breakpoint(lg) {
+    align-items: center;
+  }
+}
+
+.right {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: rem(16px);
+
+  @include breakpoint(md) {
+    width: auto;
+  }
+
+  @include breakpoint(lg) {
+    margin-top: 0;
+  }
+}
+
+.heading {
+  @include font-size('medium');
+  font-weight: 600;
+  color: $white;
+}
+
+.subheading {
+  @include font-size('regular');
+  font-weight: 400;
+  color: $white;
+
+  @include breakpoint(md) {
+    margin-left: rem(8px);
+  }
+}
+
+.colon {
+  margin-right: rem(8px);
+}
+
+.support {
+  display: block;
+
+  @include breakpoint(md) {
+    display: inline-block;
+  }
+}
+
+.cta {
+  width: 100%;
+  flex: 1;
+
+  @include breakpoint(lg) {
+    width: auto;
+    flex: auto;
+    margin-left: rem(16px);
+  }
+}
+
+.quit {
+  color: $white;
+  @include font-size('small');
+  display: none;
+
+  &:hover {
+    color: #e3e3e3;
+  }
+
+  @include breakpoint(lg) {
+    display: block;
+    position: absolute;
+    right: rem(16px);
+  }
+}
+
+a.quit-mobile {
+  color: white;
+  font-size: 1.4rem;
+  flex: 1;
+  padding: 5px 14px;
+
+  @include breakpoint(lg) {
+    display: none;
+  }
+}

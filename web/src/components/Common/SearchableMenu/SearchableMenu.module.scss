@@ -1,0 +1,25 @@
+@import '../../App/variables';
+@import '../../App/rem';
+
+.content {
+  z-index: 1;
+  right: 0;
+  left: 0;
+}
+
+.item {
+  cursor: pointer;
+}
+
+.dropdown {
+  overflow-y: auto;
+  outline: 0;
+}
+
+.search-container {
+  padding: rem(12px);
+}
+
+.search-input {
+  width: 100%;
+}

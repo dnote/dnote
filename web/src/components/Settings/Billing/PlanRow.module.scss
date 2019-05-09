@@ -1,0 +1,34 @@
+@import '../../App/rem';
+@import '../../App/font';
+@import '../../App/variables';
+
+.wrapper {
+  padding-top: rem(48px);
+  padding-bottom: rem(48px);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content {
+  display: flex;
+}
+
+.detail {
+  margin-left: rem(8px);
+}
+
+.label {
+  @include font-size('regular');
+}
+
+.desc {
+  @include font-size('small');
+  color: $dark-light5;
+  max-width: rem(400px);
+}
+
+.status {
+  margin-left: rem(8px);
+}

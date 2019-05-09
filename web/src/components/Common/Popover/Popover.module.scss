@@ -1,0 +1,40 @@
+@import '../../App/font';
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+.wrapper {
+  @include breakpoint(md) {
+    // position: relative;
+  }
+}
+
+.trigger {
+  position: relative;
+  font-weight: 600;
+}
+
+.is-open.has-arrow {
+  &:before {
+    border: 6px solid transparent;
+    border-bottom-color: $black;
+    position: absolute;
+    display: inline-block;
+    content: '';
+    left: 50%;
+    margin-left: -8px;
+  }
+
+  &.top {
+    &:before {
+      bottom: 90%;
+      transform: rotate(180deg);
+    }
+  }
+
+  &.bottom {
+    &:before {
+      top: 90%;
+    }
+  }
+}

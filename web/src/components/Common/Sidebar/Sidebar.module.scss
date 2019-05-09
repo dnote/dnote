@@ -1,0 +1,133 @@
+@import '../../App/variables';
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  background: rgba(72, 72, 72, 0.87);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  // transition: background 0.5s cubic-bezier(0, 0, 0, 1);
+
+  &.wrapper-hidden {
+    background: none;
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+  }
+
+  @include breakpoint(lg) {
+    background: none;
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+  }
+}
+
+.sidebar {
+  background: $dark-light;
+  min-width: $sidebar-width;
+  width: $sidebar-width;
+  transition: 0.25s cubic-bezier(0, 0, 0, 1);
+  border-right: 1px solid $border-color;
+  padding-top: rem(12px);
+  height: 100%;
+
+  position: absolute;
+  transform: translateX(0);
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+
+  @include breakpoint(lg) {
+    position: relative;
+    transform: initial;
+    top: auto;
+    bottom: auto;
+  }
+}
+
+.sidebar-hidden {
+  min-width: 0;
+  width: 0;
+  transform: translateX(-100%);
+
+  .sidebar-content {
+    position: absolute;
+    left: -$sidebar-width;
+  }
+}
+
+.sidebar-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.link-list {
+  margin-top: rem(12px);
+}
+
+.link {
+  @include font-size('regular');
+  color: $black;
+  flex: 1;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  height: rem(52px);
+  padding: 0 rem(12px);
+
+  @include breakpoint(md) {
+    height: rem(36px);
+  }
+
+  &:hover {
+    color: $black;
+    text-decoration: none;
+    background: #eaeaea;
+  }
+
+  &:focus {
+    background: #eaeaea;
+    outline: none;
+  }
+
+  &.link-active {
+    background: $dark-light2;
+  }
+}
+
+.link-label {
+  margin-left: rem(12px);
+}
+
+.link-item {
+  display: flex;
+}
+
+.close-button {
+  position: absolute;
+  top: rem(16px);
+  right: rem(24px);
+  border-radius: 100%;
+  background: white;
+  border: none;
+  width: rem(28px);
+  height: rem(28px);
+  padding: 0;
+}
+.close-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

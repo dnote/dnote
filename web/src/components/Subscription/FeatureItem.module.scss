@@ -1,0 +1,21 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  padding: rem(4px) rem(8px);
+}
+
+.name {
+  margin-left: rem(12px);
+  vertical-align: middle;
+  color: $black;
+  @include font-size('regular');
+}
+
+.value {
+  font-weight: 600;
+}

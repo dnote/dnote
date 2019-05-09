@@ -1,0 +1,91 @@
+@import '../App/font';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/responsive';
+
+.wrapper {
+  position: relative;
+}
+
+.account-circle {
+  border-radius: 100%;
+  //  background: white;
+  background: $third;
+  width: rem(8px);
+  height: rem(8px);
+  display: inline-block;
+  //border: 1px solid gray;
+}
+
+.account-label {
+  margin-left: rem(8px);
+  font-weight: 600;
+}
+
+.content {
+  width: rem(200px);
+
+  @include breakpoint(md) {
+    width: rem(240px);
+  }
+}
+
+.header {
+  padding: rem(8px) rem(12px);
+  display: block;
+  margin-bottom: 0;
+  font-size: 1.4rem;
+  color: #868e96;
+  white-space: nowrap;
+  @include font-size('small');
+
+  svg {
+    fill: #868e96;
+  }
+}
+
+.divider {
+  height: 0;
+  overflow: hidden;
+  border-top: 1px solid #e9ecef;
+}
+
+.link {
+  @include font-size('small');
+  white-space: pre;
+  padding: rem(8px) rem(14px);
+  width: 100%;
+  display: block;
+  color: black;
+
+  &:hover {
+    background: $dark-light3;
+    text-decoration: none;
+    color: #0056b3;
+  }
+
+  &.disabled {
+    color: #d4d4d4;
+    cursor: not-allowed;
+  }
+
+  &:not(.disabled):focus {
+    background: $dark-light3;
+    color: #0056b3;
+    outline: 1px dotted gray;
+  }
+}
+
+.email {
+  font-weight: 600;
+  white-space: normal;
+}
+
+.session-notice-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.session-notice {
+  margin-left: rem(4px);
+}

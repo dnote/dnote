@@ -1,0 +1,11 @@
+@import '../App/variables';
+
+.wrapper {
+  background: $dark-bg;
+  min-height: 100vh;
+  padding: 50px 15px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

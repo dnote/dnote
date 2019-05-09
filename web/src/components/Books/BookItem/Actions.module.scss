@@ -1,0 +1,32 @@
+@import '../../App/responsive';
+@import '../../App/rem';
+
+.actions-wrapper {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  transform: none;
+  height: 100%;
+  z-index: 1;
+
+  @include breakpoint(lg) {
+    &.shown {
+      display: block;
+    }
+  }
+}
+
+.action-tooltip-trigger {
+  height: 100%;
+  display: inline-block;
+}
+.action-tooltip-wrapper {
+  height: 100%;
+}
+
+.action {
+  padding: 0 rem(12px);
+  height: 100%;
+}

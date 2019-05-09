@@ -1,0 +1,8 @@
+@import '../../App/responsive';
+@import '../../App/variables';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  padding: rem(16px) rem(16px) rem(12px);
+}

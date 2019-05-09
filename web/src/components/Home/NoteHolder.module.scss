@@ -1,0 +1,40 @@
+@import '../App/responsive';
+@import '../App/font';
+@import '../App/variables';
+@import '../App/rem';
+
+.wrapper {
+  background: white;
+  height: rem(96px);
+  position: relative;
+  border-bottom: 1px solid #cecece;
+}
+
+.book {
+  position: absolute;
+  top: 19px;
+  left: 20px;
+  height: 14px;
+  width: 120px;
+}
+
+.ts {
+  position: absolute;
+  top: 36px;
+  left: 20px;
+  height: 14px;
+  width: 100px;
+}
+
+.content {
+  position: absolute;
+  top: 58px;
+  left: 20px;
+  height: 15px;
+  width: 50%;
+
+  @include breakpoint(lg) {
+    width: 200px;
+    right: auto;
+  }
+}

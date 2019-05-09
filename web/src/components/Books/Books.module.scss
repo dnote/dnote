@@ -1,0 +1,26 @@
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/font';
+
+.new-book-button {
+  display: block;
+
+  @include breakpoint(lg) {
+    display: none;
+  }
+}
+
+.count {
+  display: none;
+
+  @include breakpoint(lg) {
+    @include font-size('small');
+    color: $dark;
+    display: inline-block;
+
+    &.hidden {
+      display: none;
+    }
+  }
+}

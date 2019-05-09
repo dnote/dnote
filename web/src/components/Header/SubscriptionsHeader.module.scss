@@ -1,0 +1,40 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  padding: 0 rem(20px);
+  height: 60px;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  border-bottom: 1px solid $border-color-light;
+  align-items: center;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.logo {
+  display: block;
+  margin: 0 auto;
+}
+
+.email {
+  @include font-size('regular');
+  color: $dark-light5;
+}

@@ -1,0 +1,59 @@
+@import '../../App/rem';
+@import '../../App/font';
+@import '../../App/variables';
+
+.item {
+  position: relative;
+
+  &:not(:first-child) {
+    border-top: 1px solid $border-color-light;
+  }
+}
+
+.link {
+  padding: rem(12px) rem(20px);
+  display: block;
+  color: inherit;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.icon {
+  vertical-align: middle;
+}
+
+.label {
+  @include font-size('medium');
+
+  display: inline-block;
+  font-weight: 400;
+  margin-bottom: 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  width: rem(200px);
+  display: block;
+
+  @include breakpoint(sm) {
+    width: rem(240px);
+  }
+
+  @include breakpoint(md) {
+    width: rem(440px);
+  }
+  @include breakpoint(lg) {
+    width: rem(700px);
+  }
+  @include breakpoint(xl) {
+    width: rem(852px);
+  }
+}
+
+.active {
+  .link {
+    background: $third-light;
+    color: $black;
+  }
+}
