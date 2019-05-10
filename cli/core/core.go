@@ -41,7 +41,7 @@ var (
 	// ConfigFilename is the name of the config file
 	ConfigFilename = "dnoterc"
 	// TmpContentFilename is the name of the temporary file that holds editor input
-	TmpContentFilename = "DNOTE_TMPCONTENT"
+	TmpContentFilename = "DNOTE_TMPCONTENT.md"
 )
 
 // RunEFunc is a function type of dnote commands
