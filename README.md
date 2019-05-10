@@ -38,5 +38,6 @@ Instructions are coming soon.
 
 - [Dnote](https://dnote.io)
 - [Dnote Pro](https://dnote.io/pricing)
+- [Forum](https://forum.dnote.io)
 
 [![Build Status](https://semaphoreci.com/api/v1/dnote/dnote-2/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote-2)
