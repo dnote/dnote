@@ -135,7 +135,7 @@ install_dnote() {
 
   if ! check_platform "$os" "$arch"; then
     print_error "System not supported: $os/$arch"
-    print_error "Please compile manually from https://github.com/dnote/dnote/cli"
+    print_error "Please compile manually from https://github.com/dnote/dnote"
     exit 1
   fi
 
@@ -149,21 +149,21 @@ install_dnote() {
 
   # get the latest version
   resp=$(http_get "https://api.github.com/repos/$owner/$repo/tags")
-  version=$(echo "$resp" | tr ',' '\n' | grep -m 1 "\"name\":" | cut -f4 -d'"')
+  version=$(echo "$resp" | tr ',' '\n' | grep -m 1 "\"name\": \"cli" | cut -f4 -d'"')
 
   if [ -z "$version" ]; then
     print_error "Error fetching latest version. Please try again."
     exit 1
   fi
 
-  # remove the preceding 'v'
-  version="${version#v}"
+  # remove the preceding 'cli-v'
+  version="${version#cli-v}"
 
   checksum=${binary}_${version}_checksums.txt
   filename=${binary}_${version}_${os}_${arch}
   tarball="${filename}.tar.gz"
-  binary_url="${github_download}/v${version}/${tarball}"
-  checksum_url="${github_download}/v${version}/${checksum}"
+  binary_url="${github_download}/cli-v${version}/${tarball}"
+  checksum_url="${github_download}/cli-v${version}/${checksum}"
 
   print_step "Latest release version is v$version."
 
@@ -188,8 +188,9 @@ install_dnote() {
 
 
 exit_error() {
+  # shellcheck disable=SC2181
   if [ "$?" -ne 0 ]; then
-    print_error "A problem occurred while installing Dnote. Please report it on https://github.com/dnote/dnote/cli/issues so that we can help you."
+    print_error "A problem occurred while installing Dnote. Please report it on https://github.com/dnote/dnote/issues so that we can help you."
   fi
 }
 

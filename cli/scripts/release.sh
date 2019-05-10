@@ -26,14 +26,14 @@ if ! command_exists hub; then
   exit 1
 fi
 
-if [ ! -d $homebrewRepoDir ]; then
+if [ ! -d "$homebrewRepoDir" ]; then
   echo "homebrew-dnote not found locally. did you clone it?"
   exit 1
 fi
 
 # 1. push tag
 version=$1
-version_tag="v$version"
+version_tag="cli-v$version"
 
 echo "* tagging and pushing the tag"
 git tag -a "$version_tag" -m "Release $version_tag"
@@ -55,4 +55,4 @@ hub release create \
 
 # 3. Release on Homebrew
 homebrew_sha256=$(shasum -a 256 "./build/dnote_${version}_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
-(cd $homebrewRepoDir && ./release.sh "$version" "$homebrew_sha256")
+(cd "$homebrewRepoDir" && ./release.sh "$version" "$homebrew_sha256")
