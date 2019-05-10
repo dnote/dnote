@@ -1,37 +1,34 @@
 # Dnote
 
-A simple, encrypted notebook that respects your privacy.
+A simple, encrypted personal knowledge base.
+
+## What It Does
+
+Instantly capture your microlessons and get automatic reminders for spaced repetition. Because:
+
+* we forget exponentially unless we write down what we learn and come back.
+* ideas cannot be grokked unless we can put them down in clear words.
 
 ## How to Use
 
-- [CLI](https://github.com/dnote/dnote/cli/README.md)
+Use the following to keep Dnote handy.
+
+- [CLI](https://github.com/dnote/dnote/blob/fix-loading/cli/README.md)
 - [Web](https://dnote.io)
 - [Browser extension](https://github.com/dnote/browser-extension)
+- [Atom](https://github.com/dnote/dnote-atom)
 
-*Planned*
 
-- Desktop
-- Mobile
-
-## Overview
-
-Perfect for building a personal knowledge base.
-
-- End-to-end encrypted.
-- Minimal distraction by using CLI or browser extension.
-- We forget exponentially unless we write down what we learn and come back.
-- Ideas cannot be grokked unless we can put them down in clear words.
-
-Sync your notes to Dnote server and receive automated email digests for spaced repetition.
+### User Stories
 
 - [How I Built a Personal Knowledge Base for Myself](https://dnote.io/blog/how-i-built-personal-knowledge-base-for-myself/)
 - [I Wrote Down Everything I Learned While Programming for a Month](https://dnote.io/blog/writing-everything-i-learn-coding-for-a-month/)
 
 ## Security
 
-All your data is encrypted using the AES-256 block cipher when you sync with the server for backup.
+Dnote is end-to-end encrypted and respects your privacy. It does not track you.
 
-Dnote has zero knowledge about the contents. Only you can decrypt the data.
+When syncing, your data is encrypted with AES-256. Dnote server has zero knowledge about note contents.
 
 ## Self-host
 

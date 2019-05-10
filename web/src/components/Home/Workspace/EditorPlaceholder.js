@@ -24,7 +24,7 @@ import workspaceStyle from './Workspace.module.scss';
 
 function EditorPlaceholder() {
   return (
-    <div className={classnames(workspaceStyle['editor-area'])}>
+    <div className={workspaceStyle['pane-content']}>
       <div className={classnames('holder', styles.line, styles.line1)} />
       <div className={classnames('holder', styles.line, styles.line2)} />
       <div className={classnames('holder', styles.line, styles.line3)} />
