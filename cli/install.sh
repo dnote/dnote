@@ -148,8 +148,8 @@ install_dnote() {
 
 
   # get the latest version
-  resp=$(http_get "https://api.github.com/repos/$owner/$repo/tags")
-  version=$(echo "$resp" | tr ',' '\n' | grep -m 1 "\"name\": \"cli" | cut -f4 -d'"')
+  resp=$(http_get "https://api.github.com/repos/$owner/$repo/releases")
+  version=$(echo "$resp" | tr ',' '\n' | grep -m 1 "\"tag_name\": \"cli" | cut -f4 -d'"')
 
   if [ -z "$version" ]; then
     print_error "Error fetching latest version. Please try again."
