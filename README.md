@@ -13,7 +13,7 @@ Instantly capture your microlessons and get automatic reminders for spaced repet
 
 Use the following to keep Dnote handy.
 
-- [CLI](https://github.com/dnote/dnote/blob/fix-loading/cli/README.md)
+- [CLI](https://github.com/dnote/dnote/tree/master/cli)
 - [Web](https://dnote.io)
 - [Browser extension](https://github.com/dnote/browser-extension)
 - [Atom](https://github.com/dnote/dnote-atom)
