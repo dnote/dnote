@@ -6,7 +6,7 @@
 .wrapper {
   background: $dark-light3;
   padding: rem(12px) rem(20px);
-  height: 60px;
+  height: $note-header-height;
   z-index: 2;
   position: relative;
   display: flex;

@@ -1,9 +1,12 @@
 @import '../App/responsive';
+@import '../App/variables';
 
 .digest-page {
-  min-height: calc(100vh - 57px);
+  min-height: calc(100vh - #{$note-header-height});
   background: #f8f8f8;
   padding-bottom: 5rem;
+  display: flex;
+  justify-content: center;
 
   .note-container {
     display: flex;
@@ -22,6 +25,7 @@
     padding-left: 0;
     margin-bottom: 0;
     padding-top: 5rem;
+    display: inline-block;
   }
   .note-item ~ .note-item {
     margin-top: 5rem;

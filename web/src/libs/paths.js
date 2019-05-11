@@ -182,6 +182,16 @@ export function isSubscriptionsPath(pathname) {
   return Boolean(match);
 }
 
+// isDigestPath checks if the given pathname is for the digest path
+export function isDigestPath(pathname) {
+  const match = matchPath(pathname, {
+    path: '/digests/:digestUUID',
+    exact: true
+  });
+
+  return Boolean(match);
+}
+
 // isLegacyPath checks if the given pathname is for the legacy path
 export function isLegacyPath(pathname) {
   const match = matchPath(pathname, {
@@ -244,6 +254,9 @@ export function checkBoxedLayout(location, isEditor) {
     return false;
   }
   if (isEmailPreferencePath(pathname)) {
+    return false;
+  }
+  if (isDigestPath(pathname)) {
     return false;
   }
 
