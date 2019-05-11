@@ -24,7 +24,7 @@ export function fetchDigestNotes(digestUUID) {
   return apiClient.get(endpoint);
 }
 
-export function fetchDigests() {
+export function fetchAll() {
   const endpoint = '/digests';
 
   return apiClient.get(endpoint);

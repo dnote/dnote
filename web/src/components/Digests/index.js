@@ -20,17 +20,17 @@ import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
-import { getLessonCalendar } from '../../actions/calendar';
+import { getDigests } from '../../actions/digests';
 
 import Header from '../Common/Page/Header';
 import Body from '../Common/Page/Body';
 import SubscriberWall from '../Common/SubscriberWall';
 import Content from './Content';
 
-function Digests({ demo, userData, calendarData, doGetLessonCalendar }) {
+function Digests({ demo, userData, calendarData, doGetDigests }) {
   useEffect(() => {
-    doGetLessonCalendar({ demo });
-  }, [demo, doGetLessonCalendar]);
+    doGetDigests({ demo });
+  }, [demo, doGetDigests]);
 
   const user = userData.data;
 
@@ -63,7 +63,7 @@ function mapStateToProps(state) {
 }
 
 const mapDispatchToProps = {
-  doGetLessonCalendar: getLessonCalendar
+  doGetDigests: getDigests
 };
 
 export default connect(

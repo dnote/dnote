@@ -112,7 +112,7 @@ func (a *App) getDigests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	offset := page - 1
-	perPage := 1
+	perPage := 25
 
 	var digests []database.Digest
 	conn := db.Where("user_id = ?", user.ID).Offset(offset).Limit(perPage)

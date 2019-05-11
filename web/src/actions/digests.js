@@ -17,11 +17,10 @@
  */
 
 import * as digestsService from '../services/digests';
-import { decryptNote } from '../crypto/notes';
 
-export const START_FETCHING_DIGESTS = 'digest/START_FETCHING_DIGESTS';
-export const RECEIVE_DIGESTS = 'digest/RECEIVE_DIGESTS';
-export const RECEIVE_ERROR = 'digest/RECEIVE_ERROR';
+export const START_FETCHING_DIGESTS = 'digests/START_FETCHING_DIGESTS';
+export const RECEIVE_DIGESTS = 'digests/RECEIVE_DIGESTS';
+export const RECEIVE_ERROR = 'digests/RECEIVE_ERROR';
 
 function receiveDigests(digests) {
   return {
@@ -32,7 +31,7 @@ function receiveDigests(digests) {
   };
 }
 
-function startFetchingDigest() {
+function startFetchingDigests() {
   return {
     type: START_FETCHING_DIGESTS
   };
@@ -47,21 +46,16 @@ function receiveError(error) {
   };
 }
 
-export function getDigest(cipherKeyBuf, digestUUID) {
+export function getDigests() {
   return async dispatch => {
     try {
-      dispatch(startFetchingDigest());
+      dispatch(startFetchingDigests());
 
-      const notes = await fetchDigest(digestUUID);
+      const digests = await digestsService.fetchAll();
 
-      const p = notes.map(note => {
-        return decryptNote(note, cipherKeyBuf);
-      });
-
-      const notesDec = await Promise.all(p);
-      dispatch(receiveDigest(notesDec));
+      dispatch(receiveDigests(digests));
     } catch (err) {
-      console.log('Error fetching digest notes', err.stack);
+      console.log('Error fetching digests', err.stack);
       dispatch(receiveError(err.message));
     }
   };
