@@ -98,7 +98,11 @@ function App({ location, history, doGetCurrentUser, user }) {
 
       <Route path="/demo" component={DemoHeader} />
       <Route
-        path={['/notes/:noteUUID', '/demo/notes/:noteUUID', '/digests']}
+        path={[
+          '/notes/:noteUUID',
+          '/demo/notes/:noteUUID',
+          '/digests/:digestUUID'
+        ]}
         render={() => {
           if (isEditor) {
             return null;

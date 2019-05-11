@@ -78,14 +78,14 @@ export function booksPath(options = { demo: false }) {
   return getPathObj({ pathname: basePath });
 }
 
-export function dashboardPath(options = { demo: false }) {
+export function digestsPath(options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
   if (demo) {
-    basePath = '/demo/dashboard';
+    basePath = '/demo/digests';
   } else {
-    basePath = '/dashboard';
+    basePath = '/digests';
   }
 
   return getPathObj({ pathname: basePath });
@@ -136,10 +136,10 @@ export function settingsPath(section) {
 export const mainSidebarPaths = [
   '/',
   '/books',
-  '/dashboard',
+  '/digests',
   '/demo',
   '/demo/books',
-  '/demo/dashboard'
+  '/demo/digests'
 ];
 
 // noteSidebarPaths are paths that have the note sidebar
@@ -221,7 +221,7 @@ export function isHomePath(pathname, demo = false) {
 const demoPaths = [
   '/demo',
   '/demo/books',
-  '/demo/dashboard',
+  '/demo/digests',
   '/demo/notes/:noteUUID'
 ];
 

@@ -27,7 +27,7 @@ import Body from '../Common/Page/Body';
 import SubscriberWall from '../Common/SubscriberWall';
 import Content from './Content';
 
-function Dashboard({ demo, userData, calendarData, doGetLessonCalendar }) {
+function Digests({ demo, userData, calendarData, doGetLessonCalendar }) {
   useEffect(() => {
     doGetLessonCalendar({ demo });
   }, [demo, doGetLessonCalendar]);
@@ -37,10 +37,10 @@ function Dashboard({ demo, userData, calendarData, doGetLessonCalendar }) {
   return (
     <div className="dashboard-page page">
       <Helmet>
-        <title>Dashboard</title>
+        <title>Digests</title>
       </Helmet>
 
-      <Header heading="Dashboard" />
+      <Header heading="Digests" />
 
       <Body>
         <div className="container">
@@ -69,4 +69,4 @@ const mapDispatchToProps = {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Dashboard);
+)(Digests);

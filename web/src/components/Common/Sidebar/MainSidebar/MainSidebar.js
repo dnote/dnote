@@ -28,7 +28,7 @@ import {
   homePath,
   booksPath,
   notePath,
-  dashboardPath,
+  digestsPath,
   subscriptionsPath
 } from '../../../../libs/paths';
 import { parseSearchString } from '../../../../libs/url';
@@ -182,7 +182,7 @@ const Sidebar = ({
 
   const pathHome = homePath({}, { demo });
   const pathBooks = booksPath({ demo });
-  const pathDashboard = dashboardPath({ demo });
+  const pathDigests = digestsPath({ demo });
 
   const user = userData.data;
 
@@ -279,14 +279,14 @@ const Sidebar = ({
                 <SafeNavLink
                   onClick={handleLinkClick}
                   className={sidebarStyles.link}
-                  to={pathDashboard}
+                  to={pathDigests}
                   activeClassName={sidebarStyles['link-active']}
                   isActive={() => {
-                    return location.pathname === pathDashboard.pathname;
+                    return location.pathname === pathDigests.pathname;
                   }}
                 >
                   <DashboardIcon width={16} height={16} fill="#6e6e6e" />
-                  <div className={sidebarStyles['link-label']}>Dashboard</div>
+                  <div className={sidebarStyles['link-label']}>Digests</div>
                 </SafeNavLink>
               </li>
             </ul>

@@ -27,7 +27,7 @@ import { joinPath, isNotePath, isDemoPath } from './libs/paths';
 import Home from './components/Home';
 import Books from './components/Books';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import Digests from './components/Digests';
 import Join from './components/Join';
 import Settings from './components/Settings';
 import NotFound from './components/Common/NotFound';
@@ -43,9 +43,9 @@ import LegacyEncrypt from './components/LegacyEncrypt';
 
 const AuthenticatedHome = userOnly(Home);
 const AuthenticatedBooks = userOnly(Books);
-const AuthenticatedDashboard = userOnly(Dashboard);
 const AuthenticatedSettings = userOnly(Settings);
 const AuthenticatedDigest = userOnly(Digest);
+const AuthenticatedDigests = userOnly(Digests);
 const AuthenticatedNote = userOnly(Note);
 const AuthenticatedSubscription = userOnly(Subscription, joinPath().pathname);
 const GuestLogin = guestOnly(Login);
@@ -89,10 +89,10 @@ export default function render(isEditor) {
       }
     },
     {
-      path: '/demo/dashboard',
+      path: '/demo/digests',
       exact: true,
       render: () => {
-        return <Dashboard demo />;
+        return <Digests demo />;
       }
     },
     {
@@ -128,9 +128,9 @@ export default function render(isEditor) {
       component: AuthenticatedBooks
     },
     {
-      path: '/dashboard',
+      path: '/digests',
       exact: true,
-      component: AuthenticatedDashboard
+      component: AuthenticatedDigests
     },
     {
       path: '/settings/:section',
