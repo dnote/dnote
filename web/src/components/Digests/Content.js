@@ -31,11 +31,7 @@ export default class Content extends React.Component {
       <div>
         <EmailVerifyBanner demo={demo} />
 
-        <div className={styles.content}>
-          <h2>Learning Heatmap</h2>
-
-          {calendar.isFetched && <LessonHeatmap timestamps={calendar.items} />}
-        </div>
+        <div className={styles.content} />
       </div>
     );
   }

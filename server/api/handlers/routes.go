@@ -358,6 +358,7 @@ func NewRouter(app *App) *mux.Router {
 		Route{"GET", "/calendar", auth(app.getCalendar, &proOnly), true},
 		Route{"GET", "/demo/calendar", app.getDemoCalendar, true},
 		Route{"GET", "/digests/{digestUUID}/notes", auth(app.getDigestNotes, &proOnly), true},
+		Route{"GET", "/digests", auth(app.getDigests, &proOnly), true},
 		//Route{"GET", "/books/{bookUUID}", cors(auth(app.getBook)), true},
 
 		// routes for user migration to use encryption

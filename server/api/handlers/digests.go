@@ -21,12 +21,14 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/dnote/dnote/server/api/helpers"
 	"github.com/dnote/dnote/server/api/logger"
 	"github.com/dnote/dnote/server/api/presenters"
 	"github.com/dnote/dnote/server/database"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 func (a App) getDigestNotes(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +73,58 @@ func (a App) getDigestNotes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	presented := presenters.PresentNotes(notes)
+	if err := json.NewEncoder(w).Encode(presented); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func parseGetDigestsParams(r *http.Request) (int, error) {
+	var page int
+	var err error
+
+	q := r.URL.Query()
+	pageStr := q.Get("page")
+
+	if pageStr != "" {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			return 0, errors.Wrap(err, "parsing page")
+		}
+
+	}
+
+	return page, nil
+}
+
+func (a *App) getDigests(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		return
+	}
+
+	db := database.DBConn
+
+	page, err := parseGetDigestsParams(r)
+	if err != nil {
+		http.Error(w, "parsing params", http.StatusBadRequest)
+		return
+	}
+	offset := page - 1
+	perPage := 1
+
+	var digests []database.Digest
+	conn := db.Where("user_id = ?", user.ID).Offset(offset).Limit(perPage)
+
+	if err := conn.Find(&digests).Error; err != nil {
+		logger.Err("finding digests %s", err.Error())
+		http.Error(w, "finding digests", http.StatusInternalServerError)
+		return
+	}
+
+	presented := presenters.PresentDigests(digests)
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(presented); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

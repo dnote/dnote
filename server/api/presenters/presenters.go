@@ -119,3 +119,27 @@ func PresentNotes(notes []database.Note) []Note {
 
 	return ret
 }
+
+// PresentDigestsSingleResult is a result of PresentDigest
+type PresentDigestsSingleResult struct {
+	UUID      string    `json:"uuid"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// PresentDigests presetns digests
+func PresentDigests(digests []database.Digest) []PresentDigestsSingleResult {
+	ret := []PresentDigestsSingleResult{}
+
+	for _, digest := range digests {
+		p := PresentDigestsSingleResult{
+			UUID:      digest.UUID,
+			CreatedAt: digest.CreatedAt,
+			UpdatedAt: digest.UpdatedAt,
+		}
+
+		ret = append(ret, p)
+	}
+
+	return ret
+}
