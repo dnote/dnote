@@ -57,10 +57,8 @@
     "@babel/plugin-proposal-class-properties": "^7.4.4",
     "classnames": "^2.2.5",
     "core-js": "^3.0.1",
-    "d3": "^5.9.2",
     "highlight.js": "^9.15.6",
     "hoist-non-react-statics": "^3.3.0",
-    "http-proxy": "^1.14.0",
     "js-cookie": "^2.2.0",
     "lodash": "^4.17.4",
     "markdown-it": "^8.4.1",
@@ -79,7 +77,6 @@
     "redux": "^4.0.0",
     "redux-thunk": "^2.1.0",
     "regenerator-runtime": "^0.13.2",
-    "tippy.js": "^2.5.3",
     "webpack": "^4.31.0"
   }
 }

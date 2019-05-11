@@ -16,62 +16,65 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
 import Note from '../Common/Note';
-import { getDigestNotes } from '../../actions/digest';
+import { getDigest } from '../../actions/digest';
 import { getCipherKey } from '../../crypto';
 
-import './module.scss';
+import styles from './Digest.module.scss';
 
-class Digest extends React.Component {
-  componentDidMount() {
-    const { doGetDigestNotes, match } = this.props;
-    const { digestUUID } = match.params;
+function Digest({ digestData, doGetDigest, match, demo }) {
+  const { digestUUID } = match.params;
 
-    // TODO: make demo
-    const cipherKeyBuf = getCipherKey();
+  useEffect(() => {
+    const cipherKeyBuf = getCipherKey(demo);
 
-    doGetDigestNotes(cipherKeyBuf, digestUUID);
+    doGetDigest(cipherKeyBuf, digestUUID, demo);
+  }, [demo, doGetDigest, digestUUID]);
+
+  const { item } = digestData;
+
+  if (!digestData.isFetched) {
+    return null;
   }
 
-  render() {
-    const { notes } = this.props;
+  return (
+    <div className={styles.wrapper}>
+      <Helmet>
+        <title>Digest</title>
+      </Helmet>
 
-    return (
-      <div className="digest-page">
-        <Helmet>
-          <title>Digest</title>
-        </Helmet>
-
-        <ul className="note-list">
-          {notes.map(note => {
-            return (
-              <li key={note.uuid} className="note-item">
-                <Note note={note} />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
-  }
+      <ul className={styles.list}>
+        {item.notes.map(note => {
+          return (
+            <li key={note.uuid} className={styles.item}>
+              <Note note={note} />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
 
 function mapStateToProps(state) {
   return {
-    notes: state.digest.notes,
+    digestData: state.digest,
     error: state.digest.error
   };
 }
 
 const mapDispatchToProps = {
-  doGetDigestNotes: getDigestNotes
+  doGetDigest: getDigest
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Digest);
+export default withRouter(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(Digest)
+);

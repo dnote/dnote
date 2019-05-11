@@ -1,0 +1,23 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+
+.wrapper {
+  background: #fff;
+  height: rem(48px);
+  position: relative;
+  border-bottom: 1px solid $border-color-light;
+}
+
+.title {
+  position: absolute;
+  top: rem(12px);
+  left: rem(20px);
+  right: rem(20px);
+  height: rem(20px);
+
+  @include breakpoint(md) {
+    right: auto;
+    width: 152px;
+  }
+}

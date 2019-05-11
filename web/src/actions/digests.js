@@ -18,22 +18,40 @@
 
 import * as digestsService from '../services/digests';
 
-export const START_FETCHING_DIGESTS = 'digests/START_FETCHING_DIGESTS';
-export const RECEIVE_DIGESTS = 'digests/RECEIVE_DIGESTS';
+export const START_FETCHING = 'digests/START_FETCHING';
+export const START_FETCHING_MORE = 'digests/START_FETCHING_MORE';
+export const RECEIVE = 'digests/RECEIVE';
+export const RECEIVE_MORE = 'digests/RECEIVE_MORE';
 export const RECEIVE_ERROR = 'digests/RECEIVE_ERROR';
 
-function receiveDigests(digests) {
+function receiveDigests(total, items) {
   return {
-    type: RECEIVE_DIGESTS,
+    type: RECEIVE,
     data: {
-      digests
+      total,
+      items
+    }
+  };
+}
+
+function receiveMoreDigests(items) {
+  return {
+    type: RECEIVE_MORE,
+    data: {
+      items
     }
   };
 }
 
 function startFetchingDigests() {
   return {
-    type: START_FETCHING_DIGESTS
+    type: START_FETCHING
+  };
+}
+
+function startFetchingMoreDigests() {
+  return {
+    type: START_FETCHING_MORE
   };
 }
 
@@ -46,14 +64,35 @@ function receiveError(error) {
   };
 }
 
-export function getDigests() {
+export function getDigests(option = {}) {
+  const { demo } = option;
+
   return async dispatch => {
     try {
       dispatch(startFetchingDigests());
 
-      const digests = await digestsService.fetchAll();
+      const res = await digestsService.fetchAll({ demo });
 
-      dispatch(receiveDigests(digests));
+      dispatch(receiveDigests(res.total, res.digests));
+    } catch (err) {
+      console.log('Error fetching digests', err.stack);
+      dispatch(receiveError(err.message));
+    }
+  };
+}
+
+export function getMoreDigests(option = {}) {
+  const { demo } = option;
+
+  return async (dispatch, getState) => {
+    try {
+      dispatch(startFetchingMoreDigests());
+
+      const { digests } = getState();
+      const nextPage = digests.page + 1;
+      const res = await digestsService.fetchAll({ page: nextPage, demo });
+
+      dispatch(receiveMoreDigests(res.digests));
     } catch (err) {
       console.log('Error fetching digests', err.stack);
       dispatch(receiveError(err.message));

@@ -91,6 +91,20 @@ export function digestsPath(options = { demo: false }) {
   return getPathObj({ pathname: basePath });
 }
 
+export function digestPath(digestUUID, options = { demo: false }) {
+  const { demo } = options;
+
+  let basePath;
+  if (demo) {
+    basePath = '/demo/digests';
+  } else {
+    basePath = '/digests';
+  }
+
+  const path = `${basePath}/${digestUUID}`;
+  return getPathObj({ pathname: path });
+}
+
 export function notePath(noteUUID, searchObj, { demo, isEditor }) {
   const basePath = `/notes/${noteUUID}`;
 
@@ -185,7 +199,7 @@ export function isSubscriptionsPath(pathname) {
 // isDigestPath checks if the given pathname is for the digest path
 export function isDigestPath(pathname) {
   const match = matchPath(pathname, {
-    path: '/digests/:digestUUID',
+    path: ['/digests/:digestUUID', '/demo/digests/:digestUUID'],
     exact: true
   });
 
@@ -222,6 +236,7 @@ const demoPaths = [
   '/demo',
   '/demo/books',
   '/demo/digests',
+  '/demo/digests/:digestUUID',
   '/demo/notes/:noteUUID'
 ];
 

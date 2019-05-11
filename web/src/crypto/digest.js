@@ -16,29 +16,23 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { apiClient } from '../libs/http';
-import { getPath } from '../libs/url';
+import { decryptNote } from './notes';
 
-export function fetch(digestUUID, { demo }) {
-  let endpoint;
-  if (demo) {
-    endpoint = `/demo/digests/${digestUUID}`;
-  } else {
-    endpoint = `/digests/${digestUUID}`;
+export async function decryptDigest(digest, cipherKeyBuf) {
+  try {
+    const notesPromise = digest.notes.map(note => {
+      return decryptNote(note, cipherKeyBuf);
+    });
+
+    const notes = await Promise.all(notesPromise);
+
+    return {
+      ...digest,
+      notes
+    };
+  } catch (e) {
+    console.log(`Error while decrypting digest ${digest.uuid}`, e);
+    console.log(e.stack);
+    throw e;
   }
-
-  return apiClient.get(endpoint);
-}
-
-export function fetchAll({ page, demo }) {
-  let path;
-  if (demo) {
-    path = `/demo/digests`;
-  } else {
-    path = '/digests';
-  }
-
-  const endpoint = getPath(path, { page });
-
-  return apiClient.get(endpoint);
 }

@@ -101,7 +101,8 @@ function App({ location, history, doGetCurrentUser, user }) {
         path={[
           '/notes/:noteUUID',
           '/demo/notes/:noteUUID',
-          '/digests/:digestUUID'
+          '/digests/:digestUUID',
+          '/demo/digests/:digestUUID'
         ]}
         render={() => {
           if (isEditor) {

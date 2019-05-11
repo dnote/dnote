@@ -4,19 +4,21 @@
 @import '../../App/font';
 
 .wrapper {
-  margin: 0 rem(12px);
   width: 100%;
 
-  @include breakpoint(sm) {
-    margin: 0 rem(20px);
-  }
   @include breakpoint(md) {
     width: rem(600px);
   }
   @include breakpoint(lg) {
     width: rem(800px);
   }
+}
 
+.frame {
+  margin: 0 rem(12px);
+  @include breakpoint(sm) {
+    margin: 0 rem(20px);
+  }
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
   background: white;
 }
@@ -56,6 +58,7 @@
 .content {
   word-wrap: break-word;
   padding: rem(12px) rem(16px);
+  word-break: break-all;
 }
 
 .footer {

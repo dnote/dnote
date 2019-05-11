@@ -143,6 +143,13 @@ export default function render(isEditor) {
       component: AuthenticatedDigest
     },
     {
+      path: '/demo/digests/:digestUUID',
+      exact: true,
+      render: () => {
+        return <Digest demo />;
+      }
+    },
+    {
       path: '/subscriptions',
       exact: true,
       component: AuthenticatedSubscription

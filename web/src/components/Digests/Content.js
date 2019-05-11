@@ -17,22 +17,29 @@
  */
 
 import React from 'react';
+import { connect } from 'react-redux';
 
-import LessonHeatmap from './LessonHeatmap';
 import EmailVerifyBanner from '../Common/EmailVerifyBanner';
+import DigestList from './DigestList';
 
-import styles from './DashboardContent.module.scss';
+function Content({ demo, digestsData }) {
+  return (
+    <div>
+      <EmailVerifyBanner demo={demo} />
 
-export default class Content extends React.Component {
-  render() {
-    const { demo, calendar } = this.props;
-
-    return (
-      <div>
-        <EmailVerifyBanner demo={demo} />
-
-        <div className={styles.content} />
-      </div>
-    );
-  }
+      <DigestList
+        isFetching={digestsData.isFetching}
+        items={digestsData.items}
+        demo={demo}
+      />
+    </div>
+  );
 }
+
+function mapStateToProps(state) {
+  return {
+    digestsData: state.digests
+  };
+}
+
+export default connect(mapStateToProps)(Content);

@@ -16,25 +16,25 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { fetchDigestNotes } from '../services/digests';
-import { decryptNote } from '../crypto/notes';
+import * as digestsService from '../services/digests';
+import { decryptDigest } from '../crypto/digest';
 
-export const START_FETCHING_DIGEST_NOTES = 'digest/START_FETCHING_DIGEST_NOTES';
-export const RECEIVE_DIGEST_NOTES = 'digest/RECEIVE_DIGEST_NOTES';
+export const START_FETCHING = 'digest/START_FETCHING';
+export const RECEIVE = 'digest/RECEIVE';
 export const RECEIVE_ERROR = 'digest/RECEIVE_ERROR';
 
-function receiveDigestNotes(notes) {
+function receiveDigest(item) {
   return {
-    type: RECEIVE_DIGEST_NOTES,
+    type: RECEIVE,
     data: {
-      notes
+      item
     }
   };
 }
 
 function startFetchingDigestNotes() {
   return {
-    type: START_FETCHING_DIGEST_NOTES
+    type: START_FETCHING
   };
 }
 
@@ -47,21 +47,16 @@ function receiveError(error) {
   };
 }
 
-export function getDigestNotes(cipherKeyBuf, digestUUID) {
+export function getDigest(cipherKeyBuf, digestUUID, demo) {
   return async dispatch => {
     try {
       dispatch(startFetchingDigestNotes());
 
-      const notes = await fetchDigestNotes(digestUUID);
-
-      const p = notes.map(note => {
-        return decryptNote(note, cipherKeyBuf);
-      });
-
-      const notesDec = await Promise.all(p);
-      dispatch(receiveDigestNotes(notesDec));
+      const digest = await digestsService.fetch(digestUUID, { demo });
+      const digestDec = await decryptDigest(digest, cipherKeyBuf);
+      dispatch(receiveDigest(digestDec));
     } catch (err) {
-      console.log('Error fetching digest notes', err.stack);
+      console.log('Error fetching digest', err.stack);
       dispatch(receiveError(err.message));
     }
   };
