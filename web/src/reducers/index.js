@@ -27,6 +27,7 @@ import ui from './ui';
 import form from './form';
 import editor from './editor';
 import digest from './digest';
+import digests from './digests';
 
 const rootReducer = combineReducers({
   auth,
@@ -37,7 +38,8 @@ const rootReducer = combineReducers({
   ui,
   form,
   editor,
-  digest
+  digest,
+  digests
 });
 
 export default rootReducer;

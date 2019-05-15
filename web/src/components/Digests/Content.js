@@ -16,29 +16,30 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { apiClient } from '../libs/http';
-import { getPath } from '../libs/url';
+import React from 'react';
+import { connect } from 'react-redux';
 
-export function fetch(digestUUID, { demo }) {
-  let endpoint;
-  if (demo) {
-    endpoint = `/demo/digests/${digestUUID}`;
-  } else {
-    endpoint = `/digests/${digestUUID}`;
-  }
+import EmailVerifyBanner from '../Common/EmailVerifyBanner';
+import DigestList from './DigestList';
 
-  return apiClient.get(endpoint);
+function Content({ demo, digestsData }) {
+  return (
+    <div>
+      <EmailVerifyBanner demo={demo} />
+
+      <DigestList
+        isFetching={digestsData.isFetching}
+        items={digestsData.items}
+        demo={demo}
+      />
+    </div>
+  );
 }
 
-export function fetchAll({ page, demo }) {
-  let path;
-  if (demo) {
-    path = `/demo/digests`;
-  } else {
-    path = '/digests';
-  }
-
-  const endpoint = getPath(path, { page });
-
-  return apiClient.get(endpoint);
+function mapStateToProps(state) {
+  return {
+    digestsData: state.digests
+  };
 }
+
+export default connect(mapStateToProps)(Content);

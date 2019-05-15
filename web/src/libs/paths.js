@@ -78,17 +78,31 @@ export function booksPath(options = { demo: false }) {
   return getPathObj({ pathname: basePath });
 }
 
-export function dashboardPath(options = { demo: false }) {
+export function digestsPath(options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
   if (demo) {
-    basePath = '/demo/dashboard';
+    basePath = '/demo/digests';
   } else {
-    basePath = '/dashboard';
+    basePath = '/digests';
   }
 
   return getPathObj({ pathname: basePath });
+}
+
+export function digestPath(digestUUID, options = { demo: false }) {
+  const { demo } = options;
+
+  let basePath;
+  if (demo) {
+    basePath = '/demo/digests';
+  } else {
+    basePath = '/digests';
+  }
+
+  const path = `${basePath}/${digestUUID}`;
+  return getPathObj({ pathname: path });
 }
 
 export function notePath(noteUUID, searchObj, { demo, isEditor }) {
@@ -136,10 +150,10 @@ export function settingsPath(section) {
 export const mainSidebarPaths = [
   '/',
   '/books',
-  '/dashboard',
+  '/digests',
   '/demo',
   '/demo/books',
-  '/demo/dashboard'
+  '/demo/digests'
 ];
 
 // noteSidebarPaths are paths that have the note sidebar
@@ -185,7 +199,7 @@ export function isSubscriptionsPath(pathname) {
 // isDigestPath checks if the given pathname is for the digest path
 export function isDigestPath(pathname) {
   const match = matchPath(pathname, {
-    path: '/digests/:digestUUID',
+    path: ['/digests/:digestUUID', '/demo/digests/:digestUUID'],
     exact: true
   });
 
@@ -221,7 +235,8 @@ export function isHomePath(pathname, demo = false) {
 const demoPaths = [
   '/demo',
   '/demo/books',
-  '/demo/dashboard',
+  '/demo/digests',
+  '/demo/digests/:digestUUID',
   '/demo/notes/:noteUUID'
 ];
 

@@ -1,0 +1,26 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+
+.wrapper {
+  min-height: calc(100vh - #{$note-header-height});
+  background: $dark-light3;
+  text-align: center;
+  padding-bottom: rem(32px);
+}
+
+.item {
+  text-align: left;
+
+  & ~ & {
+    margin-top: rem(32px);
+  }
+}
+
+.list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  padding-top: rem(32px);
+  display: inline-block;
+}

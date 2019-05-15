@@ -119,3 +119,38 @@ func PresentNotes(notes []database.Note) []Note {
 
 	return ret
 }
+
+// Digest is a presented digest
+type Digest struct {
+	UUID      string    `json:"uuid"`
+	Notes     []Note    `json:"notes"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// PresentDigests presetns digests
+func PresentDigests(digests []database.Digest) []Digest {
+	ret := []Digest{}
+
+	for _, digest := range digests {
+		p := Digest{
+			UUID:      digest.UUID,
+			CreatedAt: digest.CreatedAt,
+			UpdatedAt: digest.UpdatedAt,
+		}
+
+		ret = append(ret, p)
+	}
+
+	return ret
+}
+
+// PresentDigest presents a digest
+func PresentDigest(digest database.Digest) Digest {
+	ret := Digest{
+		UUID:  digest.UUID,
+		Notes: PresentNotes(digest.Notes),
+	}
+
+	return ret
+}

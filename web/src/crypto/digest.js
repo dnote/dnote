@@ -16,27 +16,23 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import { decryptNote } from './notes';
 
-import LessonHeatmap from './LessonHeatmap';
-import EmailVerifyBanner from '../Common/EmailVerifyBanner';
+export async function decryptDigest(digest, cipherKeyBuf) {
+  try {
+    const notesPromise = digest.notes.map(note => {
+      return decryptNote(note, cipherKeyBuf);
+    });
 
-import styles from './DashboardContent.module.scss';
+    const notes = await Promise.all(notesPromise);
 
-export default class Content extends React.Component {
-  render() {
-    const { demo, calendar } = this.props;
-
-    return (
-      <div>
-        <EmailVerifyBanner demo={demo} />
-
-        <div className={styles.content}>
-          <h2>Learning Heatmap</h2>
-
-          {calendar.isFetched && <LessonHeatmap timestamps={calendar.items} />}
-        </div>
-      </div>
-    );
+    return {
+      ...digest,
+      notes
+    };
+  } catch (e) {
+    console.log(`Error while decrypting digest ${digest.uuid}`, e);
+    console.log(e.stack);
+    throw e;
   }
 }

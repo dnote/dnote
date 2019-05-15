@@ -16,10 +16,18 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { START_FETCHING, RECEIVE, RECEIVE_ERROR } from '../actions/digest';
+import {
+  START_FETCHING,
+  RECEIVE,
+  RECEIVE_MORE,
+  START_FETCHING_MORE,
+  RECEIVE_ERROR
+} from '../actions/digests';
 
 const initialState = {
-  item: {},
+  items: [],
+  total: 0,
+  page: 0,
   isFetching: false,
   isFetched: false,
   error: null
@@ -34,12 +42,30 @@ export default function(state = initialState, action) {
         isFetched: false
       };
     }
+    case START_FETCHING_MORE: {
+      return {
+        ...state,
+        isFetchingMore: true,
+        hasFetchedMore: false
+      };
+    }
     case RECEIVE: {
       return {
         ...state,
         isFetching: false,
         isFetched: true,
-        item: action.data.item
+        page: 1,
+        total: action.data.total,
+        items: action.data.items
+      };
+    }
+    case RECEIVE_MORE: {
+      return {
+        ...state,
+        page: state.page + 1,
+        isFetchingMore: false,
+        hasFetchedMore: true,
+        items: [...state.items, ...action.data.items]
       };
     }
     case RECEIVE_ERROR: {

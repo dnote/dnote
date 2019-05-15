@@ -1,0 +1,28 @@
+@import '../App/responsive';
+@import '../App/variables';
+@import '../App/rem';
+
+.wrapper {
+  position: relative;
+
+  &:not(:first-child) {
+    border-top: 1px solid $border-color-light;
+  }
+}
+
+.link {
+  padding: rem(12px) rem(20px);
+  display: block;
+  color: inherit;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.active {
+  .link {
+    background: $third-light;
+    color: $black;
+  }
+}

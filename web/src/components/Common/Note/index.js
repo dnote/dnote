@@ -39,25 +39,27 @@ function formatAddedOn(ts) {
 function Note({ note }) {
   return (
     <div className={styles.wrapper}>
-      <div className={styles.header}>
-        <BookIcon
-          fill="#000000"
-          width={20}
-          height={20}
-          className={styles['book-icon']}
-        />
+      <div className={styles.frame}>
+        <div className={styles.header}>
+          <BookIcon
+            fill="#000000"
+            width={20}
+            height={20}
+            className={styles['book-icon']}
+          />
 
-        <div className={styles['book-label']}>{note.book.label}</div>
-      </div>
-      <div
-        className={classnames('markdown-body', styles.content)}
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{
-          __html: parseMarkdown(note.content)
-        }}
-      />
-      <div className={styles.footer}>
-        <div className={styles.ts}>{formatAddedOn(note.added_on)}</div>
+          <div className={styles['book-label']}>{note.book.label}</div>
+        </div>
+        <div
+          className={classnames('markdown-body', styles.content)}
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: parseMarkdown(note.content)
+          }}
+        />
+        <div className={styles.footer}>
+          <div className={styles.ts}>{formatAddedOn(note.added_on)}</div>
+        </div>
       </div>
     </div>
   );

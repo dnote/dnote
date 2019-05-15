@@ -16,36 +16,82 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 
-import { getLessonCalendar } from '../../actions/calendar';
+import { getDigests, getMoreDigests } from '../../actions/digests';
+import { debounce } from '../../libs/perf';
+import { useEventListener } from '../../libs/hooks';
 
 import Header from '../Common/Page/Header';
 import Body from '../Common/Page/Body';
 import SubscriberWall from '../Common/SubscriberWall';
 import Content from './Content';
 
-function Dashboard({ demo, userData, calendarData, doGetLessonCalendar }) {
+function useFetchMoreDigests({ digestsData, pageEl, doGetMoreDigests }) {
+  let scrollLock = false;
+
+  function fetchMore() {
+    scrollLock = true;
+
+    doGetMoreDigests().then(() => {
+      scrollLock = false;
+    });
+  }
+
+  const handleScroll = debounce(() => {
+    if (scrollLock || !pageEl) {
+      return;
+    }
+
+    const scrollY = pageEl.scrollTop;
+    const maxScrollY = pageEl.scrollHeight - pageEl.clientHeight;
+
+    if (scrollY / maxScrollY > 0.85) {
+      if (digestsData.total > digestsData.items.length) {
+        fetchMore();
+      }
+    }
+  }, 100);
+
+  useEventListener(pageEl, 'scroll', handleScroll);
+}
+
+function Digests({
+  demo,
+  userData,
+  digestsData,
+  doGetDigests,
+  doGetMoreDigests
+}) {
+  const [pageEl, setPageEl] = useState(null);
+
   useEffect(() => {
-    doGetLessonCalendar({ demo });
-  }, [demo, doGetLessonCalendar]);
+    doGetDigests({ demo });
+  }, [demo, doGetDigests]);
 
   const user = userData.data;
 
+  useFetchMoreDigests({ digestsData, pageEl, doGetMoreDigests });
+
   return (
-    <div className="dashboard-page page">
+    <div
+      className="page"
+      ref={el => {
+        setPageEl(el);
+      }}
+    >
       <Helmet>
-        <title>Dashboard</title>
+        <title>Digests</title>
       </Helmet>
 
-      <Header heading="Dashboard" />
+      <Header heading="Digests" />
 
       <Body>
         <div className="container">
           {demo || user.cloud ? (
-            <Content user={user} calendar={calendarData} demo={demo} />
+            <Content user={user} demo={demo} />
           ) : (
             <SubscriberWall />
           )}
@@ -58,15 +104,16 @@ function Dashboard({ demo, userData, calendarData, doGetLessonCalendar }) {
 function mapStateToProps(state) {
   return {
     userData: state.auth.user,
-    calendarData: state.calendar
+    digestsData: state.digests
   };
 }
 
 const mapDispatchToProps = {
-  doGetLessonCalendar: getLessonCalendar
+  doGetDigests: getDigests,
+  doGetMoreDigests: getMoreDigests
 };
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Dashboard);
+)(Digests);
