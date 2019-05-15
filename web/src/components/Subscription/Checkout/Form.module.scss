@@ -1,0 +1,69 @@
+@import '../../App/responsive';
+@import '../../App/theme';
+@import '../../App/font';
+@import '../../App/rem';
+
+.wrapper {
+  margin-top: rem(52px);
+}
+
+.number {
+  flex-grow: 1;
+}
+
+.cvc,
+.expiry {
+  width: rem(100px);
+}
+
+.flash {
+  margin-bottom: rem(24px);
+}
+
+.label {
+  @include font-size('medium');
+}
+
+.input {
+  margin-top: rem(8px);
+}
+
+.input-row {
+  &:not(:first-child) {
+    margin-top: rem(20px);
+  }
+}
+
+.card-row {
+  display: flex;
+}
+
+.heading {
+  @include font-size('3x-large');
+  font-weight: 400;
+}
+
+.content-wrapper {
+  @include breakpoint(lg) {
+    padding-right: rem(52px);
+  }
+}
+
+.content {
+  margin-top: rem(32px);
+}
+
+.card-number {
+  // match the height of the stripe element with other inputs
+  padding: rem(10.4px) rem(12px);
+  border: 2px solid $border-color;
+
+  &.card-number-active {
+    border: 2px solid $third;
+  }
+}
+
+.countries-select {
+  width: 100%;
+  display: block;
+}

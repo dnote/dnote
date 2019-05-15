@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import Lock from '../Icons/Lock';
 import Menu from '../Common/Menu';
 import { signout } from '../../services/users';
-import { settingsPath } from '../../libs/paths';
+import { getSettingsPath } from '../../libs/paths';
 
 import styles from './AccountMenu.module.scss';
 
@@ -66,7 +66,7 @@ const AccountMenu = ({ triggerClassName, demo, user }) => {
           className={classnames(styles.link, {
             [styles.disabled]: demo
           })}
-          to={settingsPath('account', { demo })}
+          to={getSettingsPath('account', { demo })}
           onClick={e => {
             if (demo) {
               e.preventDefault();

@@ -52,7 +52,7 @@ function getPathObj({ pathname, searchObj, state }) {
   return ret;
 }
 
-export function homePath(searchObj = {}, options = { demo: false }) {
+export function getHomePath(searchObj = {}, options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
@@ -65,7 +65,7 @@ export function homePath(searchObj = {}, options = { demo: false }) {
   return getPathObj({ pathname: basePath, searchObj });
 }
 
-export function booksPath(options = { demo: false }) {
+export function getBooksPath(options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
@@ -78,7 +78,7 @@ export function booksPath(options = { demo: false }) {
   return getPathObj({ pathname: basePath });
 }
 
-export function digestsPath(options = { demo: false }) {
+export function getDigestsPath(options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
@@ -91,7 +91,7 @@ export function digestsPath(options = { demo: false }) {
   return getPathObj({ pathname: basePath });
 }
 
-export function digestPath(digestUUID, options = { demo: false }) {
+export function getDigestPath(digestUUID, options = { demo: false }) {
   const { demo } = options;
 
   let basePath;
@@ -105,7 +105,7 @@ export function digestPath(digestUUID, options = { demo: false }) {
   return getPathObj({ pathname: path });
 }
 
-export function notePath(noteUUID, searchObj, { demo, isEditor }) {
+export function getNotePath(noteUUID, searchObj, { demo, isEditor }) {
   const basePath = `/notes/${noteUUID}`;
 
   let path;
@@ -122,27 +122,23 @@ export function notePath(noteUUID, searchObj, { demo, isEditor }) {
   });
 }
 
-export function clientsPath(client) {
-  if (client) {
-    return `/apps/${client}`;
-  }
-
-  return '/apps';
-}
-
-export function joinPath(searchObj) {
+export function getJoinPath(searchObj) {
   return getPathObj({ pathname: '/join', searchObj });
 }
 
-export function loginPath(searchObj) {
+export function getLoginPath(searchObj) {
   return getPathObj({ pathname: '/login', searchObj });
 }
 
-export function subscriptionsPath(searchObj) {
+export function getSubscriptionPath(searchObj) {
   return getPathObj({ pathname: '/subscriptions', searchObj });
 }
 
-export function settingsPath(section) {
+export function getSubscriptionCheckoutPath(searchObj) {
+  return getPathObj({ pathname: '/subscriptions/checkout', searchObj });
+}
+
+export function getSettingsPath(section) {
   return `/settings/${section}`;
 }
 
@@ -190,6 +186,16 @@ export function isNotePath(pathname) {
 export function isSubscriptionsPath(pathname) {
   const match = matchPath(pathname, {
     path: '/subscriptions',
+    exact: true
+  });
+
+  return Boolean(match);
+}
+
+// isSubscriptionsCheckoutPath checks if the given pathname is for the subscriptions path
+export function isSubscriptionsCheckoutPath(pathname) {
+  const match = matchPath(pathname, {
+    path: '/subscriptions/checkout',
     exact: true
   });
 
@@ -272,6 +278,9 @@ export function checkBoxedLayout(location, isEditor) {
     return false;
   }
   if (isDigestPath(pathname)) {
+    return false;
+  }
+  if (isSubscriptionsCheckoutPath(pathname)) {
     return false;
   }
 

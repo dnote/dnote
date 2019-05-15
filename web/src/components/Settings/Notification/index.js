@@ -28,7 +28,7 @@ import Flash from '../../Common/Flash';
 import { getEmailPreference } from '../../../actions/auth';
 import FrequencyModal from './FrequencyModal';
 import SettingRow from '../SettingRow';
-import { settingsPath } from '../../../libs/paths';
+import { getSettingsPath } from '../../../libs/paths';
 
 import settingsStyles from '../Settings.module.scss';
 
@@ -60,7 +60,7 @@ function Email({ emailPreferenceData, doGetEmailPreference }) {
       <Header heading="Notification" />
 
       <Body>
-        <div className="container">
+        <div className="container-wide">
           {successMsg && (
             <div className="row">
               <div className="col-12 col-lg-10">
@@ -116,9 +116,9 @@ function Email({ emailPreferenceData, doGetEmailPreference }) {
                   digests.
                 </div>
                 <Link
-                  to={settingsPath('account')}
+                  to={getSettingsPath('account')}
                   className={classnames(
-                    'button button-second',
+                    'button button-normal button-second',
                     settingsStyles['verification-banner-cta']
                   )}
                 >

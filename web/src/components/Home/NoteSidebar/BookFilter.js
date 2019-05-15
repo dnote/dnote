@@ -25,7 +25,7 @@ import SearchInput from '../../Common/SearchInput';
 import Popover from '../../Common/Popover';
 import CaretIcon from '../../Icons/Caret';
 import CheckIcon from '../../Icons/Check';
-import { homePath, notePath, isNotePath } from '../../../libs/paths';
+import { getHomePath, getNotePath, isNotePath } from '../../../libs/paths';
 import { parseSearchString } from '../../../libs/url';
 import { getFacetsFromSearchStr } from '../../../libs/facets';
 
@@ -77,12 +77,12 @@ function getOptionDestination({ demo, location, match, option }) {
       book: option.value
     };
 
-    ret = notePath(params.noteUUID, newSearchObj, {
+    ret = getNotePath(params.noteUUID, newSearchObj, {
       demo,
       isEditor: true
     });
   } else {
-    ret = homePath({ book: option.value }, { demo });
+    ret = getHomePath({ book: option.value }, { demo });
   }
 
   return ret;

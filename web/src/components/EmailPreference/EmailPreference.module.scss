@@ -1,5 +1,5 @@
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 @import '../App/font';
 
@@ -7,7 +7,7 @@
   text-align: center;
   height: 100vh;
   padding: rem(52px) 0;
-  background: $dark-bg;
+  background: $light-gray;
 }
 
 .heading {
@@ -33,7 +33,7 @@
   margin-top: rem(20px);
 
   a {
-    color: $dark-light5;
+    color: $gray;
   }
 }
 

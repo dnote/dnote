@@ -1,5 +1,5 @@
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 
 .wrapper {
@@ -22,7 +22,7 @@
 
 .active {
   .link {
-    background: $third-light;
+    background: $light-blue;
     color: $black;
   }
 }

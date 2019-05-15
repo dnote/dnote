@@ -118,7 +118,7 @@ function Books({ demo, doGetBooks, userData, booksData }) {
       />
 
       <Body>
-        <div className="container">
+        <div className="container-wide">
           <div className="row">
             <div className="col-12">
               <ContentWrapper

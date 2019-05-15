@@ -39,7 +39,7 @@ import { getCipherKey } from '../../../crypto';
 import BookFilter from './BookFilter';
 import { getFacetsFromSearchStr } from '../../../libs/facets';
 import { usePrevious } from '../../../libs/hooks';
-import { notePath, isHomePath } from '../../../libs/paths';
+import { getNotePath, isHomePath } from '../../../libs/paths';
 import SidebarToggle from '../../Common/SidebarToggle';
 import SubscriberWall from '../../Common/SubscriberWall';
 import { isEmptyObj } from '../../../libs/obj';
@@ -253,7 +253,7 @@ function useSelectFirstNote({ notesData, location, history, demo, user }) {
     const firstNote = firstItem.data;
 
     const searchObj = parseSearchString(location.search);
-    const dest = notePath(firstNote.uuid, searchObj, { demo, isEditor: true });
+    const dest = getNotePath(firstNote.uuid, searchObj, { demo, isEditor: true });
 
     history.replace(dest);
   });

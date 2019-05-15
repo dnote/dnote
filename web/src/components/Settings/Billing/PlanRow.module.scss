@@ -1,6 +1,6 @@
 @import '../../App/rem';
 @import '../../App/font';
-@import '../../App/variables';
+@import '../../App/theme';
 
 .wrapper {
   padding-top: rem(48px);
@@ -25,7 +25,7 @@
 
 .desc {
   @include font-size('small');
-  color: $dark-light5;
+  color: $gray;
   max-width: rem(400px);
 }
 

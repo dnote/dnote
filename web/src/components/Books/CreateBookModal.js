@@ -24,7 +24,7 @@ import { withRouter } from 'react-router-dom';
 import Modal, { Header } from '../Common/Modal';
 import * as booksOperation from '../../operations/books';
 import { addBook } from '../../actions/books';
-import { homePath } from '../../libs/paths';
+import { getHomePath } from '../../libs/paths';
 import Button from '../Common/Button';
 import Flash from '../Common/Flash';
 
@@ -114,7 +114,7 @@ function CreateBookModal({
               doAddBook(book);
               setInProgress(false);
 
-              const dest = homePath({ book: book.uuid });
+              const dest = getHomePath({ book: book.uuid });
               history.push(dest);
             })
             .catch(err => {

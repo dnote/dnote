@@ -1,7 +1,7 @@
-@import '../App/variables';
+@import '../App/theme';
 
 .wrapper {
-  background: $dark-bg;
+  background: $light-gray;
   min-height: 100vh;
   padding: 50px 15px;
   box-sizing: border-box;

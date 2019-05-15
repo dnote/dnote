@@ -1,6 +1,6 @@
 @import '../App/rem';
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 
 .section {
   margin-top: rem(24px);
@@ -14,7 +14,7 @@
   @include font-size('regular');
   font-weight: 400;
   padding-bottom: rem(4px);
-  background: $dark-light;
+  background: $light;
   padding: rem(4px) rem(12px);
 }
 .section-content {

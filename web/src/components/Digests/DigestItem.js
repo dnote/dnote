@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Link } from 'react-router-dom';
 
 import styles from './DigestItem.module.scss';
-import { digestPath } from '../../libs/paths';
+import { getDigestPath } from '../../libs/paths';
 
 function DigestItem({ digest, demo }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -23,7 +23,7 @@ function DigestItem({ digest, demo }) {
         setIsHovered(false);
       }}
     >
-      <Link className={styles.link} to={digestPath(digest.uuid, { demo })}>
+      <Link className={styles.link} to={getDigestPath(digest.uuid, { demo })}>
         {moment(digest.created_at).format('YYYY MMM Do')}
       </Link>
     </li>

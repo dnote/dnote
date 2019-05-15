@@ -349,15 +349,25 @@ func GetCookieByName(cookies []*http.Cookie, name string) *http.Cookie {
 	return ret
 }
 
-// CreateMockStripeBackend returns a mock stripe backend implementation that uses
+// CreateMockStripeBackend returns a mock stripe backend that uses
 // the given test server
-func CreateMockStripeBackend(ts *httptest.Server) *stripe.BackendImplementation {
-	c := ts.Client()
-	bi := stripe.BackendImplementation{
-		Type:       stripe.APIBackend,
-		URL:        ts.URL + "/v1",
-		HTTPClient: c,
-	}
+func CreateMockStripeBackend(ts *httptest.Server) stripe.Backend {
+	stripeMockBackend := stripe.GetBackendWithConfig(
+		stripe.APIBackend,
+		&stripe.BackendConfig{
+			URL:        ts.URL + "/v1",
+			HTTPClient: ts.Client(),
+		},
+	)
 
-	return &bi
+	return stripeMockBackend
+}
+
+// MustRespondJSON responds with the JSON-encoding of the given interface. If the encoding
+// fails, the test fails. It is used by test servers.
+func MustRespondJSON(t *testing.T, w http.ResponseWriter, i interface{}, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(i); err != nil {
+		t.Fatal(message)
+	}
 }

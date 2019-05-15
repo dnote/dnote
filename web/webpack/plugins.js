@@ -20,7 +20,11 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 
-module.exports = ({ production = false, standalone = false } = {}) => {
+module.exports = ({
+  production = false,
+  test = false,
+  standalone = false
+} = {}) => {
   let domain;
   if (production) {
     domain = 'dnote.io';
@@ -42,12 +46,20 @@ module.exports = ({ production = false, standalone = false } = {}) => {
     baseURL = `http://${domain}:3000${basename}`;
   }
 
+  let stripePublicKey;
+  if (test) {
+    stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
+  } else {
+    stripePublicKey = 'pk_test_5926f65DQoIilZeNOiKydfoN';
+  }
+
   const compileTimeConstantForMinification = {
     __PRODUCTION__: production,
     __DEVELOPMENT__: !production,
     __DOMAIN__: JSON.stringify(domain),
     __BASE_URL__: JSON.stringify(baseURL),
-    __BASE_NAME__: JSON.stringify(basename)
+    __BASE_NAME__: JSON.stringify(basename),
+    __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey)
   };
 
   if (!production) {

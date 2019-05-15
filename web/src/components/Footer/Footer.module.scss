@@ -1,11 +1,12 @@
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
+@import '../App/variables';
 
 .footer {
   @include font-size('small');
   border-top: 1px solid $border-color;
-  background: $dark-light;
+  background: $light;
   z-index: 4;
   height: $footer-height;
   display: flex;

@@ -24,7 +24,7 @@ import { connect } from 'react-redux';
 
 import SafeLink from '../Common/Link/SafeLink';
 import { closeNoteSidebar } from '../../actions/ui';
-import { notePath } from '../../libs/paths';
+import { getNotePath } from '../../libs/paths';
 import { nanosecToSec } from '../../helpers/time';
 import { excerpt } from '../../libs/string';
 import { getWindowWidth, noteSidebarThreshold } from '../../libs/ui';
@@ -104,7 +104,7 @@ function NoteItem({
     >
       <SafeLink
         className={styles.link}
-        to={notePath(note.uuid, queryObj, { demo, isEditor: true })}
+        to={getNotePath(note.uuid, queryObj, { demo, isEditor: true })}
         draggable="false"
         onClick={handleNoteItemClick}
       >

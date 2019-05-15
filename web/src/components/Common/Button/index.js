@@ -29,6 +29,7 @@ function Button({
   id,
   type,
   kind,
+  size,
   children,
   className,
   isBusy,
@@ -40,10 +41,16 @@ function Button({
     <button
       id={id}
       type={type}
-      className={classnames(className, 'button', `button-${kind}`, {
-        [styles.busy]: isBusy,
-        'button-stretch': stretch
-      })}
+      className={classnames(
+        className,
+        'button',
+        `button-${kind}`,
+        `button-${size}`,
+        {
+          [styles.busy]: isBusy,
+          'button-stretch': stretch
+        }
+      )}
       disabled={isBusy || disabled}
       onClick={onClick}
     >
@@ -60,5 +67,9 @@ function Button({
     </button>
   );
 }
+
+Button.defaultProps = {
+  size: 'normal'
+};
 
 export default Button;

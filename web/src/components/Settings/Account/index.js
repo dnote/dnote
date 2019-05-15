@@ -106,7 +106,7 @@ function Account({ userState }) {
 
       <Header heading="Account" />
       <Body>
-        <div className="container">
+        <div className="container-wide">
           <div className="row">
             <div className="col-12 col-md-12 col-lg-10">
               {successMsg && (

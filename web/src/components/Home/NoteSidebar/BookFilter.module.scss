@@ -1,4 +1,4 @@
-@import '../../App/variables';
+@import '../../App/theme';
 @import '../../App/font';
 @import '../../App/rem';
 @import '../../App/responsive';
@@ -14,7 +14,7 @@
 
 .trigger {
   padding: 0;
-  color: $dark-light5;
+  color: $gray;
 }
 
 .button-content {

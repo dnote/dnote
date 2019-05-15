@@ -128,7 +128,7 @@ function Content({
   doGetSubscription
 }) {
   return (
-    <div className="container">
+    <div className="container-wide">
       <div className="row">
         <div className="col-12 col-md-12 col-lg-10">
           {successMsg && (
@@ -220,7 +220,7 @@ function Billing({
 
       <Body>
         {subscriptionData.errorMessage && (
-          <div className="container">
+          <div className="container-wide">
             <div className="row">
               <div className="col-12 col-md-12 col-lg-10">
                 <Flash type="danger" wrapperClassName={settingsStyles.flash}>
@@ -232,7 +232,7 @@ function Billing({
           </div>
         )}
         {sourceData.errorMessage && (
-          <div className="container">
+          <div className="container-wide">
             <div className="row">
               <div className="col-12 col-md-12 col-lg-10">
                 <Flash type="danger" wrapperClassName={settingsStyles.flash}>

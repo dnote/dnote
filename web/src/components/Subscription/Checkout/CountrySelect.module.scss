@@ -1,0 +1,33 @@
+@import '../../App/responsive';
+@import '../../App/theme';
+@import '../../App/font';
+@import '../../App/rem';
+
+.wrapper {
+  position: relative;
+}
+
+.select {
+  // match the height of the stripe element with other inputs
+  padding: rem(7px) rem(12px);
+
+  border: 2px solid $border-color;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  appearance: none;
+  outline: none;
+  background: transparent;
+
+  &:focus {
+    border: 2px solid $third;
+  }
+}
+
+.caret {
+  position: absolute;
+  right: rem(16px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: -1;
+}

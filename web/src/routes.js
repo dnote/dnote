@@ -21,7 +21,7 @@ import { renderRoutes } from 'react-router-config';
 
 import userOnly from './hocs/userOnly';
 import guestOnly from './hocs/guestOnly';
-import { joinPath, isNotePath, isDemoPath } from './libs/paths';
+import { getJoinPath, isNotePath, isDemoPath } from './libs/paths';
 
 // Components
 import Home from './components/Home';
@@ -36,10 +36,13 @@ import EmailPreference from './components/EmailPreference';
 import Note from './components/Note';
 import Digest from './components/Digest';
 import Subscription from './components/Subscription';
+import Checkout from './components/Subscription/Checkout';
 
 import LegacyLogin from './components/LegacyLogin';
 import LegacyJoin from './components/LegacyJoin';
 import LegacyEncrypt from './components/LegacyEncrypt';
+
+const joinPath = getJoinPath().pathname;
 
 const AuthenticatedHome = userOnly(Home);
 const AuthenticatedBooks = userOnly(Books);
@@ -47,7 +50,8 @@ const AuthenticatedSettings = userOnly(Settings);
 const AuthenticatedDigest = userOnly(Digest);
 const AuthenticatedDigests = userOnly(Digests);
 const AuthenticatedNote = userOnly(Note);
-const AuthenticatedSubscription = userOnly(Subscription, joinPath().pathname);
+const AuthenticatedSubscription = userOnly(Subscription, joinPath);
+const AuthenticatedSubscriptionCheckout = userOnly(Checkout, joinPath);
 const GuestLogin = guestOnly(Login);
 const GuestJoin = guestOnly(Join);
 
@@ -153,6 +157,11 @@ export default function render(isEditor) {
       path: '/subscriptions',
       exact: true,
       component: AuthenticatedSubscription
+    },
+    {
+      path: '/subscriptions/checkout',
+      exact: true,
+      component: AuthenticatedSubscriptionCheckout
     },
     {
       path: '/legacy/login',

@@ -21,8 +21,10 @@ package handlers
 import (
 	crand "crypto/rand"
 	"encoding/base64"
+	"net/http"
 	"strings"
 
+	"github.com/dnote/dnote/server/api/logger"
 	"github.com/dnote/dnote/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -103,4 +105,12 @@ func getClientType(origin string) string {
 	}
 
 	return "web"
+}
+
+// handleError logs the error and responds with the given status code with a generic status text
+func handleError(w http.ResponseWriter, logMessage string, err error, statusCode int) {
+	logger.Err("[%d] %s: %v\n", statusCode, logMessage, err)
+
+	statusText := http.StatusText(statusCode)
+	http.Error(w, statusText, statusCode)
 }

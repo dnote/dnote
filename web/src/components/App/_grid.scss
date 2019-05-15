@@ -15,6 +15,58 @@ html {
   box-sizing: inherit;
 }
 
+.container-wide {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+@media (min-width: 576px) {
+  .container-wide {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-wide {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container-wide {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container-wide {
+    max-width: 1040px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .container-wide {
+    max-width: 1180px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .container-wide {
+    max-width: 1660px;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 .container {
   width: 100%;
   padding-right: 15px;
@@ -43,28 +95,8 @@ html {
 
 @media (min-width: 1200px) {
   .container {
-    max-width: 1040px;
+    max-width: 1140px;
   }
-}
-
-@media (min-width: 1440px) {
-  .container {
-    max-width: 1180px;
-  }
-}
-
-@media (min-width: 1800px) {
-  .container {
-    max-width: 1660px;
-  }
-}
-
-.container-fluid {
-  width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
-  margin-right: auto;
-  margin-left: auto;
 }
 
 .row {

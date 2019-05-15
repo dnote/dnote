@@ -315,7 +315,7 @@ func applyMiddleware(h http.Handler, rateLimit bool) http.Handler {
 // App is an application configuration
 type App struct {
 	Clock            clock.Clock
-	StripeAPIBackend *stripe.BackendImplementation
+	StripeAPIBackend stripe.Backend
 }
 
 // init sets up the application based on the configuration

@@ -16,47 +16,35 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
-import Spinner from '../Icons/Spinner';
-import Plan from './Plan';
-import Button from '../Common/Button';
-import ServerIcon from '../Icons/Server';
-import GlobeIcon from '../Icons/Globe';
-import BoxIcon from '../Icons/Box';
-import Flash from '../Common/Flash';
-
-import * as paymentService from '../../services/payment';
-import { getMe } from '../../services/users';
-import { homePath } from '../../libs/paths';
-import { updateMessage } from '../../actions/ui';
-import { receiveUser } from '../../actions/auth';
-import { useScript } from '../../libs/hooks';
+import ProPlan from './Plan/Pro';
+import CorePlan from './Plan/Core';
+import FeatureList from './FeatureList';
+import { getSubscriptionCheckoutPath } from '../../libs/paths';
 
 import styles from './Subscription.module.scss';
 
-const selfHostedPerks = [
+const proFeatures = [
   {
-    id: 'own-machine',
-    icon: <BoxIcon width="16" height="16" fill="#6e6e6e" />,
-    value: 'Host on your own machine'
-  }
-];
-
-const proPerks = [
-  {
-    id: 'hosted',
-    icon: <ServerIcon width="16" height="16" fill="#245fc5" />,
-    value: 'Fully hosted and managed'
+    id: 'core',
+    label: <div className={styles['feature-bold']}>Everything in core</div>
   },
   {
-    id: 'support',
-    icon: <GlobeIcon width="16" height="16" fill="#245fc5" />,
-    value: 'Support the Dnote community and development'
+    id: 'host',
+    label: <div>Hosting</div>
+  },
+  {
+    id: 'auto',
+    label: <div>Automatic update and migration</div>
+  },
+  {
+    id: 'email-support',
+    label: <div>Email support</div>
   }
 ];
 
@@ -98,123 +86,91 @@ const baseFeatures = [
     label: <div>Forum support</div>
   }
 ];
-
-const proFeatures = [
-  {
-    id: 'core',
-    label: <div className={styles['feature-bold']}>Everything in core</div>
-  },
-  {
-    id: 'host',
-    label: <div>Hosting</div>
-  },
-  {
-    id: 'auto',
-    label: <div>Automatic update and migration</div>
-  },
-  {
-    id: 'email-support',
-    label: <div>Email support</div>
-  }
-];
-
-function Subscription({ userData, history, doUpdateMessage, doReceiveUser }) {
-  const [openingCheckout, setOpeningCheckout] = useState(false);
-  const [transacting, setTransacting] = useState(false);
-  const [stripeLoaded, stripeLoadError] = useScript(
-    'https://checkout.stripe.com/checkout.js'
-  );
-
-  function hideOverlay() {
-    document.body.classList.remove('no-scroll');
-    setTransacting(false);
-  }
-
+function Subscription({ userData }) {
   const user = userData.data;
 
-  function handlePayment() {
-    if (user.cloud) {
-      return;
-    }
-
-    let key;
-    if (__PRODUCTION__) {
-      key = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
-    } else {
-      key = 'pk_test_5926f65DQoIilZeNOiKydfoN';
-    }
-
-    setOpeningCheckout(true);
-
-    const handler = StripeCheckout.configure({
-      key,
-      image: 'https://s3.amazonaws.com/dnote-asset/images/logo-circle.png',
-      locale: 'auto',
-      token: async token => {
-        try {
-          await paymentService.createSubscription({ token });
-        } catch (err) {
-          hideOverlay();
-          console.log('Payment error', err);
-          alert('error happened with payment', err);
-
-          return;
-        }
-
-        try {
-          const u = await getMe();
-          doReceiveUser(u);
-          doUpdateMessage('Welcome to Dnote Cloud!', 'info');
-          history.push(homePath({}, { demo: false }));
-        } catch (err) {
-          // gracefully handle error by simply redirecting to home
-          console.log('error getting user', err.message);
-          window.location = '/';
-        }
-      },
-      opened: () => {
-        document.body.classList.add('no-scroll');
-
-        setTransacting(true);
-        setOpeningCheckout(true);
-      },
-      closed: () => {
-        hideOverlay();
-        setOpeningCheckout(false);
-      }
-    });
-
-    handler.open({
-      name: 'Dnote Pro',
-      description: 'An encrypted home for your knowledge',
-      amount: 300,
-      currency: 'usd',
-      panelLabel: '{{amount}} monthly'
-    });
-  }
+  //  function handlePayment() {
+  //    if (user.cloud) {
+  //      return;
+  //    }
+  //
+  //    let key;
+  //    if (__PRODUCTION__) {
+  //      key = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
+  //    } else {
+  //      key = 'pk_test_5926f65DQoIilZeNOiKydfoN';
+  //    }
+  //
+  //    const handler = StripeCheckout.configure({
+  //      key,
+  //      image: 'https://s3.amazonaws.com/dnote-asset/images/logo-circle.png',
+  //      locale: 'auto',
+  //      token: async token => {
+  //        try {
+  //          await paymentService.createSubscription({ token });
+  //        } catch (err) {
+  //          hideOverlay();
+  //          console.log('Payment error', err);
+  //          alert('error happened with payment', err);
+  //
+  //          return;
+  //        }
+  //
+  //        try {
+  //          const u = await getMe();
+  //          doReceiveUser(u);
+  //          doUpdateMessage('Welcome to Dnote Cloud!', 'info');
+  //          history.push(getHomePath({}, { demo: false }));
+  //        } catch (err) {
+  //          // gracefully handle error by simply redirecting to home
+  //          console.log('error getting user', err.message);
+  //          window.location = '/';
+  //        }
+  //      },
+  //      opened: () => {
+  //        document.body.classList.add('no-scroll');
+  //
+  //        setTransacting(true);
+  //        setOpeningCheckout(true);
+  //      },
+  //      closed: () => {
+  //        hideOverlay();
+  //        setOpeningCheckout(false);
+  //      }
+  //    });
+  //
+  //    handler.open({
+  //      name: 'Dnote Pro',
+  //      description: 'An encrypted home for your knowledge',
+  //      amount: 300,
+  //      currency: 'usd',
+  //      panelLabel: '{{amount}} monthly'
+  //    });
+  //  }
 
   function renderPlanCta() {
     if (user && user.cloud) {
       return (
-        <Link to="/" className="button button-third-outline button-stretch">
+        <Link
+          to="/"
+          className="button button-normal button-third-outline button-stretch"
+        >
           Go to your notes
         </Link>
       );
     }
 
     return (
-      <Button
+      <Link
         id="T-unlock-pro-btn"
         type="button"
-        onClick={handlePayment}
-        className={classnames('button button-third button-stretch', {
-          busy: openingCheckout
-        })}
-        disabled={openingCheckout}
-        isBusy={openingCheckout || !stripeLoaded}
+        className={classnames(
+          'button button-normal button-third button-stretch'
+        )}
+        to={getSubscriptionCheckoutPath()}
       >
         Unlock
-      </Button>
+      </Link>
     );
   }
 
@@ -228,16 +184,6 @@ function Subscription({ userData, history, doUpdateMessage, doReceiveUser }) {
         />
       </Helmet>
 
-      {transacting && (
-        <div className={styles['transaction-overlay']}>
-          <Spinner width={50} height={50} />
-        </div>
-      )}
-
-      {stripeLoadError && (
-        <Flash type="danger">Stripe failed to load {stripeLoadError}</Flash>
-      )}
-
       <div className={styles.hero}>
         <div className="container">
           <h1 className={styles.heading}>
@@ -248,32 +194,25 @@ function Subscription({ userData, history, doUpdateMessage, doReceiveUser }) {
 
       <div className="container">
         <div className={styles['plans-wrapper']}>
-          <Plan
-            name="Core"
-            price="Free"
-            features={baseFeatures}
-            perks={selfHostedPerks}
+          <CorePlan
+            wrapperClassName={styles['core-plan']}
             ctaContent={
               <a
                 href="https://github.com/dnote/dnote"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="button button-second-outline button-stretch"
+                className="button button-normal button-second-outline button-stretch"
               >
                 See source code
               </a>
             }
-            wrapperClassName={styles['core-plan']}
+            bottomContent={<FeatureList features={baseFeatures} />}
           />
 
-          <Plan
-            name="Pro"
-            price="$3"
-            interval="month"
-            features={proFeatures}
-            perks={proPerks}
-            ctaContent={renderPlanCta()}
+          <ProPlan
             wrapperClassName={styles['pro-plan']}
+            ctaContent={renderPlanCta()}
+            bottomContent={<FeatureList features={proFeatures} />}
           />
         </div>
       </div>
@@ -287,12 +226,4 @@ function mapStateToProps(state) {
   };
 }
 
-const mapDispatchToProps = {
-  doReceiveUser: receiveUser,
-  doUpdateMessage: updateMessage
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Subscription);
+export default connect(mapStateToProps)(Subscription);

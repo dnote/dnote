@@ -64,7 +64,7 @@ done
 
  serverPath="$GOPATH"/src/github.com/dnote/dnote/server
  webPath="$GOPATH"/src/github.com/dnote/dnote/web
- agplFiles=$(find "$serverPath" "$webPath" -type f \( -name "*.go" -o -name "*.js" \) ! -path "**/vendor/*" ! -path "**/node_modules/*")
+ agplFiles=$(find "$serverPath" "$webPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.scss" \) ! -path "**/vendor/*" ! -path "**/node_modules/*")
  
  for file in $agplFiles; do
    remove_notice "$file"

@@ -23,6 +23,7 @@ const resolve = require('./resolve');
 
 module.exports = env => {
   const isStandalone = env.standalone === 'true';
+  const isTest = env.isTest === 'true';
 
   return {
     mode: 'development',
@@ -39,6 +40,10 @@ module.exports = env => {
     },
     module: { rules: rules({ production: false }) },
     resolve,
-    plugins: plugins({ production: false, standalone: isStandalone })
+    plugins: plugins({
+      production: false,
+      test: isTest,
+      standalone: isStandalone
+    })
   };
 };

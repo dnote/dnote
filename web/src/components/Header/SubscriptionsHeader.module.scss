@@ -1,5 +1,5 @@
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 @import '../App/font';
 
@@ -36,5 +36,5 @@
 
 .email {
   @include font-size('regular');
-  color: $dark-light5;
+  color: $gray;
 }

@@ -20,21 +20,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import Logo from '../Icons/Logo';
-import { homePath } from '../../libs/paths';
+import { getHomePath } from '../../libs/paths';
 import styles from './NoteHeader.module.scss';
 
 function NoteHeader({ demo }) {
   return (
     <header className={styles.wrapper}>
       <div className={styles.content}>
-        <Link to={homePath({}, { demo })} className={styles.brand}>
+        <Link to={getHomePath({}, { demo })} className={styles.brand}>
           <Logo width={32} height={32} fill="#909090" className="logo" />
           <span className={styles['brand-name']}>Dnote</span>
         </Link>
 
         <Link
-          to={homePath({}, { demo })}
-          className="button button-slim button-first-outline"
+          to={getHomePath({}, { demo })}
+          className="button button-normal button-slim button-first-outline"
         >
           Go to Dnote
         </Link>

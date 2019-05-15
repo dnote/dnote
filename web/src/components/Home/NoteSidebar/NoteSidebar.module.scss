@@ -1,7 +1,8 @@
-@import '../../App/variables';
+@import '../../App/theme';
 @import '../../App/responsive';
 @import '../../App/rem';
 @import '../../App/font';
+@import '../../App/variables';
 
 .sidebar {
   min-width: 100%;
@@ -18,7 +19,7 @@
   transform: translateX(0);
   height: 100%;
 
-  @include breakpoint(lg) {
+  @include overSidebarThreshold {
     position: relative;
     transform: initial;
     min-width: $note-sidebar-width;
@@ -86,11 +87,11 @@
   margin-left: rem(12px);
   margin-bottom: 0;
   @include font-size('large');
-  color: $dark-light5;
+  color: $gray;
   text-transform: uppercase;
   font-weight: 400;
 
-  @include breakpoint(lg) {
+  @include overSidebarThreshold {
     margin-top: 0;
     margin-left: 0;
   }

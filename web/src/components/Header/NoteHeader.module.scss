@@ -1,10 +1,11 @@
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 @import '../App/font';
+@import '../App/variables';
 
 .wrapper {
-  background: $dark-light3;
+  background: $light-gray;
   padding: rem(12px) rem(20px);
   height: $note-header-height;
   z-index: 2;

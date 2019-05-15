@@ -16,8 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export const noteSidebarThreshold = 1280;
+import { noteSidebarThreshold } from '../components/App/_variables.scss';
+
 export const sidebarOverlayThreshold = 1024;
+export { noteSidebarThreshold };
 
 export function getWindowWidth() {
   return window.innerWidth || document.body.clientWidth;

@@ -1,6 +1,6 @@
 @import '../App/rem';
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/font';
 
 .new-book-button {
@@ -14,9 +14,9 @@
 .count {
   display: none;
 
-  @include breakpoint(lg) {
+  @include overSidebarThreshold {
     @include font-size('small');
-    color: $dark;
+    color: $black;
     display: inline-block;
 
     &.hidden {

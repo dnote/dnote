@@ -27,7 +27,7 @@ import styles from './Header.module.scss';
 function Header({ doToggleSidebar, heading, leftContent, rightContent }) {
   return (
     <div className={styles.header}>
-      <div className="container">
+      <div className="container-wide">
         <div className={styles.content}>
           <div className={styles.left}>
             <SidebarToggle onClick={doToggleSidebar} />
