@@ -51,7 +51,7 @@ const AccountMenu = ({ triggerClassName, demo, user }) => {
           onClick={() => {
             setIsOpen(false);
           }}
-          innerRef={optRefs[0]}
+          ref={optRefs[0]}
           tabIndex="-1"
         >
           Home
