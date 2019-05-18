@@ -33,8 +33,8 @@ import (
 var targetBookName string
 
 var example = `
-  * Delete a note by its index from a book
-  dnote delete js 2
+  * Delete a note by its id
+  dnote delete 2
 
   * Delete a book
   dnote delete -b js`
@@ -65,14 +65,18 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return nil
 		}
 
-		if len(args) < 2 {
+		var noteRowID string
+		if len(args) == 2 {
+			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+
+			noteRowID = args[1]
+		} else if len(args) == 1 {
+			noteRowID = args[0]
+		} else {
 			return errors.New("Missing argument")
 		}
 
-		targetBook := args[0]
-		noteRowID := args[1]
-
-		if err := removeNote(ctx, noteRowID, targetBook); err != nil {
+		if err := removeNote(ctx, noteRowID); err != nil {
 			return errors.Wrap(err, "removing the note")
 		}
 
@@ -80,24 +84,23 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func removeNote(ctx infra.DnoteCtx, noteRowID, bookLabel string) error {
+func removeNote(ctx infra.DnoteCtx, noteRowID string) error {
 	db := ctx.DB
 
-	bookUUID, err := core.GetBookUUID(ctx, bookLabel)
-	if err != nil {
-		return errors.Wrap(err, "finding book uuid")
-	}
-
-	var noteUUID, noteContent string
-	err = db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND book_uuid = ?", noteRowID, bookUUID).Scan(&noteUUID, &noteContent)
+	var noteUUID, noteContent, bookLabel string
+	err := db.QueryRow(`SELECT notes.uuid, notes.body, books.label
+		FROM notes
+		INNER JOIN books ON books.uuid = notes.book_uuid
+		WHERE notes.rowid = ?`, noteRowID).Scan(&noteUUID, &noteContent, &bookLabel)
 	if err == sql.ErrNoRows {
-		return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
+		return errors.Errorf("note %s not found", noteRowID)
 	} else if err != nil {
 		return errors.Wrap(err, "querying the book")
 	}
 
-	// todo: multiline
-	log.Printf("body: \"%s\"\n", noteContent)
+	fmt.Printf("\n------------------------content------------------------\n")
+	fmt.Printf("%s", noteContent)
+	fmt.Printf("\n-------------------------------------------------------\n")
 
 	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
@@ -113,7 +116,7 @@ func removeNote(ctx infra.DnoteCtx, noteRowID, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ? AND book_uuid = ?", true, true, "", noteUUID, bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ?", true, true, "", noteUUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
 	tx.Commit()

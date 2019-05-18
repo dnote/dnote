@@ -38,7 +38,7 @@ dnote view
 dnote view golang
 
 # See details of a note
-dnote view golang 12
+dnote view 12
 ```
 
 ## dnote edit
@@ -48,11 +48,11 @@ _alias: e_
 Edit a note.
 
 ```bash
-# Launch a text editor to edit a note with the given index.
-dnote edit linux 1
+# Launch a text editor to edit a note with the given id.
+dnote edit 12
 
-# Edit a note with the given index in the specified book with a content.
-dnote edit linux 1 -c "New Content"
+# Edit a note with the given id in the specified book with a content.
+dnote edit 12 -c "New Content"
 ```
 
 ## dnote remove
@@ -62,8 +62,8 @@ _alias: d_
 Remove either a note or a book.
 
 ```bash
-# Remove the note with `index` in the specified book.
-dnote remove JS 1
+# Remove the note with an id in the specified book.
+dnote remove 1
 
 # Remove the book with the `book name`.
 dnote remove -b JS
