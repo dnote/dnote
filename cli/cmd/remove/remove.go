@@ -19,7 +19,6 @@
 package remove
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/dnote/dnote/cli/core"
@@ -87,20 +86,12 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 func removeNote(ctx infra.DnoteCtx, noteRowID string) error {
 	db := ctx.DB
 
-	var noteUUID, noteContent, bookLabel string
-	err := db.QueryRow(`SELECT notes.uuid, notes.body, books.label
-		FROM notes
-		INNER JOIN books ON books.uuid = notes.book_uuid
-		WHERE notes.rowid = ?`, noteRowID).Scan(&noteUUID, &noteContent, &bookLabel)
-	if err == sql.ErrNoRows {
-		return errors.Errorf("note %s not found", noteRowID)
-	} else if err != nil {
-		return errors.Wrap(err, "querying the book")
+	noteInfo, err := core.GetNoteInfo(ctx, noteRowID)
+	if err != nil {
+		return err
 	}
 
-	fmt.Printf("\n------------------------content------------------------\n")
-	fmt.Printf("%s", noteContent)
-	fmt.Printf("\n-------------------------------------------------------\n")
+	core.PrintNoteInfo(noteInfo)
 
 	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
@@ -116,12 +107,12 @@ func removeNote(ctx infra.DnoteCtx, noteRowID string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ?", true, true, "", noteUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ?", true, true, "", noteInfo.UUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
 	tx.Commit()
 
-	log.Successf("removed from %s\n", bookLabel)
+	log.Successf("removed from %s\n", noteInfo.BookLabel)
 
 	return nil
 }

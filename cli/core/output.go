@@ -16,15 +16,26 @@
  * along with Dnote CLI.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package log
+package core
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/dnote/dnote/cli/log"
 )
 
-// PrintContent prints the note content with an appropriate format.
-func PrintContent(content string) {
-	fmt.Printf("\n-----------------------content-----------------------\n")
-	fmt.Printf("%s", content)
-	fmt.Printf("\n-----------------------------------------------------\n")
+// PrintNoteInfo prints a note information
+func PrintNoteInfo(info NoteInfo) {
+	log.Infof("book name: %s\n", info.BookLabel)
+	log.Infof("created at: %s\n", time.Unix(0, info.AddedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+	if info.EditedOn != 0 {
+		log.Infof("updated at: %s\n", time.Unix(0, info.EditedOn).Format("Jan 2, 2006 3:04pm (MST)"))
+	}
+	log.Infof("note id: %d\n", info.RowID)
+	log.Infof("note uuid: %s\n", info.UUID)
+
+	fmt.Printf("\n------------------------content------------------------\n")
+	fmt.Printf("%s", info.Content)
+	fmt.Printf("\n-------------------------------------------------------\n")
 }

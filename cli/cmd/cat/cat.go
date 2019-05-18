@@ -19,10 +19,6 @@
 package cat
 
 import (
-	"database/sql"
-	"fmt"
-	"time"
-
 	"github.com/dnote/dnote/cli/core"
 	"github.com/dnote/dnote/cli/infra"
 	"github.com/dnote/dnote/cli/log"
@@ -63,19 +59,9 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-type noteInfo struct {
-	BookLabel string
-	UUID      string
-	Content   string
-	AddedOn   int64
-	EditedOn  int64
-}
-
 // NewRun returns a new run function
 func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		db := ctx.DB
-
 		var noteRowID string
 
 		if len(args) == 2 {
@@ -86,27 +72,12 @@ func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 			noteRowID = args[0]
 		}
 
-		var info noteInfo
-		err := db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on
-			FROM notes
-			INNER JOIN books ON books.uuid = notes.book_uuid
-			WHERE notes.rowid = ?`, noteRowID).
-			Scan(&info.BookLabel, &info.UUID, &info.Content, &info.AddedOn, &info.EditedOn)
-		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found", noteRowID)
-		} else if err != nil {
-			return errors.Wrap(err, "querying the note")
+		info, err := core.GetNoteInfo(ctx, noteRowID)
+		if err != nil {
+			return err
 		}
 
-		log.Infof("book name: %s\n", info.BookLabel)
-		log.Infof("note uuid: %s\n", info.UUID)
-		log.Infof("created at: %s\n", time.Unix(0, info.AddedOn).Format("Jan 2, 2006 3:04pm (MST)"))
-		if info.EditedOn != 0 {
-			log.Infof("updated at: %s\n", time.Unix(0, info.EditedOn).Format("Jan 2, 2006 3:04pm (MST)"))
-		}
-		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", info.Content)
-		fmt.Printf("\n-------------------------------------------------------\n")
+		core.PrintNoteInfo(info)
 
 		return nil
 	}

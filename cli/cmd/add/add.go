@@ -111,13 +111,19 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		ts := time.Now().UnixNano()
-		err := writeNote(ctx, bookName, content, ts)
+		noteRowID, err := writeNote(ctx, bookName, content, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
 
 		log.Successf("added to %s\n", bookName)
-		log.PrintContent(content)
+
+		info, err := core.GetNoteInfo(ctx, noteRowID)
+		if err != nil {
+			return err
+		}
+
+		core.PrintNoteInfo(info)
 
 		if err := core.CheckUpdate(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())
@@ -127,10 +133,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) error {
+func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) (string, error) {
 	tx, err := ctx.DB.Begin()
 	if err != nil {
-		return errors.Wrap(err, "beginning a transaction")
+		return "", errors.Wrap(err, "beginning a transaction")
 	}
 
 	var bookUUID string
@@ -142,10 +148,10 @@ func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) e
 		err = b.Insert(tx)
 		if err != nil {
 			tx.Rollback()
-			return errors.Wrap(err, "creating the book")
+			return "", errors.Wrap(err, "creating the book")
 		}
 	} else if err != nil {
-		return errors.Wrap(err, "finding the book")
+		return "", errors.Wrap(err, "finding the book")
 	}
 
 	noteUUID := utils.GenerateUUID()
@@ -154,10 +160,19 @@ func writeNote(ctx infra.DnoteCtx, bookLabel string, content string, ts int64) e
 	err = n.Insert(tx)
 	if err != nil {
 		tx.Rollback()
-		return errors.Wrap(err, "creating the note")
+		return "", errors.Wrap(err, "creating the note")
+	}
+
+	var noteRowID string
+	err = tx.QueryRow(`SELECT notes.rowid
+			FROM notes
+			WHERE notes.uuid = ?`, noteUUID).
+		Scan(&noteRowID)
+	if err != nil {
+		return noteRowID, errors.Wrap(err, "getting the note rowid")
 	}
 
 	tx.Commit()
 
-	return nil
+	return noteRowID, nil
 }
