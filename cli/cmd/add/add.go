@@ -98,6 +98,10 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		bookName := args[0]
 
+		if err := validateBookName(bookName); err != nil {
+			return errors.Wrap(err, "invalid book name")
+		}
+
 		if content == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)
 			err := core.GetEditorInput(ctx, fpath, &content)
