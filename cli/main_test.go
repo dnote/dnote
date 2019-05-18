@@ -168,7 +168,7 @@ func TestEditNote_BodyFlag(t *testing.T) {
 	testutils.Setup4(t, ctx)
 
 	// Execute
-	testutils.RunDnoteCmd(t, ctx, binaryName, "edit", "js", "2", "-c", "foo bar")
+	testutils.RunDnoteCmd(t, ctx, binaryName, "edit", "2", "-c", "foo bar")
 
 	// Test
 	db := ctx.DB
