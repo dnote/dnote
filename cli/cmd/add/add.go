@@ -76,13 +76,27 @@ func isReservedName(name string) bool {
 	return false
 }
 
+// ErrBookNameReserved is an error incidating that the specified book name is reserved
+var ErrBookNameReserved = errors.New("The book name is reserved")
+
+// ErrNumericBookName is an error for book names that only contain numbers
+var ErrNumericBookName = errors.New("The book name cannot contain only numbers")
+
+func validateBookName(name string) error {
+	if isReservedName(name) {
+		return ErrBookNameReserved
+	}
+
+	if utils.IsNumber(name) {
+		return ErrNumericBookName
+	}
+
+	return nil
+}
+
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		bookName := args[0]
-
-		if isReservedName(bookName) {
-			return errors.Errorf("book name '%s' is reserved", bookName)
-		}
 
 		if content == "" {
 			fpath := core.GetDnoteTmpContentPath(ctx)

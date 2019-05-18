@@ -75,25 +75,25 @@ type noteInfo struct {
 func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
-		bookLabel := args[0]
-		noteRowID := args[1]
 
-		var bookUUID string
-		err := db.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
-		if err == sql.ErrNoRows {
-			return errors.Errorf("book '%s' not found", bookLabel)
-		} else if err != nil {
-			return errors.Wrap(err, "querying the book")
+		var noteRowID string
+
+		if len(args) == 2 {
+			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+
+			noteRowID = args[1]
+		} else {
+			noteRowID = args[0]
 		}
 
 		var info noteInfo
-		err = db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on
+		err := db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on
 			FROM notes
 			INNER JOIN books ON books.uuid = notes.book_uuid
-			WHERE notes.rowid = ? AND books.uuid = ?`, noteRowID, bookUUID).
+			WHERE notes.rowid = ?`, noteRowID).
 			Scan(&info.BookLabel, &info.UUID, &info.Content, &info.AddedOn, &info.EditedOn)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
+			return errors.Errorf("note %s not found", noteRowID)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the note")
 		}

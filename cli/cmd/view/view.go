@@ -26,6 +26,7 @@ import (
 
 	"github.com/dnote/dnote/cli/cmd/cat"
 	"github.com/dnote/dnote/cli/cmd/ls"
+	"github.com/dnote/dnote/cli/utils"
 )
 
 var example = `
@@ -65,9 +66,16 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		var run core.RunEFunc
 
-		if len(args) <= 1 {
+		if len(args) == 0 {
 			run = ls.NewRun(ctx)
+		} else if len(args) == 1 {
+			if utils.IsNumber(args[0]) {
+				run = cat.NewRun(ctx)
+			} else {
+				run = ls.NewRun(ctx)
+			}
 		} else if len(args) == 2 {
+			// DEPRECATED: passing book name to view command is deprecated
 			run = cat.NewRun(ctx)
 		} else {
 			return errors.New("Incorrect number of arguments")
