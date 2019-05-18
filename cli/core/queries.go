@@ -25,7 +25,7 @@ func GetNoteInfo(ctx infra.DnoteCtx, noteRowID string) (NoteInfo, error) {
 	err := db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on, notes.rowid
 			FROM notes
 			INNER JOIN books ON books.uuid = notes.book_uuid
-			WHERE notes.rowid = ?`, noteRowID).
+			WHERE notes.rowid = ? AND notes.deleted = false`, noteRowID).
 		Scan(&ret.BookLabel, &ret.UUID, &ret.Content, &ret.AddedOn, &ret.EditedOn, &ret.RowID)
 	if err == sql.ErrNoRows {
 		return ret, errors.Errorf("note %s not found", noteRowID)

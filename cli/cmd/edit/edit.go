@@ -80,7 +80,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		}
 
 		var noteUUID, oldContent string
-		err := db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ?", noteRowID).Scan(&noteUUID, &oldContent)
+		err := db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND deleted = false", noteRowID).Scan(&noteUUID, &oldContent)
 		if err == sql.ErrNoRows {
 			return errors.Errorf("note %s not found", noteRowID)
 		} else if err != nil {
