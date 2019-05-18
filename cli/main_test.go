@@ -52,7 +52,7 @@ func TestInit(t *testing.T) {
 	testutils.RunDnoteCmd(t, ctx, binaryName)
 
 	// Test
-	if !utils.FileExists(fmt.Sprintf("%s", ctx.DnoteDir)) {
+	if !utils.FileExists(ctx.DnoteDir) {
 		t.Errorf("dnote directory was not initialized")
 	}
 	if !utils.FileExists(fmt.Sprintf("%s/%s", ctx.DnoteDir, core.ConfigFilename)) {
@@ -168,7 +168,7 @@ func TestEditNote_BodyFlag(t *testing.T) {
 	testutils.Setup4(t, ctx)
 
 	// Execute
-	testutils.RunDnoteCmd(t, ctx, binaryName, "edit", "js", "2", "-c", "foo bar")
+	testutils.RunDnoteCmd(t, ctx, binaryName, "edit", "2", "-c", "foo bar")
 
 	// Test
 	db := ctx.DB

@@ -19,7 +19,6 @@
 package remove
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/dnote/dnote/cli/core"
@@ -33,8 +32,8 @@ import (
 var targetBookName string
 
 var example = `
-  * Delete a note by its index from a book
-  dnote delete js 2
+  * Delete a note by its id
+  dnote delete 2
 
   * Delete a book
   dnote delete -b js`
@@ -65,14 +64,18 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 			return nil
 		}
 
-		if len(args) < 2 {
+		var noteRowID string
+		if len(args) == 2 {
+			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+
+			noteRowID = args[1]
+		} else if len(args) == 1 {
+			noteRowID = args[0]
+		} else {
 			return errors.New("Missing argument")
 		}
 
-		targetBook := args[0]
-		noteRowID := args[1]
-
-		if err := removeNote(ctx, noteRowID, targetBook); err != nil {
+		if err := removeNote(ctx, noteRowID); err != nil {
 			return errors.Wrap(err, "removing the note")
 		}
 
@@ -80,24 +83,15 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	}
 }
 
-func removeNote(ctx infra.DnoteCtx, noteRowID, bookLabel string) error {
+func removeNote(ctx infra.DnoteCtx, noteRowID string) error {
 	db := ctx.DB
 
-	bookUUID, err := core.GetBookUUID(ctx, bookLabel)
+	noteInfo, err := core.GetNoteInfo(ctx, noteRowID)
 	if err != nil {
-		return errors.Wrap(err, "finding book uuid")
+		return err
 	}
 
-	var noteUUID, noteContent string
-	err = db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND book_uuid = ?", noteRowID, bookUUID).Scan(&noteUUID, &noteContent)
-	if err == sql.ErrNoRows {
-		return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
-	} else if err != nil {
-		return errors.Wrap(err, "querying the book")
-	}
-
-	// todo: multiline
-	log.Printf("body: \"%s\"\n", noteContent)
+	core.PrintNoteInfo(noteInfo)
 
 	ok, err := utils.AskConfirmation("remove this note?", false)
 	if err != nil {
@@ -113,12 +107,12 @@ func removeNote(ctx infra.DnoteCtx, noteRowID, bookLabel string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ? AND book_uuid = ?", true, true, "", noteUUID, bookUUID); err != nil {
+	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ?", true, true, "", noteInfo.UUID); err != nil {
 		return errors.Wrap(err, "removing the note")
 	}
 	tx.Commit()
 
-	log.Successf("removed from %s\n", bookLabel)
+	log.Successf("removed from %s\n", noteInfo.BookLabel)
 
 	return nil
 }

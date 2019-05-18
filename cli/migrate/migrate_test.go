@@ -890,6 +890,77 @@ func TestLocalMigration9(t *testing.T) {
 	testutils.AssertEqual(t, resCount, 1, "noteFtsCount mismatch")
 }
 
+func TestLocalMigration10(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-10-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "123")
+	b2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 2", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "123 javascript")
+	b3UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 3", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b3UUID, "foo")
+	b4UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 4", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b4UUID, "+123")
+	b5UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 5", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b5UUID, "0123")
+	b6UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 6", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b6UUID, "javascript 123")
+	b7UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 7", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b7UUID, "123 (1)")
+	b8UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 8", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b8UUID, "5")
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm10.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+
+	// assert that note_fts was populated with correct values
+	var b1Label, b2Label, b3Label, b4Label, b5Label, b6Label, b7Label, b8Label string
+	var b1Dirty, b2Dirty, b3Dirty, b4Dirty, b5Dirty, b6Dirty, b7Dirty, b8Dirty bool
+
+	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
+	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
+	testutils.MustScan(t, "getting b5", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
+	testutils.MustScan(t, "getting b6", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
+	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
+	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
+
+	testutils.AssertEqual(t, b1Label, "123 (2)", "b1Label mismatch")
+	testutils.AssertEqual(t, b1Dirty, true, "b1Dirty mismatch")
+	testutils.AssertEqual(t, b2Label, "123 javascript", "b2Label mismatch")
+	testutils.AssertEqual(t, b2Dirty, false, "b2Dirty mismatch")
+	testutils.AssertEqual(t, b3Label, "foo", "b3Label mismatch")
+	testutils.AssertEqual(t, b3Dirty, false, "b3Dirty mismatch")
+	testutils.AssertEqual(t, b4Label, "+123", "b4Label mismatch")
+	testutils.AssertEqual(t, b4Dirty, false, "b4Dirty mismatch")
+	testutils.AssertEqual(t, b5Label, "0123 (1)", "b5Label mismatch")
+	testutils.AssertEqual(t, b5Dirty, true, "b5Dirty mismatch")
+	testutils.AssertEqual(t, b6Label, "javascript 123", "b6Label mismatch")
+	testutils.AssertEqual(t, b6Dirty, false, "b6Dirty mismatch")
+	testutils.AssertEqual(t, b7Label, "123 (1)", "b7Label mismatch")
+	testutils.AssertEqual(t, b7Dirty, false, "b7Dirty mismatch")
+	testutils.AssertEqual(t, b8Label, "5 (1)", "b8Label mismatch")
+	testutils.AssertEqual(t, b8Dirty, true, "b8Dirty mismatch")
+}
+
 func TestRemoteMigration1(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/remote-1-pre-schema.sql", false)

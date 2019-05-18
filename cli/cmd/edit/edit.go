@@ -34,11 +34,11 @@ import (
 var newContent string
 
 var example = `
-  * Edit the note by index in a book
-  dnote edit js 3
+  * Edit the note by its id
+  dnote edit 3
 
 	* Skip the prompt by providing new content directly
-	dnote edit js 3 -c "new content"`
+	dnote edit 3 -c "new content"`
 
 // NewCmd returns a new edit command
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
@@ -58,7 +58,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) != 2 {
+	if len(args) > 2 {
 		return errors.New("Incorrect number of argument")
 	}
 
@@ -68,18 +68,21 @@ func preRun(cmd *cobra.Command, args []string) error {
 func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
-		bookLabel := args[0]
-		noteRowID := args[1]
 
-		bookUUID, err := core.GetBookUUID(ctx, bookLabel)
-		if err != nil {
-			return errors.Wrap(err, "finding book uuid")
+		var noteRowID string
+
+		if len(args) == 2 {
+			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+
+			noteRowID = args[1]
+		} else {
+			noteRowID = args[0]
 		}
 
 		var noteUUID, oldContent string
-		err = db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND book_uuid = ?", noteRowID, bookUUID).Scan(&noteUUID, &oldContent)
+		err := db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND deleted = false", noteRowID).Scan(&noteUUID, &oldContent)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found in the book '%s'", noteRowID, bookLabel)
+			return errors.Errorf("note %s not found", noteRowID)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the book")
 		}
@@ -112,7 +115,7 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 
 		_, err = tx.Exec(`UPDATE notes
 			SET body = ?, edited_on = ?, dirty = ?
-			WHERE rowid = ? AND book_uuid = ?`, newContent, ts, true, noteRowID, bookUUID)
+			WHERE rowid = ?`, newContent, ts, true, noteRowID)
 		if err != nil {
 			tx.Rollback()
 			return errors.Wrap(err, "updating the note")

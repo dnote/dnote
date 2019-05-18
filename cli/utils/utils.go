@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -247,4 +248,16 @@ func CopyFile(src, dest string) error {
 	}
 
 	return nil
+}
+
+// regexNumber is a regex that matches a string that looks like an integer
+var regexNumber = regexp.MustCompile(`^\d+$`)
+
+// IsNumber checks if the given string is in the form of a number
+func IsNumber(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	return regexNumber.MatchString(s)
 }

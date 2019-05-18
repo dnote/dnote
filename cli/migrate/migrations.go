@@ -22,6 +22,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/dnote/actions"
 	"github.com/dnote/dnote/cli/client"
@@ -397,6 +398,66 @@ var lm9 = migration{
 			SELECT rowid, body FROM notes;`)
 		if err != nil {
 			return errors.Wrap(err, "populating note_fts")
+		}
+
+		return nil
+	},
+}
+
+var lm10 = migration{
+	name: "rename-number-only-book",
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
+		migrateBook := func(label string) error {
+			var uuid string
+
+			err := tx.QueryRow("SELECT uuid FROM books WHERE label = ?", label).Scan(&uuid)
+			if err != nil {
+				return errors.Wrap(err, "finding uuid")
+			}
+
+			for i := 1; ; i++ {
+				candidate := fmt.Sprintf("%s (%d)", label, i)
+
+				var count int
+				err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", candidate).Scan(&count)
+				if err != nil {
+					return errors.Wrap(err, "counting candidate")
+				}
+
+				if count == 0 {
+					_, err := tx.Exec("UPDATE books SET label = ?, dirty = ? WHERE uuid = ?", candidate, true, uuid)
+					if err != nil {
+						return errors.Wrapf(err, "updating book '%s'", label)
+					}
+
+					break
+				}
+			}
+
+			return nil
+		}
+
+		rows, err := tx.Query("SELECT label FROM books")
+		defer rows.Close()
+		if err != nil {
+			return errors.Wrap(err, "getting labels")
+		}
+
+		var regexNumber = regexp.MustCompile(`^\d+$`)
+
+		for rows.Next() {
+			var label string
+			err := rows.Scan(&label)
+			if err != nil {
+				return errors.Wrap(err, "scannign row")
+			}
+
+			if regexNumber.MatchString(label) {
+				err = migrateBook(label)
+				if err != nil {
+					return errors.Wrapf(err, "migrating book %s", label)
+				}
+			}
 		}
 
 		return nil
