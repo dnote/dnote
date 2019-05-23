@@ -1,38 +1,34 @@
 # Dnote
 
-A simple, encrypted personal knowledge base.
+A simple notebook for developers.
 
 ## What It Does
 
-Instantly capture your microlessons and get automatic reminders for spaced repetition. Because:
-
-* we forget exponentially unless we write down what we learn and come back.
-* ideas cannot be grokked unless we can put them down in clear words.
+Write technical notes and neatly organize them into books.
 
 ## How to Use
 
-Use the following to keep Dnote handy.
+You can use Dnote in a command line, web browser, or in an IDE.
 
 - [CLI](https://github.com/dnote/dnote/tree/master/cli)
 - [Web](https://dnote.io)
 - [Browser extension](https://github.com/dnote/browser-extension)
 - [Atom](https://github.com/dnote/dnote-atom)
 
+It is designed to minimize switching environment.
 
-### User Stories
+## Privacy
 
-- [How I Built a Personal Knowledge Base for Myself](https://dnote.io/blog/how-i-built-personal-knowledge-base-for-myself/)
-- [I Wrote Down Everything I Learned While Programming for a Month](https://dnote.io/blog/writing-everything-i-learn-coding-for-a-month/)
-
-## Security
-
-Dnote is end-to-end encrypted and respects your privacy. It does not track you.
-
-When syncing, your data is encrypted with AES-256. Dnote server has zero knowledge about note contents.
+Dnote is end-to-end encrypted with AES-256 to respect your privacy. It does not track you.
 
 ## Self-host
 
 Instructions are coming soon.
+
+## User Stories
+
+- [How I Built a Personal Knowledge Base for Myself](https://dnote.io/blog/how-i-built-personal-knowledge-base-for-myself/)
+- [I Wrote Down Everything I Learned While Programming for a Month](https://dnote.io/blog/writing-everything-i-learn-coding-for-a-month/)
 
 ## Links
 

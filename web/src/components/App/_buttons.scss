@@ -28,7 +28,6 @@
 .button {
   position: relative;
   display: inline-block;
-  line-height: 1.25;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
@@ -72,7 +71,6 @@ button:disabled {
 
 .button-large {
   @include font-size('medium');
-  font-weight: 600;
 
   padding: rem(8px) rem(24px);
 
@@ -81,15 +79,14 @@ button:disabled {
   }
 
   @include breakpoint(lg) {
-    padding: rem(16px) rem(48px);
+    padding: rem(12px) rem(48px);
   }
 }
 
 .button-xlarge {
   @include font-size('x-large');
-  font-weight: 600;
 
-  padding: rem(8px) rem(24px);
+  padding: rem(16px) rem(24px);
 
   @include breakpoint(md) {
     padding: rem(12px) rem(36px);

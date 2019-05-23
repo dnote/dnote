@@ -1,77 +1,81 @@
 @import './responsive';
 
+$lowDecay: 0.1;
+$medDecay: 0.15;
+$highDecay: 0.2;
+
 // font-size is a mixin for pre-defined font-size values in rem.
 // It also includes px as a fallback for older browsers.
 @mixin font-size($size, $responsive: true) {
-  $sizeValue: 16;
+  $smSizeValue: 16;
   $mdSizeValue: 16;
   $lgSizeValue: 16;
 
   @if $size == 'x-small' {
     $baseSize: 10;
 
-    $sizeValue: $baseSize;
+    $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;
     $lgSizeValue: $baseSize;
   } @else if $size == 'small' {
     $baseSize: 14;
 
-    $sizeValue: $baseSize;
+    $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;
     $lgSizeValue: $baseSize;
   } @else if $size == 'regular' {
     $baseSize: 16;
 
-    $sizeValue: $baseSize;
-    $mdSizeValue: $baseSize;
+    $smSizeValue: $baseSize * (1 - $lowDecay);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
     $lgSizeValue: $baseSize;
   } @else if $size == 'medium' {
     $baseSize: 18;
 
-    $sizeValue: $baseSize;
+    $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;
     $lgSizeValue: $baseSize;
   } @else if $size == 'large' {
     $baseSize: 20;
 
-    $sizeValue: $baseSize;
+    $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;
     $lgSizeValue: $baseSize;
   } @else if $size == 'x-large' {
     $baseSize: 24;
 
-    $sizeValue: $baseSize * 0.8;
-    $mdSizeValue: $baseSize * 0.9;
+    $smSizeValue: $baseSize * (1 - $lowDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
     $lgSizeValue: $baseSize;
   } @else if $size == '2x-large' {
     $baseSize: 32;
 
-    $sizeValue: $baseSize * 0.8;
-    $mdSizeValue: $baseSize * 0.9;
+    $smSizeValue: $baseSize * (1 - $lowDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
     $lgSizeValue: $baseSize;
   } @else if $size == '3x-large' {
     $baseSize: 36;
 
-    $sizeValue: $baseSize * 0.7;
-    $mdSizeValue: $baseSize * 0.85;
+    $smSizeValue: $baseSize * (1 - $medDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $medDecay);
     $lgSizeValue: $baseSize;
   } @else if $size == '4x-large' {
     $baseSize: 48;
 
-    $sizeValue: $baseSize * 0.7;
-    $mdSizeValue: $baseSize * 0.85;
+    $smSizeValue: $baseSize * (1 - $medDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $medDecay);
     $lgSizeValue: $baseSize;
   } @else if $size == '5x-large' {
     $baseSize: 56;
 
-    $sizeValue: $baseSize * 0.6;
-    $mdSizeValue: $baseSize * 0.8;
+    $smSizeValue: $baseSize * (1 - $highDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $highDecay);
     $lgSizeValue: $baseSize;
   }
 
   @if $responsive == true {
-    font-size: $sizeValue * 1px;
-    font-size: $sizeValue * 0.1rem;
+    font-size: $smSizeValue * 1px;
+    font-size: $smSizeValue * 0.1rem;
 
     @include breakpoint(md) {
       font-size: $mdSizeValue * 1px;
