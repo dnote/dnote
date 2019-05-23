@@ -48,9 +48,9 @@ module.exports = ({
 
   let stripePublicKey;
   if (test) {
-    stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
-  } else {
     stripePublicKey = 'pk_test_5926f65DQoIilZeNOiKydfoN';
+  } else {
+    stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
   }
 
   const compileTimeConstantForMinification = {
