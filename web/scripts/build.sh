@@ -4,6 +4,7 @@ set -eux
 
 basePath="$GOPATH/src/github.com/dnote/dnote"
 standalone=${STANDALONE:-false}
+isTest=${IS_TEST:-false}
 
 rm -rf "$basePath/web/public"
 mkdir -p "$basePath/web/public/dist"
@@ -18,6 +19,7 @@ pushd "$basePath/web"
       --colors\
       --display-error-details\
       --env.standalone="$standalone"\
+      --env.test="$isTest"\
       --config "$basePath"/web/webpack/prod.config.js
 
   NODE_ENV=PRODUCTION \
