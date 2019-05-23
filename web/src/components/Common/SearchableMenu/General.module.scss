@@ -1,4 +1,4 @@
-@import '../../App/variables';
+@import '../../App/theme';
 @import '../../App/font';
 @import '../../App/rem';
 @import '../../App/responsive';
@@ -42,7 +42,7 @@
   }
 
   &.active {
-    background: $dark-light2;
+    background: $light;
   }
 
   &.focused {
@@ -61,7 +61,7 @@
   display: block;
   @include font-size('small');
   font-weight: 600;
-  background: $dark-light;
+  background: $light;
   padding: rem(4px) rem(12px);
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -72,7 +72,7 @@
   padding: rem(8px);
   //background: #e7f0ff;
   border-bottom: 1px solid #e6e6e6;
-  background: $dark-light;
+  background: $light;
 }
 .textbox {
   @include font-size('small');

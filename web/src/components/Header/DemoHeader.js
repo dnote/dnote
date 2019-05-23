@@ -21,16 +21,16 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
-import { subscriptionsPath, joinPath } from '../../libs/paths';
+import { getSubscriptionPath, getJoinPath } from '../../libs/paths';
 
 import styles from './DemoHeader.module.scss';
 
 function getPricingPath(user) {
   if (user) {
-    return subscriptionsPath();
+    return getSubscriptionPath();
   }
 
-  return joinPath({ referrer: subscriptionsPath() });
+  return getJoinPath({ referrer: getSubscriptionPath() });
 }
 
 function DemoHeader({ user }) {
@@ -49,13 +49,19 @@ function DemoHeader({ user }) {
       <div className={styles.right}>
         <Link
           to={getPricingPath(user)}
-          className={classnames(styles.cta, 'button button-second')}
+          className={classnames(
+            styles.cta,
+            'button button-normal button-second'
+          )}
         >
           Get started
         </Link>
         <a
           href="/"
-          className={classnames(styles['quit-mobile'], 'button button-first')}
+          className={classnames(
+            styles['quit-mobile'],
+            'button button-normal button-first'
+          )}
         >
           Quit demo
         </a>

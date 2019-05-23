@@ -58,10 +58,6 @@
   }
 }
 
-.feature-bold {
-  font-weight: 600;
-}
-
 .pro-plan {
   order: 0;
   @include breakpoint(md) {
@@ -73,4 +69,8 @@
   @include breakpoint(md) {
     order: initial;
   }
+}
+
+.feature-bold {
+  font-weight: 600;
 }

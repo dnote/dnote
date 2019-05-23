@@ -23,7 +23,7 @@ import { connect } from 'react-redux';
 
 import DotsIcon from '../../Icons/Dots';
 import Menu from '../../Common/Menu';
-import { homePath } from '../../../libs/paths';
+import { getHomePath } from '../../../libs/paths';
 
 import { removeNote } from '../../../actions/notes';
 import { resetNote } from '../../../actions/note';
@@ -66,7 +66,7 @@ function handleRemove({
       doResetEditor();
 
       console.log('pushing');
-      history.push(homePath());
+      history.push(getHomePath());
     })
     .catch(err => {
       console.log('err', err);

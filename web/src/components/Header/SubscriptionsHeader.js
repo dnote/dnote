@@ -21,7 +21,7 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import Logo from '../Icons/LogoWithText';
-import { homePath } from '../../libs/paths';
+import { getHomePath } from '../../libs/paths';
 import styles from './SubscriptionsHeader.module.scss';
 
 function SubscriptionsHeader({ userData }) {
@@ -30,7 +30,7 @@ function SubscriptionsHeader({ userData }) {
   return (
     <header className={styles.wrapper}>
       <div className={styles.content}>
-        <Link to={homePath({})} className={styles.brand}>
+        <Link to={getHomePath({})} className={styles.brand}>
           <Logo width={32} height={32} fill="black" className={styles.logo} />
         </Link>
 

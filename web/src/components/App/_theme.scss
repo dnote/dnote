@@ -1,0 +1,23 @@
+// basic colors
+$black: #2a2a2a;
+$white: #ffffff;
+$light: #f7f9fa;
+$gray: #686868;
+$light-gray: #f3f3f3;
+
+// primary colors
+$first: #333745;
+$second: #e7e7e7;
+$third: #4d4d8b;
+
+// functional colors
+$border-color: #d8d8d8;
+$border-color-light: $light-gray;
+
+$link: #6f53c0;
+$link-hover: darken($link, 5%);
+
+$danger-text: #cb2431;
+$danger-background: #f8d7da;
+
+$light-blue: #ecf4ff;

@@ -4,7 +4,7 @@ A simple command line interface for Dnote.
 
 ![Dnote](assets/dnote.gif)
 
-It is Designed to minimize context switching for taking notes.
+It is Designed to minimize environment switching for taking notes.
 
 ## Install
 

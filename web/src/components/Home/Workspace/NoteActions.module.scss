@@ -1,4 +1,4 @@
-@import '../../App/variables';
+@import '../../App/theme';
 @import '../../App/responsive';
 @import '../../App/rem';
 @import '../../App/font';
@@ -16,7 +16,7 @@
   display: block;
 
   &:hover {
-    background: $dark-light3;
+    background: $light-gray;
   }
 }
 

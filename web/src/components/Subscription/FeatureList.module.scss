@@ -1,0 +1,11 @@
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
+
+.feature-list {
+  list-style: none;
+  margin-bottom: 0;
+  padding-left: 0;
+  padding-top: rem(12px);
+}

@@ -19,14 +19,12 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import FeatureItem from './FeatureItem';
-
 import styles from './Plan.module.scss';
 
 function Plan({
   name,
   price,
-  features,
+  bottomContent,
   ctaContent,
   interval,
   perks,
@@ -62,11 +60,7 @@ function Plan({
         </div>
       </div>
 
-      <ul className={styles['feature-list']}>
-        {features.map(feature => {
-          return <FeatureItem key={feature.id} label={feature.label} />;
-        })}
-      </ul>
+      {bottomContent}
     </div>
   );
 }

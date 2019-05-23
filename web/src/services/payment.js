@@ -18,8 +18,13 @@
 
 import { apiClient } from '../libs/http';
 
-export function createSubscription({ token }) {
-  return apiClient.post('/subscriptions', token);
+export function createSubscription({ source, country }) {
+  const payload = {
+    source,
+    country
+  };
+
+  return apiClient.post('/subscriptions', payload);
 }
 
 export function getSubscription() {

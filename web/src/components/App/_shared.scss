@@ -18,111 +18,6 @@
   background: #f4f4f4;
 }
 
-.alert {
-  // display: flex;
-  // flex-direction: column;
-  // align-items: flex-start;
-  margin-bottom: 0;
-
-  @include breakpoint(md) {
-    //    flex-direction: row;
-    //  align-items: center;
-    //   justify-content: space-between;
-  }
-
-  .alert-content {
-    margin-bottom: 0;
-  }
-
-  .alert-action {
-    margin-top: 10px;
-
-    @include breakpoint(md) {
-      margin-top: 0;
-    }
-  }
-}
-
-// panels
-.panel {
-  background-color: white;
-  list-style: none;
-  padding-left: 0;
-  margin-bottom: 0;
-  border-radius: 3px;
-  word-wrap: break-word;
-
-  .panel-heading {
-    font-size: 2rem;
-    margin-bottom: 10px;
-  }
-}
-
-.panel-padded {
-  padding: 16px 25px;
-}
-
-.panel ~ .panel {
-  margin-top: 12px;
-}
-
-// dropdown
-.dropdown-content {
-  position: absolute;
-  list-style: none;
-  padding: 0;
-  margin-bottom: 0;
-  background-color: #ffffff;
-  color: #000000;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.29);
-  border-radius: 1.5px;
-  z-index: 1;
-
-  .dropdown-content-header {
-    padding: 8px 14px;
-    display: block;
-    margin-bottom: 0;
-    font-size: 1.4rem;
-    color: #868e96;
-    white-space: nowrap;
-  }
-
-  .dropdown-content-divider {
-    height: 0;
-    overflow: hidden;
-    border-top: 1px solid #e9ecef;
-  }
-
-  &::after {
-    top: 0px;
-    border: 7px solid transparent;
-    border-bottom-color: #fff;
-    position: absolute;
-    display: inline-block;
-    content: '';
-  }
-
-  &::before {
-    top: -2px;
-    border: 8px solid transparent;
-    border-bottom-color: rgba(27, 31, 35, 0.15);
-    position: absolute;
-    display: inline-block;
-    content: '';
-  }
-}
-
-// dismissable
-
-.dismissable-overlay {
-  position: fixed;
-  top: 0px;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  // z-index: 2;
-}
-
 input[type='text']:disabled,
 input[type='email']:disabled,
 input[type='number']:disabled,
@@ -131,14 +26,13 @@ textarea:disabled {
   background: #ececec;
   cursor: not-allowed;
 }
+
+// Replace the default browser outline with custom focus indicator
 textarea:focus {
   outline: none;
 }
-
-// used to copy things to clipboard
-.copy-input {
-  position: absolute;
-  left: -999px;
+input:focus {
+  outline: none;
 }
 
 .list-unstyled {
@@ -160,13 +54,6 @@ textarea:focus {
 }
 
 .page {
-  //  padding: rem(14px) 0;
-  //
-  //  @include breakpoint(md) {
-  //    padding: rem(28px) 0;
-  //  }
-
-  // max-height: 100%;
   height: 100%;
   overflow-y: scroll;
 }
@@ -179,33 +66,36 @@ button {
 }
 
 .text-input {
-  border: 1px solid $dark-light2;
+  border: 2px solid $border-color;
   padding: rem(4px) rem(12px);
   position: relative;
   border-radius: 2px;
+  display: block;
 
   &::placeholder {
-    color: $dark-light4;
+    color: $gray;
   }
   &:focus {
-    border: 1px solid $third;
-  }
-
-  &:not(.text-input-transparent) {
-    background: $dark-light3;
-  }
-  &.text-input-transparent {
-    background: transparent;
+    border: 2px solid $third;
   }
 
   &.text-input-medium {
     padding: rem(8px) rem(12px);
   }
+
+  &.text-input-stretch {
+    width: 100%;
+  }
 }
 
-.learning-count {
-  @include font-size('medium');
+.label-full {
+  width: 100%;
 }
-.learning-date {
-  @include font-size('regular');
+
+a {
+  color: $link;
+
+  &:hover {
+    color: $link-hover;
+  }
 }

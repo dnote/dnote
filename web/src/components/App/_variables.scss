@@ -1,39 +1,12 @@
-$dark: #3d4c53;
-//$dark-light: #f5f5f5;
-$dark-light: #f7f9fa;
-$dark-light2: #e5e5e5;
-$dark-light3: #f7f7f7;
-$dark-light4: #929292;
-$dark-light5: #6e6e6e;
-$dark-bg: #f3f3f3;
-$black: #2a2a2a;
-$white: #ffffff;
-
-$border-color: #d8d8d8;
-$border-color-light: #f3f3f3;
-
-//$danger-text: #721c24;
-$danger-text: #cb2431;
-$danger-background: #f8d7da;
-
-$first: #333745;
-$second: #e7e7e7;
-
-$third: #245fc5;
-// $third: #6d6daa;
-// $third: #4d4d8b;
-
-//$third: #18a0fb;
-//$third: #505061;
-$third-light: #ecf4ff;
-
 $sidebar-width: 180px;
 $note-sidebar-width: 244px;
 $xl-note-sidebar-width: 320px;
 $footer-height: 28px;
 $note-header-height: 60px;
 
-$note-sidebar-threshold: 1280px;
+$note-sidebar-threshold-value: 1280;
+$note-sidebar-threshold: '#{$note-sidebar-threshold-value}px';
 
-$link: #0061ff;
-$link-hover: #0052d9;
+:export {
+  noteSidebarThreshold: $note-sidebar-threshold-value;
+}

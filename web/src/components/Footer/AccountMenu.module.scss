@@ -1,5 +1,5 @@
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 @import '../App/responsive';
 
@@ -59,7 +59,7 @@
   color: black;
 
   &:hover {
-    background: $dark-light3;
+    background: $light-gray;
     text-decoration: none;
     color: #0056b3;
   }
@@ -70,7 +70,7 @@
   }
 
   &:not(.disabled):focus {
-    background: $dark-light3;
+    background: $light-gray;
     color: #0056b3;
     outline: 1px dotted gray;
   }

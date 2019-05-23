@@ -67,7 +67,7 @@
 
 [[constraint]]
   name = "github.com/stripe/stripe-go"
-  version = "49.1.0"
+  version = "60.17.0"
 
 [[constraint]]
   name = "gopkg.in/gomail.v2"

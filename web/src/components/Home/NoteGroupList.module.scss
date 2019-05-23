@@ -1,6 +1,6 @@
 @import '../App/responsive';
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 
 .wrapper {
@@ -20,5 +20,5 @@
 .content {
   padding: rem(40px) rem(16px);
   text-align: center;
-  color: $dark-light5;
+  color: $gray;
 }

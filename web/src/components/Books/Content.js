@@ -27,7 +27,7 @@ import Flash from '../Common/Flash';
 import Button from '../Common/Button';
 
 import { escapesRegExp } from '../../libs/string';
-import { homePath } from '../../libs/paths';
+import { getHomePath } from '../../libs/paths';
 import DeleteBookModal from './DeleteBookModal';
 import { useSearchMenuKeydown, useScrollToFocused } from '../../libs/hooks/dom';
 import { getOptIdxByValue } from '../../helpers/accessibility';
@@ -48,7 +48,7 @@ function filterBooks(books, searchInput) {
 
 function handleMenuKeydownSelect(demo, history) {
   return option => {
-    const destination = homePath(
+    const destination = getHomePath(
       {
         book: option.uuid
       },
@@ -154,6 +154,7 @@ function Content({
           id="T-create-book-btn"
           type="button"
           kind="third"
+          size="normal"
           className={styles['create-book-button']}
           disabled={isFetching}
           onClick={() => {

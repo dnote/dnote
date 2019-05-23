@@ -70,12 +70,12 @@ module.exports = ({ production = false } = {}) => {
 
   return [
     {
-      test: /\.scss$/,
-      exclude: /\.module\.scss$/,
+      test: /\.global\.scss$/,
       use: scssLoaders
     },
     {
-      test: /\.module\.scss$/,
+      test: /\.scss$/,
+      exclude: /\.global\.scss$/,
       use: scssModuleLoaders
     }
   ];

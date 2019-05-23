@@ -1,6 +1,6 @@
 @import '../App/rem';
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 
 .row {
   padding: rem(12px) rem(12px);
@@ -30,7 +30,7 @@
 .desc {
   margin-bottom: 0;
   @include font-size('small');
-  color: $dark-light5;
+  color: $gray;
 }
 .action {
   display: flex;

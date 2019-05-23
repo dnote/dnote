@@ -24,7 +24,7 @@ import styles from './Placeholder.module.scss';
 
 function Placeholder() {
   return (
-    <div className="container">
+    <div className="container-wide">
       <div className="row">
         <div className="col-12 col-md-12 col-lg-10">
           <section className={settingsStyles.section}>

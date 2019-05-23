@@ -1,4 +1,4 @@
-@import '../../../App/variables';
+@import '../../../App/theme';
 @import '../../../App/responsive';
 @import '../../../App/rem';
 @import '../../../App/font';
@@ -38,6 +38,6 @@ a.back-button {
   display: block;
   margin-top: rem(20px);
   padding-left: rem(12px);
-  color: $dark-light5;
+  color: $gray;
   font-weight: 600;
 }

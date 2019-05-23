@@ -89,7 +89,7 @@ function Digests({
       <Header heading="Digests" />
 
       <Body>
-        <div className="container">
+        <div className="container-wide">
           {demo || user.cloud ? (
             <Content user={user} demo={demo} />
           ) : (

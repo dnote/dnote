@@ -1,10 +1,11 @@
 @import '../App/responsive';
+@import '../App/theme';
 @import '../App/variables';
 @import '../App/rem';
 
 .wrapper {
   min-height: calc(100vh - #{$note-header-height});
-  background: $dark-light3;
+  background: $light-gray;
   text-align: center;
   padding-bottom: rem(32px);
 }

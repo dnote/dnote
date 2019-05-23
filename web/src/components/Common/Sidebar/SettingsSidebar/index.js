@@ -21,7 +21,7 @@ import classnames from 'classnames';
 import { withRouter, Link, NavLink } from 'react-router-dom';
 import { connect } from 'react-redux';
 
-import { homePath, settingsPath } from '../../../../libs/paths';
+import { getHomePath, getSettingsPath } from '../../../../libs/paths';
 import {
   getWindowWidth,
   noteSidebarThreshold,
@@ -94,10 +94,10 @@ const SettingsSidebar = ({ location, layoutData, doCloseSidebar }) => {
           <div>
             <div className={styles['button-wrapper']}>
               <Link
-                to={homePath()}
+                to={getHomePath()}
                 onClick={maybeCloseSidebar}
                 className={classnames(
-                  'button button-slim button-stretch button-third-outline',
+                  'button button-normal button-slim button-stretch button-third-outline',
                   styles['back-button']
                 )}
               >
@@ -119,13 +119,13 @@ const SettingsSidebar = ({ location, layoutData, doCloseSidebar }) => {
                 <NavLink
                   onClick={maybeCloseSidebar}
                   className={classnames(styles.link, sidebarStyles.link)}
-                  to={settingsPath('account')}
+                  to={getSettingsPath('account')}
                   activeClassName={classnames(
                     sidebarStyles['link-active'],
                     styles['link-active']
                   )}
                   isActive={() => {
-                    return location.pathname === settingsPath('account');
+                    return location.pathname === getSettingsPath('account');
                   }}
                 >
                   {/* <UserIcon width="16" height="16" fill="#6e6e6e" />
@@ -138,13 +138,15 @@ const SettingsSidebar = ({ location, layoutData, doCloseSidebar }) => {
                 <NavLink
                   onClick={maybeCloseSidebar}
                   className={classnames(styles.link, sidebarStyles.link)}
-                  to={settingsPath('notification')}
+                  to={getSettingsPath('notification')}
                   activeClassName={classnames(
                     sidebarStyles['link-active'],
                     styles['link-active']
                   )}
                   isActive={() => {
-                    return location.pathname === settingsPath('notification');
+                    return (
+                      location.pathname === getSettingsPath('notification')
+                    );
                   }}
                 >
                   {/* <EmailIcon width="16" height="16" fill="#6e6e6e" />
@@ -159,13 +161,13 @@ const SettingsSidebar = ({ location, layoutData, doCloseSidebar }) => {
                 <NavLink
                   onClick={maybeCloseSidebar}
                   className={classnames(styles.link, sidebarStyles.link)}
-                  to={settingsPath('billing')}
+                  to={getSettingsPath('billing')}
                   activeClassName={classnames(
                     sidebarStyles['link-active'],
                     styles['link-active']
                   )}
                   isActive={() => {
-                    return location.pathname === settingsPath('billing');
+                    return location.pathname === getSettingsPath('billing');
                   }}
                 >
                   {/* <CreditCardIcon width="16" height="16" fill="#6e6e6e" />

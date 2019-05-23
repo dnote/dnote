@@ -67,6 +67,7 @@ type User struct {
 	APIKey           string `json:"-" gorm:"index"`
 	Name             string `json:"name"`
 	StripeCustomerID string `json:"-"`
+	BillingCountry   string `json:"-"`
 	Cloud            bool   `json:"-" gorm:"default:false"`
 	IsAdmin          bool   `json:"-" gorm:"default:false"`
 	Account          Account

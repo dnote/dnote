@@ -1,6 +1,6 @@
 @import '../App/responsive';
 @import '../App/font';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/rem';
 
 .wrapper {
@@ -28,10 +28,9 @@
   @include font-size('small');
   display: flex;
   justify-content: space-between;
-  background: $dark;
   color: white;
   padding: rem(8px) rem(12px);
-  background: $dark-light;
+  background: $light;
   color: $black;
   // border-top: 1px solid $border-color;
   border-bottom: 1px solid $border-color;

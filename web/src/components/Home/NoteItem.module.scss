@@ -1,7 +1,7 @@
 @import '../App/font';
 @import '../App/responsive';
 @import '../App/rem';
-@import '../App/variables';
+@import '../App/theme';
 
 .wrapper {
   background: white;
@@ -19,7 +19,7 @@
 
   &:hover {
     text-decoration: none;
-    background: $third-light;
+    background: $light-blue;
     color: inherit;
   }
 }
@@ -61,7 +61,7 @@
 
 .active {
   .link {
-    background: $third-light;
+    background: $light-blue;
   }
 }
 

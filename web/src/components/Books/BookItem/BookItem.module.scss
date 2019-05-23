@@ -1,6 +1,6 @@
 @import '../../App/rem';
 @import '../../App/font';
-@import '../../App/variables';
+@import '../../App/theme';
 
 .item {
   position: relative;
@@ -53,7 +53,7 @@
 
 .active {
   .link {
-    background: $third-light;
+    background: $light-blue;
     color: $black;
   }
 }

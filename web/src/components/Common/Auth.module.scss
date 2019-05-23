@@ -1,10 +1,10 @@
 @import '../App/responsive';
-@import '../App/variables';
+@import '../App/theme';
 @import '../App/font';
 @import '../App/rem';
 
 .page {
-  background: $dark-bg;
+  background: $light-gray;
   text-align: center;
   min-height: 100vh;
   padding: 50px 0;

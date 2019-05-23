@@ -28,7 +28,7 @@ import Flash from '../Common/Flash';
 
 import { parseSearchString } from '../../libs/url';
 import { getEmailPreference } from '../../actions/auth';
-import { loginPath } from '../../libs/paths';
+import { getLoginPath } from '../../libs/paths';
 
 import styles from './EmailPreference.module.scss';
 
@@ -69,7 +69,7 @@ function EmailPreference({
             <Flash type="danger" wrapperClassName={styles.flash}>
               Error fetching email preference: {errorMessage}.{' '}
               <span>
-                Please <Link to={loginPath()}>login</Link> and try again.
+                Please <Link to={getLoginPath()}>login</Link> and try again.
               </span>
             </Flash>
           )}

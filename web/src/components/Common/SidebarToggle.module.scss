@@ -1,10 +1,11 @@
 @import '../App/responsive';
+@import '../App/theme';
 @import '../App/variables';
 
 .button {
   padding: 0;
 
-  @media (min-width: $note-sidebar-threshold) {
+  @include overSidebarThreshold {
     display: none;
   }
 }

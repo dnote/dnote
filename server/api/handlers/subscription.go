@@ -20,75 +20,150 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/dnote/dnote/server/api/helpers"
-	"github.com/dnote/dnote/server/api/logger"
 	"github.com/dnote/dnote/server/api/operations"
 	"github.com/dnote/dnote/server/database"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/card"
 	"github.com/stripe/stripe-go/customer"
+	"github.com/stripe/stripe-go/paymentsource"
+	"github.com/stripe/stripe-go/source"
 	"github.com/stripe/stripe-go/sub"
 	"github.com/stripe/stripe-go/webhook"
 )
 
-type stripeToken struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
+var proPlanID = "plan_EpgsEvY27pajfo"
+
+func getOrCreateStripeCustomer(tx *gorm.DB, user database.User) (*stripe.Customer, error) {
+	if user.StripeCustomerID != "" {
+		c, err := customer.Get(user.StripeCustomerID, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "getting customer")
+		}
+
+		return c, nil
+	}
+
+	var account database.Account
+	if err := tx.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		return nil, errors.Wrap(err, "finding account")
+	}
+
+	customerParams := &stripe.CustomerParams{
+		Email: &account.Email.String,
+	}
+	c, err := customer.New(customerParams)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating customer")
+	}
+
+	user.StripeCustomerID = c.ID
+	if err := tx.Save(&user).Error; err != nil {
+		return nil, errors.Wrap(err, "updating user")
+	}
+
+	return c, nil
 }
 
-var planID = "plan_EpgsEvY27pajfo"
+func addCustomerSource(customerID, sourceID string) (*stripe.PaymentSource, error) {
+	params := &stripe.CustomerSourceParams{
+		Customer: stripe.String(customerID),
+		Source: &stripe.SourceParams{
+			Token: stripe.String(sourceID),
+		},
+	}
 
-func init() {
+	src, err := paymentsource.New(params)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating source for customer")
+	}
+
+	return src, nil
+}
+
+func createCustomerSubscription(customerID, planID string) (*stripe.Subscription, error) {
+	subParams := &stripe.SubscriptionParams{
+		Customer: stripe.String(customerID),
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				Plan: stripe.String(planID),
+			},
+		},
+	}
+
+	s, err := sub.New(subParams)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating subscription for customer")
+	}
+
+	return s, nil
+}
+
+type createSubPayload struct {
+	Source  stripe.Source `json:"source"`
+	Country string        `json:"country"`
 }
 
 // createSub creates a subscription for a the current user
 func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
 		return
 	}
-	if user.StripeCustomerID != "" {
-		http.Error(w, "Customer already exists", http.StatusForbidden)
+
+	var payload createSubPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		handleError(w, "decoding params", err, http.StatusBadRequest)
 		return
 	}
 
-	var tok stripeToken
-	if err := json.NewDecoder(r.Body).Decode(&tok); err != nil {
-		http.Error(w, errors.Wrap(err, "decoding params").Error(), http.StatusInternalServerError)
+	db := database.DBConn
+	tx := db.Begin()
+
+	if err := tx.Model(&user).
+		Update(map[string]interface{}{
+			"cloud":           true,
+			"billing_country": payload.Country,
+		}).Error; err != nil {
+		tx.Rollback()
+		handleError(w, "updating user", err, http.StatusInternalServerError)
 		return
 	}
 
-	customerParams := &stripe.CustomerParams{
-		Plan:  &planID,
-		Email: &tok.Email,
-	}
-	err := customerParams.SetSource(tok.ID)
+	customer, err := getOrCreateStripeCustomer(tx, user)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "setting source").Error(), http.StatusInternalServerError)
+		tx.Rollback()
+		handleError(w, "getting customer", err, http.StatusInternalServerError)
 		return
 	}
 
-	//TODO: if customer exists, update not create
-	c, err := customer.New(customerParams)
-	if err != nil {
-		http.Error(w, errors.Wrap(err, "creating customer").Error(), http.StatusInternalServerError)
+	if _, err = addCustomerSource(customer.ID, payload.Source.ID); err != nil {
+		tx.Rollback()
+		handleError(w, "attaching source", err, http.StatusInternalServerError)
 		return
 	}
 
-	user.StripeCustomerID = c.ID
-	user.Cloud = true
-	if err := db.Save(&user).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "updating user").Error(), http.StatusInternalServerError)
+	if _, err := createCustomerSubscription(customer.ID, proPlanID); err != nil {
+		tx.Rollback()
+		handleError(w, "creating subscription", err, http.StatusInternalServerError)
 		return
 	}
+
+	if err := tx.Commit().Error; err != nil {
+		handleError(w, "committing a subscription transaction", err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 type updateSubPayload struct {
@@ -141,12 +216,11 @@ func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
 
 	var payload updateSubPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, errors.Wrap(err, "decoding params").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding params", err, http.StatusBadRequest)
 		return
 	}
-
 	if err := validateUpdateSubPayload(payload); err != nil {
-		http.Error(w, errors.Wrap(err, "invalid payload").Error(), http.StatusBadRequest)
+		handleError(w, "invalid payload", err, http.StatusBadRequest)
 		return
 	}
 
@@ -165,7 +239,7 @@ func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
 			statusCode = http.StatusInternalServerError
 		}
 
-		http.Error(w, errors.Wrapf(err, "during operation %s", payload.Op).Error(), statusCode)
+		handleError(w, fmt.Sprintf("during operation %s", payload.Op), err, statusCode)
 		return
 	}
 
@@ -189,13 +263,13 @@ type GetSubResponse struct {
 }
 
 func respondWithEmptySub(w http.ResponseWriter) {
-	emptyGetSubREsponse := GetSubResponse{
+	emptyGetSubResponse := GetSubResponse{
 		Items: []GetSubResponseItem{},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(emptyGetSubREsponse); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(emptyGetSubResponse); err != nil {
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -218,7 +292,7 @@ func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
 
 	if !i.Next() {
 		if err := i.Err(); err != nil {
-			http.Error(w, errors.Wrap(err, "fetching subscription").Error(), http.StatusInternalServerError)
+			handleError(w, "fetching subscription", err, http.StatusInternalServerError)
 			return
 		}
 
@@ -247,7 +321,7 @@ func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -262,11 +336,62 @@ type GetStripeSourceResponse struct {
 
 func respondWithEmptyStripeToken(w http.ResponseWriter) {
 	var resp GetStripeSourceResponse
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
+}
+
+// getStripeCard retrieves card information from stripe and returns a stripe.Card
+// It handles legacy 'card' resource which have 'card_' prefixes, as well as the
+// more up-to-date 'source' resources which have 'src_' prefixes.
+func getStripeCard(stripeCustomerID, sourceID string) (*stripe.Card, error) {
+	if strings.HasPrefix(sourceID, "card_") {
+		params := &stripe.CardParams{
+			Customer: stripe.String(stripeCustomerID),
+		}
+		cd, err := card.Get(sourceID, params)
+		if err != nil {
+			return nil, errors.Wrap(err, "fetching card")
+		}
+
+		return cd, nil
+	} else if strings.HasPrefix(sourceID, "src_") {
+		src, err := source.Get(sourceID, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "fetching source")
+		}
+
+		brand, ok := src.TypeData["brand"].(string)
+		if !ok {
+			return nil, errors.New("casting brand")
+		}
+		last4, ok := src.TypeData["last4"].(string)
+		if !ok {
+			return nil, errors.New("casting last4")
+		}
+		expMonth, ok := src.TypeData["exp_month"].(float64)
+		if !ok {
+			return nil, errors.New("casting exp_month")
+		}
+		expYear, ok := src.TypeData["exp_year"].(float64)
+		if !ok {
+			return nil, errors.New("casting exp_year")
+		}
+
+		cd := &stripe.Card{
+			Brand:    stripe.CardBrand(brand),
+			Last4:    last4,
+			ExpMonth: uint8(expMonth),
+			ExpYear:  uint16(expYear),
+		}
+
+		return cd, nil
+	}
+
+	return nil, errors.Errorf("malformed sourceID %s", sourceID)
 }
 
 func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
@@ -282,20 +407,18 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 
 	c, err := customer.Get(user.StripeCustomerID, nil)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "fetching stripe customer").Error(), http.StatusInternalServerError)
+		handleError(w, "fetching stripe customer", err, http.StatusInternalServerError)
 		return
 	}
+
 	if c.DefaultSource == nil {
 		respondWithEmptyStripeToken(w)
 		return
 	}
 
-	params := &stripe.CardParams{
-		Customer: stripe.String(user.StripeCustomerID),
-	}
-	cd, err := card.Get(c.DefaultSource.ID, params)
+	cd, err := getStripeCard(user.StripeCustomerID, c.DefaultSource.ID)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "fetching stripe card").Error(), http.StatusInternalServerError)
+		handleError(w, "fetching stripe source", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -308,7 +431,7 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -316,16 +439,14 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Err("Error reading request body: %v\n", err)
-		w.WriteHeader(http.StatusServiceUnavailable)
+		handleError(w, "reading body", err, http.StatusServiceUnavailable)
 		return
 	}
 
 	webhookSecret := os.Getenv("StripeWebhookSecret")
 	event, err := webhook.ConstructEvent(body, req.Header.Get("Stripe-Signature"), webhookSecret)
 	if err != nil {
-		logger.Err("Error verifying the signature: %v\n", err)
-		w.WriteHeader(http.StatusBadRequest)
+		handleError(w, "verifying stripe webhook signature", err, http.StatusBadRequest)
 		return
 	}
 
@@ -334,8 +455,7 @@ func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 		{
 			var subscription stripe.Subscription
 			if json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-				logger.Err(errors.Wrap(err, "unmarshaling").Error())
-				w.WriteHeader(http.StatusBadRequest)
+				handleError(w, "unmarshaling payload", err, http.StatusBadRequest)
 				return
 			}
 
@@ -343,8 +463,8 @@ func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 		}
 	default:
 		{
-			logger.Err("Unsupported webhook event type %s", event.Type)
-			w.WriteHeader(http.StatusBadRequest)
+			msg := fmt.Sprintf("Unsupported webhook event type %s", event.Type)
+			handleError(w, msg, err, http.StatusBadRequest)
 			return
 		}
 	}

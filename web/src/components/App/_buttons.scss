@@ -1,4 +1,4 @@
-@import './variables';
+@import './theme';
 @import './rem';
 @import './font';
 
@@ -28,7 +28,6 @@
 .button {
   position: relative;
   display: inline-block;
-  line-height: 1.25;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
@@ -44,8 +43,6 @@
   cursor: pointer;
 
   &:not(.button-no-ui) {
-    padding: rem(8px) rem(16px);
-    @include font-size('small');
   }
 
   &:not(:disabled):hover {
@@ -67,9 +64,36 @@ button:disabled {
   opacity: 0.6;
 }
 
+.button-normal {
+  @include font-size('small');
+  padding: rem(8px) rem(16px);
+}
+
 .button-large {
-  &:not(.button-no-ui) {
-    padding: rem(12px) rem(16px);
+  @include font-size('medium');
+
+  padding: rem(8px) rem(24px);
+
+  @include breakpoint(md) {
+    padding: rem(12px) rem(36px);
+  }
+
+  @include breakpoint(lg) {
+    padding: rem(12px) rem(48px);
+  }
+}
+
+.button-xlarge {
+  @include font-size('x-large');
+
+  padding: rem(16px) rem(24px);
+
+  @include breakpoint(md) {
+    padding: rem(12px) rem(36px);
+  }
+
+  @include breakpoint(lg) {
+    padding: rem(16px) rem(48px);
   }
 }
 
@@ -107,7 +131,7 @@ button:disabled {
 }
 
 .button ~ .button {
-  margin-left: rem(8px);
+  margin-left: rem(12px);
 }
 
 .button-no-ui {

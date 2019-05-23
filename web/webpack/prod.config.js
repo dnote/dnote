@@ -23,6 +23,7 @@ const resolve = require('./resolve');
 
 module.exports = env => {
   const isStandalone = env.standalone === 'true';
+  const isTest = env.isTest === 'true';
 
   if (!isStandalone) {
     console.log('building a non-standalone app');
@@ -40,7 +41,11 @@ module.exports = env => {
     },
     module: { rules: rules({ production: true }) },
     resolve,
-    plugins: plugins({ production: true, standalone: isStandalone }),
+    plugins: plugins({
+      production: true,
+      test: isTest,
+      standalone: isStandalone
+    }),
     optimization: {
       minimize: true
     }

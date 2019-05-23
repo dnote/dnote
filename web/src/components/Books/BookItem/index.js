@@ -20,7 +20,7 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import { homePath } from '../../../libs/paths';
+import { getHomePath } from '../../../libs/paths';
 import Actions from './Actions';
 import MobileActions from './MobileActions';
 
@@ -49,7 +49,7 @@ export default ({ book, demo, isFocused, setFocusedOptEl, onDeleteBook }) => {
       }}
     >
       <Link
-        to={homePath({ book: book.uuid }, { demo })}
+        to={getHomePath({ book: book.uuid }, { demo })}
         className={styles.link}
         tabIndex="-1"
       >
