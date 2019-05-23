@@ -19,7 +19,7 @@ pushd "$basePath/web"
       --colors\
       --display-error-details\
       --env.standalone="$standalone"\
-      --env.test="$isTest"\
+      --env.isTest="$isTest"\
       --config "$basePath"/web/webpack/prod.config.js
 
   NODE_ENV=PRODUCTION \
