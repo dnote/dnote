@@ -58,7 +58,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 		Aliases:    []string{"l", "notes"},
 		Short:      "List all notes",
 		Example:    example,
-		RunE:       NewRun(ctx),
+		RunE:       NewRun(ctx, false),
 		PreRunE:    preRun,
 		Deprecated: deprecationWarning,
 	}
@@ -67,10 +67,10 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 // NewRun returns a new run function for ls
-func NewRun(ctx infra.DnoteCtx) core.RunEFunc {
+func NewRun(ctx infra.DnoteCtx, nameOnly bool) core.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			if err := printBooks(ctx); err != nil {
+			if err := printBooks(ctx, nameOnly); err != nil {
 				return errors.Wrap(err, "viewing books")
 			}
 
@@ -125,7 +125,15 @@ func formatBody(noteBody string) (string, bool) {
 	return strings.Trim(noteBody, " "), false
 }
 
-func printBooks(ctx infra.DnoteCtx) error {
+func printBookLine(info bookInfo, nameOnly bool) {
+	if nameOnly {
+		fmt.Println(info.BookLabel)
+	} else {
+		log.Printf("%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
+	}
+}
+
+func printBooks(ctx infra.DnoteCtx, nameOnly bool) error {
 	db := ctx.DB
 
 	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
@@ -151,7 +159,7 @@ func printBooks(ctx infra.DnoteCtx) error {
 	}
 
 	for _, info := range infos {
-		log.Printf("%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
+		printBookLine(info, nameOnly)
 	}
 
 	return nil

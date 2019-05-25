@@ -40,6 +40,8 @@ var example = `
  dnote view javascript 0
  `
 
+var nameOnly bool
+
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 {
 		return errors.New("Incorrect number of argument")
@@ -59,6 +61,9 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 		PreRunE: preRun,
 	}
 
+	f := cmd.Flags()
+	f.BoolVarP(&nameOnly, "name-only", "", false, "print book names only")
+
 	return cmd
 }
 
@@ -67,12 +72,16 @@ func newRun(ctx infra.DnoteCtx) core.RunEFunc {
 		var run core.RunEFunc
 
 		if len(args) == 0 {
-			run = ls.NewRun(ctx)
+			run = ls.NewRun(ctx, nameOnly)
 		} else if len(args) == 1 {
+			if nameOnly {
+				return errors.New("--name-only flag is only valid when viewing books")
+			}
+
 			if utils.IsNumber(args[0]) {
 				run = cat.NewRun(ctx)
 			} else {
-				run = ls.NewRun(ctx)
+				run = ls.NewRun(ctx, false)
 			}
 		} else if len(args) == 2 {
 			// DEPRECATED: passing book name to view command is deprecated
