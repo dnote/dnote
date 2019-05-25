@@ -167,15 +167,19 @@ func TestResolveLabel(t *testing.T) {
 	}{
 		{
 			input:    "js",
-			expected: "js (2)",
+			expected: "js_(2)",
 		},
 		{
 			input:    "css",
-			expected: "css (3)",
+			expected: "css_(3)",
 		},
 		{
 			input:    "linux",
-			expected: "linux (4)",
+			expected: "linux_(4)",
+		},
+		{
+			input:    "cool_ideas",
+			expected: "cool_ideas_(2)",
 		},
 	}
 
@@ -188,10 +192,11 @@ func TestResolveLabel(t *testing.T) {
 			db := ctx.DB
 
 			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b1-uuid", "js")
-			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b2-uuid", "css (2)")
-			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b3-uuid", "linux (1)")
-			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b4-uuid", "linux (2)")
-			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b5-uuid", "linux (3)")
+			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b2-uuid", "css_(2)")
+			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b3-uuid", "linux_(1)")
+			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b4-uuid", "linux_(2)")
+			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b5-uuid", "linux_(3)")
+			testutils.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b6-uuid", "cool_ideas")
 
 			// execute
 			tx, err := db.Begin()
@@ -1437,7 +1442,7 @@ func TestStepSyncBook(t *testing.T) {
 				expectedLabel:            "foo",
 				expectedDeleted:          false,
 				anotherBookLabel:         "foo",
-				expectedAnotherBookLabel: "foo (2)",
+				expectedAnotherBookLabel: "foo_(2)",
 				expectedAnotherBookDirty: true,
 			},
 		}
@@ -1601,7 +1606,7 @@ func TestMergeBook(t *testing.T) {
 			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 
-		testutils.AssertEqual(t, b1Record.Label, "foo (2)", "b1 Label mismatch")
+		testutils.AssertEqual(t, b1Record.Label, "foo_(2)", "b1 Label mismatch")
 		testutils.AssertEqual(t, b1Record.USN, 1, "b1 USN mismatch")
 		testutils.AssertEqual(t, b1Record.Dirty, true, "b1 should have been marked dirty")
 
@@ -1618,8 +1623,8 @@ func TestMergeBook(t *testing.T) {
 		db := ctx.DB
 
 		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
-		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "foo (2)", true, false)
-		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b3-uuid", 3, "foo (3)", false, false)
+		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "foo_(2)", true, false)
+		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b3-uuid", 3, "foo_(3)", false, false)
 
 		// test
 		tx, err := db.Begin()
@@ -1664,15 +1669,15 @@ func TestMergeBook(t *testing.T) {
 			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b4-uuid"),
 			&b4Record.UUID, &b4Record.Label, &b4Record.USN, &b4Record.Dirty)
 
-		testutils.AssertEqual(t, b1Record.Label, "foo (4)", "b1 Label mismatch")
+		testutils.AssertEqual(t, b1Record.Label, "foo_(4)", "b1 Label mismatch")
 		testutils.AssertEqual(t, b1Record.USN, 1, "b1 USN mismatch")
 		testutils.AssertEqual(t, b1Record.Dirty, true, "b1 Dirty mismatch")
 
-		testutils.AssertEqual(t, b2Record.Label, "foo (2)", "b2 Label mismatch")
+		testutils.AssertEqual(t, b2Record.Label, "foo_(2)", "b2 Label mismatch")
 		testutils.AssertEqual(t, b2Record.USN, 2, "b2 USN mismatch")
 		testutils.AssertEqual(t, b2Record.Dirty, true, "b2 Dirty mismatch")
 
-		testutils.AssertEqual(t, b3Record.Label, "foo (3)", "b3 Label mismatch")
+		testutils.AssertEqual(t, b3Record.Label, "foo_(3)", "b3 Label mismatch")
 		testutils.AssertEqual(t, b3Record.USN, 3, "b3 USN mismatch")
 		testutils.AssertEqual(t, b3Record.Dirty, false, "b3 Dirty mismatch")
 
@@ -1781,7 +1786,7 @@ func TestMergeBook(t *testing.T) {
 		testutils.AssertEqual(t, b1Record.USN, 12, "b1 USN mismatch")
 		testutils.AssertEqual(t, b1Record.Dirty, false, "b1 Dirty mismatch")
 
-		testutils.AssertEqual(t, b2Record.Label, "bar (2)", "b2 Label mismatch")
+		testutils.AssertEqual(t, b2Record.Label, "bar_(2)", "b2 Label mismatch")
 		testutils.AssertEqual(t, b2Record.USN, 2, "b2 USN mismatch")
 		testutils.AssertEqual(t, b2Record.Dirty, true, "b2 Dirty mismatch")
 	})
@@ -1795,8 +1800,8 @@ func TestMergeBook(t *testing.T) {
 
 		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
-		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b3-uuid", 3, "bar (2)", true, false)
-		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b4-uuid", 4, "bar (3)", false, false)
+		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b3-uuid", 3, "bar_(2)", true, false)
+		testutils.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b4-uuid", 4, "bar_(3)", false, false)
 
 		// test
 		tx, err := db.Begin()
@@ -1845,15 +1850,15 @@ func TestMergeBook(t *testing.T) {
 		testutils.AssertEqual(t, b1Record.USN, 12, "b1 USN mismatch")
 		testutils.AssertEqual(t, b1Record.Dirty, false, "b1 Dirty mismatch")
 
-		testutils.AssertEqual(t, b2Record.Label, "bar (4)", "b2 Label mismatch")
+		testutils.AssertEqual(t, b2Record.Label, "bar_(4)", "b2 Label mismatch")
 		testutils.AssertEqual(t, b2Record.USN, 2, "b2 USN mismatch")
 		testutils.AssertEqual(t, b2Record.Dirty, true, "b2 Dirty mismatch")
 
-		testutils.AssertEqual(t, b3Record.Label, "bar (2)", "b3 Label mismatch")
+		testutils.AssertEqual(t, b3Record.Label, "bar_(2)", "b3 Label mismatch")
 		testutils.AssertEqual(t, b3Record.USN, 3, "b3 USN mismatch")
 		testutils.AssertEqual(t, b3Record.Dirty, true, "b3 Dirty mismatch")
 
-		testutils.AssertEqual(t, b4Record.Label, "bar (3)", "b4 Label mismatch")
+		testutils.AssertEqual(t, b4Record.Label, "bar_(3)", "b4 Label mismatch")
 		testutils.AssertEqual(t, b4Record.USN, 4, "b4 USN mismatch")
 		testutils.AssertEqual(t, b4Record.Dirty, false, "b4 Dirty mismatch")
 	})

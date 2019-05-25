@@ -20,6 +20,7 @@ package add
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/dnote/dnote/cli/core"
@@ -82,6 +83,9 @@ var ErrBookNameReserved = errors.New("The book name is reserved")
 // ErrNumericBookName is an error for book names that only contain numbers
 var ErrNumericBookName = errors.New("The book name cannot contain only numbers")
 
+// ErrBookNameHasSpace is an error for book names that have any space
+var ErrBookNameHasSpace = errors.New("The book name cannot contain spaces")
+
 func validateBookName(name string) error {
 	if isReservedName(name) {
 		return ErrBookNameReserved
@@ -89,6 +93,10 @@ func validateBookName(name string) error {
 
 	if utils.IsNumber(name) {
 		return ErrNumericBookName
+	}
+
+	if strings.Contains(name, " ") {
+		return ErrBookNameHasSpace
 	}
 
 	return nil
