@@ -58,7 +58,7 @@ func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 }
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) > 2 {
+	if len(args) != 1 && len(args) != 2 {
 		return errors.New("Incorrect number of argument")
 	}
 
