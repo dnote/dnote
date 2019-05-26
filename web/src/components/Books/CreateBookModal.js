@@ -27,21 +27,10 @@ import { addBook } from '../../actions/books';
 import { getHomePath } from '../../libs/paths';
 import Button from '../Common/Button';
 import Flash from '../Common/Flash';
+import { checkDuplicate, validateBookName } from '../../libs/books';
 
 import styles from './CreateBookModal.module.scss';
 import bodyStyles from '../Common/Modal/ModalBody.module.scss';
-
-function checkDuplicate(books, bookLabel) {
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i];
-
-    if (book.label === bookLabel) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 function CreateBookModal({
   isOpen,
@@ -60,7 +49,7 @@ function CreateBookModal({
 
   let msgId;
   if (errMessage) {
-    msgId = 'new-book-modal-message';
+    msgId = 'new-book-modal-err';
   }
 
   return (
@@ -100,11 +89,19 @@ function CreateBookModal({
           }
 
           // Check if the book label already exists. If the client somehow posts a duplicate label,
-          // Duplicate book labels will be resolved on the server side, anyway.
-          // IDEA: If duplicate, post it anyway and re-fetch books?
+          // Duplicate book labels will be resolved when they are locally synced, anyway.
+          // TODO: resolve any duplicate book labels on the web as well.
           if (checkDuplicate(booksData.items, bookName)) {
             setInProgress(false);
             setErrMessage('Duplicate book exists');
+            return;
+          }
+
+          try {
+            validateBookName(bookName);
+          } catch (err) {
+            setInProgress(false);
+            setErrMessage(err.message);
             return;
           }
 

@@ -44,7 +44,7 @@ func TestValidateBookName(t *testing.T) {
 		},
 		{
 			input:    "123",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
 		},
 		{
 			input:    "+123",
@@ -60,11 +60,11 @@ func TestValidateBookName(t *testing.T) {
 		},
 		{
 			input:    "0",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
 		},
 		{
 			input:    "0333",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
 		},
 		{
 			input:    " javascript",
