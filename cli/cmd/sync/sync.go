@@ -201,7 +201,7 @@ func resolveLabel(tx *infra.DB, label string) (string, error) {
 	var ret string
 
 	for i := 2; ; i++ {
-		ret = fmt.Sprintf("%s_(%d)", label, i)
+		ret = fmt.Sprintf("%s_%d", label, i)
 
 		var cnt int
 		if err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", ret).Scan(&cnt); err != nil {
