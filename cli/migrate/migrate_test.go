@@ -961,6 +961,85 @@ func TestLocalMigration10(t *testing.T) {
 	testutils.AssertEqual(t, b8Dirty, true, "b8Dirty mismatch")
 }
 
+func TestLocalMigration11(t *testing.T) {
+	// set up
+	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/local-11-pre-schema.sql", false)
+	defer testutils.TeardownEnv(ctx)
+
+	db := ctx.DB
+
+	b1UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "foo")
+	b2UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 2", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "bar baz")
+	b3UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 3", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b3UUID, "quz qux")
+	b4UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 4", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b4UUID, "quz_qux")
+	b5UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 5", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b5UUID, "foo bar baz quz 123")
+	b6UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 6", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b6UUID, "foo_bar baz")
+	b7UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 7", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b7UUID, "cool ideas")
+	b8UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 8", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b8UUID, "cool_ideas")
+	b9UUID := utils.GenerateUUID()
+	testutils.MustExec(t, "inserting book 9", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b9UUID, "cool_ideas_2")
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm11.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test
+	var bookCount int
+	testutils.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	testutils.AssertEqual(t, bookCount, 9, "bookCount mismatch")
+
+	// assert that note_fts was populated with correct values
+	var b1Label, b2Label, b3Label, b4Label, b5Label, b6Label, b7Label, b8Label, b9Label string
+	var b1Dirty, b2Dirty, b3Dirty, b4Dirty, b5Dirty, b6Dirty, b7Dirty, b8Dirty, b9Dirty bool
+
+	testutils.MustScan(t, "getting b1", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	testutils.MustScan(t, "getting b2", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	testutils.MustScan(t, "getting b3", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
+	testutils.MustScan(t, "getting b4", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
+	testutils.MustScan(t, "getting b5", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
+	testutils.MustScan(t, "getting b6", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
+	testutils.MustScan(t, "getting b7", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
+	testutils.MustScan(t, "getting b8", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
+	testutils.MustScan(t, "getting b9", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b9UUID), &b9Label, &b9Dirty)
+
+	testutils.AssertEqual(t, b1Label, "foo", "b1Label mismatch")
+	testutils.AssertEqual(t, b1Dirty, false, "b1Dirty mismatch")
+	testutils.AssertEqual(t, b2Label, "bar_baz", "b2Label mismatch")
+	testutils.AssertEqual(t, b2Dirty, true, "b2Dirty mismatch")
+	testutils.AssertEqual(t, b3Label, "quz_qux_2", "b3Label mismatch")
+	testutils.AssertEqual(t, b3Dirty, true, "b3Dirty mismatch")
+	testutils.AssertEqual(t, b4Label, "quz_qux", "b4Label mismatch")
+	testutils.AssertEqual(t, b4Dirty, false, "b4Dirty mismatch")
+	testutils.AssertEqual(t, b5Label, "foo_bar_baz_quz_123", "b5Label mismatch")
+	testutils.AssertEqual(t, b5Dirty, true, "b5Dirty mismatch")
+	testutils.AssertEqual(t, b6Label, "foo_bar_baz", "b6Label mismatch")
+	testutils.AssertEqual(t, b6Dirty, true, "b6Dirty mismatch")
+	testutils.AssertEqual(t, b7Label, "cool_ideas_3", "b7Label mismatch")
+	testutils.AssertEqual(t, b7Dirty, true, "b7Dirty mismatch")
+	testutils.AssertEqual(t, b8Label, "cool_ideas", "b8Label mismatch")
+	testutils.AssertEqual(t, b8Dirty, false, "b8Dirty mismatch")
+	testutils.AssertEqual(t, b9Label, "cool_ideas_2", "b9Label mismatch")
+	testutils.AssertEqual(t, b9Dirty, false, "b9Dirty mismatch")
+}
+
 func TestRemoteMigration1(t *testing.T) {
 	// set up
 	ctx := testutils.InitEnv(t, "../tmp", "./fixtures/remote-1-pre-schema.sql", false)

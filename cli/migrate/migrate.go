@@ -44,6 +44,7 @@ var LocalSequence = []migration{
 	lm8,
 	lm9,
 	lm10,
+	lm11,
 }
 
 // RemoteSequence is a list of remote migrations to be run
