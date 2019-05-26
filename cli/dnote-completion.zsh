@@ -31,7 +31,7 @@ if (( CURRENT == 2 )); then
   return
 elif (( CURRENT == 3 )); then
   case "$words[2]" in
-    v|view)
+    v|view|a|add)
       _alternative \
         "names:book names:($(get_booknames))"
   esac

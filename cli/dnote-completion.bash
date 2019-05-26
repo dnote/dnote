@@ -38,7 +38,7 @@ _dnote_completions() {
 
         __dnote_debug "cmd: ${cmd}"
 
-        if [[ ( "${cmd}" == view ) || ( "${cmd}" == v ) ]]; then
+        if [[ ( "${cmd}" == view ) || ( "${cmd}" == v ) || ( "${cmd}" == add ) || ( "${cmd}" == a ) ]]; then
             _complete_view_command
         fi
     fi
