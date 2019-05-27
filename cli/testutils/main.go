@@ -63,7 +63,7 @@ func InitEnv(t *testing.T, dnotehomePath string, fixturePath string, migrated bo
 
 	if migrated {
 		// mark migrations as done. When adding new migrations, bump the numbers here.
-		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemSchema, 9); err != nil {
+		if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", infra.SystemSchema, 11); err != nil {
 			t.Fatal(errors.Wrap(err, "inserting schema"))
 		}
 

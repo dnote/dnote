@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/dnote/actions"
 	"github.com/dnote/dnote/cli/client"
@@ -456,6 +457,70 @@ var lm10 = migration{
 				err = migrateBook(label)
 				if err != nil {
 					return errors.Wrapf(err, "migrating book %s", label)
+				}
+			}
+		}
+
+		return nil
+	},
+}
+
+var lm11 = migration{
+	name: "rename-book-labels-with-space",
+	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
+		processLabel := func(label string) (string, error) {
+			sanitized := strings.Replace(label, " ", "_", -1)
+
+			var cnt int
+			err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", sanitized).Scan(&cnt)
+			if err != nil {
+				return "", errors.Wrap(err, "counting ret")
+			}
+			if cnt == 0 {
+				return sanitized, nil
+			}
+
+			// if there is a collision, resolve by appending number
+			var ret string
+			for i := 2; ; i++ {
+				ret = fmt.Sprintf("%s_%d", sanitized, i)
+
+				var count int
+				err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", ret).Scan(&count)
+				if err != nil {
+					return "", errors.Wrap(err, "counting ret")
+				}
+
+				if count == 0 {
+					break
+				}
+			}
+
+			return ret, nil
+		}
+
+		rows, err := tx.Query("SELECT uuid, label FROM books")
+		defer rows.Close()
+		if err != nil {
+			return errors.Wrap(err, "getting labels")
+		}
+
+		for rows.Next() {
+			var uuid, label string
+			err := rows.Scan(&uuid, &label)
+			if err != nil {
+				return errors.Wrap(err, "scanning row")
+			}
+
+			if strings.Contains(label, " ") {
+				processed, err := processLabel(label)
+				if err != nil {
+					return errors.Wrapf(err, "resolving book name for %s", label)
+				}
+
+				_, err = tx.Exec("UPDATE books SET label = ?, dirty = ? WHERE uuid = ?", processed, true, uuid)
+				if err != nil {
+					return errors.Wrapf(err, "updating book '%s'", label)
 				}
 			}
 		}

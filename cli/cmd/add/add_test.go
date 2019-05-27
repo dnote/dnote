@@ -19,6 +19,7 @@
 package add
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/dnote/dnote/cli/testutils"
@@ -39,11 +40,11 @@ func TestValidateBookName(t *testing.T) {
 		},
 		{
 			input:    "foo bar",
-			expected: nil,
+			expected: ErrBookNameHasSpace,
 		},
 		{
 			input:    "123",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
 		},
 		{
 			input:    "+123",
@@ -59,11 +60,31 @@ func TestValidateBookName(t *testing.T) {
 		},
 		{
 			input:    "0",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
 		},
 		{
 			input:    "0333",
-			expected: ErrNumericBookName,
+			expected: ErrBookNameNumeric,
+		},
+		{
+			input:    " javascript",
+			expected: ErrBookNameHasSpace,
+		},
+		{
+			input:    "java script",
+			expected: ErrBookNameHasSpace,
+		},
+		{
+			input:    "javascript (1)",
+			expected: ErrBookNameHasSpace,
+		},
+		{
+			input:    "javascript ",
+			expected: ErrBookNameHasSpace,
+		},
+		{
+			input:    "javascript (1) (2) (3)",
+			expected: ErrBookNameHasSpace,
 		},
 
 		// reserved book names
@@ -80,6 +101,6 @@ func TestValidateBookName(t *testing.T) {
 	for _, tc := range testCases {
 		actual := validateBookName(tc.input)
 
-		testutils.AssertEqual(t, actual, tc.expected, "result does not match")
+		testutils.AssertEqual(t, actual, tc.expected, fmt.Sprintf("result does not match for the input '%s'", tc.input))
 	}
 }
