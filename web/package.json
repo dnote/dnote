@@ -10,9 +10,9 @@
   "author": "Sung Won Cho <sung@monomax.sh> (https://dnote.io)",
   "license": "AGPL",
   "devDependencies": {
-    "@babel/core": "^7.4.4",
+    "@babel/core": "^7.4.5",
     "@babel/plugin-transform-react-constant-elements": "^7.2.0",
-    "@babel/preset-env": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
     "@babel/preset-react": "^7.0.0",
     "@babel/register": "^7.4.4",
     "@hot-loader/react-dom": "^16.8.6",
@@ -25,8 +25,8 @@
     "cssnano": "^4.1.10",
     "eslint": "^5.16.0",
     "eslint-config-airbnb": "^17.0.0",
-    "eslint-config-prettier": "^4.2.0",
-    "eslint-plugin-import": "^2.17.2",
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-import": "^2.17.3",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.13.0",
@@ -48,15 +48,15 @@
     "style-loader": "^0.23.0",
     "url-loader": "^1.0.1",
     "webpack-cli": "^3.3.2",
-    "webpack-dev-middleware": "^3.6.2",
-    "webpack-dev-server": "^3.3.1",
-    "webpack-hot-middleware": "^2.24.4",
+    "webpack-dev-middleware": "^3.7.0",
+    "webpack-dev-server": "^3.4.1",
+    "webpack-hot-middleware": "^2.25.0",
     "webpack-manifest-plugin": "^2.0.2"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.4",
     "classnames": "^2.2.5",
-    "core-js": "^3.0.1",
+    "core-js": "^3.1.2",
     "highlight.js": "^9.15.6",
     "hoist-non-react-statics": "^3.3.0",
     "js-cookie": "^2.2.0",
@@ -68,7 +68,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-helmet": "^5.2.1",
-    "react-hot-loader": "^4.8.4",
+    "react-hot-loader": "^4.8.8",
     "react-redux": "^7.0.0",
     "react-router": "^5.0.0",
     "react-router-config": "^5.0.0",
@@ -78,6 +78,6 @@
     "redux": "^4.0.0",
     "redux-thunk": "^2.1.0",
     "regenerator-runtime": "^0.13.2",
-    "webpack": "^4.31.0"
+    "webpack": "^4.32.2"
   }
 }
