@@ -15,6 +15,7 @@ appPath="$basePath"/web
   PUBLIC_PATH="$appPath"/public \
   STANDALONE=true \
   COMPILED_PATH="$basePath/web/compiled" \
+  IS_TEST=true \
     "$appPath"/scripts/webpack-dev.sh
 ) &
 

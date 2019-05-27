@@ -14,6 +14,7 @@ appPath="$basePath"/web
   ASSET_BASE_URL=$ASSET_BASE_URL \
   COMPILED_PATH=$COMPILED_PATH \
   PUBLIC_PATH=$PUBLIC_PATH \
+  IS_TEST=true \
     "$appPath"/scripts/placeholder.sh &&
 
   "$appPath"/node_modules/.bin/webpack-dev-server\
