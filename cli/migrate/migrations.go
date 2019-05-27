@@ -469,7 +469,7 @@ var lm11 = migration{
 	name: "rename-book-labels-with-space",
 	run: func(ctx infra.DnoteCtx, tx *infra.DB) error {
 		processLabel := func(label string) (string, error) {
-			sanitized := strings.ReplaceAll(label, " ", "_")
+			sanitized := strings.Replace(label, " ", "_", -1)
 
 			var cnt int
 			err := tx.QueryRow("SELECT count(*) FROM books WHERE label = ?", sanitized).Scan(&cnt)
