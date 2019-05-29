@@ -1,39 +1,63 @@
-# Dnote
+![Dnote](assets/logo.png)
+=========================
 
-A simple notebook for developers.
+Dnote is a simple notebook for developers.
 
-## What It Does
+[![Build Status](https://semaphoreci.com/api/v1/dnote/dnote-2/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote-2)
 
-Write technical notes and neatly organize them into books.
+## What is Dnote?
 
-## How to Use
+Dnote is a lightweight notebook for writing technical notes and neatly organizing them into books. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
 
-You can use Dnote in a command line, web browser, or in an IDE.
+It also offers **end-to-end encrypted** backup with AES-256, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
 
-- [CLI](https://github.com/dnote/dnote/tree/master/cli)
-- [Web](https://dnote.io)
-- [Browser extension](https://github.com/dnote/browser-extension)
-- [Atom](https://github.com/dnote/dnote-atom)
+For more details, see the [download page](https://dnote.io/download) and [features](https://dnote.io/pricing).
 
-It is designed to minimize switching environment.
+## Quick install
 
-## Privacy
+The quickest way to try Dnote is to install the command line interface.
 
-Dnote is end-to-end encrypted with AES-256 to respect your privacy. It does not track you.
+### Install with Homebrew
 
-## Self-host
+On macOS, you can install using Homebrew:
 
-Instructions are coming soon.
+```sh
+brew tap dnote/dnote
+brew install dnote
 
-## User Stories
+# to upgrade to the latest version
+brew upgrade dnote
+```
+
+### Install with script
+
+You can use the installation script to install the latest version:
+
+    curl -s https://raw.githubusercontent.com/dnote/dnote/master/cli/install.sh | sh
+
+In some cases, you might need an elevated permission:
+
+    curl -s https://raw.githubusercontent.com/dnote/dnote/master/cli/install.sh | sudo sh
+
+### Install with tarball
+
+You can download the binary for your platform manually from the [releases page](https://github.com/dnote/dnote/releases).
+
+## Personal knowledge base
+
+Dnote is great for building a personal knowledge base because:
+
+* It is fully open source.
+* Your data is stored locally first and in a SQLite format which is [suitable for continued accessibility](https://www.sqlite.org/locrsf.html).
+* It provides a way of instantly capturing new lessons without distracting you.
+* It automates spaced repetition to help you retain your memory.
+
+You can read more in the following user stories:
 
 - [How I Built a Personal Knowledge Base for Myself](https://dnote.io/blog/how-i-built-personal-knowledge-base-for-myself/)
 - [I Wrote Down Everything I Learned While Programming for a Month](https://dnote.io/blog/writing-everything-i-learn-coding-for-a-month/)
 
-## Links
+## See Also
 
-- [Dnote](https://dnote.io)
-- [Dnote Pro](https://dnote.io/pricing)
+- [Homepage](https://dnote.io)
 - [Forum](https://forum.dnote.io)
-
-[![Build Status](https://semaphoreci.com/api/v1/dnote/dnote-2/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote-2)
