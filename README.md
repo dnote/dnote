@@ -48,7 +48,7 @@ You can download the binary for your platform manually from the [releases page](
 Dnote is great for building a personal knowledge base because:
 
 * It is fully open source.
-* Your data is stored locally first and in a SQLite format [suitable for continued accessibility](https://www.sqlite.org/locrsf.html).
+* Your data is stored locally first and in a SQLite format which is [suitable for continued accessibility](https://www.sqlite.org/locrsf.html).
 * It provides a way of instantly capturing new lessons without distracting you.
 * It automates spaced repetition to help you retain your memory.
 

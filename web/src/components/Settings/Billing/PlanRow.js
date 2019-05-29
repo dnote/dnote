@@ -67,7 +67,10 @@ function PlanRow({ subscription }) {
 
       <div>
         {!subscription.id && (
-          <Link className="button button-first" to="/subscriptions">
+          <Link
+            className="button button-normal button-first"
+            to="/subscriptions"
+          >
             Upgrade
           </Link>
         )}
