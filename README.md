@@ -13,6 +13,8 @@ It also offers **end-to-end encrypted** backup with AES-256, and **automated spa
 
 For more details, see the [download page](https://dnote.io/download) and [features](https://dnote.io/pricing).
 
+![A demo of Dnote CLI](assets/cli.gif)
+
 ## Quick install
 
 The quickest way to try Dnote is to install the command line interface.
