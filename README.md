@@ -9,7 +9,7 @@ Dnote is a simple notebook for developers.
 
 Dnote is a lightweight notebook for writing technical notes and neatly organizing them into books. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
 
-It also offers **end-to-end encrypted** backup with AES-256, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
+It also offers **end-to-end encrypted** backup with AES-256, a seamless **multi device sync**, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
 
 For more details, see the [download page](https://dnote.io/download) and [features](https://dnote.io/pricing).
 

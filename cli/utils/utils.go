@@ -30,7 +30,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/dnote/dnote/cli/infra"
 	"github.com/dnote/dnote/cli/log"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -161,55 +160,20 @@ func CopyDir(src, dest string) error {
 	return nil
 }
 
-func getReq(ctx infra.DnoteCtx, path, method, body string) (*http.Request, error) {
-	endpoint := fmt.Sprintf("%s%s", ctx.APIEndpoint, path)
-	req, err := http.NewRequest(method, endpoint, strings.NewReader(body))
+// checkRespErr checks if the given http response indicates an error. It returns a boolean indicating
+// if the response is an error, and a decoded error message.
+func checkRespErr(res *http.Response) error {
+	if res.StatusCode < 400 {
+		return nil
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "constructing http request")
+		return errors.Wrapf(err, "server responded with %d but could not read the response body", res.StatusCode)
 	}
 
-	req.Header.Set("CLI-Version", ctx.Version)
-
-	return req, nil
-}
-
-// DoAuthorizedReq does a http request to the given path in the api endpoint as a user,
-// with the appropriate headers. The given path should include the preceding slash.
-func DoAuthorizedReq(ctx infra.DnoteCtx, hc http.Client, method, path, body string) (*http.Response, error) {
-	if ctx.SessionKey == "" {
-		return nil, errors.New("no session key found")
-	}
-
-	req, err := getReq(ctx, path, method, body)
-	if err != nil {
-		return nil, errors.Wrap(err, "getting request")
-	}
-
-	credential := fmt.Sprintf("Bearer %s", ctx.SessionKey)
-	req.Header.Set("Authorization", credential)
-
-	res, err := hc.Do(req)
-	if err != nil {
-		return res, errors.Wrap(err, "making http request")
-	}
-
-	return res, nil
-}
-
-// DoReq does a http request to the given path in the api endpoint
-func DoReq(ctx infra.DnoteCtx, method, path, body string) (*http.Response, error) {
-	req, err := getReq(ctx, path, method, body)
-	if err != nil {
-		return nil, errors.Wrap(err, "getting request")
-	}
-
-	hc := http.Client{}
-	res, err := hc.Do(req)
-	if err != nil {
-		return res, errors.Wrap(err, "making http request")
-	}
-
-	return res, nil
+	bodyStr := string(body)
+	return errors.Errorf(`response %d "%s"`, res.StatusCode, strings.TrimRight(bodyStr, "\n"))
 }
 
 // CopyFile copies a file from the src to dest
