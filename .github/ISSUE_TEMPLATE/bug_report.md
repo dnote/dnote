@@ -1,14 +1,13 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a bug report
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-* version: 
-* project (e.g. CLI): 
+* project/version (e.g. CLI v0.8.0): 
 * operating system: 
 
 ## Description
