@@ -74,7 +74,7 @@ func CreateNote(user database.User, clock clock.Clock, bookUUID, content string,
 }
 
 // UpdateNote creates a note with the next usn and updates the user's max_usn
-func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note database.Note, bookUUID, content *string, public *bool) (database.Note, error) {
+func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note database.Note, bookUUID, content *string) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
@@ -85,9 +85,6 @@ func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note databas
 	}
 	if content != nil {
 		note.Body = *content
-	}
-	if public != nil {
-		note.Public = *public
 	}
 
 	note.USN = nextUSN

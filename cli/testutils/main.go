@@ -165,7 +165,7 @@ func checkEqual(a interface{}, b interface{}, message string) (bool, string) {
 	} else {
 		m = message
 	}
-	errorMessage := fmt.Sprintf("%s. Actual: %+v. Expected: %+v.", m, a, b)
+	errorMessage := fmt.Sprintf("%s.\n==== Actual ====\n%+v\n=============\n==== Expected ====\n%+v\n=================", m, a, b)
 
 	return false, errorMessage
 }

@@ -298,9 +298,13 @@ func mergeNote(tx *infra.DB, serverNote client.SyncFragNote, localNote core.Note
 		return nil
 	}
 
-	// TODO: if the client copy is dirty, perform field-by-field merge and report conflict instead of overwriting
-	if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?, public = ?  WHERE uuid = ?",
-		serverNote.USN, serverNote.BookUUID, serverNote.Body, serverNote.EditedOn, serverNote.Deleted, serverNote.Public, serverNote.UUID); err != nil {
+	mr, err := mergeNoteFields(tx, localNote, serverNote)
+	if err != nil {
+		return errors.Wrapf(err, "reporting note conflict for note %s", localNote.UUID)
+	}
+
+	if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?  WHERE uuid = ?",
+		serverNote.USN, mr.bookUUID, mr.body, mr.editedOn, serverNote.Deleted, serverNote.UUID); err != nil {
 		return errors.Wrapf(err, "updating local note %s", serverNote.UUID)
 	}
 
@@ -309,8 +313,8 @@ func mergeNote(tx *infra.DB, serverNote client.SyncFragNote, localNote core.Note
 
 func stepSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
-	err := tx.QueryRow("SELECT usn, book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
-		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
+	err := tx.QueryRow("SELECT body, usn, book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
+		Scan(&localNote.Body, &localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
 	if err != nil && err != sql.ErrNoRows {
 		return errors.Wrapf(err, "getting local note %s", n.UUID)
 	}
@@ -333,8 +337,8 @@ func stepSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 
 func fullSyncNote(tx *infra.DB, n client.SyncFragNote) error {
 	var localNote core.Note
-	err := tx.QueryRow("SELECT usn,book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
-		Scan(&localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
+	err := tx.QueryRow("SELECT body, usn, book_uuid, dirty, deleted FROM notes WHERE uuid = ?", n.UUID).
+		Scan(&localNote.Body, &localNote.USN, &localNote.BookUUID, &localNote.Dirty, &localNote.Deleted)
 	if err != nil && err != sql.ErrNoRows {
 		return errors.Wrapf(err, "getting local note %s", n.UUID)
 	}
