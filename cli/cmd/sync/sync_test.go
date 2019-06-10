@@ -260,12 +260,12 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -291,12 +291,12 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1Record core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
-			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, n1Record.UUID, n1.UUID, "n1 UUID mismatch for test case")
 		testutils.AssertEqual(t, n1Record.BookUUID, n1.BookUUID, "n1 BookUUID mismatch for test case")
@@ -304,7 +304,6 @@ func TestSyncDeleteNote(t *testing.T) {
 		testutils.AssertEqual(t, n1Record.AddedOn, n1.AddedOn, "n1 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.EditedOn, n1.EditedOn, "n1 EditedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Body, n1.Body, "n1 Body mismatch for test case")
-		testutils.AssertEqual(t, n1Record.Public, n1.Public, "n1 Public mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Deleted, n1.Deleted, "n1 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Dirty, n1.Dirty, "n1 Dirty mismatch for test case")
 
@@ -314,7 +313,6 @@ func TestSyncDeleteNote(t *testing.T) {
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
 	})
@@ -334,12 +332,12 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -364,8 +362,8 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, n2Record.UUID, n2.UUID, "n2 UUID mismatch for test case")
 		testutils.AssertEqual(t, n2Record.BookUUID, n2.BookUUID, "n2 BookUUID mismatch for test case")
@@ -373,7 +371,6 @@ func TestSyncDeleteNote(t *testing.T) {
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
 	})
@@ -443,8 +440,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -474,8 +471,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		var n1Record core.Note
 		testutils.MustScan(t, "getting n1 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
-			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 
 		testutils.AssertEqual(t, b1Record.UUID, b1.UUID, "b1 UUID mismatch for test case")
 		testutils.AssertEqual(t, b1Record.Label, b1.Label, "b1 Label mismatch for test case")
@@ -488,7 +485,6 @@ func TestSyncDeleteBook(t *testing.T) {
 		testutils.AssertEqual(t, n1Record.AddedOn, n1.AddedOn, "n1 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.EditedOn, n1.EditedOn, "n1 EditedOn mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Body, n1.Body, "n1 Body mismatch for test case")
-		testutils.AssertEqual(t, n1Record.Public, n1.Public, "n1 Public mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Deleted, n1.Deleted, "n1 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n1Record.Dirty, n1.Dirty, "n1 Dirty mismatch for test case")
 	})
@@ -514,8 +510,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b2.UUID, &b2.Label, &b2.USN, &b2.Dirty)
 		var n2 core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
-			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Public, &n2.Deleted, &n2.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
 		tx, err := db.Begin()
@@ -544,8 +540,8 @@ func TestSyncDeleteBook(t *testing.T) {
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 		var n2Record core.Note
 		testutils.MustScan(t, "getting n2 for test case",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		testutils.AssertEqual(t, b2Record.UUID, b2.UUID, "b2 UUID mismatch for test case")
 		testutils.AssertEqual(t, b2Record.Label, b2.Label, "b2 Label mismatch for test case")
@@ -558,7 +554,6 @@ func TestSyncDeleteBook(t *testing.T) {
 		testutils.AssertEqual(t, n2Record.AddedOn, n2.AddedOn, "n2 AddedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.EditedOn, n2.EditedOn, "n2 EditedOn mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Body, n2.Body, "n2 Body mismatch for test case")
-		testutils.AssertEqual(t, n2Record.Public, n2.Public, "n2 Public mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Deleted, n2.Deleted, "n2 Deleted mismatch for test case")
 		testutils.AssertEqual(t, n2Record.Dirty, n2.Dirty, "n2 Dirty mismatch for test case")
 	})
@@ -642,7 +637,6 @@ func TestFullSyncNote(t *testing.T) {
 			AddedOn:  1541232118,
 			EditedOn: 1541219321,
 			Body:     "n1-body",
-			Public:   true,
 			Deleted:  false,
 		}
 
@@ -663,8 +657,8 @@ func TestFullSyncNote(t *testing.T) {
 
 		var n1 core.Note
 		testutils.MustScan(t, "getting n1",
-			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
-			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Public, &n1.Deleted, &n1.Dirty)
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 		testutils.AssertEqual(t, n1.UUID, n.UUID, "n1 UUID mismatch")
 		testutils.AssertEqual(t, n1.BookUUID, n.BookUUID, "n1 BookUUID mismatch")
@@ -672,7 +666,6 @@ func TestFullSyncNote(t *testing.T) {
 		testutils.AssertEqual(t, n1.AddedOn, n.AddedOn, "n1 AddedOn mismatch")
 		testutils.AssertEqual(t, n1.EditedOn, n.EditedOn, "n1 EditedOn mismatch")
 		testutils.AssertEqual(t, n1.Body, n.Body, "n1 Body mismatch")
-		testutils.AssertEqual(t, n1.Public, n.Public, "n1 Public mismatch")
 		testutils.AssertEqual(t, n1.Deleted, n.Deleted, "n1 Deleted mismatch")
 		testutils.AssertEqual(t, n1.Dirty, false, "n1 Dirty mismatch")
 	})
@@ -2721,6 +2714,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 func TestMergeNote(t *testing.T) {
 	b1UUID := "b1-uuid"
 	b2UUID := "b2-uuid"
+	conflictBookUUID := utils.GenerateUUID()
 
 	testCases := []struct {
 		addedOn          int64
@@ -2743,6 +2737,7 @@ func TestMergeNote(t *testing.T) {
 		expectedBookUUID string
 		expectedDirty    bool
 	}{
+		// local copy is not dirty
 		{
 			clientDirty:      false,
 			clientUSN:        1,
@@ -2755,14 +2750,73 @@ func TestMergeNote(t *testing.T) {
 			serverEditedOn:   1541219321,
 			serverBody:       "n1 body edited",
 			serverDeleted:    false,
-			serverBookUUID:   b2UUID,
+			serverBookUUID:   b1UUID,
 			expectedUSN:      21,
 			expectedAddedOn:  1541232118,
 			expectedEditedOn: 1541219321,
 			expectedBody:     "n1 body edited",
 			expectedDeleted:  false,
-			expectedBookUUID: b2UUID,
+			expectedBookUUID: b1UUID,
 			expectedDirty:    false,
+		},
+		// local copy is dirty and needs conflict resolution
+		{
+			clientDirty:      true,
+			clientUSN:        1,
+			clientEditedOn:   1541219320,
+			clientBody:       "n1 body",
+			clientDeleted:    false,
+			clientBookUUID:   b1UUID,
+			addedOn:          1541232118,
+			serverUSN:        21,
+			serverEditedOn:   1541219321,
+			serverBody:       "n1 body edited",
+			serverDeleted:    false,
+			serverBookUUID:   b1UUID,
+			expectedUSN:      21,
+			expectedAddedOn:  1541232118,
+			expectedEditedOn: 1541219321,
+			expectedBody: `<<<<<<< Local
+n1 body
+=======
+n1 body edited
+>>>>>>> Server
+`,
+			expectedDeleted:  false,
+			expectedBookUUID: b1UUID,
+			expectedDirty:    true,
+		},
+		{
+			clientDirty:      true,
+			clientUSN:        1,
+			clientEditedOn:   1541219319,
+			clientBody:       "n1 body",
+			clientDeleted:    false,
+			clientBookUUID:   b1UUID,
+			addedOn:          1541232118,
+			serverUSN:        21,
+			serverEditedOn:   1541219321,
+			serverBody:       "n1 body edited",
+			serverDeleted:    false,
+			serverBookUUID:   b2UUID,
+			expectedUSN:      21,
+			expectedAddedOn:  1541232118,
+			expectedEditedOn: 1541219321,
+			expectedBody: `<<<<<<< Local
+Moved to the book b1-label
+=======
+Moved to the book b2-label
+>>>>>>> Server
+
+<<<<<<< Local
+n1 body
+=======
+n1 body edited
+>>>>>>> Server
+`,
+			expectedDeleted:  false,
+			expectedBookUUID: conflictBookUUID,
+			expectedDirty:    true,
 		},
 		// deleted locally and edited on server
 		{
@@ -2798,6 +2852,7 @@ func TestMergeNote(t *testing.T) {
 
 			testutils.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 5, false)
 			testutils.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b2UUID, "b2-label", 6, false)
+			testutils.MustExec(t, fmt.Sprintf("inserting conflitcs book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", conflictBookUUID, "conflicts")
 			n1UUID := utils.GenerateUUID()
 			testutils.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?,  ?, ?, ?, ?, ?)", n1UUID, b1UUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
@@ -2835,7 +2890,7 @@ func TestMergeNote(t *testing.T) {
 			testutils.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 			testutils.AssertEqualf(t, noteCount, 1, fmt.Sprintf("note count mismatch for test case %d", idx))
-			testutils.AssertEqualf(t, bookCount, 2, fmt.Sprintf("book count mismatch for test case %d", idx))
+			testutils.AssertEqualf(t, bookCount, 3, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 			var n1Record core.Note
 			testutils.MustScan(t, fmt.Sprintf("getting n1Record for test case %d", idx),

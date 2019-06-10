@@ -45,7 +45,6 @@ func (a *App) NotesOptions(w http.ResponseWriter, r *http.Request) {
 type updateNotePayload struct {
 	BookUUID *string `json:"book_uuid"`
 	Content  *string `json:"content"`
-	Public   *bool   `json:"public"`
 }
 
 type updateNoteResp struct {
@@ -54,7 +53,7 @@ type updateNoteResp struct {
 }
 
 func validateUpdateNotePayload(p updateNotePayload) bool {
-	return p.BookUUID != nil || p.Content != nil || p.Public != nil
+	return p.BookUUID != nil || p.Content != nil
 }
 
 // UpdateNote updates note
@@ -89,7 +88,7 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	tx := db.Begin()
 
-	note, err = operations.UpdateNote(tx, user, a.Clock, note, params.BookUUID, params.Content, params.Public)
+	note, err = operations.UpdateNote(tx, user, a.Clock, note, params.BookUUID, params.Content)
 	if err != nil {
 		tx.Rollback()
 		http.Error(w, errors.Wrap(err, "updating note").Error(), http.StatusInternalServerError)
