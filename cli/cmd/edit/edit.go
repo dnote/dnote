@@ -44,7 +44,7 @@ var example = `
 func NewCmd(ctx infra.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "edit",
-		Short:   "Edit a note or a book",
+		Short:   "Edit a note",
 		Aliases: []string{"e"},
 		Example: example,
 		PreRunE: preRun,
