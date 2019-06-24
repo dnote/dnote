@@ -30,6 +30,14 @@
   version = "v0.2.0"
 
 [[projects]]
+  branch = "endpoint-186"
+  digest = "1:b56e65cab256427453f4454af3e7be2c1c544b52332772dbf7e6992aa7fdf599"
+  name = "github.com/dnote/dnote"
+  packages = ["pkg/assert"]
+  pruneopts = ""
+  revision = "54646c6bf85fba5efb8b4de67c9fed19cdbe0d97"
+
+[[projects]]
   digest = "1:529d738b7976c3848cae5cf3a8036440166835e389c1f617af701eeb12a0518d"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -159,6 +167,7 @@
     "customer",
     "form",
     "paymentsource",
+    "source",
     "sub",
     "webhook",
   ]
@@ -247,6 +256,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aymerick/douceur/inliner",
+    "github.com/dnote/dnote/pkg/assert",
     "github.com/gorilla/mux",
     "github.com/gorilla/securecookie",
     "github.com/gorilla/sessions",
@@ -264,6 +274,7 @@
     "github.com/stripe/stripe-go/card",
     "github.com/stripe/stripe-go/customer",
     "github.com/stripe/stripe-go/paymentsource",
+    "github.com/stripe/stripe-go/source",
     "github.com/stripe/stripe-go/sub",
     "github.com/stripe/stripe-go/webhook",
     "golang.org/x/crypto/bcrypt",

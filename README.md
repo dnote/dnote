@@ -3,7 +3,7 @@
 
 Dnote is a simple notebook for developers.
 
-[![Build Status](https://semaphoreci.com/api/v1/dnote/dnote-2/branches/master/badge.svg)](https://semaphoreci.com/dnote/dnote-2)
+[![Build Status](https://travis-ci.org/dnote/dnote.svg?branch=master)](https://travis-ci.org/dnote/dnote)
 
 ## What is Dnote?
 

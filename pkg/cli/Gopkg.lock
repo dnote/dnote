@@ -18,6 +18,14 @@
   version = "v1.7.0"
 
 [[projects]]
+  branch = "endpoint-186"
+  digest = "1:b56e65cab256427453f4454af3e7be2c1c544b52332772dbf7e6992aa7fdf599"
+  name = "github.com/dnote/dnote"
+  packages = ["pkg/assert"]
+  pruneopts = ""
+  revision = "54646c6bf85fba5efb8b4de67c9fed19cdbe0d97"
+
+[[projects]]
   branch = "master"
   digest = "1:fe99ddb68e996f2f9f7995e9765bc283ceef12dbe30de17922900c1cfa9dfc09"
   name = "github.com/google/go-github"
@@ -82,6 +90,14 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:3962f553b77bf6c03fc07cd687a22dd3b00fe11aa14d31194f5505f5bb65cdc8"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  pruneopts = ""
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:78715f4ed019d19795e67eed1dc63f525461d925616b1ed02b72582c01362440"
   name = "github.com/spf13/cobra"
   packages = ["."]
@@ -134,10 +150,12 @@
   input-imports = [
     "github.com/dnote/actions",
     "github.com/dnote/color",
+    "github.com/dnote/dnote/pkg/assert",
     "github.com/google/go-github/github",
     "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
     "github.com/satori/go.uuid",
+    "github.com/sergi/go-diff/diffmatchpatch",
     "github.com/spf13/cobra",
     "golang.org/x/crypto/hkdf",
     "golang.org/x/crypto/pbkdf2",

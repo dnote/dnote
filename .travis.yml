@@ -1,0 +1,25 @@
+language: go
+dist: xenial
+
+go:
+  - 1.12
+
+addons:
+  postgresql: "10"
+
+env:
+  - NODE_VERSION=10.15.0
+
+before_script:
+  - nvm install "$NODE_VERSION"
+  - nvm use "$NODE_VERSION"
+  - node --version
+  - psql -c "CREATE DATABASE dnote_test;" -U postgres
+
+install:
+  - make install
+
+script:
+  - make test-cli
+  - make test-api
+  - make test-web
