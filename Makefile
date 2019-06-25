@@ -2,17 +2,20 @@ DEP := $(shell command -v dep 2> /dev/null)
 NPM := $(shell command -v npm 2> /dev/null)
 
 ## installation
-install-cli:
+install: install-go install-js
+.PHONY: install
+
+install-go:
 ifndef DEP
 	@echo "==> installing dep"
 	@curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
 
 	@echo "==> installing CLI dependencies"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/cli && dep ensure)
+	@dep ensure
 .PHONY: install-cli
 
-install-web:
+install-js:
 ifndef NPM
 	@echo "npm not found"
 	exit 1
@@ -20,15 +23,7 @@ endif
 
 	@echo "==> installing web dependencies"
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
-.PHONY: install-web
-
-install-server:
-	@echo "==> installing server dependencies"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server && dep ensure)
-.PHONY: install-server
-
-install: install-cli install-web install-server
-.PHONY: install
+.PHONY: install-js
 
 ## test
 test-cli:
