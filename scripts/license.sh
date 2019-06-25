@@ -54,19 +54,20 @@ agpl="/* Copyright (C) 2019 Monomax Software Pty Ltd
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */"
 
-cliPath="$GOPATH"/src/github.com/dnote/dnote/cli
-cliFiles=$(find "$cliPath" -type f -name "*.go" ! -path "**/vendor/*")
+pkgPath="$GOPATH"/src/github.com/dnote/dnote/pkg
+serverPath="$GOPATH"/src/github.com/dnote/dnote/pkg/server
 
-for file in $cliFiles; do
+pkgFiles=$(find "$pkgPath" -type f -name "*.go" ! -path "**/vendor/*" ! -path "$serverPath/*")
+
+for file in $pkgFiles; do
   remove_notice "$file"
   add_notice "$file" "$gpl"
 done
 
- serverPath="$GOPATH"/src/github.com/dnote/dnote/server
- webPath="$GOPATH"/src/github.com/dnote/dnote/web
- agplFiles=$(find "$serverPath" "$webPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.scss" \) ! -path "**/vendor/*" ! -path "**/node_modules/*")
- 
- for file in $agplFiles; do
-   remove_notice "$file"
-   add_notice "$file" "$agpl"
- done
+webPath="$GOPATH"/src/github.com/dnote/dnote/web
+agplFiles=$(find "$serverPath" "$webPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.scss" \) ! -path "**/vendor/*" ! -path "**/node_modules/*")
+
+for file in $agplFiles; do
+  remove_notice "$file"
+  add_notice "$file" "$agpl"
+done
