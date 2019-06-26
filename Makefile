@@ -17,12 +17,11 @@ endif
 
 install-js:
 ifndef NPM
-	@echo "npm not found"
-	exit 1
+	$(error npm is not installed)
 endif
 
 	@echo "==> installing web dependencies"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm)
 .PHONY: install-js
 
 ## test
