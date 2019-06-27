@@ -11,17 +11,22 @@ ifndef DEP
 	@curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 endif
 
-	@echo "==> installing CLI dependencies"
+	@echo "==> installing go dependencies"
 	@dep ensure
-.PHONY: install-cli
+.PHONY: install-go
 
 install-js:
 ifndef NPM
 	$(error npm is not installed)
 endif
 
-	@echo "==> installing web dependencies"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm)
+	@echo "==> installing js dependencies"
+
+ifeq ($(CI), true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm=true)
+else
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
+endif
 .PHONY: install-js
 
 ## test
