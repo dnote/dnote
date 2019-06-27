@@ -228,7 +228,7 @@ func CreateMockStripeBackend(ts *httptest.Server) stripe.Backend {
 	stripeMockBackend := stripe.GetBackendWithConfig(
 		stripe.APIBackend,
 		&stripe.BackendConfig{
-			URL:        ts.URL + "/v1",
+			URL:        ts.URL,
 			HTTPClient: ts.Client(),
 		},
 	)
