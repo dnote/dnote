@@ -306,9 +306,11 @@ const Sidebar = ({
             </div>
           </div>
 
+          {/*
           <div className={styles.bottom}>
             <span className={styles.version}>v1.0.0</span>
           </div>
+            */}
         </div>
       </div>
     </aside>
