@@ -21,7 +21,12 @@ ifndef NPM
 endif
 
 	@echo "==> installing web dependencies"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm)
+
+ifeq ($(CI), true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm=true)
+else
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
+endif
 .PHONY: install-js
 
 ## test
