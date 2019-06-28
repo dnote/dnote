@@ -53,3 +53,8 @@ build-web:
 	@echo "==> building web"
 	@${GOPATH}/src/github.com/dnote/dnote/web/scripts/build-prod.sh
 .PHONY: build-web
+
+build-dev-cli:
+	@echo "==> building dev cli"
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/dev.sh
+.PHONY: build-dev-cli

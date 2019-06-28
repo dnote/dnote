@@ -1,7 +1,6 @@
 #!/bin/bash
-set -eux
-
 # dev.sh builds a new binary and replaces the old one in the PATH with it
+set -eux
 
 sudo rm -rf "$(which dnote)" "$GOPATH/bin/cli"
 

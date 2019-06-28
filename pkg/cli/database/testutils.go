@@ -161,7 +161,7 @@ func OpenTestDB(t *testing.T, dnoteDir string) *DB {
 
 // MarkMigrationComplete marks all migrations as complete in the database
 func MarkMigrationComplete(t *testing.T, db *DB) {
-	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemSchema, 11); err != nil {
+	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemSchema, 12); err != nil {
 		t.Fatal(errors.Wrap(err, "inserting schema"))
 	}
 	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemRemoteSchema, 1); err != nil {

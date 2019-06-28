@@ -26,6 +26,8 @@ var (
 	DnoteDBFileName = "dnote.db"
 	// TmpContentFilename is the filename for a temporary content
 	TmpContentFilename = "DNOTE_TMPCONTENT.md"
+	// ConfigFilename is the name of the config file
+	ConfigFilename = "dnoterc"
 
 	// SystemSchema is the key for schema in the system table
 	SystemSchema = "schema"

@@ -16,32 +16,34 @@
  * along with Dnote CLI.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package infra
+package config
 
 import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
-var (
-	// ConfigFilename is the name of the config file
-	ConfigFilename = "dnoterc"
-)
-
-// GetConfigPath returns the path to the dnote config file
-func GetConfigPath(ctx context.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, ConfigFilename)
+// Config holds dnote configuration
+type Config struct {
+	Editor      string `yaml:"editor"`
+	APIEndpoint string `yaml:"apiEndpoint"`
 }
 
-// ReadConfig reads the config file
-func ReadConfig(ctx context.DnoteCtx) (Config, error) {
+// GetPath returns the path to the dnote config file
+func GetPath(ctx context.DnoteCtx) string {
+	return fmt.Sprintf("%s/%s", ctx.DnoteDir, consts.ConfigFilename)
+}
+
+// Read reads the config file
+func Read(ctx context.DnoteCtx) (Config, error) {
 	var ret Config
 
-	configPath := GetConfigPath(ctx)
+	configPath := GetPath(ctx)
 	b, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return ret, errors.Wrap(err, "reading config file")
@@ -53,4 +55,21 @@ func ReadConfig(ctx context.DnoteCtx) (Config, error) {
 	}
 
 	return ret, nil
+}
+
+// Write writes the config to the config file
+func Write(ctx context.DnoteCtx, cf Config) error {
+	path := GetPath(ctx)
+
+	b, err := yaml.Marshal(cf)
+	if err != nil {
+		return errors.Wrap(err, "marshalling config into YAML")
+	}
+
+	err = ioutil.WriteFile(path, b, 0644)
+	if err != nil {
+		return errors.Wrap(err, "writing the config file")
+	}
+
+	return nil
 }
