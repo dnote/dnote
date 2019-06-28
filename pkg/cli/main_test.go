@@ -27,9 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/cli/consts"
-	// "github.com/dnote/dnote/pkg/cli/core"
 	"github.com/dnote/dnote/pkg/cli/database"
-	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/testutils"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
@@ -62,7 +60,7 @@ func TestInit(t *testing.T) {
 	if !utils.FileExists(opts.DnoteDir) {
 		t.Errorf("dnote directory was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", opts.DnoteDir, infra.ConfigFilename)) {
+	if !utils.FileExists(fmt.Sprintf("%s/%s", opts.DnoteDir, consts.ConfigFilename)) {
 		t.Errorf("config file was not initialized")
 	}
 

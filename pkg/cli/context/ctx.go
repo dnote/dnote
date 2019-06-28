@@ -33,4 +33,27 @@ type DnoteCtx struct {
 	SessionKey       string
 	SessionKeyExpiry int64
 	CipherKey        []byte
+	Editor           string
+}
+
+// Redact replaces private information from the context with a set of
+// placeholder values.
+func Redact(ctx DnoteCtx) DnoteCtx {
+	var sessionKey string
+	if ctx.SessionKey != "" {
+		sessionKey = "1"
+	} else {
+		sessionKey = "0"
+	}
+	ctx.SessionKey = sessionKey
+
+	var cipherKey []byte
+	if ctx.CipherKey != nil {
+		cipherKey = []byte{1}
+	} else {
+		cipherKey = []byte{0}
+	}
+	ctx.CipherKey = cipherKey
+
+	return ctx
 }

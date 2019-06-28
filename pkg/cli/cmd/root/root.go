@@ -19,11 +19,6 @@
 package root
 
 import (
-	"github.com/dnote/dnote/pkg/cli/context"
-	// "github.com/dnote/dnote/pkg/cli/core"
-	// "github.com/dnote/dnote/pkg/cli/infra"
-	// "github.com/dnote/dnote/pkg/cli/migrate"
-	// "github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -42,27 +37,4 @@ func Register(cmd *cobra.Command) {
 // Execute runs the main command
 func Execute() error {
 	return root.Execute()
-}
-
-// Prepare initializes necessary files
-func Prepare(ctx context.DnoteCtx) error {
-	// 	if err := core.InitFiles(ctx); err != nil {
-	// 		return errors.Wrap(err, "initializing files")
-	// 	}
-	//
-	// 	if err := infra.InitDB(ctx); err != nil {
-	// 		return errors.Wrap(err, "initializing database")
-	// 	}
-	// 	if err := core.InitSystem(ctx); err != nil {
-	// 		return errors.Wrap(err, "initializing system data")
-	// 	}
-	//
-	// 	if err := migrate.Legacy(ctx); err != nil {
-	// 		return errors.Wrap(err, "running legacy migration")
-	// 	}
-	// 	if err := migrate.Run(ctx, migrate.LocalSequence, migrate.LocalMode); err != nil {
-	// 		return errors.Wrap(err, "running migration")
-	// 	}
-
-	return nil
 }

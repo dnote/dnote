@@ -21,6 +21,8 @@ package migrate
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -1057,6 +1059,43 @@ func TestLocalMigration11(t *testing.T) {
 	assert.Equal(t, b8Dirty, false, "b8Dirty mismatch")
 	assert.Equal(t, b9Label, "cool_ideas_2", "b9Label mismatch")
 	assert.Equal(t, b9Dirty, false, "b9Dirty mismatch")
+}
+
+func TestLocalMigration12(t *testing.T) {
+	// set up
+	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-12-pre-schema.sql", SkipMigration: true}
+	ctx := context.InitTestCtx(t, "../tmp", &opts)
+	defer context.TeardownTestCtx(t, ctx)
+
+	data := []byte("editor: vim")
+	path := fmt.Sprintf("%s/dnoterc", ctx.DnoteDir)
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
+	}
+
+	// execute
+	err := lm12.run(ctx, nil)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	// test
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "reading config"))
+	}
+
+	type config struct {
+		APIEndpoint string `yaml:"apiEndpoint"`
+	}
+
+	var cf config
+	err = yaml.Unmarshal(b, &cf)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "unmarshalling config"))
+	}
+
+	assert.NotEqual(t, cf.APIEndpoint, "", "apiEndpoint was not populated")
 }
 
 func TestRemoteMigration1(t *testing.T) {

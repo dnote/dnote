@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/actions"
 	"github.com/dnote/dnote/pkg/cli/client"
+	"github.com/dnote/dnote/pkg/cli/config"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -524,6 +525,25 @@ var lm11 = migration{
 					return errors.Wrapf(err, "updating book '%s'", label)
 				}
 			}
+		}
+
+		return nil
+	},
+}
+
+var lm12 = migration{
+	name: "add apiEndpoint to the configuration file",
+	run: func(ctx context.DnoteCtx, tx *database.DB) error {
+		cf, err := config.Read(ctx)
+		if err != nil {
+			return errors.Wrap(err, "reading config")
+		}
+
+		cf.APIEndpoint = "https://api.dnote.io"
+
+		err = config.Write(ctx, cf)
+		if err != nil {
+			return errors.Wrap(err, "writing config")
 		}
 
 		return nil

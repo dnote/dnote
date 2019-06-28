@@ -24,12 +24,12 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"strconv"
 	"time"
 
+	"github.com/dnote/dnote/pkg/cli/config"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -38,14 +38,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
-
-// Config holds dnote configuration
-type Config struct {
-	Editor      string `yaml:"editor"`
-	APIEndpoint string `yaml:"apiEndpoint"`
-}
 
 // RunEFunc is a function type of dnote commands
 type RunEFunc func(*cobra.Command, []string) error
@@ -103,6 +96,8 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 		return nil, errors.Wrap(err, "setting up the context")
 	}
 
+	log.Debug("Running with Dnote context: %+v\n", context.Redact(ctx))
+
 	return &ctx, nil
 }
 
@@ -131,7 +126,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		return ctx, errors.Wrap(err, "decoding cipherKey from base64")
 	}
 
-	config, err := ReadConfig(ctx)
+	cf, err := config.Read(ctx)
 	if err != nil {
 		return ctx, errors.Wrap(err, "reading config")
 	}
@@ -144,7 +139,8 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		SessionKey:       sessionKey,
 		SessionKeyExpiry: sessionKeyExpiry,
 		CipherKey:        cipherKey,
-		APIEndpoint:      config.APIEndpoint,
+		APIEndpoint:      cf.APIEndpoint,
+		Editor:           cf.Editor,
 	}
 
 	return ret, nil
@@ -332,27 +328,20 @@ func initDnoteDir(ctx context.DnoteCtx) error {
 
 // initConfigFile populates a new config file if it does not exist yet
 func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
-	path := GetConfigPath(ctx)
-
+	path := config.GetPath(ctx)
 	if utils.FileExists(path) {
 		return nil
 	}
 
 	editor := getEditorCommand()
 
-	config := Config{
+	cf := config.Config{
 		Editor:      editor,
 		APIEndpoint: apiEndpoint,
 	}
 
-	b, err := yaml.Marshal(config)
-	if err != nil {
-		return errors.Wrap(err, "marshalling config into YAML")
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	if err != nil {
-		return errors.Wrap(err, "writing the config file")
+	if err := config.Write(ctx, cf); err != nil {
+		return errors.Wrap(err, "writing config")
 	}
 
 	return nil

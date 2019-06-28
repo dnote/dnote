@@ -28,7 +28,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 )
@@ -83,12 +82,7 @@ func SanitizeContent(s string) string {
 }
 
 func newEditorCmd(ctx context.DnoteCtx, fpath string) (*exec.Cmd, error) {
-	config, err := infra.ReadConfig(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "reading config")
-	}
-
-	args := strings.Fields(config.Editor)
+	args := strings.Fields(ctx.Editor)
 	args = append(args, fpath)
 
 	return exec.Command(args[0], args[1:]...), nil
