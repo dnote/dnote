@@ -35,11 +35,11 @@ brew upgrade dnote
 
 You can use the installation script to install the latest version:
 
-    curl -s https://raw.githubusercontent.com/dnote/dnote/master/cli/install.sh | sh
+    curl -s https://raw.githubusercontent.com/dnote/dnote/master/pkg/cli/install.sh | sh
 
 In some cases, you might need an elevated permission:
 
-    curl -s https://raw.githubusercontent.com/dnote/dnote/master/cli/install.sh | sudo sh
+    curl -s https://raw.githubusercontent.com/dnote/dnote/master/pkg/cli/install.sh | sudo sh
 
 ### Install with tarball
 
