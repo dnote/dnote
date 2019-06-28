@@ -43,13 +43,14 @@ import (
 
 // Config holds dnote configuration
 type Config struct {
-	Editor string
+	Editor      string `yaml:"editor"`
+	APIEndpoint string `yaml:"apiEndpoint"`
 }
 
 // RunEFunc is a function type of dnote commands
 type RunEFunc func(*cobra.Command, []string) error
 
-func newCtx(apiEndpoint, versionTag string) (context.DnoteCtx, error) {
+func newCtx(versionTag string) (context.DnoteCtx, error) {
 	homeDir, err := getHomeDir()
 	if err != nil {
 		return context.DnoteCtx{}, errors.Wrap(err, "Failed to get home dir")
@@ -63,11 +64,10 @@ func newCtx(apiEndpoint, versionTag string) (context.DnoteCtx, error) {
 	}
 
 	ctx := context.DnoteCtx{
-		HomeDir:     homeDir,
-		DnoteDir:    dnoteDir,
-		APIEndpoint: apiEndpoint,
-		Version:     versionTag,
-		DB:          db,
+		HomeDir:  homeDir,
+		DnoteDir: dnoteDir,
+		Version:  versionTag,
+		DB:       db,
 	}
 
 	return ctx, nil
@@ -75,12 +75,12 @@ func newCtx(apiEndpoint, versionTag string) (context.DnoteCtx, error) {
 
 // Init initializes the Dnote environment and returns a new dnote context
 func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
-	ctx, err := newCtx(apiEndpoint, versionTag)
+	ctx, err := newCtx(versionTag)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing a context")
 	}
 
-	if err := InitFiles(ctx); err != nil {
+	if err := InitFiles(ctx, apiEndpoint); err != nil {
 		return nil, errors.Wrap(err, "initializing files")
 	}
 
@@ -106,7 +106,7 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 	return &ctx, nil
 }
 
-// SetupCtx populates context and returns a new context
+// SetupCtx populates the context and returns a new context
 func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	db := ctx.DB
 
@@ -131,15 +131,20 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		return ctx, errors.Wrap(err, "decoding cipherKey from base64")
 	}
 
+	config, err := ReadConfig(ctx)
+	if err != nil {
+		return ctx, errors.Wrap(err, "reading config")
+	}
+
 	ret := context.DnoteCtx{
 		HomeDir:          ctx.HomeDir,
 		DnoteDir:         ctx.DnoteDir,
-		APIEndpoint:      ctx.APIEndpoint,
 		Version:          ctx.Version,
 		DB:               ctx.DB,
 		SessionKey:       sessionKey,
 		SessionKeyExpiry: sessionKeyExpiry,
 		CipherKey:        cipherKey,
+		APIEndpoint:      config.APIEndpoint,
 	}
 
 	return ret, nil
@@ -326,7 +331,7 @@ func initDnoteDir(ctx context.DnoteCtx) error {
 }
 
 // initConfigFile populates a new config file if it does not exist yet
-func initConfigFile(ctx context.DnoteCtx) error {
+func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
 	path := GetConfigPath(ctx)
 
 	if utils.FileExists(path) {
@@ -336,7 +341,8 @@ func initConfigFile(ctx context.DnoteCtx) error {
 	editor := getEditorCommand()
 
 	config := Config{
-		Editor: editor,
+		Editor:      editor,
+		APIEndpoint: apiEndpoint,
 	}
 
 	b, err := yaml.Marshal(config)
@@ -353,11 +359,11 @@ func initConfigFile(ctx context.DnoteCtx) error {
 }
 
 // InitFiles creates, if necessary, the dnote directory and files inside
-func InitFiles(ctx context.DnoteCtx) error {
+func InitFiles(ctx context.DnoteCtx, apiEndpoint string) error {
 	if err := initDnoteDir(ctx); err != nil {
 		return errors.Wrap(err, "creating the dnote dir")
 	}
-	if err := initConfigFile(ctx); err != nil {
+	if err := initConfigFile(ctx, apiEndpoint); err != nil {
 		return errors.Wrap(err, "generating the config file")
 	}
 
