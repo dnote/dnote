@@ -1,0 +1,8 @@
+# a configuration for sql-migrate tool. We don't need to configure production,
+# because we programmatically connect to the database and run migrations.
+# Its main purpose is to generate migrations using `sql-migrate new`
+
+development:
+  dialect: postgres
+  datasource: dbname=dnote sslmode=disable
+  dir: ./migrations
