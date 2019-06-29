@@ -116,3 +116,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  revision = "f4d34eae5a5cf210693e81c604e6bac5f6727927"
+  name = "github.com/rubenv/sql-migrate"
