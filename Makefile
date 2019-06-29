@@ -58,3 +58,13 @@ build-dev-cli:
 	@echo "==> building dev cli"
 	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/dev.sh
 .PHONY: build-dev-cli
+
+## migrate
+migrate:
+ifndef GO_ENV
+	$(error "environment variable GO_ENV is required.")
+endif
+
+	@echo "==> running migrations"
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server/database/migrate && go run *.go --migrationDir ../migrations)
+.PHONY: migrate

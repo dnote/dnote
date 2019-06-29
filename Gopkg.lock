@@ -207,6 +207,17 @@
   version = "v1.2.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:83eb06141fc25c7fd89f8b39717962ac930a7480796aab3d46c7e88507a69173"
+  name = "github.com/rubenv/sql-migrate"
+  packages = [
+    ".",
+    "sqlparse",
+  ]
+  pruneopts = "UT"
+  revision = "f4d34eae5a5cf210693e81c604e6bac5f6727927"
+
+[[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
   name = "github.com/satori/go.uuid"
   packages = ["."]
@@ -352,6 +363,14 @@
   version = "2.0.0"
 
 [[projects]]
+  digest = "1:1b36b0cb56126316f637ad55cfd5ed84c945fe45bd90e944666b4107a80a1da9"
+  name = "gopkg.in/gorp.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6a667da9c028871f98598d85413e3fc4c6daa52e"
+  version = "v1.7.2"
+
+[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -380,6 +399,7 @@
     "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
     "github.com/robfig/cron",
+    "github.com/rubenv/sql-migrate",
     "github.com/satori/go.uuid",
     "github.com/sergi/go-diff/diffmatchpatch",
     "github.com/spf13/cobra",
