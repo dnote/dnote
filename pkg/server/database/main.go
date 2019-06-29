@@ -64,8 +64,6 @@ const (
 func InitDB() {
 	var err error
 
-	fmt.Println(getPGConnectionString())
-
 	DBConn, err = gorm.Open("postgres", getPGConnectionString())
 	if err != nil {
 		panic(err)
