@@ -163,7 +163,6 @@ function Subscription({ userData }) {
     return (
       <Link
         id="T-unlock-pro-btn"
-        type="button"
         className={classnames(
           'button button-normal button-third button-stretch'
         )}
