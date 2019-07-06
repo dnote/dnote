@@ -1,16 +1,15 @@
 #!/bin/bash
 #
-# build.sh compiles dnote binary for target platforms
-# it is resonsible for creating distributable files that can
-# be released by a human or a script
+# build.sh compiles dnote binary for target platforms. It is resonsible for creating
+# distributable files that can be released by a human or a script.
 # use: ./scripts/build.sh 0.4.8
 
-set -eu
+set -eux
 
-version="$1"
+version=$1
 projectDir="$GOPATH/src/github.com/dnote/dnote"
 basedir="$GOPATH/src/github.com/dnote/dnote/pkg/cli"
-TMP="$basedir/build"
+outputDir="$projectDir/build/cli"
 
 command_exists () {
   command -v "$1" >/dev/null 2>&1;
@@ -29,78 +28,55 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
+goVersion=1.12.x
+
+get_binary_name() {
+  platform=$1
+
+  if [ "$platform" == "windows" ]; then
+    echo "dnote.exe"
+  else
+    echo "dnote"
+  fi
+}
+
 build() {
-  # init build dir
-  rm -rf "$TMP"
-  mkdir "$TMP"
+  platform=$1
+  arch=$2
 
-  # fetch tool
-  go get -u github.com/karalabe/xgo
+  # build binary
+  destDir="$outputDir/$platform-$arch"
 
-  pushd "$basedir"
+  mkdir -p "$destDir"
+  xgo \
+    -go "$goVersion" \
+    -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" \
+    --targets="$platform/$arch" \
+    --tags "fts5" \
+    --dest="$destDir" \
+    "$basedir"
 
-  # build linux
-  xgo --targets="linux/amd64"\
-    --tags "linux fts5"\
-    -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
-  mkdir "$TMP/linux"
-  mv cli-linux-amd64 "$TMP/linux/dnote"
+  binaryName=$(get_binary_name "$platform")
+  mv "$destDir/cli-${platform}-"* "$destDir/$binaryName"
 
-  # build darwin
-  xgo --targets="darwin/amd64"\
-    --tags "darwin fts5"\
-    -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
-  mkdir "$TMP/darwin"
-  mv cli-darwin-10.6-amd64 "$TMP/darwin/dnote"
+  # build tarball
+  tarballName="dnote_${version}_${platform}_${arch}.tar.gz"
+  tarballPath="$outputDir/$tarballName"
 
-  # build windows
-  xgo --targets="windows/amd64"\
-    --tags "fts5"\
-    -ldflags "-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version" .
-  mkdir "$TMP/windows"
-  mv cli-windows-4.0-amd64.exe "$TMP/windows/dnote.exe"
+  cp "$projectDir/licenses/GPLv3.txt" "$destDir"
+  cp "$basedir/README.md" "$destDir"
+  tar -C "$destDir" -zcvf "$tarballPath" "."
+  rm -rf "$destDir"
 
+  # calculate checksum
+  pushd "$outputDir"
+  shasum -a 256 "$tarballName" >> "$outputDir/dnote_${version}_checksums.txt"
   popd
 }
 
-get_buildname() {
-  os=$1
+# fetch tool
+go get -u github.com/karalabe/xgo
 
-  echo "dnote_${version}_${os}_amd64"
-}
-
-calc_checksum() {
-  os=$1
-
-  pushd "$TMP/$os"
-
-  buildname=$(get_buildname "$os")
-  mv dnote "$buildname"
-  shasum -a 256 "$buildname" >> "$TMP/dnote_${version}_checksums.txt"
-  mv "$buildname" dnote
-
-  popd
-}
-
-build_tarball() {
-  os=$1
-  buildname=$(get_buildname "$os")
-
-  pushd "$TMP/$os"
-
-  cp "$projectDir/licenses/GPLv3.txt" .
-  cp "$basedir/README.md" .
-  tar -zcvf "../${buildname}.tar.gz" ./*
-
-  popd
-}
-
-build
-
-calc_checksum darwin
-calc_checksum linux
-
-build_tarball windows
-build_tarball darwin
-build_tarball linux
-
+build linux amd64
+build darwin amd64
+build windows amd64

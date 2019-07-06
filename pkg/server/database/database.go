@@ -28,6 +28,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+var (
+	// MigrationTableName is the name of the table that keeps track of migrations
+	MigrationTableName = "migrations"
+)
+
 func getPGConnectionString() string {
 	if os.Getenv("GO_ENV") == "PRODUCTION" {
 		return fmt.Sprintf(

@@ -16,41 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package main
+package job
 
 import (
-	"flag"
 	"log"
-	"os"
 
-	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/job/digest"
-	"github.com/dnote/dnote/pkg/server/mailer"
-
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 )
-
-var (
-	emailTemplateDir = flag.String("emailTemplateDir", "../mailer/templates/src", "the path to the template directory")
-)
-
-func init() {
-	// Load env
-	if os.Getenv("GO_ENV") == "PRODUCTION" {
-		err := godotenv.Load(".env")
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		err := godotenv.Load(".env.dev")
-		if err != nil {
-			panic(err)
-		}
-	}
-}
 
 func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	s, err := cron.ParseStandard(spec)
@@ -61,22 +34,13 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	c.Schedule(s, cron.FuncJob(cmd))
 }
 
-func main() {
-	flag.Parse()
-
-	mailer.InitTemplates(*emailTemplateDir)
-
-	database.InitDB()
-	defer database.CloseDB()
-
-	// Run jobs on initial start
-	log.Println("Job is running")
+// Run starts the background tasks and blocks forever.
+func Run() {
+	log.Println("Started background tasks")
 
 	// Schedule jobs
 	c := cron.New()
-
-	scheduleJob(c, "0 20 * * 5", func() { digest.Send() })
-
+	scheduleJob(c, "0 20 * * 5", func() { sendDigest() })
 	c.Start()
 
 	// Block forever

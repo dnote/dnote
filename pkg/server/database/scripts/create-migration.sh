@@ -18,4 +18,4 @@ if [ "$#" == 0 ]; then
 fi
 
 filename=$1
-sql-migrate new -config=migrate.yml "$filename"
+sql-migrate new -config=./sql-migrate.yml "$filename"

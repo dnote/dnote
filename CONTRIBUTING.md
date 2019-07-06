@@ -2,51 +2,61 @@
 
 This repository contains the server side and the client side code for Dnote.
 
-## Set up
+* [Setting up](#setting-up)
+* [Command Linux Interface](#command-line-interface)
+* [Server](#server)
 
-1. Download and setup the [Go programming language](https://golang.org/dl/).
-2. Download the project
+## Setting up
+
+1. Install the following prerequisites if necessary:
+
+* [Go programming language](https://golang.org/dl/) 1.12+
+* [Node.js](https://nodejs.org/) 10.16+
+* Postgres 10.9+
+
+2. Get the Dnote code:
 
 ```sh
 go get github.com/dnote/dnote
 ```
 
-## CLI
+3. Run `make` to install dependencies
 
-### Set up
+## Command Line Interface
 
-Download dependencies using [dep](https://github.com/golang/dep).
+### Build
 
-```sh
-dep ensure
+You can build either a development version or a production version:
+
+```
+# Build a development version for your platform and place it in your `PATH`.
+make debug=true build-cli
+
+# Build a production version
+make version=v0.1.0 build-cli
 ```
 
 ### Test
 
-Run:
+* Run all tests for the command line interface:
 
-```sh
-./cli/scripts/test.sh
+```
+make test-cli
 ```
 
 ### Debug
 
-Run Dnote with `DNOTE_DEBUG=1` to print debugging statements.
+Run Dnote with `DNOTE_DEBUG=1` to print debugging statements. For instance:
+
+```
+DNOTE_DEBUG=1 dnote sync
+```
 
 ### Release
 
-* Build for all target platforms, tag, push tags
-* Release on GitHub and [Dnote Homebrew tap](https://github.com/dnote/homebrew-dnote).
-
-```sh
-VERSION=0.4.8 make release
-```
-
-* Build, without releasing, for all target platforms
-
-```sh
-VERSION=0.4.8 make
-```
+* Run `make version=v0.1.0 release-cli` to achieve the following:
+  * Build for all target platforms, create a git tag, push all tags to the repository
+  * Create a release on GitHub and [Dnote Homebrew tap](https://github.com/dnote/homebrew-dnote).
 
 **Note**
 
@@ -54,39 +64,24 @@ VERSION=0.4.8 make
   - disable the homebrew release by commenting out relevant code in the release script.
   - mark release as pre-release on GitHub release
 
-## Web
-
-### Set up
-
-Download dependencies using [dep](https://github.com/golang/dep) and npm.
-
-```sh
-dep ensure
-npm install
-```
-
-### Test
-
-Run:
-
-```
-npm run test
-```
-
 ## Server
 
-### Set up
+The server consists of the frontend web application and a web server.
 
-Download dependencies using [dep](https://github.com/golang/dep).
+### Development
 
-```sh
-dep ensure
-```
+* Create a postgres database by running `createdb -O postgres dnote`
+* If the role does not exist, you can create it by running `sudo -u postgres createuser postgres`
+
+* Run `make dev-server` to start a local server
 
 ### Test
 
-Run:
+```bash
+# Run tests for the frontend web application
+make test-web
 
+# Run tests for API
+make test-api
 ```
-./server/api/scripts/test-local.sh
-```
+

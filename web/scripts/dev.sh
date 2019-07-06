@@ -1,11 +1,25 @@
 #!/bin/bash
+# shellcheck disable=SC1090
 # dev.sh builds and starts development environment for standalone app
 set -eux -o pipefail
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
-appPath="$basePath"/web
+# clean up background processes
+function cleanup {
+  kill "$devServerPID"
+}
+trap cleanup EXIT
 
-# run webpack-dev-server for js
+basePath="$GOPATH/src/github.com/dnote/dnote"
+appPath="$basePath/web"
+serverPath="$basePath/pkg/server"
+
+# load env
+set -a
+dotenvPath="$serverPath/.env.dev"
+source "$dotenvPath"
+set +a
+
+# run webpack-dev-server for js in the background
 (
   cd "$appPath" &&
 
@@ -18,6 +32,7 @@ appPath="$basePath"/web
   IS_TEST=true \
     "$appPath"/scripts/webpack-dev.sh
 ) &
+devServerPID=$!
 
 # run server
-(cd "$appPath" && PORT=3000 go run main.go)
+(cd "$serverPath" && go run main.go)

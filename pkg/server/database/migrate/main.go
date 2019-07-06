@@ -55,6 +55,8 @@ func main() {
 		Dir: *migrationDir,
 	}
 
+	migrate.SetTable("migrations")
+
 	n, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up)
 	if err != nil {
 		panic(errors.Wrap(err, "executing migrations"))

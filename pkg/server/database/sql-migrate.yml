@@ -1,0 +1,8 @@
+# A configuration for sql-migrate tool for generating migrations
+# using `sql-migrate new`. This file is not actually used for running
+# migrations because we run them programmatically.
+
+development:
+  dialect: postgres
+  datasource: dbname=dnote sslmode=disable
+  dir: ./migrations
