@@ -24,8 +24,10 @@ var (
 	DnoteDirName = ".dnote"
 	// DnoteDBFileName is a filename for the Dnote SQLite database
 	DnoteDBFileName = "dnote.db"
-	// TmpContentFilename is the filename for a temporary content
-	TmpContentFilename = "DNOTE_TMPCONTENT.md"
+	// TmpContentFileBase is the base for the filename for a temporary content
+	TmpContentFileBase = "DNOTE_TMPCONTENT"
+	// TmpContentFileExt is the extension for the temporary content file
+	TmpContentFileExt = "md"
 	// ConfigFilename is the name of the config file
 	ConfigFilename = "dnoterc"
 

@@ -34,8 +34,19 @@ import (
 
 // GetTmpContentPath returns the path to the temporary file containing
 // content being added or edited
-func GetTmpContentPath(ctx context.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, consts.TmpContentFilename)
+func GetTmpContentPath(ctx context.DnoteCtx) (string, error) {
+	for i := 0; ; i++ {
+		filename := fmt.Sprintf("%s_%d.%s", consts.TmpContentFileBase, i, consts.TmpContentFileExt)
+		candidate := fmt.Sprintf("%s/%s", ctx.DnoteDir, filename)
+
+		ok, err := utils.FileExists(candidate)
+		if err != nil {
+			return "", errors.Wrapf(err, "checking if file exists at %s", candidate)
+		}
+		if !ok {
+			return candidate, nil
+		}
+	}
 }
 
 // getEditorCommand returns the system's editor command with appropriate flags,
@@ -91,7 +102,11 @@ func newEditorCmd(ctx context.DnoteCtx, fpath string) (*exec.Cmd, error) {
 // GetEditorInput gets the user input by launching a text editor and waiting for
 // it to exit
 func GetEditorInput(ctx context.DnoteCtx, fpath string, content *string) error {
-	if !utils.FileExists(fpath) {
+	ok, err := utils.FileExists(fpath)
+	if err != nil {
+		return errors.Wrapf(err, "checking if the file exists at %s", fpath)
+	}
+	if !ok {
 		f, err := os.Create(fpath)
 		if err != nil {
 			return errors.Wrap(err, "creating a temporary content file")

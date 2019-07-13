@@ -115,8 +115,12 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		if content == "" {
-			fpath := ui.GetTmpContentPath(ctx)
-			err := ui.GetEditorInput(ctx, fpath, &content)
+			fpath, err := ui.GetTmpContentPath(ctx)
+			if err != nil {
+				return errors.Wrap(err, "getting temporarily content file path")
+			}
+
+			err = ui.GetEditorInput(ctx, fpath, &content)
 			if err != nil {
 				return errors.Wrap(err, "Failed to get editor input")
 			}

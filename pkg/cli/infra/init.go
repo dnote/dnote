@@ -315,7 +315,11 @@ func getEditorCommand() string {
 func initDnoteDir(ctx context.DnoteCtx) error {
 	path := ctx.DnoteDir
 
-	if utils.FileExists(path) {
+	ok, err := utils.FileExists(path)
+	if err != nil {
+		return errors.Wrap(err, "checking if dnote dir exists")
+	}
+	if ok {
 		return nil
 	}
 
@@ -329,7 +333,11 @@ func initDnoteDir(ctx context.DnoteCtx) error {
 // initConfigFile populates a new config file if it does not exist yet
 func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
 	path := config.GetPath(ctx)
-	if utils.FileExists(path) {
+	ok, err := utils.FileExists(path)
+	if err != nil {
+		return errors.Wrap(err, "checking if config exists")
+	}
+	if ok {
 		return nil
 	}
 

@@ -44,9 +44,16 @@ func ReadFileAbs(relpath string) []byte {
 }
 
 // FileExists checks if the file exists at the given path
-func FileExists(filepath string) bool {
+func FileExists(filepath string) (bool, error) {
 	_, err := os.Stat(filepath)
-	return !os.IsNotExist(err)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, errors.Wrap(err, "getting file info")
 }
 
 // CopyDir copies a directory from src to dest, recursively copying nested
