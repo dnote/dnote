@@ -1,6 +1,6 @@
 main
 *.swo
-tmp/
+tmp*/
 /vendor
 test-dnote
 /dist

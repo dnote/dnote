@@ -72,7 +72,11 @@ func TestMigrateToV1(t *testing.T) {
 		}
 
 		// test
-		if utils.FileExists(yamlPath) {
+		ok, err := utils.FileExists(yamlPath)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "checking if yaml file exists"))
+		}
+		if ok {
 			t.Fatal("YAML archive file has not been deleted")
 		}
 	})
@@ -93,7 +97,11 @@ func TestMigrateToV1(t *testing.T) {
 		}
 
 		// test
-		if utils.FileExists(yamlPath) {
+		ok, err := utils.FileExists(yamlPath)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "checking if yaml file exists"))
+		}
+		if ok {
 			t.Fatal("YAML archive file must not exist")
 		}
 	})
@@ -372,23 +380,43 @@ func TestMigrateToV8(t *testing.T) {
 	dnotercPath := fmt.Sprintf("%s/dnoterc", ctx.DnoteDir)
 	schemaFilePath := fmt.Sprintf("%s/schema", ctx.DnoteDir)
 	timestampFilePath := fmt.Sprintf("%s/timestamps", ctx.DnoteDir)
-	if ok := utils.FileExists(dnoteFilePath); ok {
+
+	ok, err := utils.FileExists(dnoteFilePath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if file exists"))
+	}
+	if ok {
 		t.Errorf("%s still exists", dnoteFilePath)
 	}
-	if ok := utils.FileExists(schemaFilePath); ok {
-		t.Errorf("%s still exists", dnoteFilePath)
+
+	ok, err = utils.FileExists(schemaFilePath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if file exists"))
 	}
-	if ok := utils.FileExists(timestampFilePath); ok {
-		t.Errorf("%s still exists", dnoteFilePath)
+	if ok {
+		t.Errorf("%s still exists", schemaFilePath)
 	}
-	if ok := utils.FileExists(dnotercPath); !ok {
-		t.Errorf("%s should exist", dnotercPath)
+
+	ok, err = utils.FileExists(timestampFilePath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if file exists"))
+	}
+	if ok {
+		t.Errorf("%s still exists", timestampFilePath)
+	}
+
+	ok, err = utils.FileExists(dnotercPath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if file exists"))
+	}
+	if !ok {
+		t.Errorf("%s still exists", dnotercPath)
 	}
 
 	// 2. test if notes and books are migrated
 
 	var bookCount, noteCount int
-	err := db.QueryRow("SELECT count(*) FROM books").Scan(&bookCount)
+	err = db.QueryRow("SELECT count(*) FROM books").Scan(&bookCount)
 	if err != nil {
 		panic(errors.Wrap(err, "counting books"))
 	}

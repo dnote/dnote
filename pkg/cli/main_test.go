@@ -57,10 +57,19 @@ func TestInit(t *testing.T) {
 	db := database.OpenTestDB(t, opts.DnoteDir)
 
 	// Test
-	if !utils.FileExists(opts.DnoteDir) {
+	ok, err := utils.FileExists(opts.DnoteDir)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if dnote dir exists"))
+	}
+	if !ok {
 		t.Errorf("dnote directory was not initialized")
 	}
-	if !utils.FileExists(fmt.Sprintf("%s/%s", opts.DnoteDir, consts.ConfigFilename)) {
+
+	ok, err = utils.FileExists(fmt.Sprintf("%s/%s", opts.DnoteDir, consts.ConfigFilename))
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "checking if dnote config exists"))
+	}
+	if !ok {
 		t.Errorf("config file was not initialized")
 	}
 

@@ -85,7 +85,11 @@ func makeSchema(complete bool) schema {
 func Legacy(ctx context.DnoteCtx) error {
 	// If schema does not exist, no need run a legacy migration
 	schemaPath := getSchemaPath(ctx)
-	if ok := utils.FileExists(schemaPath); !ok {
+	ok, err := utils.FileExists(schemaPath)
+	if err != nil {
+		return errors.Wrap(err, "checking if schema exists")
+	}
+	if !ok {
 		return nil
 	}
 
@@ -472,7 +476,11 @@ var migrateToV8SystemKeyBookMark = "bookmark"
 // migrateToV1 deletes YAML archive if exists
 func migrateToV1(ctx context.DnoteCtx) error {
 	yamlPath := fmt.Sprintf("%s/%s", ctx.HomeDir, ".dnote-yaml-archived")
-	if !utils.FileExists(yamlPath) {
+	ok, err := utils.FileExists(yamlPath)
+	if err != nil {
+		return errors.Wrap(err, "checking if yaml file exists")
+	}
+	if !ok {
 		return nil
 	}
 

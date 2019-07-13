@@ -89,7 +89,10 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		if newContent == "" {
-			fpath := ui.GetTmpContentPath(ctx)
+			fpath, err := ui.GetTmpContentPath(ctx)
+			if err != nil {
+				return errors.Wrap(err, "getting temporarily content file path")
+			}
 
 			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
 			if e != nil {
