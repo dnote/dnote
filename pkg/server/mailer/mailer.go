@@ -27,6 +27,7 @@ import (
 	"path"
 
 	"github.com/aymerick/douceur/inliner"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
 	"gopkg.in/gomail.v2"
 )
@@ -54,26 +55,45 @@ func getTemplatePath(templateDirPath, filename string) string {
 
 // initTemplate returns a template instance by parsing the template with the
 // given name along with partials
-func initTemplate(templateDirPath, templateFileName string) (*template.Template, error) {
-	templatePath := getTemplatePath(templateDirPath, templateFileName)
-	headerPath := getTemplatePath(templateDirPath, "header")
-	footerPath := getTemplatePath(templateDirPath, "footer")
+func initTemplate(box *packr.Box, templateName string) (*template.Template, error) {
+	filename := fmt.Sprintf("%s.html", templateName)
 
-	t, err := template.ParseFiles(templatePath, headerPath, footerPath)
+	content, err := box.FindString(filename)
 	if err != nil {
-		return nil, errors.Wrap(err, "parseing template")
+		return nil, errors.Wrap(err, "reading template")
+	}
+	headerContent, err := box.FindString("header.html")
+	if err != nil {
+		return nil, errors.Wrap(err, "reading header template")
+	}
+	footerContent, err := box.FindString("footer.html")
+	if err != nil {
+		return nil, errors.Wrap(err, "reading footer template")
+	}
+
+	t := template.New(templateName)
+	if _, err = t.Parse(content); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+	if _, err = t.Parse(headerContent); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+	if _, err = t.Parse(footerContent); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
 	}
 
 	return t, nil
 }
 
 // InitTemplates initializes templates
-func InitTemplates(templateDirPath string) {
-	weeklyDigestTmpl, err := initTemplate(templateDirPath, EmailTypeWeeklyDigest)
+func InitTemplates() {
+	box := packr.New("emailTemplates", "../mailer/templates/src")
+
+	weeklyDigestTmpl, err := initTemplate(box, EmailTypeWeeklyDigest)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing template"))
 	}
-	emailVerificationTmpl, err := initTemplate(templateDirPath, EmailTypeEmailVerification)
+	emailVerificationTmpl, err := initTemplate(box, EmailTypeEmailVerification)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing template"))
 	}

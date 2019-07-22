@@ -1,20 +1,4 @@
-/* Copyright (C) 2019 Monomax Software Pty Ltd
- *
- * This file is part of Dnote.
- *
- * Dnote is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Dnote is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
- */
+#!/usr/bin/env node
 
 // placeholder.js replaces the placeholders in index.html with real values
 // It is needed to load assets whose paths are not fixed because they change
@@ -23,8 +7,16 @@
 const fs = require('fs');
 const path = require('path');
 
+const baseURL = process.env.BASE_URL;
+const assetBaseURL = process.env.ASSET_BASE_URL;
 const publicPath = process.env.PUBLIC_PATH;
 const compiledPath = process.env.COMPILED_PATH;
+if (!publicPath) {
+  throw new Error('No PUBLIC_PATH environment variable found');
+}
+if (!compiledPath) {
+  throw new Error('No COMPILED_PATH environment variable found');
+}
 
 const indexHtmlPath = `${publicPath}/index.html`;
 
@@ -38,9 +30,6 @@ try {
 } catch (e) {}
 
 const isProduction = process.env.NODE_ENV === 'PRODUCTION';
-
-const baseURL = process.env.BASE_URL;
-const assetBaseURL = process.env.ASSET_BASE_URL;
 
 function getJSBundleTag() {
   let jsBundleUrl;

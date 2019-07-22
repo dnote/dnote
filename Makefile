@@ -1,5 +1,7 @@
 DEP := $(shell command -v dep 2> /dev/null)
+PACKR2 := $(shell command -v packr2 2> /dev/null)
 NPM := $(shell command -v npm 2> /dev/null)
+HUB := $(shell command -v hub 2> /dev/null)
 
 ## installation
 install: install-go install-js
@@ -9,6 +11,11 @@ install-go:
 ifndef DEP
 	@echo "==> installing dep"
 	@curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+endif
+
+ifndef PACKR2
+	@echo "==> installing packr2"
+	@go get -u github.com/gobuffalo/packr/v2/packr2
 endif
 
 	@echo "==> installing go dependencies"
@@ -30,6 +37,9 @@ endif
 .PHONY: install-js
 
 ## test
+test: test-cli test-api test-web
+.PHONY: test
+
 test-cli:
 	@echo "==> running CLI test"
 	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/test.sh
@@ -45,26 +55,81 @@ test-web:
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test)
 .PHONY: test-web
 
-test: test-cli test-api test-web
-.PHONY: test
+# development
+dev-server:
+	@echo "==> running dev environment"
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && ./scripts/dev.sh)
+.PHONY: dev-server
 
 ## build
 build-web:
 	@echo "==> building web"
-	@${GOPATH}/src/github.com/dnote/dnote/web/scripts/build-prod.sh
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && ./scripts/build-prod.sh)
 .PHONY: build-web
 
-build-dev-cli:
-	@echo "==> building dev cli"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/dev.sh
-.PHONY: build-dev-cli
-
-## migrate
-migrate:
-ifndef GO_ENV
-	$(error "environment variable GO_ENV is required.")
+build-server: build-web
+ifndef version
+	$(error version is required. Usage: make version=v0.1.0 build-server)
 endif
 
-	@echo "==> running migrations"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server/database/migrate && go run *.go --migrationDir ../migrations)
-.PHONY: migrate
+	@echo "==> building server"
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server && ./scripts/build.sh $(version))
+.PHONY: build-server
+
+build-cli:
+ifeq ($(debug), true)
+	@echo "==> building cli in dev mode"
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/dev.sh
+else
+
+ifndef version
+	$(error version is required. Usage: make version=v0.1.0 build-cli)
+endif
+
+	@echo "==> building cli"
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/build.sh $(version)
+endif
+.PHONY: build-cli
+
+## release
+release-cli: build-cli
+ifndef version
+	$(error version is required. Usage: make version=v0.1.0 release-cli)
+endif
+ifndef HUB
+	$(error please install hub)
+endif
+
+	@homebrewRepoDir=${GOPATH}/src/github.com/dnote/homebrew-dnote
+	if [ ! -d ${homebrewRepoDir} ]; then
+		@echo "homebrew-dnote not found locally. did you clone it?"
+		@exit 1
+	fi
+
+	@echo "==> releasing cli"
+	@outputDir=${GOPATH}/src/github.com/dnote/dnote/build/cli
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/release.sh cli $(version) ${outputDir}
+
+	@echo "===> releading on Homebrew"
+	@homebrew_sha256=$(shasum -a 256 "${outputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
+	@(cd "${homebrewRepoDir}" && ./release.sh "$(version)" "${homebrew_sha256}")
+.PHONY: release-cli
+
+release-server: build-server
+ifndef version
+	$(error version is required. Usage: make version=v0.1.0 release-server)
+endif
+ifndef HUB
+	$(error please install hub)
+endif
+
+	@echo "==> releasing server"
+	@outputDir=${GOPATH}/src/github.com/dnote/dnote/build/server
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/server/scripts/release.sh server $(version) ${outputDir}
+.PHONY: release-server
+
+clean:
+	@git clean -f
+	@rm -rf build
+	@rm -rf web/public
+.PHONY: clean

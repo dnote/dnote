@@ -113,18 +113,19 @@ hash_sha256() {
 }
 
 verify_checksum() {
-  binary_path=$1
-  filename=$2
-  checksums=$3
+  filepath=$1
+  checksums=$2
+
+  filename=$(basename "$filepath")
 
   want=$(grep "${filename}" "${checksums}" 2>/dev/null | cut -d ' ' -f 1)
   if [ -z "$want" ]; then
     print_error "unable to find checksum for '${filename}' in '${checksums}'"
     exit 1
   fi
-  got=$(hash_sha256 "$binary_path")
+  got=$(hash_sha256 "$filepath")
   if [ "$want" != "$got" ]; then
-    print_error "checksum for '$binary_path' did not verify ${want} vs $got"
+    print_error "checksum for '$filepath' did not verify ${want} vs $got"
     exit 1
   fi
 }
@@ -173,12 +174,12 @@ install_dnote() {
   print_step "Downloading the checksum file for v$version"
   http_download "$tmpdir/$checksum" "$checksum_url"
 
+  print_step "Comparing checksums for binaries."
+  verify_checksum "$tmpdir/$tarball" "$tmpdir/$checksum"
+
   # unzip tar
   print_step "Inflating the binary."
   (cd "${tmpdir}" && tar -xzf "${tarball}")
-
-  print_step "Comparing checksums for binaries."
-  verify_checksum "${tmpdir}/${binary}" "$filename" "$tmpdir/$checksum"
 
   install -d "${bindir}"
   install "${tmpdir}/${binary}" "${bindir}/"

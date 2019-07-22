@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package digest
+package job
 
 import (
 	"log"
@@ -27,8 +27,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Make builds a weekly digest email
-func Make(user database.User, emailAddr string) (*mailer.Email, error) {
+// makeDigest builds a weekly digest email
+func makeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
 	log.Printf("Sending for %s", emailAddr)
 	db := database.DBConn
 
@@ -92,8 +92,8 @@ func Make(user database.User, emailAddr string) (*mailer.Email, error) {
 	return email, nil
 }
 
-// Send sends the weekly digests to users
-func Send() error {
+// sendDigest sends the weekly digests to users
+func sendDigest() error {
 	db := database.DBConn
 
 	var users []database.User
@@ -111,7 +111,7 @@ func Send() error {
 			continue
 		}
 
-		email, err := Make(user, account.Email.String)
+		email, err := makeDigest(user, account.Email.String)
 		if err != nil {
 			log.Printf("Error occurred while sending to %s: %s", account.Email.String, err.Error())
 			continue

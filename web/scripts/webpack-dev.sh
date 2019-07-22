@@ -15,7 +15,7 @@ appPath="$basePath"/web
   COMPILED_PATH=$COMPILED_PATH \
   PUBLIC_PATH=$PUBLIC_PATH \
   IS_TEST=true \
-    "$appPath"/scripts/placeholder.sh &&
+    node "$appPath"/scripts/placeholder.js &&
 
   "$appPath"/node_modules/.bin/webpack-dev-server\
     --env.standalone="$STANDALONE"\

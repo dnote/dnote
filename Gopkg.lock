@@ -46,6 +46,51 @@
   version = "v1.7.0"
 
 [[projects]]
+  digest = "1:d29ee5ef14a7e0253facd0bcebe6a69a7a4e02a67eb24d2aacd8ccb4a7cea6fc"
+  name = "github.com/gobuffalo/envy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "043cb4b8af871b49563291e32c66bb84378a60ac"
+  version = "v1.7.0"
+
+[[projects]]
+  digest = "1:6c9088827dcc7a807c97592a55f190e35e0fdaf237c5a074256c260925c59428"
+  name = "github.com/gobuffalo/logger"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7c291b53e05b81d77bd43109b4a3c6f84e45c8e1"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:40849e8495ef81a84ff335ef65e23d33671b61e60e9db464fbab55f19f43f120"
+  name = "github.com/gobuffalo/packd"
+  packages = [
+    ".",
+    "internal/takeon/github.com/markbates/errx",
+  ]
+  pruneopts = "UT"
+  revision = "54ea459691466cfb630ccc276723fe3963f3e9d5"
+  version = "v0.3.0"
+
+[[projects]]
+  digest = "1:d5be00af71142774ee6738480e580ae975e8e97158f9334b13af41a77f2f6b0c"
+  name = "github.com/gobuffalo/packr"
+  packages = [
+    "v2",
+    "v2/file",
+    "v2/file/resolver",
+    "v2/file/resolver/encoding/hex",
+    "v2/internal/takeon/github.com/markbates/errx",
+    "v2/internal/takeon/github.com/markbates/oncer",
+    "v2/internal/takeon/github.com/markbates/safe",
+    "v2/jam/parser",
+    "v2/plog",
+  ]
+  pruneopts = "UT"
+  revision = "9eb7a3d310e89e471c2cdf1ea3ec8d7fc1ab969c"
+  version = "v2.5.2"
+
+[[projects]]
   digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -142,6 +187,22 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:77857b3205f936bdc6928ef347b682ab549cf99454d6c0ca04a49f8df9e418f3"
+  name = "github.com/karrick/godirwalk"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "73c17a9b9528eb3ce857b782a2816c0cda581e62"
+  version = "v1.10.12"
+
+[[projects]]
+  digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   digest = "1:bdd53b87de8185da386bae179c84d4848854c6870bacacf6a154fe63e2e750f7"
   name = "github.com/lib/pq"
   packages = [
@@ -154,13 +215,11 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:639aaff480d288c3dbc99ae68f00d58ae43c283a85725ae3afaada7b5810c6be"
+  digest = "1:1241b137a50b99f7f395e6d3d917cafa4330bd17c55dacef18bfa8d87707533a"
   name = "github.com/markbates/goth"
   packages = [
     ".",
     "gothic",
-    "providers/github",
-    "providers/gplus",
   ]
   pruneopts = "UT"
   revision = "3b8012093d951beedd026d120be1792db01a08f6"
@@ -207,7 +266,18 @@
   version = "v1.2.0"
 
 [[projects]]
-  branch = "master"
+  digest = "1:e09ada96a5a41deda4748b1659cc8953961799e798aea557257b56baee4ecaf3"
+  name = "github.com/rogpeppe/go-internal"
+  packages = [
+    "modfile",
+    "module",
+    "semver",
+  ]
+  pruneopts = "UT"
+  revision = "438578804ca6f31be148c27683afc419ce47c06e"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:83eb06141fc25c7fd89f8b39717962ac930a7480796aab3d46c7e88507a69173"
   name = "github.com/rubenv/sql-migrate"
   packages = [
@@ -232,6 +302,14 @@
   pruneopts = "UT"
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
 
 [[projects]]
   digest = "1:e096613fb7cf34743d49af87d197663cfccd61876e2219853005a57baedfa562"
@@ -385,17 +463,14 @@
     "github.com/aymerick/douceur/inliner",
     "github.com/dnote/actions",
     "github.com/dnote/color",
+    "github.com/gobuffalo/packr/v2",
     "github.com/google/go-github/github",
     "github.com/gorilla/mux",
-    "github.com/gorilla/securecookie",
-    "github.com/gorilla/sessions",
     "github.com/jinzhu/gorm",
     "github.com/joho/godotenv",
     "github.com/lib/pq",
     "github.com/markbates/goth",
     "github.com/markbates/goth/gothic",
-    "github.com/markbates/goth/providers/github",
-    "github.com/markbates/goth/providers/gplus",
     "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
     "github.com/robfig/cron",
