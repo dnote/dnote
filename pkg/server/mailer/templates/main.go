@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/job/digest"
+	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -39,7 +39,7 @@ func weeklyDigestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, err := digest.Make(user, "sung@dnote.io")
+	email, err := job.MakeDigest(user, "sung@dnote.io")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,7 +79,7 @@ func main() {
 	database.InitDB()
 	defer database.CloseDB()
 
-	mailer.InitTemplates("./src")
+	mailer.InitTemplates()
 
 	log.Println("Email template debug server running on http://127.0.0.1:2300")
 
