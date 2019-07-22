@@ -27,8 +27,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// makeDigest builds a weekly digest email
-func makeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
+// MakeDigest builds a weekly digest email
+func MakeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
 	log.Printf("Sending for %s", emailAddr)
 	db := database.DBConn
 
@@ -111,7 +111,7 @@ func sendDigest() error {
 			continue
 		}
 
-		email, err := makeDigest(user, account.Email.String)
+		email, err := MakeDigest(user, account.Email.String)
 		if err != nil {
 			log.Printf("Error occurred while sending to %s: %s", account.Email.String, err.Error())
 			continue

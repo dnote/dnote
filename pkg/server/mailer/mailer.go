@@ -87,7 +87,7 @@ func initTemplate(box *packr.Box, templateName string) (*template.Template, erro
 
 // InitTemplates initializes templates
 func InitTemplates() {
-	box := packr.New("emailTemplates", "../mailer/templates/src")
+	box := packr.New("emailTemplates", "./templates/src")
 
 	weeklyDigestTmpl, err := initTemplate(box, EmailTypeWeeklyDigest)
 	if err != nil {
@@ -123,7 +123,7 @@ func (e *Email) Send() error {
 	if os.Getenv("GO_ENV") != "PRODUCTION" {
 		fmt.Println("Not sending email because not production")
 		fmt.Println(e.subject, e.to, e.from)
-		// fmt.Println("Body", e.Body)
+		fmt.Println("Body", e.Body)
 		return nil
 	}
 
