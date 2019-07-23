@@ -34,7 +34,7 @@ var (
 )
 
 func getPGConnectionString() string {
-	return fmt.Sprintf(
+	ret := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s",
 		os.Getenv("DBHost"),
 		os.Getenv("DBPort"),
@@ -42,6 +42,12 @@ func getPGConnectionString() string {
 		os.Getenv("DBUser"),
 		os.Getenv("DBPassword"),
 	)
+
+	if os.Getenv("GO_ENV") != "PRODUCTION" {
+		ret = fmt.Sprintf("%s sslmode=disable", ret)
+	}
+
+	return ret
 }
 
 var (
