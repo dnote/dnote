@@ -34,22 +34,13 @@ var (
 )
 
 func getPGConnectionString() string {
-	if os.Getenv("GO_ENV") == "PRODUCTION" {
-		return fmt.Sprintf(
-			"host=%s port=%s dbname=%s user=%s password=%s",
-			os.Getenv("DBHost"),
-			os.Getenv("DBPort"),
-			os.Getenv("DBName"),
-			os.Getenv("DBUser"),
-			os.Getenv("DBPassword"),
-		)
-	}
-
 	return fmt.Sprintf(
-		"host=%s dbname=%s user=%s sslmode=disable",
-		os.Getenv("DB_HOST"),
-		os.Getenv("POSTGRES_DB"),
-		os.Getenv("POSTGRES_USER"),
+		"host=%s port=%s dbname=%s user=%s password=%s",
+		os.Getenv("DBHost"),
+		os.Getenv("DBPort"),
+		os.Getenv("DBName"),
+		os.Getenv("DBUser"),
+		os.Getenv("DBPassword"),
 	)
 }
 
@@ -69,7 +60,9 @@ const (
 func InitDB() {
 	var err error
 
-	DBConn, err = gorm.Open("postgres", getPGConnectionString())
+	connStr := getPGConnectionString()
+
+	DBConn, err = gorm.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}

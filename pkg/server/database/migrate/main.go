@@ -38,7 +38,7 @@ func init() {
 
 	// Load env
 	if os.Getenv("GO_ENV") != "PRODUCTION" {
-		if err := godotenv.Load("../../api/.env.dev"); err != nil {
+		if err := godotenv.Load("../../.env.dev"); err != nil {
 			panic(err)
 		}
 	}
