@@ -305,7 +305,7 @@ func applyMiddleware(h http.Handler, rateLimit bool) http.Handler {
 	ret := h
 	ret = logging(ret)
 
-	if rateLimit && os.Getenv("GO_ENV") == "PRODUCTION" {
+	if rateLimit && os.Getenv("GO_ENV") != "TEST" {
 		ret = limit(ret)
 	}
 

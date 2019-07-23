@@ -35,7 +35,12 @@ func Init() error {
 
 	var endpoint string
 	if os.Getenv("GO_ENV") == "PRODUCTION" {
-		endpoint = "logs7.papertrailapp.com:37297"
+		endpoint = os.Getenv("LogEndpoint")
+
+		if endpoint == "" {
+			log.Println("No log endpoint provided. Not aggregating system logs.")
+			return nil
+		}
 
 		writer, err = syslog.Dial("udp", endpoint, syslog.LOG_DEBUG|syslog.LOG_KERN, "dnote-api")
 		if err != nil {
