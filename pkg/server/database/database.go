@@ -42,13 +42,13 @@ func getPGConnectionString() string {
 	}
 
 	return fmt.Sprintf(
-		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		"sslmode=%s host=%s port=%s dbname=%s user=%s password=%s",
+		sslmode,
 		os.Getenv("DBHost"),
 		os.Getenv("DBPort"),
 		os.Getenv("DBName"),
 		os.Getenv("DBUser"),
 		os.Getenv("DBPassword"),
-		sslmode,
 	)
 }
 
