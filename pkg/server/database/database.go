@@ -43,18 +43,30 @@ type Config struct {
 	Password string
 }
 
+// ErrConfigMissingHost is an error for an incomplete configuration missing the host
+var ErrConfigMissingHost = errors.New("Host is empty")
+
+// ErrConfigMissingPort is an error for an incomplete configuration missing the port
+var ErrConfigMissingPort = errors.New("Port is empty")
+
+// ErrConfigMissingName is an error for an incomplete configuration missing the name
+var ErrConfigMissingName = errors.New("Name is empty")
+
+// ErrConfigMissingUser is an error for an incomplete configuration missing the user
+var ErrConfigMissingUser = errors.New("User is empty")
+
 func validateConfig(c Config) error {
 	if c.Host == "" {
-		return errors.New("Host is empty")
+		return ErrConfigMissingHost
 	}
 	if c.Port == "" {
-		return errors.New("Port is empty")
+		return ErrConfigMissingPort
 	}
 	if c.Name == "" {
-		return errors.New("Name is empty")
+		return ErrConfigMissingName
 	}
 	if c.User == "" {
-		return errors.New("User is empty")
+		return ErrConfigMissingUser
 	}
 
 	return nil
