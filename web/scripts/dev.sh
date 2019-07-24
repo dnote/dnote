@@ -35,4 +35,5 @@ set +a
 devServerPID=$!
 
 # run server
-(cd "$serverPath" && go run main.go)
+(cd "$serverPath" && CompileDaemon \
+  -command="$serverPath/server start")

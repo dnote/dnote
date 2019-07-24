@@ -86,8 +86,14 @@ func initTemplate(box *packr.Box, templateName string) (*template.Template, erro
 }
 
 // InitTemplates initializes templates
-func InitTemplates() {
-	box := packr.New("emailTemplates", "./templates/src")
+func InitTemplates(srcDir *string) {
+	var box *packr.Box
+
+	if srcDir != nil {
+		box = packr.Folder(*srcDir)
+	} else {
+		box = packr.New("emailTemplates", "./templates/src")
+	}
 
 	weeklyDigestTmpl, err := initTemplate(box, EmailTypeWeeklyDigest)
 	if err != nil {

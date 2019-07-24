@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -38,7 +39,14 @@ import (
 // InitTestDB establishes connection pool with the test database specified by
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() {
-	database.InitDB()
+	c := database.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	}
+	database.Open(c)
 	database.InitSchema()
 }
 

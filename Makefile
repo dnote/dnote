@@ -2,6 +2,7 @@ DEP := $(shell command -v dep 2> /dev/null)
 PACKR2 := $(shell command -v packr2 2> /dev/null)
 NPM := $(shell command -v npm 2> /dev/null)
 HUB := $(shell command -v hub 2> /dev/null)
+COMPILEDAEMON := $(shell command -v CompileDaemon 2> /dev/null)
 
 ## installation
 install: install-go install-js
@@ -16,6 +17,11 @@ endif
 ifndef PACKR2
 	@echo "==> installing packr2"
 	@go get -u github.com/gobuffalo/packr/v2/packr2
+endif
+
+ifndef COMPILEDAEMON
+	@echo "==> installing CompileDaemon"
+	@go get -u github.com/githubnemo/CompileDaemon
 endif
 
 	@echo "==> installing go dependencies"

@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/dnote/dnote/pkg/server/api/clock"
@@ -37,7 +38,7 @@ import (
 )
 
 var versionTag = "master"
-var port = flag.String("port", "8080", "port to connect to")
+var port = flag.String("port", "3000", "port to connect to")
 
 func init() {
 }
@@ -78,10 +79,18 @@ func initServer() *mux.Router {
 }
 
 func startCmd() {
-	mailer.InitTemplates()
-	database.InitDB()
+	c := database.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	}
+	database.Open(c)
 	database.InitSchema()
-	defer database.CloseDB()
+	defer database.Close()
+
+	mailer.InitTemplates(nil)
 
 	// Perform database migration
 	if err := database.Migrate(); err != nil {

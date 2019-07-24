@@ -21,6 +21,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
@@ -76,10 +77,17 @@ func init() {
 }
 
 func main() {
-	database.InitDB()
-	defer database.CloseDB()
+	c := database.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	}
+	database.Open(c)
+	defer database.Close()
 
-	mailer.InitTemplates()
+	mailer.InitTemplates(nil)
 
 	log.Println("Email template debug server running on http://127.0.0.1:2300")
 
