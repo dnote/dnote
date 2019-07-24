@@ -21,6 +21,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
@@ -76,7 +77,14 @@ func init() {
 }
 
 func main() {
-	database.InitDB()
+	c := database.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	}
+	database.Connect(c)
 	defer database.CloseDB()
 
 	mailer.InitTemplates()

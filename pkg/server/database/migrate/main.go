@@ -43,7 +43,14 @@ func init() {
 		}
 	}
 
-	database.InitDB()
+	c := database.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	}
+	database.Connect(c)
 }
 
 func main() {

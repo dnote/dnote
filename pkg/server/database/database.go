@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 
 	// Use postgres
 	_ "github.com/lib/pq"
@@ -33,7 +34,37 @@ var (
 	MigrationTableName = "migrations"
 )
 
-func getPGConnectionString() string {
+// Config holds the connection configuration
+type Config struct {
+	Host     string
+	Port     string
+	Name     string
+	User     string
+	Password string
+}
+
+func validateConfig(c Config) error {
+	if c.Host == "" {
+		return errors.New("Host is empty")
+	}
+	if c.Port == "" {
+		return errors.New("Port is empty")
+	}
+	if c.Name == "" {
+		return errors.New("Name is empty")
+	}
+	if c.User == "" {
+		return errors.New("User is empty")
+	}
+
+	return nil
+}
+
+func getPGConnectionString(c Config) (string, error) {
+	if err := validateConfig(c); err != nil {
+		return "", errors.Wrap(err, "invalid database config")
+	}
+
 	var sslmode string
 	if os.Getenv("GO_ENV") == "PRODUCTION" {
 		sslmode = "require"
@@ -44,12 +75,12 @@ func getPGConnectionString() string {
 	return fmt.Sprintf(
 		"sslmode=%s host=%s port=%s dbname=%s user=%s password=%s",
 		sslmode,
-		os.Getenv("DBHost"),
-		os.Getenv("DBPort"),
-		os.Getenv("DBName"),
-		os.Getenv("DBUser"),
-		os.Getenv("DBPassword"),
-	)
+		c.Host,
+		c.Port,
+		c.Name,
+		c.User,
+		c.Password,
+	), nil
 }
 
 var (
@@ -64,11 +95,12 @@ const (
 	TokenTypeEmailPreference = "email_preference"
 )
 
-// InitDB opens the connection with the database
-func InitDB() {
-	var err error
-
-	connStr := getPGConnectionString()
+// Connect opens the connection with the database
+func Connect(c Config) {
+	connStr, err := getPGConnectionString(c)
+	if err != nil {
+		panic(err)
+	}
 
 	DBConn, err = gorm.Open("postgres", connStr)
 	if err != nil {
