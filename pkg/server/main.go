@@ -38,7 +38,7 @@ import (
 )
 
 var versionTag = "master"
-var port = flag.String("port", "8080", "port to connect to")
+var port = flag.String("port", "3000", "port to connect to")
 
 func init() {
 }
@@ -90,7 +90,7 @@ func startCmd() {
 	database.InitSchema()
 	defer database.Close()
 
-	mailer.InitTemplates()
+	mailer.InitTemplates(nil)
 
 	// Perform database migration
 	if err := database.Migrate(); err != nil {

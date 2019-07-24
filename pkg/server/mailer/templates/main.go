@@ -87,7 +87,7 @@ func main() {
 	database.Open(c)
 	defer database.Close()
 
-	mailer.InitTemplates()
+	mailer.InitTemplates(nil)
 
 	log.Println("Email template debug server running on http://127.0.0.1:2300")
 
