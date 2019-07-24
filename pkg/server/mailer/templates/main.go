@@ -84,8 +84,8 @@ func main() {
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
 	}
-	database.Connect(c)
-	defer database.CloseDB()
+	database.Open(c)
+	defer database.Close()
 
 	mailer.InitTemplates()
 

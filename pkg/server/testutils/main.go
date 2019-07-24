@@ -46,7 +46,7 @@ func InitTestDB() {
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
 	}
-	database.Connect(c)
+	database.Open(c)
 	database.InitSchema()
 }
 

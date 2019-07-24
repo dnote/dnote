@@ -107,8 +107,8 @@ const (
 	TokenTypeEmailPreference = "email_preference"
 )
 
-// Connect opens the connection with the database
-func Connect(c Config) {
+// Open opens the connection with the database
+func Open(c Config) {
 	connStr, err := getPGConnectionString(c)
 	if err != nil {
 		panic(err)
@@ -120,8 +120,8 @@ func Connect(c Config) {
 	}
 }
 
-// CloseDB closes database connection
-func CloseDB() {
+// Close closes database connection
+func Close() {
 	DBConn.Close()
 }
 

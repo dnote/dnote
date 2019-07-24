@@ -33,7 +33,7 @@ func main() {
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
 	}
-	database.Connect(c)
+	database.Open(c)
 
 	db := database.DBConn
 	tx := db.Begin()
