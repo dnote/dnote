@@ -21,6 +21,7 @@ package upgrade
 import (
 	stdCtx "context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/cli/consts"
@@ -61,21 +62,43 @@ func touchLastUpgrade(ctx context.DnoteCtx) error {
 	return nil
 }
 
+func fetchLatestStableTag(gh *github.Client, page int) (string, error) {
+	params := github.ListOptions{
+		Page: page,
+	}
+	releases, resp, err := gh.Repositories.ListReleases(stdCtx.Background(), "dnote", "dnote", &params)
+	if err != nil {
+		return "", errors.Wrapf(err, "fetching releases page %d", page)
+	}
+
+	for _, release := range releases {
+		tag := release.GetTagName()
+		isStable := !release.GetPrerelease()
+
+		if strings.HasPrefix(tag, "cli-") && isStable {
+			return tag, nil
+		}
+	}
+
+	if page == resp.LastPage {
+		return "", errors.New("No CLI release was found")
+	}
+
+	return fetchLatestStableTag(gh, page+1)
+}
+
 func checkVersion(ctx context.DnoteCtx) error {
 	log.Infof("current version is %s\n", ctx.Version)
 
 	// Fetch the latest version
 	gh := github.NewClient(nil)
-	releases, _, err := gh.Repositories.ListReleases(stdCtx.Background(), "dnote", "cli", nil)
+	latestTag, err := fetchLatestStableTag(gh, 1)
 	if err != nil {
-		return errors.Wrap(err, "fetching releases")
+		return errors.Wrap(err, "fetching the latest stable release")
 	}
 
-	latest := releases[0]
-
 	// releases are tagged in a form of cli-v1.0.0
-	latestVersion := (*latest.TagName)[5:]
-
+	latestVersion := latestTag[5:]
 	log.Infof("latest version is %s\n", latestVersion)
 
 	if latestVersion == ctx.Version {

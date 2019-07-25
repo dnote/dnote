@@ -110,17 +110,20 @@ ifndef HUB
 	$(error please install hub)
 endif
 
-	if [ ! -d ${cliHomebrewDir} ]; then
-		@echo "homebrew-dnote not found locally. did you clone it?"
-		@exit 1
+	if [ ! -d ${cliHomebrewDir} ]; then \
+		@echo "homebrew-dnote not found locally. did you clone it?"; \
+		@exit 1; \
 	fi
 
 	@echo "==> releasing cli"
 	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh cli $(version) ${cliOutputDir}
 
 	@echo "===> releading on Homebrew"
-	@homebrew_sha256=$(shasum -a 256 "${outputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
-	@(cd "${cliHomebrewDir}" && ./release.sh "$(version)" "${homebrew_sha256}")
+	@(cd "${cliHomebrewDir}" && \
+		./release.sh \
+			"$(version)" \
+			"${shasum -a 256 "${outputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1}" \
+	)
 .PHONY: release-cli
 
 release-server: build-server
