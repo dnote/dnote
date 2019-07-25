@@ -13,6 +13,22 @@ import (
 	"github.com/pkg/errors"
 )
 
+func setupGithubClient(t *testing.T) (*github.Client, *http.ServeMux) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+
+	url, err := url.Parse(server.URL + "/")
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "parsing mock server url"))
+	}
+
+	client := github.NewClient(nil)
+	client.BaseURL = url
+	client.UploadURL = url
+
+	return client, mux
+}
+
 func TestFetchLatestStableTag(t *testing.T) {
 	tagCLI0_1_0 := "cli-v0.1.0"
 	tagCLI0_1_1 := "cli-v0.1.1"
@@ -69,25 +85,15 @@ func TestFetchLatestStableTag(t *testing.T) {
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("case %d", idx), func(t *testing.T) {
 			// setup
-			apiHandler := http.NewServeMux()
-			apiHandler.HandleFunc("/repos/dnote/dnote/releases", func(w http.ResponseWriter, r *http.Request) {
+			gh, mux := setupGithubClient(t)
+			mux.HandleFunc("/repos/dnote/dnote/releases", func(w http.ResponseWriter, r *http.Request) {
 				if err := json.NewEncoder(w).Encode(tc.releases); err != nil {
 					t.Fatal(errors.Wrap(err, "responding with mock releases"))
 				}
 			})
 
-			server := httptest.NewServer(apiHandler)
-			url, err := url.Parse(server.URL + "/")
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "parsing mock server url"))
-			}
-
-			client := github.NewClient(nil)
-			client.BaseURL = url
-			client.UploadURL = url
-
 			// execute
-			got, err := fetchLatestStableTag(client, 0)
+			got, err := fetchLatestStableTag(gh, 0)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "performing"))
 			}
@@ -96,5 +102,56 @@ func TestFetchLatestStableTag(t *testing.T) {
 			assert.Equal(t, got, tc.expected, "result mismatch")
 		})
 	}
+}
 
+func TestFetchLatestStableTag_paginated(t *testing.T) {
+	tagServer0_1_0 := "server-v0.1.0"
+	tagCLI0_1_2Beta := "cli-v0.1.2-beta"
+	tagCLI0_1_1 := "cli-v0.1.1"
+	prereleaseTrue := true
+
+	// set up
+	gh, mux := setupGithubClient(t)
+	path := "/repos/dnote/dnote/releases"
+	mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
+		page := r.FormValue("page")
+
+		releasesPage1 := []*github.RepositoryRelease{
+			{TagName: &tagServer0_1_0},
+		}
+		releasesPage2 := []*github.RepositoryRelease{
+			{TagName: &tagCLI0_1_2Beta, Prerelease: &prereleaseTrue},
+			{TagName: &tagCLI0_1_1},
+		}
+
+		baseURL := gh.BaseURL.String()
+
+		switch page {
+		case "", "1":
+			linkHeader := fmt.Sprintf("<%s%s?page=2>; rel=\"next\" <%s%s?page=2>; rel=\"last\"", baseURL, path, baseURL, path)
+			w.Header().Set("Link", linkHeader)
+
+			if err := json.NewEncoder(w).Encode(releasesPage1); err != nil {
+				t.Fatal(errors.Wrap(err, "responding with mock releases"))
+			}
+		case "2":
+			linkHeader := fmt.Sprintf("<%s%s?page=1>; rel=\"prev\" <%s%s?page=1>; rel=\"first\"", baseURL, path, baseURL, path)
+			w.Header().Set("Link", linkHeader)
+
+			if err := json.NewEncoder(w).Encode(releasesPage2); err != nil {
+				t.Fatal(errors.Wrap(err, "responding with mock releases"))
+			}
+		default:
+			t.Fatal("Should have stopped walking")
+		}
+	})
+
+	// execute
+	got, err := fetchLatestStableTag(gh, 0)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "performing"))
+	}
+
+	// test
+	assert.Equal(t, got, tagCLI0_1_1, "result mismatch")
 }
