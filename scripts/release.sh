@@ -10,7 +10,7 @@ project=$1
 version=$2
 assetPath=$3
 
-if [ "$project" != "cli" ] || [ "$project" != "server" ]; then
+if [ "$project" != "cli" ] && [ "$project" != "server" ]; then
   echo "unrecognized project '$project'"
   exit 1
 fi
@@ -24,7 +24,6 @@ if [[ $version == v* ]]; then
 fi
 
 # 1. push tag
-version=$1
 version_tag="$project-v$version"
 
 echo "* tagging and pushing the tag"

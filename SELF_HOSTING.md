@@ -8,13 +8,12 @@ This guide documents the steps for installing the Dnote server on your own machi
 
 1. Install Postgres 10+.
 2. Create a `dnote` database by running `createdb dnote`
-2. Download the official Dnote server release.
-3. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
+3. Download the official Dnote server release from the [release page](https://github.com/dnote/dnote/releases).
+4. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
 
 ```bash
 tar -xzf dnote-server-$version-$os.tar.gz
-chmod +x ./dnote-server/dnote-server
-mv ./dnote-server/dnote-server /usr/local/bin
+mv ./dnote-server /usr/local/bin
 ```
 
 4. Run Dnote
@@ -31,7 +30,7 @@ DBPassword=$password \
 
 Replace $user and $password with the credentials of the Postgres user that owns the `dnote` database.
 
-By default, dnote server will run on the port 8080.
+By default, dnote server will run on the port 3000.
 
 ## Configuration
 
@@ -41,7 +40,8 @@ By now, Dnote is fully functional in your machine. The API, frontend app, and th
 
 To make it accessible from the Internet, you need to configure Nginx.
 
-1. Create a new file in `/etc/nginx/sites-enabled/dnote` with the following contents:
+1. Install nginx.
+2. Create a new file in `/etc/nginx/sites-enabled/dnote` with the following contents:
 
 ```
 server {
@@ -51,26 +51,28 @@ server {
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $remote_addr;
 		proxy_set_header Host $host;
-		proxy_pass http://127.0.0.1:8080; 
+		proxy_pass http://127.0.0.1:3000;
 	}
 }
 ```
-
-2. Reload the nginx configuration by running the following:
+3. Replace `my-dnote-server.com` with the URL for your server.
+4. Reload the nginx configuration by running the following:
 
 ```
 sudo service nginx reload
 ```
 
-Now you can access the Dnote frontend application on `http://my-dnote-server.com`, and the API on `http://my-dnote-server.com/api`.
+Now you can access the Dnote frontend application on `/`, and the API on `/api`.
 
 ### Configure TLS by using LetsEncrypt
 
-TODO
+It is recommended to use HTTPS. Obtain a certificate using LetsEncrypt and configure TLS in Nginx.
+
+In the future versions of the Dnote Server, HTTPS will be required at all times.
 
 ### Run Dnote As a Daemon
 
-We can use `systemctl` to run Dnote in the background as a Daemon, and automatically start it on system reboot.
+We can use `systemd` to run Dnote in the background as a Daemon, and automatically start it on system reboot.
 
 1. Create a new file at `/etc/systemd/system/dnote.service` with the following content:
 
@@ -86,9 +88,16 @@ User=$user
 Restart=always
 RestartSec=3
 WorkingDirectory=/home/$user
-ExecStart=/home/$user/dnote-server start
-Environment=GO_ENV=PRODUCTION DBHost=localhost DBPort=5432 DBName=dnote DBUser=$DBUser
+ExecStart=/usr/local/bin/dnote-server start
+Environment=GO_ENV=PRODUCTION
+Environment=DBHost=localhost
+Environment=DBPort=5432
+Environment=DBName=dnote
+Environment=DBUser=$DBUser
 Environment=DBPassword=$DBPassword
+Environment=SmtpHost=
+Environment=SmtpUsername=
+Environment=SmtpPassword=
 
 [Install]
 WantedBy=multi-user.target
@@ -96,6 +105,20 @@ WantedBy=multi-user.target
 
 Replace `$user`, `$DBUser`, and `$DBPassword` with the actual values.
 
+Optionally, if you would like to send email digests, populate `SmtpHost`,  `SmtpUsername`, and `SmtpPassword`.
+
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
 4. Start the Daemon by running `sudo systemctl start dnote`
+
+### Enable Pro version
+
+After signing up with an account, enable the pro version to access all features.
+
+Log into the `dnote` Postgres database and execute the following query:
+
+```sql
+UPDATE users SET cloud = true FROM accounts WHERE accounts.user_id = users.id AND accounts.email = '$yourEmail';
+```
+
+Replace `$yourEmail` with the email you used to create the account.

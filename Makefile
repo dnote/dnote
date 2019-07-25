@@ -4,6 +4,10 @@ NPM := $(shell command -v npm 2> /dev/null)
 HUB := $(shell command -v hub 2> /dev/null)
 COMPILEDAEMON := $(shell command -v CompileDaemon 2> /dev/null)
 
+serverOutputDir = ${GOPATH}/src/github.com/dnote/dnote/build/server
+cliOutputDir = ${GOPATH}/src/github.com/dnote/dnote/build/cli
+cliHomebrewDir = ${GOPATH}/src/github.com/dnote/homebrew-dnote
+
 ## installation
 install: install-go install-js
 .PHONY: install
@@ -106,19 +110,17 @@ ifndef HUB
 	$(error please install hub)
 endif
 
-	@homebrewRepoDir=${GOPATH}/src/github.com/dnote/homebrew-dnote
-	if [ ! -d ${homebrewRepoDir} ]; then
+	if [ ! -d ${cliHomebrewDir} ]; then
 		@echo "homebrew-dnote not found locally. did you clone it?"
 		@exit 1
 	fi
 
 	@echo "==> releasing cli"
-	@outputDir=${GOPATH}/src/github.com/dnote/dnote/build/cli
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/release.sh cli $(version) ${outputDir}
+	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh cli $(version) ${cliOutputDir}
 
 	@echo "===> releading on Homebrew"
 	@homebrew_sha256=$(shasum -a 256 "${outputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1)
-	@(cd "${homebrewRepoDir}" && ./release.sh "$(version)" "${homebrew_sha256}")
+	@(cd "${cliHomebrewDir}" && ./release.sh "$(version)" "${homebrew_sha256}")
 .PHONY: release-cli
 
 release-server: build-server
@@ -130,8 +132,7 @@ ifndef HUB
 endif
 
 	@echo "==> releasing server"
-	@outputDir=${GOPATH}/src/github.com/dnote/dnote/build/server
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/server/scripts/release.sh server $(version) ${outputDir}
+	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh server $(version) ${serverOutputDir}
 .PHONY: release-server
 
 clean:
