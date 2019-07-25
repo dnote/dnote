@@ -110,9 +110,9 @@ ifndef HUB
 	$(error please install hub)
 endif
 
-	if [ ! -d ${cliHomebrewDir} ]; then
-		@echo "homebrew-dnote not found locally. did you clone it?"
-		@exit 1
+	if [ ! -d ${cliHomebrewDir} ]; then \
+		@echo "homebrew-dnote not found locally. did you clone it?"; \
+		@exit 1; \
 	fi
 
 	@echo "==> releasing cli"
