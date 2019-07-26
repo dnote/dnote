@@ -96,10 +96,10 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 
 	authKeyHash := crypt.HashAuthKey(params.AuthKey, account.Salt, account.ServerKDFIteration)
 	if account.AuthKeyHash != authKeyHash {
-		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		log.WithFields(log.Fields{
 			"account_id": account.ID,
-		}).Error("Existing password mismatch")
+		}).Error("Sign in password mismatch")
+		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
 	}
 

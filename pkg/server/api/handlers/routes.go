@@ -281,16 +281,33 @@ func cors(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
+// logResponseWriter wraps http.ResponseWriter to expose HTTP status code for logging.
+// The optional interfaces of http.ResponseWriter are lost because of the wrapping, and
+// such interfaces should be implemented if needed. (i.e. http.Pusher, http.Flusher, etc.)
+type logResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (w *logResponseWriter) WriteHeader(code int) {
+	w.statusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
 func logging(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		inner.ServeHTTP(w, r)
+		lw := logResponseWriter{w, http.StatusOK}
+		inner.ServeHTTP(&lw, r)
 
 		log.WithFields(log.Fields{
-			"method":   r.Method,
-			"uri":      r.RequestURI,
-			"duration": fmt.Sprintf("%dms", time.Since(start)/1000000),
+			"remoteAddr": r.RemoteAddr,
+			"uri":        r.RequestURI,
+			"statusCode": lw.statusCode,
+			"method":     r.Method,
+			"duration":   fmt.Sprintf("%dms", time.Since(start)/1000000),
+			"userAgent":  r.Header.Get("User-Agent"),
 		}).Info("incoming request")
 	})
 }
