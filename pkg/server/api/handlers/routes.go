@@ -20,7 +20,7 @@ package handlers
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -28,8 +28,8 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/api/clock"
 	"github.com/dnote/dnote/pkg/server/api/helpers"
-	"github.com/dnote/dnote/pkg/server/api/logger"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/mux"
 	"github.com/markbates/goth/gothic"
 	"github.com/pkg/errors"
@@ -153,8 +153,7 @@ func authWithSession(r *http.Request) (database.User, bool, error) {
 
 	sessionKey, err := getCredential(r)
 	if err != nil {
-		logger.Err(errors.Wrap(err, "getting credential").Error())
-		return user, false, err
+		return user, false, errors.Wrap(err, "getting credential")
 	}
 
 	if sessionKey == "" {
@@ -167,8 +166,7 @@ func authWithSession(r *http.Request) (database.User, bool, error) {
 	if conn.RecordNotFound() {
 		return user, false, nil
 	} else if err := conn.Error; err != nil {
-		logger.Err(errors.Wrap(err, "finding session").Error())
-		return user, false, err
+		return user, false, errors.Wrap(err, "finding session")
 	}
 
 	if session.ExpiresAt.Before(time.Now()) {
@@ -180,8 +178,7 @@ func authWithSession(r *http.Request) (database.User, bool, error) {
 	if conn.RecordNotFound() {
 		return user, false, nil
 	} else if err := conn.Error; err != nil {
-		logger.Err(errors.Wrap(err, "finding user from token").Error())
-		return user, false, err
+		return user, false, errors.Wrap(err, "finding user from token")
 	}
 
 	return user, true, nil
@@ -202,8 +199,7 @@ func authWithToken(r *http.Request, tokenType string) (database.User, database.T
 	if conn.RecordNotFound() {
 		return user, token, false, nil
 	} else if err := conn.Error; err != nil {
-		logger.Err(errors.Wrap(err, "finding token").Error())
-		return user, token, false, err
+		return user, token, false, errors.Wrap(err, "finding token")
 	}
 
 	if token.UsedAt != nil && time.Since(*token.UsedAt).Minutes() > 10 {
@@ -211,8 +207,7 @@ func authWithToken(r *http.Request, tokenType string) (database.User, database.T
 	}
 
 	if err := db.Where("id = ?", token.UserID).First(&user).Error; err != nil {
-		logger.Err(errors.Wrap(err, "finding user").Error())
-		return user, token, false, err
+		return user, token, false, errors.Wrap(err, "finding user")
 	}
 
 	return user, token, true, nil
@@ -247,7 +242,7 @@ func tokenAuth(next http.HandlerFunc, tokenType string) http.HandlerFunc {
 		user, token, ok, err := authWithToken(r, tokenType)
 		if err != nil {
 			// log the error and continue
-			logger.Err(errors.Wrap(err, "authenticating with token").Error())
+			log.ErrorWrap(err, "authenticating with token")
 		}
 
 		ctx := r.Context()
@@ -259,7 +254,7 @@ func tokenAuth(next http.HandlerFunc, tokenType string) http.HandlerFunc {
 			user, ok, err = authWithSession(r)
 			if err != nil {
 				// log the error and continue
-				logger.Err(errors.Wrap(err, "authenticating with session").Error())
+				log.ErrorWrap(err, "authenticating with session")
 			}
 
 			if !ok {
@@ -292,12 +287,11 @@ func logging(inner http.Handler) http.Handler {
 
 		inner.ServeHTTP(w, r)
 
-		log.Printf(
-			"%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			time.Since(start),
-		)
+		log.WithFields(log.Fields{
+			"method":   r.Method,
+			"uri":      r.RequestURI,
+			"duration": fmt.Sprintf("%dms", time.Since(start)/1000000),
+		}).Info("incoming request")
 	})
 }
 

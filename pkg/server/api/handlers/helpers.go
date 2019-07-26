@@ -21,11 +21,12 @@ package handlers
 import (
 	crand "crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"strings"
 
-	"github.com/dnote/dnote/pkg/server/api/logger"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -108,9 +109,26 @@ func getClientType(origin string) string {
 }
 
 // handleError logs the error and responds with the given status code with a generic status text
-func handleError(w http.ResponseWriter, logMessage string, err error, statusCode int) {
-	logger.Err("[%d] %s: %v\n", statusCode, logMessage, err)
+func handleError(w http.ResponseWriter, msg string, err error, statusCode int) {
+	var message string
+	if err == nil {
+		message = msg
+	} else {
+		message = errors.Wrap(err, msg).Error()
+	}
+
+	log.WithFields(log.Fields{
+		"statusCode": statusCode,
+	}).Error(message)
 
 	statusText := http.StatusText(statusCode)
 	http.Error(w, statusText, statusCode)
+}
+
+// respondJSON encodes the given payload into a JSON format and writes it to the given response writer
+func respondJSON(w http.ResponseWriter, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
+	}
 }

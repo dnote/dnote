@@ -23,11 +23,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/dnote/dnote/pkg/server/api/crypt"
 	"github.com/dnote/dnote/pkg/server/api/operations"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/pkg/errors"
 )
 
 // ErrLoginFailure is an error for failed login
@@ -75,7 +75,7 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 
 	var params signinPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -90,13 +90,16 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
 	} else if err := conn.Error; err != nil {
-		http.Error(w, errors.Wrap(err, "getting user").Error(), http.StatusInternalServerError)
+		handleError(w, "getting user", err, http.StatusInternalServerError)
 		return
 	}
 
 	authKeyHash := crypt.HashAuthKey(params.AuthKey, account.Salt, account.ServerKDFIteration)
 	if account.AuthKeyHash != authKeyHash {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
+		log.WithFields(log.Fields{
+			"account_id": account.ID,
+		}).Error("Existing password mismatch")
 		return
 	}
 
@@ -111,7 +114,7 @@ func (a *App) signoutOptions(w http.ResponseWriter, r *http.Request) {
 func (a *App) signout(w http.ResponseWriter, r *http.Request) {
 	key, err := getCredential(r)
 	if err != nil {
-		http.Error(w, "getting credential", http.StatusInternalServerError)
+		handleError(w, "getting credential", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -122,7 +125,7 @@ func (a *App) signout(w http.ResponseWriter, r *http.Request) {
 
 	err = operations.DeleteSession(database.DBConn, key)
 	if err != nil {
-		http.Error(w, "deleting session", http.StatusInternalServerError)
+		handleError(w, "deleting session", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -159,17 +162,17 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 
 	var params registerPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 	if err := validateRegisterPayload(params); err != nil {
-		http.Error(w, errors.Wrap(err, "validating payload").Error(), http.StatusBadRequest)
+		handleError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
 	var count int
 	if err := db.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "checking duplicate").Error(), http.StatusInternalServerError)
+		handleError(w, "checking duplicate", err, http.StatusInternalServerError)
 		return
 	}
 	if count > 0 {
@@ -182,14 +185,15 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 	user, err := operations.CreateUser(tx, params.Email, params.AuthKey, params.CipherKeyEnc, params.Iteration)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, "creating user", http.StatusBadRequest)
+
+		handleError(w, "creating user", nil, http.StatusBadRequest)
 		return
 	}
 
 	var account database.Account
 	if err := tx.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		tx.Rollback()
-		http.Error(w, "finding account", http.StatusBadRequest)
+		handleError(w, "finding account", nil, http.StatusBadRequest)
 		return
 	}
 
@@ -205,7 +209,7 @@ func respondWithSession(w http.ResponseWriter, userID int, cipherKeyEnc string) 
 
 	session, err := operations.CreateSession(db, userID)
 	if err != nil {
-		http.Error(w, "creating session", http.StatusBadRequest)
+		handleError(w, "creating session", nil, http.StatusBadRequest)
 		return
 	}
 
@@ -218,7 +222,7 @@ func respondWithSession(w http.ResponseWriter, userID int, cipherKeyEnc string) 
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -241,7 +245,7 @@ func (a *App) presignin(w http.ResponseWriter, r *http.Request) {
 	var account database.Account
 	conn := db.Where("email = ?", email).First(&account)
 	if !conn.RecordNotFound() && conn.Error != nil {
-		http.Error(w, errors.Wrap(conn.Error, "getting user").Error(), http.StatusInternalServerError)
+		handleError(w, "getting user", conn.Error, http.StatusInternalServerError)
 		return
 	}
 
@@ -258,7 +262,7 @@ func (a *App) presignin(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, "encoding response", nil, http.StatusInternalServerError)
 		return
 	}
 }

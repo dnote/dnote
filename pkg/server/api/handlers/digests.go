@@ -19,12 +19,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
-	"github.com/dnote/dnote/pkg/server/api/logger"
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
@@ -37,26 +35,22 @@ func respondWithDigest(w http.ResponseWriter, userID int, digestUUID string) {
 	var digest database.Digest
 	conn := db.Preload("Notes.Book").Where("user_id = ? AND uuid = ? ", userID, digestUUID).First(&digest)
 	if conn.RecordNotFound() {
-		http.Error(w, "finding digest", http.StatusNotFound)
+		handleError(w, "digest not found", nil, http.StatusNotFound)
 		return
 	} else if err := conn.Error; err != nil {
-		logger.Err("finding digest %s", err.Error())
-		http.Error(w, "finding digest", http.StatusInternalServerError)
+
+		handleError(w, "finding digest", err, http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	presented := presenters.PresentDigest(digest)
-	if err := json.NewEncoder(w).Encode(presented); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, presented)
 }
 
 func (a App) getDigest(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -69,7 +63,7 @@ func (a App) getDigest(w http.ResponseWriter, r *http.Request) {
 func (a App) getDemoDigest(w http.ResponseWriter, r *http.Request) {
 	userID, err := helpers.GetDemoUserID()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding demo user").Error(), http.StatusInternalServerError)
+		handleError(w, "finding demo user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -108,7 +102,7 @@ func respondWithDigests(w http.ResponseWriter, r *http.Request, userID int) {
 
 	page, err := parseGetDigestsParams(r)
 	if err != nil {
-		http.Error(w, "parsing params", http.StatusBadRequest)
+		handleError(w, "parsing params", err, http.StatusBadRequest)
 		return
 	}
 	perPage := 25
@@ -117,15 +111,13 @@ func respondWithDigests(w http.ResponseWriter, r *http.Request, userID int) {
 	var digests []database.Digest
 	conn := db.Where("user_id = ?", userID).Order("created_at DESC").Offset(offset).Limit(perPage)
 	if err := conn.Find(&digests).Error; err != nil {
-		logger.Err("finding digests %s", err.Error())
-		http.Error(w, "finding digests", http.StatusInternalServerError)
+		handleError(w, "finding digests", err, http.StatusInternalServerError)
 		return
 	}
 
 	var total int
 	if err := db.Model(database.Digest{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
-		logger.Err("counting digests %s", err.Error())
-		http.Error(w, "finding digests", http.StatusInternalServerError)
+		handleError(w, "counting digests", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -133,17 +125,13 @@ func respondWithDigests(w http.ResponseWriter, r *http.Request, userID int) {
 		Total:   total,
 		Digests: presenters.PresentDigests(digests),
 	}
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, res)
 }
 
 func (a *App) getDigests(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -153,7 +141,7 @@ func (a *App) getDigests(w http.ResponseWriter, r *http.Request) {
 func (a *App) getDemoDigests(w http.ResponseWriter, r *http.Request) {
 	userID, err := helpers.GetDemoUserID()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding demo user").Error(), http.StatusInternalServerError)
+		handleError(w, "finding demo user", err, http.StatusInternalServerError)
 		return
 	}
 

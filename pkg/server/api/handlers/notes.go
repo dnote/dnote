@@ -19,7 +19,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -37,11 +36,7 @@ import (
 func respondWithNote(w http.ResponseWriter, note database.Note) {
 	presentedNote := presenters.PresentNote(note)
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(presentedNote); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, presentedNote)
 }
 
 func preloadNote(conn *gorm.DB) *gorm.DB {
@@ -55,7 +50,7 @@ func (a *App) getDemoNote(w http.ResponseWriter, r *http.Request) {
 
 	demoUserID, err := helpers.GetDemoUserID()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding demo user").Error(), http.StatusInternalServerError)
+		handleError(w, "finding demo user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -65,10 +60,10 @@ func (a *App) getDemoNote(w http.ResponseWriter, r *http.Request) {
 	conn.Find(&note)
 
 	if conn.RecordNotFound() {
-		http.Error(w, "not found", http.StatusNotFound)
+		handleError(w, "not found", nil, http.StatusNotFound)
 		return
 	} else if err := conn.Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding note").Error(), http.StatusInternalServerError)
+		handleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -78,7 +73,7 @@ func (a *App) getDemoNote(w http.ResponseWriter, r *http.Request) {
 func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -87,15 +82,15 @@ func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
 	noteUUID := vars["noteUUID"]
 
 	var note database.Note
-	conn := db.Debug().Where("uuid = ? AND user_id = ?", noteUUID, user.ID)
+	conn := db.Where("uuid = ? AND user_id = ?", noteUUID, user.ID)
 	conn = preloadNote(conn)
 	conn.Find(&note)
 
 	if conn.RecordNotFound() {
-		http.Error(w, "not found", http.StatusNotFound)
+		handleError(w, "not found", nil, http.StatusNotFound)
 		return
 	} else if err := conn.Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding note").Error(), http.StatusInternalServerError)
+		handleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -114,7 +109,7 @@ type GetNotesResponse struct {
 func (a *App) getDemoNotes(w http.ResponseWriter, r *http.Request) {
 	userID, err := helpers.GetDemoUserID()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding demo user id").Error(), http.StatusInternalServerError)
+		handleError(w, "finding demo user id", err, http.StatusInternalServerError)
 		return
 	}
 	query := r.URL.Query()
@@ -125,7 +120,7 @@ func (a *App) getDemoNotes(w http.ResponseWriter, r *http.Request) {
 func (a *App) getNotes(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	query := r.URL.Query()
@@ -136,13 +131,13 @@ func (a *App) getNotes(w http.ResponseWriter, r *http.Request) {
 func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 	err := validateGetNotesQuery(query)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "validating query parameters").Error(), http.StatusBadRequest)
+		handleError(w, "validating query parameters", err, http.StatusBadRequest)
 		return
 	}
 
 	q, err := parseGetNotesQuery(query)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "parsing query parameters").Error(), http.StatusBadRequest)
+		handleError(w, "parsing query parameters", err, http.StatusBadRequest)
 		return
 	}
 
@@ -152,9 +147,9 @@ func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 	conn := baseConn.Where("notes.added_on >= ? AND notes.added_on < ?", dateLowerbound, dateUpperbound)
 
 	var total int
-	err = conn.Debug().Model(database.Note{}).Count(&total).Error
+	err = conn.Model(database.Note{}).Count(&total).Error
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "counting total").Error(), http.StatusInternalServerError)
+		handleError(w, "counting total", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -166,7 +161,7 @@ func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 
 		err = conn.Find(&notes).Error
 		if err != nil {
-			http.Error(w, errors.Wrap(err, "finding notes").Error(), http.StatusInternalServerError)
+			handleError(w, "finding notes", err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -182,7 +177,7 @@ func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 
 	prevDate, err := getPrevDate(baseConn, prevDateUpperbound)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "getting prevDate").Error(), http.StatusInternalServerError)
+		handleError(w, "getting prevDate", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -193,12 +188,7 @@ func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 		Total:    total,
 		PrevDate: prevDate,
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, response)
 }
 
 func getPrevDate(baseConn *gorm.DB, dateUpperbound int64) (*int64, error) {
@@ -328,21 +318,17 @@ func orderGetNotes(conn *gorm.DB) *gorm.DB {
 func (a *App) legacyGetNotes(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var notes []database.Note
 	db := database.DBConn
 	if err := db.Where("user_id = ? AND encrypted = false", user.ID).Find(&notes).Error; err != nil {
-		http.Error(w, "finding notes", http.StatusInternalServerError)
+		handleError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}
 
 	presented := presenters.PresentNotes(notes)
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(presented); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, presented)
 }

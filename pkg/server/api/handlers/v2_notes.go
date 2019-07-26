@@ -53,33 +53,33 @@ type CreateNoteV2Resp struct {
 func (a *App) CreateNoteV2(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var params createNoteV2Payload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	err = validateCreateNoteV2Payload(params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "validating payload").Error(), http.StatusBadRequest)
+		handleError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
 	var book database.Book
 	db := database.DBConn
 	if err := db.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding book").Error(), http.StatusInternalServerError)
+		handleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	note, err := operations.CreateNote(user, a.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "creating note").Error(), http.StatusInternalServerError)
+		handleError(w, "creating note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -90,12 +90,7 @@ func (a *App) CreateNoteV2(w http.ResponseWriter, r *http.Request) {
 	resp := CreateNoteV2Resp{
 		Result: presenters.PresentNote(note),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // NotesOptionsV2 is a handler for OPTIONS endpoint for notes
