@@ -436,7 +436,6 @@ func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.
 		Model(&account).
-		Debug().
 		Updates(map[string]interface{}{
 			"auth_key_hash":        newAuthKeyHash,
 			"client_kdf_iteration": params.NewKDFIteration,
