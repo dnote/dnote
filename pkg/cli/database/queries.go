@@ -21,6 +21,7 @@ package database
 import (
 	"database/sql"
 
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
 )
 
@@ -91,7 +92,7 @@ type NoteInfo struct {
 }
 
 // GetNoteInfo returns a NoteInfo for the note with the given noteRowID
-func GetNoteInfo(db *DB, noteRowID string) (NoteInfo, error) {
+func GetNoteInfo(db *DB, noteRowID int) (NoteInfo, error) {
 	var ret NoteInfo
 
 	err := db.QueryRow(`SELECT books.label, notes.uuid, notes.body, notes.added_on, notes.edited_on, notes.rowid
@@ -100,7 +101,7 @@ func GetNoteInfo(db *DB, noteRowID string) (NoteInfo, error) {
 			WHERE notes.rowid = ? AND notes.deleted = false`, noteRowID).
 		Scan(&ret.BookLabel, &ret.UUID, &ret.Content, &ret.AddedOn, &ret.EditedOn, &ret.RowID)
 	if err == sql.ErrNoRows {
-		return ret, errors.Errorf("note %s not found", noteRowID)
+		return ret, errors.Errorf("note %d not found", noteRowID)
 	} else if err != nil {
 		return ret, errors.Wrap(err, "querying the note")
 	}
@@ -119,4 +120,69 @@ func GetBookUUID(db *DB, label string) (string, error) {
 	}
 
 	return ret, nil
+}
+
+// GetActiveNote gets the note which has the given rowid and is not deleted
+func GetActiveNote(db *DB, rowid int) (Note, error) {
+	var ret Note
+
+	err := db.QueryRow(`SELECT
+		rowid,
+		uuid,
+		book_uuid,
+		body,
+		added_on,
+		edited_on,
+		usn,
+		public,
+		deleted,
+		dirty
+	FROM notes WHERE rowid = ? AND deleted = false;`, rowid).Scan(
+		&ret.RowID,
+		&ret.UUID,
+		&ret.BookUUID,
+		&ret.Body,
+		&ret.AddedOn,
+		&ret.EditedOn,
+		&ret.USN,
+		&ret.Public,
+		&ret.Deleted,
+		&ret.Dirty,
+	)
+
+	if err == sql.ErrNoRows {
+		return ret, err
+	} else if err != nil {
+		return ret, errors.Wrap(err, "finding the note")
+	}
+
+	return ret, nil
+}
+
+// UpdateNoteContent updates the note content and marks the note as dirty
+func UpdateNoteContent(db *DB, c clock.Clock, rowID int, content string) error {
+	ts := c.Now().UnixNano()
+
+	_, err := db.Exec(`UPDATE notes
+			SET body = ?, edited_on = ?, dirty = ?
+			WHERE rowid = ?`, content, ts, true, rowID)
+	if err != nil {
+		return errors.Wrap(err, "updating the note")
+	}
+
+	return nil
+}
+
+// UpdateNoteBook moves the note to a different book and marks the note as dirty
+func UpdateNoteBook(db *DB, c clock.Clock, rowID int, bookUUID string) error {
+	ts := c.Now().UnixNano()
+
+	_, err := db.Exec(`UPDATE notes
+			SET book_uuid = ?, edited_on = ?, dirty = ?
+			WHERE rowid = ?`, bookUUID, ts, true, rowID)
+	if err != nil {
+		return errors.Wrap(err, "updating the note")
+	}
+
+	return nil
 }

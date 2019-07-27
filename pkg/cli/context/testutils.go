@@ -24,6 +24,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/database"
+	"github.com/dnote/dnote/pkg/clock"
 )
 
 // InitTestCtx initializes a test context
@@ -32,7 +33,12 @@ func InitTestCtx(t *testing.T, dnoteDir string, dbOpts *database.TestDBOptions) 
 
 	db := database.InitTestDB(t, dbPath, dbOpts)
 
-	return DnoteCtx{DB: db, DnoteDir: dnoteDir}
+	return DnoteCtx{
+		DB:       db,
+		DnoteDir: dnoteDir,
+		// Use a mock clock to test times
+		Clock: clock.NewMock(),
+	}
 }
 
 // TeardownTestCtx cleans up the test context

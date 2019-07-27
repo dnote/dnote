@@ -34,6 +34,7 @@ type Book struct {
 
 // Note represents a note
 type Note struct {
+	RowID    int    `json:"rowid"`
 	UUID     string `json:"uuid"`
 	BookUUID string `json:"book_uuid"`
 	Body     string `json:"content"`

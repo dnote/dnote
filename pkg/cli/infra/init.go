@@ -36,6 +36,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -61,6 +62,7 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 		DnoteDir: dnoteDir,
 		Version:  versionTag,
 		DB:       db,
+		Clock:    clock.New(),
 	}
 
 	return ctx, nil

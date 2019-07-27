@@ -19,6 +19,8 @@
 package cat
 
 import (
+	"strconv"
+
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -64,14 +66,19 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 // NewRun returns a new run function
 func NewRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		var noteRowID string
+		var noteRowIDArg string
 
 		if len(args) == 2 {
 			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
 
-			noteRowID = args[1]
+			noteRowIDArg = args[1]
 		} else {
-			noteRowID = args[0]
+			noteRowIDArg = args[0]
+		}
+
+		noteRowID, err := strconv.Atoi(noteRowIDArg)
+		if err != nil {
+			return errors.Wrap(err, "invalid rowid")
 		}
 
 		db := ctx.DB

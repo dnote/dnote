@@ -154,10 +154,10 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	}
 }
 
-func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64) (string, error) {
+func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64) (int, error) {
 	tx, err := ctx.DB.Begin()
 	if err != nil {
-		return "", errors.Wrap(err, "beginning a transaction")
+		return 0, errors.Wrap(err, "beginning a transaction")
 	}
 
 	var bookUUID string
@@ -169,10 +169,10 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 		err = b.Insert(tx)
 		if err != nil {
 			tx.Rollback()
-			return "", errors.Wrap(err, "creating the book")
+			return 0, errors.Wrap(err, "creating the book")
 		}
 	} else if err != nil {
-		return "", errors.Wrap(err, "finding the book")
+		return 0, errors.Wrap(err, "finding the book")
 	}
 
 	noteUUID := utils.GenerateUUID()
@@ -181,10 +181,10 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 	err = n.Insert(tx)
 	if err != nil {
 		tx.Rollback()
-		return "", errors.Wrap(err, "creating the note")
+		return 0, errors.Wrap(err, "creating the note")
 	}
 
-	var noteRowID string
+	var noteRowID int
 	err = tx.QueryRow(`SELECT notes.rowid
 			FROM notes
 			WHERE notes.uuid = ?`, noteUUID).

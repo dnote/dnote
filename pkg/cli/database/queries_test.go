@@ -19,10 +19,13 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
 )
 
@@ -230,4 +233,128 @@ func TestUpdateSystem(t *testing.T) {
 			assert.Equal(t, systemCount, initialSystemCount, "count mismatch")
 		})
 	}
+}
+
+func TestGetActiveNote(t *testing.T) {
+	t.Run("not deleted", func(t *testing.T) {
+		// set up
+		db := InitTestDB(t, "../tmp/dnote-test.db", nil)
+		defer CloseTestDB(t, db)
+
+		n1UUID := "n1-uuid"
+		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, false, true)
+
+		var n1RowID int
+		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
+
+		// execute
+		got, err := GetActiveNote(db, n1RowID)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "executing"))
+		}
+
+		// test
+		assert.Equal(t, got.RowID, n1RowID, "RowID mismatch")
+		assert.Equal(t, got.UUID, n1UUID, "UUID mismatch")
+		assert.Equal(t, got.BookUUID, "b1-uuid", "BookUUID mismatch")
+		assert.Equal(t, got.Body, "n1 content", "Body mismatch")
+		assert.Equal(t, got.AddedOn, int64(1542058875), "AddedOn mismatch")
+		assert.Equal(t, got.EditedOn, int64(1542058876), "EditedOn mismatch")
+		assert.Equal(t, got.USN, 1, "USN mismatch")
+		assert.Equal(t, got.Public, true, "Public mismatch")
+		assert.Equal(t, got.Deleted, false, "Deleted mismatch")
+		assert.Equal(t, got.Dirty, true, "Dirty mismatch")
+	})
+
+	t.Run("deleted", func(t *testing.T) {
+		// set up
+		db := InitTestDB(t, "../tmp/dnote-test.db", nil)
+		defer CloseTestDB(t, db)
+
+		n1UUID := "n1-uuid"
+		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, true, true)
+
+		var n1RowID int
+		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
+
+		// execute
+		_, err := GetActiveNote(db, n1RowID)
+
+		// test
+		if err == nil {
+			t.Error("Should have returned an error")
+		}
+		if err != nil && err != sql.ErrNoRows {
+			t.Error(errors.Wrap(err, "executing"))
+		}
+	})
+}
+
+func TestUpdateNoteContent(t *testing.T) {
+	// set up
+	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
+	defer CloseTestDB(t, db)
+
+	uuid := "n1-uuid"
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, "b1-uuid", "n1 content", 1542058875, 0, 1, false, false, false)
+
+	var rowid int
+	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
+
+	// execute
+	c := clock.NewMock()
+	now := time.Date(2017, time.March, 14, 21, 15, 0, 0, time.UTC)
+	c.SetNow(now)
+
+	err := UpdateNoteContent(db, c, rowid, "n1 content updated")
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "executing"))
+	}
+
+	var content string
+	var editedOn int
+	var dirty bool
+
+	MustScan(t, "getting the note record", db.QueryRow("SELECT body, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &content, &editedOn, &dirty)
+
+	assert.Equal(t, content, "n1 content updated", "content mismatch")
+	assert.Equal(t, int64(editedOn), now.UnixNano(), "editedOn mismatch")
+	assert.Equal(t, dirty, true, "dirty mismatch")
+}
+
+func TestUpdateNoteBook(t *testing.T) {
+	// set up
+	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
+	defer CloseTestDB(t, db)
+
+	b1UUID := "b1-uuid"
+	b2UUID := "b2-uuid"
+	MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 8, false, false)
+	MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2UUID, "b2-label", 9, false, false)
+
+	uuid := "n1-uuid"
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, b1UUID, "n1 content", 1542058875, 0, 1, false, false, false)
+
+	var rowid int
+	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
+
+	// execute
+	c := clock.NewMock()
+	now := time.Date(2017, time.March, 14, 21, 15, 0, 0, time.UTC)
+	c.SetNow(now)
+
+	err := UpdateNoteBook(db, c, rowid, b2UUID)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "executing"))
+	}
+
+	var bookUUID string
+	var editedOn int
+	var dirty bool
+
+	MustScan(t, "getting the note record", db.QueryRow("SELECT book_uuid, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &bookUUID, &editedOn, &dirty)
+
+	assert.Equal(t, bookUUID, b2UUID, "content mismatch")
+	assert.Equal(t, int64(editedOn), now.UnixNano(), "editedOn mismatch")
+	assert.Equal(t, dirty, true, "dirty mismatch")
 }

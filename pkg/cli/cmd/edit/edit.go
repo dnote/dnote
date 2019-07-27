@@ -21,7 +21,7 @@ package edit
 import (
 	"database/sql"
 	"io/ioutil"
-	"time"
+	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -73,66 +73,89 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func changeContent(ctx context.DnoteCtx, note database.Note) error {
+	if newContent == "" {
+		fpath, err := ui.GetTmpContentPath(ctx)
+		if err != nil {
+			return errors.Wrap(err, "getting temporarily content file path")
+		}
+
+		if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
+			return errors.Wrap(err, "preparing tmp content file")
+		}
+
+		if err := ui.GetEditorInput(ctx, fpath, &newContent); err != nil {
+			return errors.Wrap(err, "getting editor input")
+		}
+	}
+
+	if note.Body == newContent {
+		return errors.New("Nothing changed")
+	}
+
+	newContent = ui.SanitizeContent(newContent)
+
+	if err := database.UpdateNoteContent(ctx.DB, ctx.Clock, note.RowID, newContent); err != nil {
+		return errors.Wrap(err, "updating the note")
+	}
+
+	return nil
+}
+
+func moveBook(ctx context.DnoteCtx, note database.Note, bookName string) error {
+	db := ctx.DB
+
+	targetBookUUID, err := database.GetBookUUID(db, bookName)
+	if err != nil {
+		return errors.Wrap(err, "finding book uuid")
+	}
+
+	if note.BookUUID == targetBookUUID {
+		return errors.New("book has not changed")
+	}
+
+	if err := database.UpdateNoteBook(db, ctx.Clock, note.RowID, targetBookUUID); err != nil {
+		return errors.Wrap(err, "moving book")
+	}
+
+	return nil
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
 
-		var noteRowID string
+		var noteRowIDArg string
 
 		if len(args) == 2 {
 			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
 
-			noteRowID = args[1]
+			noteRowIDArg = args[1]
 		} else {
-			noteRowID = args[0]
+			noteRowIDArg = args[0]
 		}
 
-		var noteUUID, oldContent string
-		err := db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND deleted = false", noteRowID).Scan(&noteUUID, &oldContent)
+		noteRowID, err := strconv.Atoi(noteRowIDArg)
+		if err != nil {
+			return errors.Wrap(err, "invalid rowid")
+		}
+
+		note, err := database.GetActiveNote(db, noteRowID)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found", noteRowID)
+			return errors.Errorf("note %d not found", noteRowID)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the book")
 		}
 
-		if newContent == "" {
-			fpath, err := ui.GetTmpContentPath(ctx)
-			if err != nil {
-				return errors.Wrap(err, "getting temporarily content file path")
+		if bookName != "" {
+			if err := moveBook(ctx, note, bookName); err != nil {
+				return errors.Wrap(err, "moving book")
 			}
-
-			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
-			if e != nil {
-				return errors.Wrap(e, "preparing tmp content file")
-			}
-
-			e = ui.GetEditorInput(ctx, fpath, &newContent)
-			if e != nil {
-				return errors.Wrap(err, "getting editor input")
+		} else {
+			if err := changeContent(ctx, note); err != nil {
+				return errors.Wrap(err, "changing content")
 			}
 		}
-
-		if oldContent == newContent {
-			return errors.New("Nothing changed")
-		}
-
-		ts := time.Now().UnixNano()
-		newContent = ui.SanitizeContent(newContent)
-
-		tx, err := db.Begin()
-		if err != nil {
-			return errors.Wrap(err, "beginning a transaction")
-		}
-
-		_, err = tx.Exec(`UPDATE notes
-			SET body = ?, edited_on = ?, dirty = ?
-			WHERE rowid = ?`, newContent, ts, true, noteRowID)
-		if err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "updating the note")
-		}
-
-		tx.Commit()
 
 		noteInfo, err := database.GetNoteInfo(db, noteRowID)
 		if err != nil {
