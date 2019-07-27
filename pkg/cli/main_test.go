@@ -99,108 +99,177 @@ func TestInit(t *testing.T) {
 	assert.NotEqual(t, lastSyncAt, "", "last sync at should not be empty")
 }
 
-func TestAddNote_NewBook_BodyFlag(t *testing.T) {
-	// Set up
-	testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-	defer testutils.RemoveDir(t, opts.HomeDir)
+func TestAddNote(t *testing.T) {
+	t.Run("new book", func(t *testing.T) {
+		// Set up and execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
+		defer testutils.RemoveDir(t, opts.HomeDir)
 
-	db := database.OpenTestDB(t, opts.DnoteDir)
+		db := database.OpenTestDB(t, opts.DnoteDir)
 
-	// Execute
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	// Test
-	var noteCount, bookCount int
-	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
-	database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 1, "note count mismatch")
 
-	assert.Equalf(t, bookCount, 1, "book count mismatch")
-	assert.Equalf(t, noteCount, 1, "note count mismatch")
+		var book database.Book
+		database.MustScan(t, "getting book", db.QueryRow("SELECT uuid, dirty FROM books where label = ?", "js"), &book.UUID, &book.Dirty)
+		var note database.Note
+		database.MustScan(t, "getting note",
+			db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ?", book.UUID), &note.UUID, &note.Body, &note.AddedOn, &note.Dirty)
 
-	var book database.Book
-	database.MustScan(t, "getting book", db.QueryRow("SELECT uuid, dirty FROM books where label = ?", "js"), &book.UUID, &book.Dirty)
-	var note database.Note
-	database.MustScan(t, "getting note",
-		db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ?", book.UUID), &note.UUID, &note.Body, &note.AddedOn, &note.Dirty)
+		assert.Equal(t, book.Dirty, true, "Book dirty mismatch")
 
-	assert.Equal(t, book.Dirty, true, "Book dirty mismatch")
+		assert.NotEqual(t, note.UUID, "", "Note should have UUID")
+		assert.Equal(t, note.Body, "foo", "Note body mismatch")
+		assert.Equal(t, note.Dirty, true, "Note dirty mismatch")
+		assert.NotEqual(t, note.AddedOn, int64(0), "Note added_on mismatch")
+	})
 
-	assert.NotEqual(t, note.UUID, "", "Note should have UUID")
-	assert.Equal(t, note.Body, "foo", "Note body mismatch")
-	assert.Equal(t, note.Dirty, true, "Note dirty mismatch")
-	assert.NotEqual(t, note.AddedOn, int64(0), "Note added_on mismatch")
+	t.Run("existing book", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		testutils.Setup3(t, db)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
+		defer testutils.RemoveDir(t, opts.HomeDir)
+
+		// Test
+
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 2, "note count mismatch")
+
+		var n1, n2 database.Note
+		database.MustScan(t, "getting n1",
+			db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes WHERE book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
+		database.MustScan(t, "getting n2",
+			db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes WHERE book_uuid = ? AND body = ?", "js-book-uuid", "foo"), &n2.UUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
+
+		var book database.Book
+		database.MustScan(t, "getting book", db.QueryRow("SELECT dirty FROM books where label = ?", "js"), &book.Dirty)
+
+		assert.Equal(t, book.Dirty, false, "Book dirty mismatch")
+
+		assert.NotEqual(t, n1.UUID, "", "n1 should have UUID")
+		assert.Equal(t, n1.Body, "Booleans have toString()", "n1 body mismatch")
+		assert.Equal(t, n1.AddedOn, int64(1515199943), "n1 added_on mismatch")
+		assert.Equal(t, n1.Dirty, false, "n1 dirty mismatch")
+
+		assert.NotEqual(t, n2.UUID, "", "n2 should have UUID")
+		assert.Equal(t, n2.Body, "foo", "n2 body mismatch")
+		assert.Equal(t, n2.Dirty, true, "n2 dirty mismatch")
+	})
 }
 
-func TestAddNote_ExistingBook_BodyFlag(t *testing.T) {
-	// Setup
-	db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
-	testutils.Setup3(t, db)
+func TestEditNote(t *testing.T) {
+	t.Run("content flag", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		testutils.Setup4(t, db)
 
-	// Execute
-	testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-	defer testutils.RemoveDir(t, opts.HomeDir)
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-c", "foo bar")
+		defer testutils.RemoveDir(t, opts.HomeDir)
 
-	// Test
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	var noteCount, bookCount int
-	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
-	database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 2, "note count mismatch")
 
-	assert.Equalf(t, bookCount, 1, "book count mismatch")
-	assert.Equalf(t, noteCount, 2, "note count mismatch")
+		var n1, n2 database.Note
+		database.MustScan(t, "getting n1",
+			db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
+		database.MustScan(t, "getting n2",
+			db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n2.UUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
 
-	var n1, n2 database.Note
-	database.MustScan(t, "getting n1",
-		db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes WHERE book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
-	database.MustScan(t, "getting n2",
-		db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes WHERE book_uuid = ? AND body = ?", "js-book-uuid", "foo"), &n2.UUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
+		assert.Equal(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "n1 should have UUID")
+		assert.Equal(t, n1.Body, "Booleans have toString()", "n1 body mismatch")
+		assert.Equal(t, n1.Dirty, false, "n1 dirty mismatch")
 
-	var book database.Book
-	database.MustScan(t, "getting book", db.QueryRow("SELECT dirty FROM books where label = ?", "js"), &book.Dirty)
+		assert.Equal(t, n2.UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
+		assert.Equal(t, n2.Body, "foo bar", "Note body mismatch")
+		assert.Equal(t, n2.Dirty, true, "n2 dirty mismatch")
+		assert.NotEqual(t, n2.EditedOn, 0, "Note edited_on mismatch")
+	})
 
-	assert.Equal(t, book.Dirty, false, "Book dirty mismatch")
+	t.Run("book flag", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		testutils.Setup5(t, db)
 
-	assert.NotEqual(t, n1.UUID, "", "n1 should have UUID")
-	assert.Equal(t, n1.Body, "Booleans have toString()", "n1 body mismatch")
-	assert.Equal(t, n1.AddedOn, int64(1515199943), "n1 added_on mismatch")
-	assert.Equal(t, n1.Dirty, false, "n1 dirty mismatch")
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux")
+		defer testutils.RemoveDir(t, opts.HomeDir)
 
-	assert.NotEqual(t, n2.UUID, "", "n2 should have UUID")
-	assert.Equal(t, n2.Body, "foo", "n2 body mismatch")
-	assert.Equal(t, n2.Dirty, true, "n2 dirty mismatch")
-}
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-func TestEditNote_BodyFlag(t *testing.T) {
-	// Setup
-	db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
-	testutils.Setup4(t, db)
+		assert.Equalf(t, bookCount, 2, "book count mismatch")
+		assert.Equalf(t, noteCount, 2, "note count mismatch")
 
-	// Execute
-	testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-c", "foo bar")
-	defer testutils.RemoveDir(t, opts.HomeDir)
+		var n1, n2 database.Note
+		database.MustScan(t, "getting n1",
+			db.QueryRow("SELECT uuid, book_uuid, body, added_on, dirty FROM notes where uuid = ?", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n1.UUID, &n1.BookUUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
+		database.MustScan(t, "getting n2",
+			db.QueryRow("SELECT uuid, book_uuid, body, added_on, dirty FROM notes where uuid = ?", "43827b9a-c2b0-4c06-a290-97991c896653"), &n2.UUID, &n2.BookUUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
 
-	// Test
+		assert.Equal(t, n1.BookUUID, "js-book-uuid", "n1 BookUUID mismatch")
+		assert.Equal(t, n1.Body, "n1 body", "n1 Body mismatch")
+		assert.Equal(t, n1.Dirty, false, "n1 Dirty mismatch")
+		assert.Equal(t, n1.EditedOn, int64(0), "n1 EditedOn mismatch")
 
-	var noteCount, bookCount int
-	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
-	database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		assert.Equal(t, n2.BookUUID, "linux-book-uuid", "n2 BookUUID mismatch")
+		assert.Equal(t, n2.Body, "n2 body", "n2 Body mismatch")
+		assert.Equal(t, n2.Dirty, true, "n2 Dirty mismatch")
+		assert.NotEqual(t, n2.EditedOn, 0, "n2 EditedOn mismatch")
+	})
 
-	assert.Equalf(t, bookCount, 1, "book count mismatch")
-	assert.Equalf(t, noteCount, 2, "note count mismatch")
+	t.Run("book flag and content flag", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		testutils.Setup5(t, db)
 
-	var n1, n2 database.Note
-	database.MustScan(t, "getting n1",
-		db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"), &n1.UUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
-	database.MustScan(t, "getting n2",
-		db.QueryRow("SELECT uuid, body, added_on, dirty FROM notes where book_uuid = ? AND uuid = ?", "js-book-uuid", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n2.UUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux", "-c", "n2 body updated")
+		defer testutils.RemoveDir(t, opts.HomeDir)
 
-	assert.Equal(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "n1 should have UUID")
-	assert.Equal(t, n1.Body, "Booleans have toString()", "n1 body mismatch")
-	assert.Equal(t, n1.Dirty, false, "n1 dirty mismatch")
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
-	assert.Equal(t, n2.UUID, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", "Note should have UUID")
-	assert.Equal(t, n2.Body, "foo bar", "Note body mismatch")
-	assert.Equal(t, n2.Dirty, true, "n2 dirty mismatch")
-	assert.NotEqual(t, n2.EditedOn, 0, "Note edited_on mismatch")
+		assert.Equalf(t, bookCount, 2, "book count mismatch")
+		assert.Equalf(t, noteCount, 2, "note count mismatch")
+
+		var n1, n2 database.Note
+		database.MustScan(t, "getting n1",
+			db.QueryRow("SELECT uuid, book_uuid, body, added_on, dirty FROM notes where uuid = ?", "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f"), &n1.UUID, &n1.BookUUID, &n1.Body, &n1.AddedOn, &n1.Dirty)
+		database.MustScan(t, "getting n2",
+			db.QueryRow("SELECT uuid, book_uuid, body, added_on, dirty FROM notes where uuid = ?", "43827b9a-c2b0-4c06-a290-97991c896653"), &n2.UUID, &n2.BookUUID, &n2.Body, &n2.AddedOn, &n2.Dirty)
+
+		assert.Equal(t, n1.BookUUID, "js-book-uuid", "n1 BookUUID mismatch")
+		assert.Equal(t, n1.Body, "n1 body", "n1 Body mismatch")
+		assert.Equal(t, n1.Dirty, false, "n1 Dirty mismatch")
+		assert.Equal(t, n1.EditedOn, int64(0), "n1 EditedOn mismatch")
+
+		assert.Equal(t, n2.BookUUID, "linux-book-uuid", "n2 BookUUID mismatch")
+		assert.Equal(t, n2.Body, "n2 body updated", "n2 Body mismatch")
+		assert.Equal(t, n2.Dirty, true, "n2 Dirty mismatch")
+		assert.NotEqual(t, n2.EditedOn, 0, "n2 EditedOn mismatch")
+	})
 }
 
 func TestRemoveNote(t *testing.T) {

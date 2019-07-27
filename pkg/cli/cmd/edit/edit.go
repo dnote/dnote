@@ -33,8 +33,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var newContent string
-var bookName string
+var contentFlag string
+var bookNameFlag string
 
 var example = `
   * Edit the note by its id
@@ -59,8 +59,8 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&newContent, "content", "c", "", "The new content for the note")
-	f.StringVarP(&bookName, "book", "b", "", "The name of the book to move the note to")
+	f.StringVarP(&contentFlag, "content", "c", "", "The new content for the note")
+	f.StringVarP(&bookNameFlag, "book", "b", "", "The name of the book to move the note to")
 
 	return cmd
 }
@@ -73,39 +73,39 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func changeContent(ctx context.DnoteCtx, note database.Note) error {
-	if newContent == "" {
-		fpath, err := ui.GetTmpContentPath(ctx)
-		if err != nil {
-			return errors.Wrap(err, "getting temporarily content file path")
-		}
-
-		if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
-			return errors.Wrap(err, "preparing tmp content file")
-		}
-
-		if err := ui.GetEditorInput(ctx, fpath, &newContent); err != nil {
-			return errors.Wrap(err, "getting editor input")
-		}
+func waitEditorContent(ctx context.DnoteCtx, note database.Note, dest *string) error {
+	fpath, err := ui.GetTmpContentPath(ctx)
+	if err != nil {
+		return errors.Wrap(err, "getting temporarily content file path")
 	}
 
-	if note.Body == newContent {
+	if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
+		return errors.Wrap(err, "preparing tmp content file")
+	}
+
+	if err := ui.GetEditorInput(ctx, fpath, dest); err != nil {
+		return errors.Wrap(err, "getting editor input")
+	}
+
+	return nil
+}
+
+func changeContent(ctx context.DnoteCtx, tx *database.DB, note database.Note, content string) error {
+	if note.Body == content {
 		return errors.New("Nothing changed")
 	}
 
-	newContent = ui.SanitizeContent(newContent)
+	sanitized := ui.SanitizeContent(content)
 
-	if err := database.UpdateNoteContent(ctx.DB, ctx.Clock, note.RowID, newContent); err != nil {
+	if err := database.UpdateNoteContent(tx, ctx.Clock, note.RowID, sanitized); err != nil {
 		return errors.Wrap(err, "updating the note")
 	}
 
 	return nil
 }
 
-func moveBook(ctx context.DnoteCtx, note database.Note, bookName string) error {
-	db := ctx.DB
-
-	targetBookUUID, err := database.GetBookUUID(db, bookName)
+func moveBook(ctx context.DnoteCtx, tx *database.DB, note database.Note, bookName string) error {
+	targetBookUUID, err := database.GetBookUUID(tx, bookName)
 	if err != nil {
 		return errors.Wrap(err, "finding book uuid")
 	}
@@ -114,8 +114,36 @@ func moveBook(ctx context.DnoteCtx, note database.Note, bookName string) error {
 		return errors.New("book has not changed")
 	}
 
-	if err := database.UpdateNoteBook(db, ctx.Clock, note.RowID, targetBookUUID); err != nil {
+	if err := database.UpdateNoteBook(tx, ctx.Clock, note.RowID, targetBookUUID); err != nil {
 		return errors.Wrap(err, "moving book")
+	}
+
+	return nil
+}
+
+func updateNote(ctx context.DnoteCtx, note database.Note, bookName, content string) error {
+	db := ctx.DB
+
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	if bookName != "" {
+		if err := moveBook(ctx, tx, note, bookName); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "moving book")
+		}
+	}
+	if content != "" {
+		if err := changeContent(ctx, tx, note, content); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "changing content")
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "committing a transaction")
 	}
 
 	return nil
@@ -147,14 +175,17 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return errors.Wrap(err, "querying the book")
 		}
 
-		if bookName != "" {
-			if err := moveBook(ctx, note, bookName); err != nil {
-				return errors.Wrap(err, "moving book")
+		// If no flag was provided, launch an editor to get the content
+		if bookNameFlag == "" && contentFlag == "" {
+			err := waitEditorContent(ctx, note, &contentFlag)
+			if err != nil {
+				return errors.Wrap(err, "getting content from editor")
 			}
-		} else {
-			if err := changeContent(ctx, note); err != nil {
-				return errors.Wrap(err, "changing content")
-			}
+		}
+
+		err = updateNote(ctx, note, bookNameFlag, contentFlag)
+		if err != nil {
+			return errors.Wrap(err, "updating note")
 		}
 
 		noteInfo, err := database.GetNoteInfo(db, noteRowID)

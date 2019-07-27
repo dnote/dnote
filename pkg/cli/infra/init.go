@@ -62,7 +62,6 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 		DnoteDir: dnoteDir,
 		Version:  versionTag,
 		DB:       db,
-		Clock:    clock.New(),
 	}
 
 	return ctx, nil
@@ -143,6 +142,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		CipherKey:        cipherKey,
 		APIEndpoint:      cf.APIEndpoint,
 		Editor:           cf.Editor,
+		Clock:            clock.New(),
 	}
 
 	return ret, nil
