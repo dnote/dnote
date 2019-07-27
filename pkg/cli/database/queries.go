@@ -106,7 +106,6 @@ func GetNoteInfo(db *DB, noteRowID string) (NoteInfo, error) {
 	}
 
 	return ret, nil
-
 }
 
 // GetBookUUID returns a uuid of a book given a label

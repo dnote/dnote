@@ -20,26 +20,32 @@ package edit
 
 import (
 	"database/sql"
-	"fmt"
 	"io/ioutil"
 	"time"
 
 	"github.com/dnote/dnote/pkg/cli/context"
+	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
+	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 var newContent string
+var bookName string
 
 var example = `
   * Edit the note by its id
   dnote edit 3
 
-	* Skip the prompt by providing new content directly
-	dnote edit 3 -c "new content"`
+  * Skip the prompt by providing new content directly
+  dnote edit 3 -c "new content"
+
+  * Move a note to another book
+  dnote edit 3 -b javascript
+`
 
 // NewCmd returns a new edit command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
@@ -54,6 +60,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 	f := cmd.Flags()
 	f.StringVarP(&newContent, "content", "c", "", "The new content for the note")
+	f.StringVarP(&bookName, "book", "b", "", "The name of the book to move the note to")
 
 	return cmd
 }
@@ -127,10 +134,13 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		tx.Commit()
 
+		noteInfo, err := database.GetNoteInfo(db, noteRowID)
+		if err != nil {
+			return errors.Wrap(err, "getting note info")
+		}
+
 		log.Success("edited the note\n")
-		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", newContent)
-		fmt.Printf("\n-------------------------------------------------------\n")
+		output.NoteInfo(noteInfo)
 
 		return nil
 	}
