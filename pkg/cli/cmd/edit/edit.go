@@ -20,26 +20,32 @@ package edit
 
 import (
 	"database/sql"
-	"fmt"
 	"io/ioutil"
-	"time"
+	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
+	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
+	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-var newContent string
+var contentFlag string
+var bookNameFlag string
 
 var example = `
   * Edit the note by its id
   dnote edit 3
 
-	* Skip the prompt by providing new content directly
-	dnote edit 3 -c "new content"`
+  * Skip the prompt by providing new content directly
+  dnote edit 3 -c "new content"
+
+  * Move a note to another book
+  dnote edit 3 -b javascript
+`
 
 // NewCmd returns a new edit command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
@@ -53,7 +59,8 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&newContent, "content", "c", "", "The new content for the note")
+	f.StringVarP(&contentFlag, "content", "c", "", "The new content for the note")
+	f.StringVarP(&bookNameFlag, "book", "b", "", "The name of the book to move the note to")
 
 	return cmd
 }
@@ -66,71 +73,128 @@ func preRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func waitEditorContent(ctx context.DnoteCtx, note database.Note, dest *string) error {
+	fpath, err := ui.GetTmpContentPath(ctx)
+	if err != nil {
+		return errors.Wrap(err, "getting temporarily content file path")
+	}
+
+	if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
+		return errors.Wrap(err, "preparing tmp content file")
+	}
+
+	if err := ui.GetEditorInput(ctx, fpath, dest); err != nil {
+		return errors.Wrap(err, "getting editor input")
+	}
+
+	return nil
+}
+
+func changeContent(ctx context.DnoteCtx, tx *database.DB, note database.Note, content string) error {
+	if note.Body == content {
+		return errors.New("Nothing changed")
+	}
+
+	sanitized := ui.SanitizeContent(content)
+
+	if err := database.UpdateNoteContent(tx, ctx.Clock, note.RowID, sanitized); err != nil {
+		return errors.Wrap(err, "updating the note")
+	}
+
+	return nil
+}
+
+func moveBook(ctx context.DnoteCtx, tx *database.DB, note database.Note, bookName string) error {
+	targetBookUUID, err := database.GetBookUUID(tx, bookName)
+	if err != nil {
+		return errors.Wrap(err, "finding book uuid")
+	}
+
+	if note.BookUUID == targetBookUUID {
+		return errors.New("book has not changed")
+	}
+
+	if err := database.UpdateNoteBook(tx, ctx.Clock, note.RowID, targetBookUUID); err != nil {
+		return errors.Wrap(err, "moving book")
+	}
+
+	return nil
+}
+
+func updateNote(ctx context.DnoteCtx, note database.Note, bookName, content string) error {
+	db := ctx.DB
+
+	tx, err := db.Begin()
+	if err != nil {
+		return errors.Wrap(err, "beginning a transaction")
+	}
+
+	if bookName != "" {
+		if err := moveBook(ctx, tx, note, bookName); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "moving book")
+		}
+	}
+	if content != "" {
+		if err := changeContent(ctx, tx, note, content); err != nil {
+			tx.Rollback()
+			return errors.Wrap(err, "changing content")
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "committing a transaction")
+	}
+
+	return nil
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		db := ctx.DB
 
-		var noteRowID string
+		var noteRowIDArg string
 
 		if len(args) == 2 {
 			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
 
-			noteRowID = args[1]
+			noteRowIDArg = args[1]
 		} else {
-			noteRowID = args[0]
+			noteRowIDArg = args[0]
 		}
 
-		var noteUUID, oldContent string
-		err := db.QueryRow("SELECT uuid, body FROM notes WHERE rowid = ? AND deleted = false", noteRowID).Scan(&noteUUID, &oldContent)
+		noteRowID, err := strconv.Atoi(noteRowIDArg)
+		if err != nil {
+			return errors.Wrap(err, "invalid rowid")
+		}
+
+		note, err := database.GetActiveNote(db, noteRowID)
 		if err == sql.ErrNoRows {
-			return errors.Errorf("note %s not found", noteRowID)
+			return errors.Errorf("note %d not found", noteRowID)
 		} else if err != nil {
 			return errors.Wrap(err, "querying the book")
 		}
 
-		if newContent == "" {
-			fpath, err := ui.GetTmpContentPath(ctx)
+		// If no flag was provided, launch an editor to get the content
+		if bookNameFlag == "" && contentFlag == "" {
+			err := waitEditorContent(ctx, note, &contentFlag)
 			if err != nil {
-				return errors.Wrap(err, "getting temporarily content file path")
-			}
-
-			e := ioutil.WriteFile(fpath, []byte(oldContent), 0644)
-			if e != nil {
-				return errors.Wrap(e, "preparing tmp content file")
-			}
-
-			e = ui.GetEditorInput(ctx, fpath, &newContent)
-			if e != nil {
-				return errors.Wrap(err, "getting editor input")
+				return errors.Wrap(err, "getting content from editor")
 			}
 		}
 
-		if oldContent == newContent {
-			return errors.New("Nothing changed")
-		}
-
-		ts := time.Now().UnixNano()
-		newContent = ui.SanitizeContent(newContent)
-
-		tx, err := db.Begin()
+		err = updateNote(ctx, note, bookNameFlag, contentFlag)
 		if err != nil {
-			return errors.Wrap(err, "beginning a transaction")
+			return errors.Wrap(err, "updating note")
 		}
 
-		_, err = tx.Exec(`UPDATE notes
-			SET body = ?, edited_on = ?, dirty = ?
-			WHERE rowid = ?`, newContent, ts, true, noteRowID)
+		noteInfo, err := database.GetNoteInfo(db, noteRowID)
 		if err != nil {
-			tx.Rollback()
-			return errors.Wrap(err, "updating the note")
+			return errors.Wrap(err, "getting note info")
 		}
-
-		tx.Commit()
 
 		log.Success("edited the note\n")
-		fmt.Printf("\n------------------------content------------------------\n")
-		fmt.Printf("%s", newContent)
-		fmt.Printf("\n-------------------------------------------------------\n")
+		output.NoteInfo(noteInfo)
 
 		return nil
 	}

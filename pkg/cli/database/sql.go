@@ -68,9 +68,7 @@ func (d *DB) Begin() (*DB, error) {
 // Commit commits a transaction
 func (d *DB) Commit() error {
 	if db, ok := d.Conn.(sqlTx); ok && db != nil {
-		if err := db.Commit(); err != nil {
-			return err
-		}
+		return db.Commit()
 	}
 
 	return errors.New("invalid transaction")

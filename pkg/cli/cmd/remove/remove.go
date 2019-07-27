@@ -20,6 +20,7 @@ package remove
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -67,15 +68,20 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return nil
 		}
 
-		var noteRowID string
+		var noteRowIDArg string
 		if len(args) == 2 {
 			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
 
-			noteRowID = args[1]
+			noteRowIDArg = args[1]
 		} else if len(args) == 1 {
-			noteRowID = args[0]
+			noteRowIDArg = args[0]
 		} else {
 			return errors.New("Missing argument")
+		}
+
+		noteRowID, err := strconv.Atoi(noteRowIDArg)
+		if err != nil {
+			return errors.Wrap(err, "invalid rowid")
 		}
 
 		if err := removeNote(ctx, noteRowID); err != nil {
@@ -86,7 +92,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	}
 }
 
-func removeNote(ctx context.DnoteCtx, noteRowID string) error {
+func removeNote(ctx context.DnoteCtx, noteRowID int) error {
 	db := ctx.DB
 
 	noteInfo, err := database.GetNoteInfo(db, noteRowID)

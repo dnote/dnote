@@ -37,7 +37,7 @@ import (
 
 var reservedBookNames = []string{"trash", "conflicts"}
 
-var content string
+var contentFlag string
 
 var example = `
  * Open an editor to write content
@@ -66,7 +66,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&content, "content", "c", "", "The new content for the note")
+	f.StringVarP(&contentFlag, "content", "c", "", "The new content for the note")
 
 	return cmd
 }
@@ -114,24 +114,24 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return errors.Wrap(err, "invalid book name")
 		}
 
-		if content == "" {
+		if contentFlag == "" {
 			fpath, err := ui.GetTmpContentPath(ctx)
 			if err != nil {
 				return errors.Wrap(err, "getting temporarily content file path")
 			}
 
-			err = ui.GetEditorInput(ctx, fpath, &content)
+			err = ui.GetEditorInput(ctx, fpath, &contentFlag)
 			if err != nil {
 				return errors.Wrap(err, "Failed to get editor input")
 			}
 		}
 
-		if content == "" {
+		if contentFlag == "" {
 			return errors.New("Empty content")
 		}
 
 		ts := time.Now().UnixNano()
-		noteRowID, err := writeNote(ctx, bookName, content, ts)
+		noteRowID, err := writeNote(ctx, bookName, contentFlag, ts)
 		if err != nil {
 			return errors.Wrap(err, "Failed to write note")
 		}
@@ -154,10 +154,10 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	}
 }
 
-func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64) (string, error) {
+func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64) (int, error) {
 	tx, err := ctx.DB.Begin()
 	if err != nil {
-		return "", errors.Wrap(err, "beginning a transaction")
+		return 0, errors.Wrap(err, "beginning a transaction")
 	}
 
 	var bookUUID string
@@ -169,10 +169,10 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 		err = b.Insert(tx)
 		if err != nil {
 			tx.Rollback()
-			return "", errors.Wrap(err, "creating the book")
+			return 0, errors.Wrap(err, "creating the book")
 		}
 	} else if err != nil {
-		return "", errors.Wrap(err, "finding the book")
+		return 0, errors.Wrap(err, "finding the book")
 	}
 
 	noteUUID := utils.GenerateUUID()
@@ -181,10 +181,10 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 	err = n.Insert(tx)
 	if err != nil {
 		tx.Rollback()
-		return "", errors.Wrap(err, "creating the note")
+		return 0, errors.Wrap(err, "creating the note")
 	}
 
-	var noteRowID string
+	var noteRowID int
 	err = tx.QueryRow(`SELECT notes.rowid
 			FROM notes
 			WHERE notes.uuid = ?`, noteUUID).

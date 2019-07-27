@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/api/clock"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"

@@ -26,7 +26,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dnote/dnote/pkg/server/api/clock"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/api/handlers"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"

@@ -21,6 +21,7 @@ package context
 
 import (
 	"github.com/dnote/dnote/pkg/cli/database"
+	"github.com/dnote/dnote/pkg/clock"
 )
 
 // DnoteCtx is a context holding the information of the current runtime
@@ -34,6 +35,7 @@ type DnoteCtx struct {
 	SessionKeyExpiry int64
 	CipherKey        []byte
 	Editor           string
+	Clock            clock.Clock
 }
 
 // Redact replaces private information from the context with a set of

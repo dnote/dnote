@@ -36,6 +36,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -141,6 +142,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		CipherKey:        cipherKey,
 		APIEndpoint:      cf.APIEndpoint,
 		Editor:           cf.Editor,
+		Clock:            clock.New(),
 	}
 
 	return ret, nil
