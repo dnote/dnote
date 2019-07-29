@@ -138,6 +138,15 @@ endif
 	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh server $(version) ${serverOutputDir}
 .PHONY: release-server
 
+# migrations
+create-migration:
+ifndef filename
+	$(error filename is required. Usage: make filename=your-filename create-migration)
+endif
+
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server/database && ./scripts/create-migration.sh $(filename))
+.PHONY: create-migration
+
 clean:
 	@git clean -f
 	@rm -rf build

@@ -4,11 +4,15 @@ dist: xenial
 go:
   - 1.12
 
-addons:
-  postgresql: "10"
-
 env:
   - NODE_VERSION=10.15.0
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get --yes remove postgresql\*
+  - sudo apt-get install -y postgresql-11 postgresql-client-11
+  - sudo cp /etc/postgresql/{9.6,11}/main/pg_hba.conf
+  - sudo service postgresql restart 11
 
 before_script:
   - nvm install "$NODE_VERSION"
