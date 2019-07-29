@@ -53,8 +53,6 @@ type Session struct {
 func makeSession(user database.User, account database.Account) Session {
 	legacy := account.AuthKeyHash == ""
 
-	log.Printf("account is %+v", account)
-
 	return Session{
 		// TODO: remove ID and use UUID
 		ID:              user.ID,
@@ -75,7 +73,7 @@ func makeSession(user database.User, account database.Account) Session {
 func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -83,7 +81,7 @@ func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 
 	var account database.Account
 	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		http.Error(w, "finding account", http.StatusInternalServerError)
+		handleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -103,18 +101,14 @@ func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit()
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, response)
 }
 
 // OauthCallbackHandler handler
 func (a *App) oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	githubUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "completing user uath").Error(), http.StatusInternalServerError)
+		handleError(w, "completing user uath", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -124,13 +118,13 @@ func (a *App) oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	currentUser, err := findUserFromOauth(githubUser, tx)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "Failed to upsert user").Error(), http.StatusInternalServerError)
+		handleError(w, "Failed to upsert user", err, http.StatusInternalServerError)
 		return
 	}
 	err = operations.TouchLastLoginAt(currentUser, tx)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
+		handleError(w, "touching login timestamp", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -182,7 +176,7 @@ func (a *App) legacyPasswordLogin(w http.ResponseWriter, r *http.Request) {
 	var params legacyPasswordLoginPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -192,7 +186,7 @@ func (a *App) legacyPasswordLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Wrong email and password combination", http.StatusUnauthorized)
 		return
 	} else if conn.Error != nil {
-		http.Error(w, errors.Wrap(err, "getting user").Error(), http.StatusInternalServerError)
+		handleError(w, "getting user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -206,7 +200,7 @@ func (a *App) legacyPasswordLogin(w http.ResponseWriter, r *http.Request) {
 	var user database.User
 	err = db.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding user").Error(), http.StatusInternalServerError)
+		handleError(w, "finding user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -215,7 +209,7 @@ func (a *App) legacyPasswordLogin(w http.ResponseWriter, r *http.Request) {
 	err = operations.TouchLastLoginAt(user, tx)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
+		handleError(w, "touching login timestamp", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -229,11 +223,7 @@ func (a *App) legacyPasswordLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setAuthCookie(w, user)
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, response)
 }
 
 type legacyRegisterPayload struct {
@@ -263,7 +253,7 @@ func validateLegacyRegisterPayload(p legacyRegisterPayload) error {
 func (a *App) legacyRegister(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -271,11 +261,11 @@ func (a *App) legacyRegister(w http.ResponseWriter, r *http.Request) {
 
 	var params legacyRegisterPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 	if err := validateLegacyRegisterPayload(params); err != nil {
-		http.Error(w, errors.Wrap(err, "validating payload").Error(), http.StatusBadRequest)
+		handleError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
@@ -284,7 +274,7 @@ func (a *App) legacyRegister(w http.ResponseWriter, r *http.Request) {
 	err := operations.LegacyRegisterUser(tx, user.ID, params.Email, params.AuthKey, params.CipherKeyEnc, params.Iteration)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, "creating user", http.StatusBadRequest)
+		handleError(w, "creating user", err, http.StatusBadRequest)
 		return
 	}
 
@@ -292,7 +282,7 @@ func (a *App) legacyRegister(w http.ResponseWriter, r *http.Request) {
 
 	var account database.Account
 	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		http.Error(w, "finding account", http.StatusInternalServerError)
+		handleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -302,14 +292,14 @@ func (a *App) legacyRegister(w http.ResponseWriter, r *http.Request) {
 func (a *App) legacyMigrate(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	db := database.DBConn
 
 	if err := db.Model(&user).Update("encrypted = ?", true).Error; err != nil {
-		http.Error(w, "updating user", http.StatusInternalServerError)
+		handleError(w, "updating user", err, http.StatusInternalServerError)
 		return
 	}
 }

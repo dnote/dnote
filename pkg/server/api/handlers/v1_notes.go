@@ -20,6 +20,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
@@ -27,7 +28,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 // CreateNote creates a note by generating an action and feeding it to the reducer
@@ -64,25 +64,25 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var params updateNotePayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "decoding params").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding params", err, http.StatusInternalServerError)
 		return
 	}
 
 	if ok := validateUpdateNotePayload(params); !ok {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		handleError(w, "Invalid payload", nil, http.StatusBadRequest)
 		return
 	}
 
 	var note database.Note
 	if err := db.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding note").Error(), http.StatusInternalServerError)
+		handleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -91,14 +91,14 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	note, err = operations.UpdateNote(tx, user, a.Clock, note, params.BookUUID, params.Content)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "updating note").Error(), http.StatusInternalServerError)
+		handleError(w, "updating note", err, http.StatusInternalServerError)
 		return
 	}
 
 	var book database.Book
 	if err := tx.Where("uuid = ? AND user_id = ?", note.BookUUID, user.ID).First(&book).Error; err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrapf(err, "finding book %s to preload", note.BookUUID).Error(), http.StatusInternalServerError)
+		handleError(w, fmt.Sprintf("finding book %s to preload", note.BookUUID), err, http.StatusInternalServerError)
 		return
 	}
 
@@ -112,12 +112,7 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Result: presenters.PresentNote(note),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 type deleteNoteResp struct {
@@ -134,13 +129,13 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var note database.Note
 	if err := db.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding note").Error(), http.StatusInternalServerError)
+		handleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -149,7 +144,7 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	n, err := operations.DeleteNote(tx, user, note)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "deleting note").Error(), http.StatusInternalServerError)
+		handleError(w, "deleting note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -159,10 +154,5 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusNoContent,
 		Result: presenters.PresentNote(n),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }

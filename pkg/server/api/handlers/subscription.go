@@ -116,7 +116,7 @@ type createSubPayload struct {
 func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -206,11 +206,11 @@ func validateUpdateSubPayload(p updateSubPayload) error {
 func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
-		http.Error(w, "Customer does not exist", http.StatusForbidden)
+		handleError(w, "Customer does not exist", nil, http.StatusForbidden)
 		return
 	}
 
@@ -277,7 +277,7 @@ func respondWithEmptySub(w http.ResponseWriter) {
 func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
@@ -319,11 +319,7 @@ func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
 		resp.Items = append(resp.Items, i)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		handleError(w, "encoding response", err, http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // GetStripeSourceResponse is a response for getStripeToken
@@ -337,11 +333,7 @@ type GetStripeSourceResponse struct {
 func respondWithEmptyStripeToken(w http.ResponseWriter) {
 	var resp GetStripeSourceResponse
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		handleError(w, "encoding response", err, http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // getStripeCard retrieves card information from stripe and returns a stripe.Card
@@ -397,7 +389,7 @@ func getStripeCard(stripeCustomerID, sourceID string) (*stripe.Card, error) {
 func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		http.Error(w, "No authenticated user found", http.StatusInternalServerError)
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
@@ -429,11 +421,7 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 		ExpYear:  cd.ExpYear,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		handleError(w, "encoding response", err, http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {

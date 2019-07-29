@@ -56,13 +56,13 @@ func (a *App) CreateBookV2(w http.ResponseWriter, r *http.Request) {
 	var params createBookPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	err = validateCreateBookPayload(params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "validating payload").Error(), http.StatusBadRequest)
+		handleError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (a *App) CreateBookV2(w http.ResponseWriter, r *http.Request) {
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "checking duplicate").Error(), http.StatusInternalServerError)
+		handleError(w, "checking duplicate", err, http.StatusInternalServerError)
 		return
 	}
 	if bookCount > 0 {
@@ -83,17 +83,12 @@ func (a *App) CreateBookV2(w http.ResponseWriter, r *http.Request) {
 
 	book, err := operations.CreateBook(user, a.Clock, params.Name)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "inserting book").Error(), http.StatusInternalServerError)
+		handleError(w, "inserting book", err, http.StatusInternalServerError)
 	}
 	resp := CreateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // BooksOptionsV2 is a handler for OPTIONS endpoint for notes

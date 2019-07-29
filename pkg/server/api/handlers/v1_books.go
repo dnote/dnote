@@ -56,24 +56,19 @@ func respondWithBooks(userID int, query url.Values, w http.ResponseWriter) {
 	}
 
 	if err := conn.Find(&books).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding books").Error(), http.StatusInternalServerError)
+		handleError(w, "finding books", err, http.StatusInternalServerError)
 		return
 	}
 
 	presentedBooks := presenters.PresentBooks(books)
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(presentedBooks); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, presentedBooks)
 }
 
 // GetDemoBooks returns books for demo
 func (a *App) GetDemoBooks(w http.ResponseWriter, r *http.Request) {
 	demoUserID, err := helpers.GetDemoUserID()
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "finding demo user").Error(), http.StatusInternalServerError)
+		handleError(w, "finding demo user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -114,16 +109,12 @@ func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := conn.Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding book").Error(), http.StatusInternalServerError)
+		handleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	p := presenters.PresentBook(book)
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(p); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, p)
 }
 
 type createBookPayload struct {
@@ -173,21 +164,21 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding book").Error(), http.StatusInternalServerError)
+		handleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	var params updateBookPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "decoding payload").Error(), http.StatusInternalServerError)
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	book, err = operations.UpdateBook(tx, a.Clock, user, book, params.Name)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, errors.Wrap(err, "updating a book").Error(), http.StatusInternalServerError)
+		handleError(w, "updating a book", err, http.StatusInternalServerError)
 	}
 
 	tx.Commit()
@@ -195,12 +186,7 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	resp := UpdateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // DeleteBookResp is the response from create book api
@@ -224,25 +210,25 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding book").Error(), http.StatusInternalServerError)
+		handleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	var notes []database.Note
 	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding notes").Error(), http.StatusInternalServerError)
+		handleError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}
 
 	for _, note := range notes {
 		if _, err := operations.DeleteNote(tx, user, note); err != nil {
-			http.Error(w, errors.Wrap(err, "deleting a note").Error(), http.StatusInternalServerError)
+			handleError(w, "deleting a note", err, http.StatusInternalServerError)
 			return
 		}
 	}
 	b, err := operations.DeleteBook(tx, user, book)
 	if err != nil {
-		http.Error(w, errors.Wrap(err, "deleting book").Error(), http.StatusInternalServerError)
+		handleError(w, "deleting book", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -252,12 +238,7 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Book:   presenters.PresentBook(b),
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	respondJSON(w, resp)
 }
 
 // BooksOptions handles OPTIONS endpoint

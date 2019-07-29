@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/log"
 	"golang.org/x/time/rate"
 )
 
@@ -112,6 +113,9 @@ func limit(next http.Handler) http.HandlerFunc {
 
 		if !limiter.Allow() {
 			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+			log.WithFields(log.Fields{
+				"ip": identifier,
+			}).Warn("Too many requests")
 			return
 		}
 
