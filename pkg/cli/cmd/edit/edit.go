@@ -95,9 +95,7 @@ func changeContent(ctx context.DnoteCtx, tx *database.DB, note database.Note, co
 		return errors.New("Nothing changed")
 	}
 
-	sanitized := ui.SanitizeContent(content)
-
-	if err := database.UpdateNoteContent(tx, ctx.Clock, note.RowID, sanitized); err != nil {
+	if err := database.UpdateNoteContent(tx, ctx.Clock, note.RowID, content); err != nil {
 		return errors.Wrap(err, "updating the note")
 	}
 

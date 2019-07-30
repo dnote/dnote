@@ -291,7 +291,7 @@ func mergeNote(tx *database.DB, serverNote client.SyncFragNote, localNote databa
 		return nil
 	}
 
-	// if the local copy is deleted, and the it was edited on the server, override with server values and mark it not dirty.
+	// if the local copy is deleted, and it was edited on the server, override with server values and mark it not dirty.
 	if localNote.Deleted {
 		if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?, public = ?, dirty = ? WHERE uuid = ?",
 			serverNote.USN, serverNote.BookUUID, serverNote.Body, serverNote.EditedOn, serverNote.Deleted, serverNote.Public, false, serverNote.UUID); err != nil {

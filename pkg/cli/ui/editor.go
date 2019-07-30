@@ -78,20 +78,6 @@ func getEditorCommand() string {
 	return ret
 }
 
-// SanitizeContent sanitizes note content
-func SanitizeContent(s string) string {
-	var ret string
-
-	ret = strings.Trim(s, " ")
-
-	// Remove newline at the end of the file because POSIX defines a line as
-	// characters followed by a newline
-	ret = strings.TrimSuffix(ret, "\n")
-	ret = strings.TrimSuffix(ret, "\r\n")
-
-	return ret
-}
-
 func newEditorCmd(ctx context.DnoteCtx, fpath string) (*exec.Cmd, error) {
 	args := strings.Fields(ctx.Editor)
 	args = append(args, fpath)
@@ -147,9 +133,7 @@ func GetEditorInput(ctx context.DnoteCtx, fpath string, content *string) error {
 	}
 
 	raw := string(b)
-	c := SanitizeContent(raw)
-
-	*content = c
+	*content = raw
 
 	return nil
 }
