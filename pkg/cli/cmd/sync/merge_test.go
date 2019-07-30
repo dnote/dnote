@@ -125,6 +125,20 @@ fuuz
 >>>>>>> Server
 `,
 		},
+		{
+			local:  "foo\nquz\nbaz\nbar\n",
+			server: "foo\nquzz\nbazz\nbar\n",
+			expected: `foo
+<<<<<<< Local
+quz
+baz
+=======
+quzz
+bazz
+>>>>>>> Server
+bar
+`,
+		},
 	}
 
 	for idx, tc := range testCases {
