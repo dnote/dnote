@@ -36,7 +36,13 @@ const (
 	modeLocal
 )
 
-func sanitizeText(s string) string {
+const (
+	conflictLabelLocal  = "<<<<<<< Local\n"
+	conflictLabelServer = ">>>>>>> Server\n"
+	conflictLabelDivide = "=======\n"
+)
+
+func sanitize(s string) string {
 	var textBuilder strings.Builder
 	textBuilder.WriteString(s)
 	if !strings.HasSuffix(s, "\n") {
@@ -56,36 +62,38 @@ func reportBodyConflict(localBody, remoteBody string) string {
 	maxIdx := len(diffs) - 1
 
 	for idx, d := range diffs {
-		text := sanitizeText(d.Text)
-
 		if d.Type == diff.DiffEqual {
 			if mode != modeNormal {
 				mode = modeNormal
-				ret.WriteString(">>>>>>> Server\n")
+				ret.WriteString(conflictLabelServer)
 			}
 
-			ret.WriteString(text)
+			ret.WriteString(d.Text)
 		}
+
+		// within the conflict area, append a linebreak to the text if it is missing one
+		// to make sure conflict labels are separated by new lines
+		sanitized := sanitize(d.Text)
 
 		if d.Type == diff.DiffDelete {
 			if mode == modeNormal {
 				mode = modeLocal
-				ret.WriteString("<<<<<<< Local\n")
+				ret.WriteString(conflictLabelLocal)
 			}
 
-			ret.WriteString(text)
+			ret.WriteString(sanitized)
 		}
 
 		if d.Type == diff.DiffInsert {
 			if mode == modeLocal {
 				mode = modeRemote
-				ret.WriteString("=======\n")
+				ret.WriteString(conflictLabelDivide)
 			}
 
-			ret.WriteString(text)
+			ret.WriteString(sanitized)
 
 			if idx == maxIdx {
-				ret.WriteString(">>>>>>> Server\n")
+				ret.WriteString(conflictLabelServer)
 			}
 		}
 	}
@@ -112,11 +120,12 @@ func reportBookConflict(tx *database.DB, body, localBookUUID, serverBookUUID str
 		return "", errors.Wrapf(err, "getting book label for %s", serverBookUUID)
 	}
 
-	builder.WriteString("<<<<<<< Local\n")
+	builder.WriteString(conflictLabelLocal)
 	builder.WriteString(fmt.Sprintf("Moved to the book %s\n", localBookName))
-	builder.WriteString("=======\n")
+	builder.WriteString(conflictLabelDivide)
 	builder.WriteString(fmt.Sprintf("Moved to the book %s\n", serverBookName))
-	builder.WriteString(">>>>>>> Server\n\n")
+	builder.WriteString(conflictLabelServer)
+	builder.WriteString("\n")
 	builder.WriteString(body)
 
 	return builder.String(), nil

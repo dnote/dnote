@@ -30,7 +30,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-func checkEqual(a interface{}, b interface{}, message string) (bool, string) {
+func getErrorMessage(m string, a, b interface{}) string {
+	return fmt.Sprintf(`%s.
+Actual:
+========================
+%+v
+========================
+
+Expected:
+========================
+%+v
+========================`, m, a, b)
+}
+
+func checkEqual(a, b interface{}, message string) (bool, string) {
 	if a == b {
 		return true, ""
 	}
@@ -41,13 +54,13 @@ func checkEqual(a interface{}, b interface{}, message string) (bool, string) {
 	} else {
 		m = message
 	}
-	errorMessage := fmt.Sprintf("%s.\n==== Actual ====\n%+v\n=============\n==== Expected ====\n%+v\n=================", m, a, b)
+	errorMessage := getErrorMessage(m, a, b)
 
 	return false, errorMessage
 }
 
 // Equal errors a test if the actual does not match the expected
-func Equal(t *testing.T, a interface{}, b interface{}, message string) {
+func Equal(t *testing.T, a, b interface{}, message string) {
 	ok, m := checkEqual(a, b, message)
 	if !ok {
 		t.Error(m)
@@ -55,7 +68,7 @@ func Equal(t *testing.T, a interface{}, b interface{}, message string) {
 }
 
 // Equalf fails a test if the actual does not match the expected
-func Equalf(t *testing.T, a interface{}, b interface{}, message string) {
+func Equalf(t *testing.T, a, b interface{}, message string) {
 	ok, m := checkEqual(a, b, message)
 	if !ok {
 		t.Fatal(m)
@@ -63,18 +76,15 @@ func Equalf(t *testing.T, a interface{}, b interface{}, message string) {
 }
 
 // NotEqual fails a test if the actual matches the expected
-func NotEqual(t *testing.T, a interface{}, b interface{}, message string) {
-	if a != b {
-		return
+func NotEqual(t *testing.T, a, b interface{}, message string) {
+	ok, m := checkEqual(a, b, message)
+	if ok {
+		t.Error(m)
 	}
-	if len(message) == 0 {
-		message = fmt.Sprintf("%v == %v", a, b)
-	}
-	t.Errorf("%s. Actual: %+v. Expected: %+v.", message, a, b)
 }
 
 // DeepEqual fails a test if the actual does not deeply equal the expected
-func DeepEqual(t *testing.T, a interface{}, b interface{}, message string) {
+func DeepEqual(t *testing.T, a, b interface{}, message string) {
 	if reflect.DeepEqual(a, b) {
 		return
 	}
@@ -82,7 +92,9 @@ func DeepEqual(t *testing.T, a interface{}, b interface{}, message string) {
 	if len(message) == 0 {
 		message = fmt.Sprintf("%v != %v", a, b)
 	}
-	t.Errorf("%s.\nActual:   %+v.\nExpected: %+v.", message, a, b)
+
+	errorMessage := getErrorMessage(message, a, b)
+	t.Error(errorMessage)
 }
 
 // EqualJSON asserts that two JSON strings are equal

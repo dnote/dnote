@@ -42,21 +42,14 @@ func TestReportConflict(t *testing.T) {
 			expected: "",
 		},
 		{
-			local:  "foo\nbar",
-			server: "foo\nbar",
-			expected: `foo
-bar
-`,
+			local:    "foo",
+			server:   "foo",
+			expected: "foo",
 		},
 		{
-			local:  "foo",
-			server: "bar",
-			expected: `<<<<<<< Local
-foo
-=======
-bar
->>>>>>> Server
-`,
+			local:    "foo\nbar",
+			server:   "foo\nbar",
+			expected: "foo\nbar",
 		},
 		{
 			local:  "foo-local",
@@ -65,6 +58,16 @@ bar
 foo-local
 =======
 foo-server
+>>>>>>> Server
+`,
+		},
+		{
+			local:  "foo\n",
+			server: "bar\n",
+			expected: `<<<<<<< Local
+foo
+=======
+bar
 >>>>>>> Server
 `,
 		},
@@ -90,8 +93,8 @@ foo
 `,
 		},
 		{
-			local:  "foo\n\nquz\nbaz",
-			server: "foo\n\nbar\nbaz",
+			local:  "foo\n\nquz\nbaz\n",
+			server: "foo\n\nbar\nbaz\n",
 			expected: `foo
 
 <<<<<<< Local
@@ -120,6 +123,20 @@ fuz
 =======
 fuuz
 >>>>>>> Server
+`,
+		},
+		{
+			local:  "foo\nquz\nbaz\nbar\n",
+			server: "foo\nquzz\nbazz\nbar\n",
+			expected: `foo
+<<<<<<< Local
+quz
+baz
+=======
+quzz
+bazz
+>>>>>>> Server
+bar
 `,
 		},
 	}

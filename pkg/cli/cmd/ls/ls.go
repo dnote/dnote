@@ -114,15 +114,16 @@ func getNewlineIdx(str string) int {
 // formatBody returns an excerpt of the given raw note content and a boolean
 // indicating if the returned string has been excertped
 func formatBody(noteBody string) (string, bool) {
-	newlineIdx := getNewlineIdx(noteBody)
+	trimmed := strings.TrimRight(noteBody, "\r\n")
+	newlineIdx := getNewlineIdx(trimmed)
 
 	if newlineIdx > -1 {
-		ret := strings.Trim(noteBody[0:newlineIdx], " ")
+		ret := strings.Trim(trimmed[0:newlineIdx], " ")
 
 		return ret, true
 	}
 
-	return strings.Trim(noteBody, " "), false
+	return strings.Trim(trimmed, " "), false
 }
 
 func printBookLine(info bookInfo, nameOnly bool) {

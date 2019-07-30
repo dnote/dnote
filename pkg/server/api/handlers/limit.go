@@ -43,7 +43,7 @@ func init() {
 // addVisitor adds a new visitor to the map and returns a limiter for the visitor
 func addVisitor(identifier string) *rate.Limiter {
 	// initialize a token bucket
-	limiter := rate.NewLimiter(rate.Every(1*time.Second), 15)
+	limiter := rate.NewLimiter(rate.Every(1*time.Second), 60)
 
 	mtx.Lock()
 	visitors[identifier] = &visitor{
