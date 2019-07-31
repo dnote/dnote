@@ -33,14 +33,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var targetBookName string
+var bookFlag string
+var yesFlag bool
 
 var example = `
   * Delete a note by its id
   dnote delete 2
 
   * Delete a book
-  dnote delete -b js`
+  dnote delete -b js
+`
 
 // NewCmd returns a new remove command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
@@ -53,15 +55,24 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&targetBookName, "book", "b", "", "The book name to delete")
+	f.StringVarP(&bookFlag, "book", "b", "", "The book name to delete")
+	f.BoolVarP(&yesFlag, "yes", "y", false, "Automatically respond yes to prompts")
 
 	return cmd
 }
 
+func maybeConfirm(message string, defaultValue bool) (bool, error) {
+	if yesFlag {
+		return true, nil
+	}
+
+	return ui.Confirm(message, defaultValue)
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		if targetBookName != "" {
-			if err := removeBook(ctx, targetBookName); err != nil {
+		if bookFlag != "" {
+			if err := removeBook(ctx, bookFlag); err != nil {
 				return errors.Wrap(err, "removing the book")
 			}
 
@@ -70,7 +81,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		var noteRowIDArg string
 		if len(args) == 2 {
-			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the view command. e.g. `dnote view 123`.\n\n"))
+			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the remove command. e.g. `dnote remove 123`.\n\n"))
 
 			noteRowIDArg = args[1]
 		} else if len(args) == 1 {
@@ -102,7 +113,7 @@ func removeNote(ctx context.DnoteCtx, noteRowID int) error {
 
 	output.NoteInfo(noteInfo)
 
-	ok, err := ui.Confirm("remove this note?", false)
+	ok, err := maybeConfirm("remove this note?", false)
 	if err != nil {
 		return errors.Wrap(err, "getting confirmation")
 	}
@@ -117,9 +128,15 @@ func removeNote(ctx context.DnoteCtx, noteRowID int) error {
 	}
 
 	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE uuid = ?", true, true, "", noteInfo.UUID); err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "removing the note")
 	}
-	tx.Commit()
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "comitting transaction")
+	}
 
 	log.Successf("removed from %s\n", noteInfo.BookLabel)
 
@@ -134,7 +151,7 @@ func removeBook(ctx context.DnoteCtx, bookLabel string) error {
 		return errors.Wrap(err, "finding book uuid")
 	}
 
-	ok, err := ui.Confirm(fmt.Sprintf("delete book '%s' and all its notes?", bookLabel), false)
+	ok, err := maybeConfirm(fmt.Sprintf("delete book '%s' and all its notes?", bookLabel), false)
 	if err != nil {
 		return errors.Wrap(err, "getting confirmation")
 	}
@@ -149,16 +166,22 @@ func removeBook(ctx context.DnoteCtx, bookLabel string) error {
 	}
 
 	if _, err = tx.Exec("UPDATE notes SET deleted = ?, dirty = ?, body = ? WHERE book_uuid = ?", true, true, "", bookUUID); err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "removing notes in the book")
 	}
 
 	// override the label with a random string
 	uniqLabel := utils.GenerateUUID()
 	if _, err = tx.Exec("UPDATE books SET deleted = ?, dirty = ?, label = ? WHERE uuid = ?", true, true, uniqLabel, bookUUID); err != nil {
+		tx.Rollback()
 		return errors.Wrap(err, "removing the book")
 	}
 
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "committing transaction")
+	}
 
 	log.Success("removed book\n")
 
