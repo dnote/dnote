@@ -245,7 +245,7 @@ func mergeBook(tx *database.DB, b client.SyncFragBook, mode int) error {
 			return errors.Wrapf(err, "inserting note with uuid %s", b.UUID)
 		}
 	} else if mode == modeUpdate {
-		// TODO: if the client copy is dirty, perform field-by-field merge and report conflict instead of overwriting
+		// The state from the server overwrites the local state. In other words, the server change always wins.
 		if _, err := tx.Exec("UPDATE books SET usn = ?, uuid = ?, label = ?, deleted = ? WHERE uuid = ?",
 			b.USN, b.UUID, b.Label, b.Deleted, b.UUID); err != nil {
 			return errors.Wrapf(err, "updating local book %s", b.UUID)
