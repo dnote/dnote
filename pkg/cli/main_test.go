@@ -272,6 +272,53 @@ func TestEditNote(t *testing.T) {
 	})
 }
 
+func TestEditBook(t *testing.T) {
+	t.Run("name flag", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		testutils.Setup1(t, db)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "js", "-n", "js-edited")
+		defer testutils.RemoveDir(t, opts.HomeDir)
+
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+
+		assert.Equalf(t, bookCount, 2, "book count mismatch")
+		assert.Equalf(t, noteCount, 1, "note count mismatch")
+
+		var b1, b2 database.Book
+		var n1 database.Note
+		database.MustScan(t, "getting b1",
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "js-book-uuid"), &b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
+		database.MustScan(t, "getting b2",
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "linux-book-uuid"), &b2.UUID, &b2.Label, &b2.USN, &b2.Dirty)
+		database.MustScan(t, "getting n1",
+			db.QueryRow("SELECT uuid, body, added_on, deleted, dirty, usn FROM notes WHERE book_uuid = ? AND uuid = ?", "js-book-uuid", "43827b9a-c2b0-4c06-a290-97991c896653"),
+			&n1.UUID, &n1.Body, &n1.AddedOn, &n1.Deleted, &n1.Dirty, &n1.USN)
+
+		assert.Equal(t, b1.UUID, "js-book-uuid", "b1 should have UUID")
+		assert.Equal(t, b1.Label, "js-edited", "b1 Label mismatch")
+		assert.Equal(t, b1.USN, 0, "b1 USN mismatch")
+		assert.Equal(t, b1.Dirty, true, "b1 Dirty mismatch")
+
+		assert.Equal(t, b2.UUID, "linux-book-uuid", "b2 should have UUID")
+		assert.Equal(t, b2.Label, "linux", "b2 Label mismatch")
+		assert.Equal(t, b2.USN, 0, "b2 USN mismatch")
+		assert.Equal(t, b2.Dirty, false, "b2 Dirty mismatch")
+
+		assert.Equal(t, n1.UUID, "43827b9a-c2b0-4c06-a290-97991c896653", "n1 UUID mismatch")
+		assert.Equal(t, n1.Body, "Booleans have toString()", "n1 Body mismatch")
+		assert.Equal(t, n1.AddedOn, int64(1515199943), "n1 AddedOn mismatch")
+		assert.Equal(t, n1.Deleted, false, "n1 Deleted mismatch")
+		assert.Equal(t, n1.Dirty, false, "n1 Dirty mismatch")
+		assert.Equal(t, n1.USN, 0, "n1 USN mismatch")
+	})
+}
+
 func TestRemoveNote(t *testing.T) {
 	// Setup
 	db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
