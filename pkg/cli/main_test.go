@@ -272,6 +272,37 @@ func TestEditNote(t *testing.T) {
 	})
 }
 
+func TestEditBook(t *testing.T) {
+	t.Run("name flag", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+
+		b1UUID := "js-book-uuid"
+		database.MustExec(t, "setting up book 1", db, "INSERT INTO books (uuid, label, usn) VALUES (?, ?, ?)", b1UUID, "js", 111)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "js", "-n", "js-edited")
+		defer testutils.RemoveDir(t, opts.HomeDir)
+
+		// Test
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 0, "note count mismatch")
+
+		var b1 database.Book
+		database.MustScan(t, "getting b1",
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID), &b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
+
+		assert.Equal(t, b1.UUID, b1UUID, "b1 should have UUID")
+		assert.Equal(t, b1.Label, "js-edited", "b1 Label mismatch")
+		assert.Equal(t, b1.USN, 111, "b1 USN mismatch")
+		assert.Equal(t, b1.Dirty, false, "b1 Dirty mismatch")
+	})
+}
+
 func TestRemoveNote(t *testing.T) {
 	// Setup
 	db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
