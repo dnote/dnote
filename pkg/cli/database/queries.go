@@ -148,7 +148,9 @@ func GetBookUUID(db *DB, label string) (string, error) {
 
 // UpdateBookName updates a book name
 func UpdateBookName(db *DB, uuid string, name string) error {
-	_, err := db.Exec(`UPDATE books SET label = ?  WHERE uuid = ?`, name, uuid)
+	_, err := db.Exec(`UPDATE books
+		SET label = ?, dirty = ?
+		WHERE uuid = ?`, name, true, uuid)
 	if err != nil {
 		return errors.Wrap(err, "updating the book")
 	}

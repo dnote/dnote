@@ -21,14 +21,11 @@ package testutils
 import (
 	"testing"
 
-	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 )
 
 // Setup1 sets up a dnote env #1
-func Setup1(t *testing.T, ctx context.DnoteCtx) {
-	db := ctx.DB
-
+func Setup1(t *testing.T, db *database.DB) {
 	b1UUID := "js-book-uuid"
 	b2UUID := "linux-book-uuid"
 

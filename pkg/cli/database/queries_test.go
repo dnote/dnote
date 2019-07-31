@@ -358,3 +358,27 @@ func TestUpdateNoteBook(t *testing.T) {
 	assert.Equal(t, int64(editedOn), now.UnixNano(), "editedOn mismatch")
 	assert.Equal(t, dirty, true, "dirty mismatch")
 }
+
+func TestUpdateBookName(t *testing.T) {
+	// set up
+	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
+	defer CloseTestDB(t, db)
+
+	b1UUID := "b1-uuid"
+	MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 8, false, false)
+
+	// execute
+	err := UpdateBookName(db, b1UUID, "b1-label-edited")
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "executing"))
+	}
+
+	// test
+	var b1 Book
+	MustScan(t, "getting the note record", db.QueryRow("SELECT uuid, label, dirty, usn, deleted FROM books WHERE uuid = ?", b1UUID), &b1.UUID, &b1.Label, &b1.Dirty, &b1.USN, &b1.Deleted)
+	assert.Equal(t, b1.UUID, b1UUID, "UUID mismatch")
+	assert.Equal(t, b1.Label, "b1-label-edited", "Label mismatch")
+	assert.Equal(t, b1.Dirty, true, "Dirty mismatch")
+	assert.Equal(t, b1.USN, 8, "USN mismatch")
+	assert.Equal(t, b1.Deleted, false, "Deleted mismatch")
+}
