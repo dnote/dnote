@@ -97,7 +97,7 @@ func updateNote(ctx context.DnoteCtx, tx *database.DB, note database.Note, bookN
 }
 
 func runNote(ctx context.DnoteCtx, rowIDArg string) error {
-	err := validateRunBookFlags()
+	err := validateRunNoteFlags()
 	if err != nil {
 		return errors.Wrap(err, "validating flags.")
 	}

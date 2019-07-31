@@ -8,6 +8,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/dnote/dnote/pkg/cli/ui"
+	"github.com/dnote/dnote/pkg/cli/validate"
 	"github.com/pkg/errors"
 )
 
@@ -68,6 +69,11 @@ func runBook(ctx context.DnoteCtx, bookName string) error {
 	name, err := getName(ctx)
 	if err != nil {
 		return errors.Wrap(err, "getting name")
+	}
+
+	err = validate.BookName(name)
+	if err != nil {
+		return errors.Wrap(err, "validating book name")
 	}
 
 	tx, err := ctx.DB.Begin()
