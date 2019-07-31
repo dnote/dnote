@@ -22,21 +22,35 @@ func validateRunBookFlags() error {
 	return nil
 }
 
-func waitEditorBookName(ctx context.DnoteCtx) error {
+func waitEditorBookName(ctx context.DnoteCtx) (string, error) {
 	fpath, err := ui.GetTmpContentPath(ctx)
 	if err != nil {
-		return errors.Wrap(err, "getting temporarily content file path")
+		return "", errors.Wrap(err, "getting temporarily content file path")
 	}
 
-	if err := ui.GetEditorInput(ctx, fpath, &nameFlag); err != nil {
-		return errors.Wrap(err, "getting editor input")
+	c, err := ui.GetEditorInput(ctx, fpath)
+	if err != nil {
+		return "", errors.Wrap(err, "getting editor input")
 	}
 
 	// remove the newline at the end because files end with linebreaks in POSIX
-	nameFlag = strings.TrimSuffix(nameFlag, "\n")
-	nameFlag = strings.TrimSuffix(nameFlag, "\r\n")
+	c = strings.TrimSuffix(c, "\n")
+	c = strings.TrimSuffix(c, "\r\n")
 
-	return nil
+	return c, nil
+}
+
+func getName(ctx context.DnoteCtx) (string, error) {
+	if nameFlag != "" {
+		return nameFlag, nil
+	}
+
+	c, err := waitEditorBookName(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to get editor input")
+	}
+
+	return c, nil
 }
 
 func runBook(ctx context.DnoteCtx, bookName string) error {
@@ -51,11 +65,9 @@ func runBook(ctx context.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "getting book uuid")
 	}
 
-	if nameFlag == "" {
-		err := waitEditorBookName(ctx)
-		if err != nil {
-			return errors.Wrap(err, "getting content from editor")
-		}
+	name, err := getName(ctx)
+	if err != nil {
+		return errors.Wrap(err, "getting name")
 	}
 
 	tx, err := ctx.DB.Begin()
@@ -63,7 +75,7 @@ func runBook(ctx context.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	err = database.UpdateBookName(tx, uuid, nameFlag)
+	err = database.UpdateBookName(tx, uuid, name)
 	if err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "updating the book name")

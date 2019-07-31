@@ -21,21 +21,35 @@ func validateRunNoteFlags() error {
 	return nil
 }
 
-func waitEditorNoteContent(ctx context.DnoteCtx, note database.Note, dest *string) error {
+func waitEditorNoteContent(ctx context.DnoteCtx, note database.Note) (string, error) {
 	fpath, err := ui.GetTmpContentPath(ctx)
 	if err != nil {
-		return errors.Wrap(err, "getting temporarily content file path")
+		return "", errors.Wrap(err, "getting temporarily content file path")
 	}
 
 	if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
-		return errors.Wrap(err, "preparing tmp content file")
+		return "", errors.Wrap(err, "preparing tmp content file")
 	}
 
-	if err := ui.GetEditorInput(ctx, fpath, dest); err != nil {
-		return errors.Wrap(err, "getting editor input")
+	c, err := ui.GetEditorInput(ctx, fpath)
+	if err != nil {
+		return "", errors.Wrap(err, "getting editor input")
 	}
 
-	return nil
+	return c, nil
+}
+
+func getContent(ctx context.DnoteCtx, note database.Note) (string, error) {
+	if contentFlag != "" {
+		return contentFlag, nil
+	}
+
+	c, err := waitEditorNoteContent(ctx, note)
+	if err != nil {
+		return "", errors.Wrap(err, "getting content from editor")
+	}
+
+	return c, nil
 }
 
 func changeContent(ctx context.DnoteCtx, tx *database.DB, note database.Note, content string) error {
@@ -101,12 +115,16 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
+	content := contentFlag
+
 	// If no flag was provided, launch an editor to get the content
 	if bookFlag == "" && contentFlag == "" {
-		err := waitEditorNoteContent(ctx, note, &contentFlag)
+		c, err := getContent(ctx, note)
 		if err != nil {
 			return errors.Wrap(err, "getting content from editor")
 		}
+
+		content = c
 	}
 
 	tx, err := ctx.DB.Begin()
@@ -114,7 +132,7 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	err = updateNote(ctx, tx, note, bookFlag, contentFlag)
+	err = updateNote(ctx, tx, note, bookFlag, content)
 	if err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "updating note fields")

@@ -87,25 +87,25 @@ func newEditorCmd(ctx context.DnoteCtx, fpath string) (*exec.Cmd, error) {
 
 // GetEditorInput gets the user input by launching a text editor and waiting for
 // it to exit
-func GetEditorInput(ctx context.DnoteCtx, fpath string, content *string) error {
+func GetEditorInput(ctx context.DnoteCtx, fpath string) (string, error) {
 	ok, err := utils.FileExists(fpath)
 	if err != nil {
-		return errors.Wrapf(err, "checking if the file exists at %s", fpath)
+		return "", errors.Wrapf(err, "checking if the file exists at %s", fpath)
 	}
 	if !ok {
 		f, err := os.Create(fpath)
 		if err != nil {
-			return errors.Wrap(err, "creating a temporary content file")
+			return "", errors.Wrap(err, "creating a temporary content file")
 		}
 		err = f.Close()
 		if err != nil {
-			return errors.Wrap(err, "closing the temporary content file")
+			return "", errors.Wrap(err, "closing the temporary content file")
 		}
 	}
 
 	cmd, err := newEditorCmd(ctx, fpath)
 	if err != nil {
-		return errors.Wrap(err, "creating an editor command")
+		return "", errors.Wrap(err, "creating an editor command")
 	}
 
 	cmd.Stdin = os.Stdin
@@ -114,26 +114,25 @@ func GetEditorInput(ctx context.DnoteCtx, fpath string, content *string) error {
 
 	err = cmd.Start()
 	if err != nil {
-		return errors.Wrapf(err, "launching an editor")
+		return "", errors.Wrapf(err, "launching an editor")
 	}
 
 	err = cmd.Wait()
 	if err != nil {
-		return errors.Wrap(err, "waiting for the editor")
+		return "", errors.Wrap(err, "waiting for the editor")
 	}
 
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
-		return errors.Wrap(err, "reading the temporary content file")
+		return "", errors.Wrap(err, "reading the temporary content file")
 	}
 
 	err = os.Remove(fpath)
 	if err != nil {
-		return errors.Wrap(err, "removing the temporary content file")
+		return "", errors.Wrap(err, "removing the temporary content file")
 	}
 
 	raw := string(b)
-	*content = raw
 
-	return nil
+	return raw, nil
 }
