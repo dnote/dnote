@@ -109,6 +109,30 @@ func GetNoteInfo(db *DB, noteRowID int) (NoteInfo, error) {
 	return ret, nil
 }
 
+// BookInfo is a basic information about a book
+type BookInfo struct {
+	RowID int
+	UUID  string
+	Name  string
+}
+
+// GetBookInfo returns a BookInfo for the book with the given uuid
+func GetBookInfo(db *DB, uuid string) (BookInfo, error) {
+	var ret BookInfo
+
+	err := db.QueryRow(`SELECT books.rowid, books.uuid, books.label
+			FROM books
+			WHERE books.uuid = ? AND books.deleted = false`, uuid).
+		Scan(&ret.RowID, &ret.UUID, &ret.Name)
+	if err == sql.ErrNoRows {
+		return ret, errors.Errorf("book %s not found", uuid)
+	} else if err != nil {
+		return ret, errors.Wrap(err, "querying the note")
+	}
+
+	return ret, nil
+}
+
 // GetBookUUID returns a uuid of a book given a label
 func GetBookUUID(db *DB, label string) (string, error) {
 	var ret string
@@ -120,6 +144,16 @@ func GetBookUUID(db *DB, label string) (string, error) {
 	}
 
 	return ret, nil
+}
+
+// UpdateBookName updates a book name
+func UpdateBookName(db *DB, uuid string, name string) error {
+	_, err := db.Exec(`UPDATE books SET label = ?  WHERE uuid = ?`, name, uuid)
+	if err != nil {
+		return errors.Wrap(err, "updating the book")
+	}
+
+	return nil
 }
 
 // GetActiveNote gets the note which has the given rowid and is not deleted

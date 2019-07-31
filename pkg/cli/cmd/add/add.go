@@ -20,7 +20,6 @@ package add
 
 import (
 	"database/sql"
-	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -31,11 +30,10 @@ import (
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/dnote/dnote/pkg/cli/upgrade"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"github.com/dnote/dnote/pkg/cli/validate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
-
-var reservedBookNames = []string{"trash", "conflicts"}
 
 var contentFlag string
 
@@ -71,46 +69,11 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func isReservedName(name string) bool {
-	for _, n := range reservedBookNames {
-		if name == n {
-			return true
-		}
-	}
-
-	return false
-}
-
-// ErrBookNameReserved is an error incidating that the specified book name is reserved
-var ErrBookNameReserved = errors.New("The book name is reserved")
-
-// ErrBookNameNumeric is an error for book names that only contain numbers
-var ErrBookNameNumeric = errors.New("The book name cannot contain only numbers")
-
-// ErrBookNameHasSpace is an error for book names that have any space
-var ErrBookNameHasSpace = errors.New("The book name cannot contain spaces")
-
-func validateBookName(name string) error {
-	if isReservedName(name) {
-		return ErrBookNameReserved
-	}
-
-	if utils.IsNumber(name) {
-		return ErrBookNameNumeric
-	}
-
-	if strings.Contains(name, " ") {
-		return ErrBookNameHasSpace
-	}
-
-	return nil
-}
-
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		bookName := args[0]
 
-		if err := validateBookName(bookName); err != nil {
+		if err := validate.BookName(bookName); err != nil {
 			return errors.Wrap(err, "invalid book name")
 		}
 
@@ -190,10 +153,15 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 			WHERE notes.uuid = ?`, noteUUID).
 		Scan(&noteRowID)
 	if err != nil {
+		tx.Rollback()
 		return noteRowID, errors.Wrap(err, "getting the note rowid")
 	}
 
-	tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return noteRowID, errors.Wrap(err, "committing a transaction")
+	}
 
 	return noteRowID, nil
 }

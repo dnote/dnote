@@ -16,7 +16,7 @@
  * along with Dnote CLI.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package add
+package validate
 
 import (
 	"fmt"
@@ -37,6 +37,10 @@ func TestValidateBookName(t *testing.T) {
 		{
 			input:    "node.js",
 			expected: nil,
+		},
+		{
+			input:    "",
+			expected: ErrBookNameEmpty,
 		},
 		{
 			input:    "foo bar",
@@ -87,6 +91,56 @@ func TestValidateBookName(t *testing.T) {
 			expected: ErrBookNameHasSpace,
 		},
 
+		// multiline
+		{
+			input:    "\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "\n\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\nbar\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\nbar\nbaz",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "\r\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "\r\n\r\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\r\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\r\nbar\r\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\r\nbar\r\nbaz",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "\n\r\n",
+			expected: ErrBookNameMultiline,
+		},
+		{
+			input:    "foo\nbar\r\n",
+			expected: ErrBookNameMultiline,
+		},
+
 		// reserved book names
 		{
 			input:    "trash",
@@ -99,7 +153,7 @@ func TestValidateBookName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actual := validateBookName(tc.input)
+		actual := BookName(tc.input)
 
 		assert.Equal(t, actual, tc.expected, fmt.Sprintf("result does not match for the input '%s'", tc.input))
 	}
