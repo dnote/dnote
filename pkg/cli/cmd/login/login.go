@@ -97,6 +97,8 @@ func Do(ctx context.DnoteCtx, email, password string) error {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		log.Plain("Welcome to Dnote Pro (https://dnote.io).\n")
+
 		var email, password string
 		if err := ui.PromptInput("email", &email); err != nil {
 			return errors.Wrap(err, "getting email input")
