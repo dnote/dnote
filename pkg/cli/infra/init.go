@@ -296,6 +296,8 @@ func getEditorCommand() string {
 		ret = "atom -w"
 	case "subl":
 		ret = "subl -n -w"
+	case "code":
+		ret = "code -n -w"
 	case "mate":
 		ret = "mate -w"
 	case "vim":
