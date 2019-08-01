@@ -45,7 +45,7 @@ dnote view 12
 
 _alias: e_
 
-Edit a note.
+Edit a note or a book.
 
 ```bash
 # Launch a text editor to edit a note with the given id.
@@ -53,20 +53,26 @@ dnote edit 12
 
 # Edit a note with the given id in the specified book with a content.
 dnote edit 12 -c "New Content"
+
+# Launch a text editor to edit a book name.
+dnote edit js
+
+# Edit a book name by using a flag.
+dnote edit js -n "javascript"
 ```
 
 ## dnote remove
 
-_alias: d_
+_alias: rm, d_
 
 Remove either a note or a book.
 
 ```bash
-# Remove the note with an id in the specified book.
+# Remove a note with an id.
 dnote remove 1
 
-# Remove the book with the `book name`.
-dnote remove -b JS
+# Remove a book with the `book name`.
+dnote remove js
 ```
 
 ## dnote find

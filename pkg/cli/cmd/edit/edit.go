@@ -51,7 +51,7 @@ var example = `
 // NewCmd returns a new edit command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "edit",
+		Use:     "edit <note id|book name>",
 		Short:   "Edit a note or a book",
 		Aliases: []string{"e"},
 		Example: example,

@@ -37,28 +37,39 @@ var bookFlag string
 var yesFlag bool
 
 var example = `
-  * Delete a note by its id
+  * Delete a note by id
   dnote delete 2
 
-  * Delete a book
-  dnote delete -b js
+  * Delete a book by name
+  dnote delete js
 `
 
 // NewCmd returns a new remove command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "remove",
+		Use:     "remove <note id|book name>",
 		Short:   "Remove a note or a book",
 		Aliases: []string{"rm", "d", "delete"},
 		Example: example,
+		PreRunE: preRun,
 		RunE:    newRun(ctx),
 	}
 
 	f := cmd.Flags()
 	f.StringVarP(&bookFlag, "book", "b", "", "The book name to delete")
-	f.BoolVarP(&yesFlag, "yes", "y", false, "Automatically respond yes to prompts")
+	f.BoolVarP(&yesFlag, "yes", "y", false, "Assume yes to the prompts and run in non-interactive mode")
+
+	f.MarkDeprecated("book", "Pass the book name as an argument. e.g. `dnote rm book_name`")
 
 	return cmd
+}
+
+func preRun(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 && len(args) != 2 {
+		return errors.New("Incorrect number of argument")
+	}
+
+	return nil
 }
 
 func maybeConfirm(message string, defaultValue bool) (bool, error) {
@@ -71,40 +82,50 @@ func maybeConfirm(message string, defaultValue bool) (bool, error) {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		// DEPRECATED: Remove in 1.0.0
 		if bookFlag != "" {
-			if err := removeBook(ctx, bookFlag); err != nil {
+			if err := runBook(ctx, bookFlag); err != nil {
 				return errors.Wrap(err, "removing the book")
 			}
 
 			return nil
 		}
 
-		var noteRowIDArg string
+		// DEPRECATED: Remove in 1.0.0
 		if len(args) == 2 {
 			log.Plain(log.ColorYellow.Sprintf("DEPRECATED: you no longer need to pass book name to the remove command. e.g. `dnote remove 123`.\n\n"))
 
-			noteRowIDArg = args[1]
-		} else if len(args) == 1 {
-			noteRowIDArg = args[0]
+			target := args[1]
+			if err := runNote(ctx, target); err != nil {
+				return errors.Wrap(err, "removing the note")
+			}
+
+			return nil
+		}
+
+		target := args[0]
+
+		if utils.IsNumber(target) {
+			if err := runNote(ctx, target); err != nil {
+				return errors.Wrap(err, "removing the note")
+			}
 		} else {
-			return errors.New("Missing argument")
-		}
-
-		noteRowID, err := strconv.Atoi(noteRowIDArg)
-		if err != nil {
-			return errors.Wrap(err, "invalid rowid")
-		}
-
-		if err := removeNote(ctx, noteRowID); err != nil {
-			return errors.Wrap(err, "removing the note")
+			if err := runBook(ctx, target); err != nil {
+				return errors.Wrap(err, "removing the book")
+			}
 		}
 
 		return nil
 	}
 }
 
-func removeNote(ctx context.DnoteCtx, noteRowID int) error {
+func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 	db := ctx.DB
+
+	noteRowID, err := strconv.Atoi(rowIDArg)
+	if err != nil {
+		return errors.Wrap(err, "invalid rowid")
+	}
 
 	noteInfo, err := database.GetNoteInfo(db, noteRowID)
 	if err != nil {
@@ -143,7 +164,7 @@ func removeNote(ctx context.DnoteCtx, noteRowID int) error {
 	return nil
 }
 
-func removeBook(ctx context.DnoteCtx, bookLabel string) error {
+func runBook(ctx context.DnoteCtx, bookLabel string) error {
 	db := ctx.DB
 
 	bookUUID, err := database.GetBookUUID(db, bookLabel)

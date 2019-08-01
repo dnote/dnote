@@ -38,7 +38,7 @@ var example = `
  dnote ls javascript
  `
 
-var deprecationWarning = `and "view" will replace it in v1.0.0.
+var deprecationWarning = `and "view" will replace it in the future version.
 
 Run "dnote view --help" for more information.
 `
