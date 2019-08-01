@@ -61,10 +61,10 @@ func Setup3(t *testing.T, db *database.DB) {
 func Setup4(t *testing.T, db *database.DB) {
 	b1UUID := "js-book-uuid"
 
-	database.MustExec(t, "setting up book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "js")
+	database.MustExec(t, "setting up book 1", db, "INSERT INTO books (uuid, label, usn) VALUES (?, ?, ?)", b1UUID, "js", 111)
 
-	database.MustExec(t, "setting up note 1", db, "INSERT INTO notes (rowid, uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?, ?)", 1, "43827b9a-c2b0-4c06-a290-97991c896653", b1UUID, "Booleans have toString()", 1515199943)
-	database.MustExec(t, "setting up note 2", db, "INSERT INTO notes (rowid, uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?, ?)", 2, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", b1UUID, "Date object implements mathematical comparisons", 1515199951)
+	database.MustExec(t, "setting up note 1", db, "INSERT INTO notes (rowid, uuid, book_uuid, body, added_on, usn) VALUES (?, ?, ?, ?, ?, ?)", 1, "43827b9a-c2b0-4c06-a290-97991c896653", b1UUID, "Booleans have toString()", 1515199943, 11)
+	database.MustExec(t, "setting up note 2", db, "INSERT INTO notes (rowid, uuid, book_uuid, body, added_on, usn) VALUES (?, ?, ?, ?, ?, ?)", 2, "f0d0fbb7-31ff-45ae-9f0f-4e429c0c797f", b1UUID, "Date object implements mathematical comparisons", 1515199951, 12)
 }
 
 // Setup5 sets up a dnote env #2
