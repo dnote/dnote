@@ -122,7 +122,7 @@ endif
 	@(cd "${cliHomebrewDir}" && \
 		./release.sh \
 			"$(version)" \
-			"${shasum -a 256 "${outputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1}" \
+			"${shasum -a 256 "${cliOutputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1}" \
 	)
 .PHONY: release-cli
 
