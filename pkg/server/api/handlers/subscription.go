@@ -89,6 +89,18 @@ func addCustomerSource(customerID, sourceID string) (*stripe.PaymentSource, erro
 	return src, nil
 }
 
+func removeCustomerSource(customerID, sourceID string) (*stripe.Source, error) {
+	params := &stripe.SourceObjectDetachParams{
+		Customer: stripe.String(customerID),
+	}
+	s, err := source.Detach(sourceID, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
 func createCustomerSubscription(customerID, planID string) (*stripe.Subscription, error) {
 	subParams := &stripe.SubscriptionParams{
 		Customer: stripe.String(customerID),
@@ -384,6 +396,79 @@ func getStripeCard(stripeCustomerID, sourceID string) (*stripe.Card, error) {
 	}
 
 	return nil, errors.Errorf("malformed sourceID %s", sourceID)
+}
+
+type updateStripeSourcePayload struct {
+	Source  stripe.Source `json:"source"`
+	Country string        `json:"country"`
+}
+
+func validateUpdateStripeSourcePayload(p updateStripeSourcePayload) error {
+	if p.Source.ID == "" {
+		return errors.New("empty source id")
+	}
+	if p.Country == "" {
+		return errors.New("empty country")
+	}
+
+	return nil
+}
+
+func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		return
+	}
+
+	var payload updateStripeSourcePayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		handleError(w, "decoding params", err, http.StatusBadRequest)
+		return
+	}
+	if err := validateUpdateStripeSourcePayload(payload); err != nil {
+		http.Error(w, errors.Wrap(err, "validating payload").Error(), http.StatusBadRequest)
+		return
+	}
+
+	db := database.DBConn
+	tx := db.Begin()
+
+	if err := tx.Model(&user).
+		Update(map[string]interface{}{
+			"billing_country": payload.Country,
+		}).Error; err != nil {
+		tx.Rollback()
+		handleError(w, "updating user", err, http.StatusInternalServerError)
+		return
+	}
+
+	c, err := customer.Get(user.StripeCustomerID, nil)
+	if err != nil {
+		tx.Rollback()
+		handleError(w, "retriving customer", err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := removeCustomerSource(user.StripeCustomerID, c.DefaultSource.ID); err != nil {
+		tx.Rollback()
+		handleError(w, "removing source", err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := addCustomerSource(user.StripeCustomerID, payload.Source.ID); err != nil {
+		tx.Rollback()
+		handleError(w, "attaching source", err, http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		handleError(w, "committing transaction", err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {

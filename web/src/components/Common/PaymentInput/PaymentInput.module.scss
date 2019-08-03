@@ -21,40 +21,29 @@
 @import '../../App/font';
 @import '../../App/rem';
 
-.wrapper {
-  margin-top: rem(52px);
+.input {
+  margin-top: rem(8px);
 }
 
-.cvc,
-.expiry {
-  width: rem(100px);
+.card-row {
+  display: flex;
 }
 
-.flash {
-  margin-bottom: rem(24px);
+.number {
+  flex-grow: 1;
 }
 
-.heading {
-  @include font-size('3x-large');
-  font-weight: 400;
-}
+.card-number {
+  // match the height of the stripe element with other inputs
+  padding: rem(10.4px) rem(12px);
+  border: 2px solid $border-color;
 
-.content-wrapper {
-  @include breakpoint(lg) {
-    padding-right: rem(52px);
+  &.card-number-active {
+    border: 2px solid $third;
   }
 }
 
-.content {
-  margin-top: rem(32px);
-}
-
-.input-row {
-  &:not(:first-child) {
-    margin-top: rem(20px);
-  }
-}
-
-.label {
-  @include font-size('medium');
+.countries-select {
+  width: 100%;
+  display: block;
 }

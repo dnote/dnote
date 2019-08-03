@@ -21,9 +21,9 @@ import classnames from 'classnames';
 
 import styles from './SettingRow.module.scss';
 
-function SettingRow({ name, desc, value, actionContent }) {
+function SettingRow({ name, desc, value, actionContent, id }) {
   return (
-    <div className={classnames(styles.wrapper, styles.row)}>
+    <div className={classnames(styles.wrapper, styles.row)} id={id}>
       <div>
         <h3 className={styles.name}>{name}</h3>
         <p className={styles.desc}>{desc}</p>
