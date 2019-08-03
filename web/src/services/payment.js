@@ -52,3 +52,12 @@ export function reactivateSubscription({ subscriptionId }) {
 export function getSource() {
   return apiClient.get('/stripe_source');
 }
+
+export function updateSource({ source, country }) {
+  const payload = {
+    source,
+    country
+  };
+
+  return apiClient.patch('/stripe_source', payload);
+}

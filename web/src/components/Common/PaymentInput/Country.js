@@ -17,24 +17,30 @@
  */
 
 import React from 'react';
+
 import classnames from 'classnames';
 
-import styles from './SettingRow.module.scss';
+import CountrySelect from './CountrySelect';
+import styles from './PaymentInput.module.scss';
 
-function SettingRow({ name, desc, value, actionContent, id }) {
+function NameOnCard({ value, onUpdate, containerClassName, labelClassName }) {
   return (
-    <div className={classnames(styles.wrapper, styles.row)} id={id}>
-      <div>
-        <h3 className={styles.name}>{name}</h3>
-        <p className={styles.desc}>{desc}</p>
-      </div>
-
-      <div className={styles.right}>
-        {value}
-        <div className={styles.action}>{actionContent}</div>
-      </div>
+    <div className={classnames(containerClassName)}>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label htmlFor="billing-country" className="label-full">
+        <span className={classnames(labelClassName)}>Country</span>
+        <CountrySelect
+          id="billing-country"
+          className={classnames(styles['countries-select'], styles.input)}
+          value={value}
+          onChange={e => {
+            const val = e.target.value;
+            onUpdate(val);
+          }}
+        />
+      </label>
     </div>
   );
 }
 
-export default SettingRow;
+export default NameOnCard;

@@ -25,6 +25,7 @@ import Header from '../../Common/Page/Header';
 import Body from '../../Common/Page/Body';
 import Flash from '../../Common/Flash';
 import CancelPlanModal from './CancelPlanModal';
+import PaymentMethodModal from './PaymentMethodModal';
 import {
   getSubscription,
   clearSubscription,
@@ -35,6 +36,7 @@ import SettingRow from '../SettingRow';
 import PlanRow from './PlanRow';
 import Placeholder from './Placeholder';
 import * as paymentService from '../../../services/payment';
+import { useScript } from '../../../libs/hooks';
 
 import settingsStyles from '../Settings.module.scss';
 
@@ -104,7 +106,11 @@ function CancelRow({ setIsPlanModalOpen }) {
   );
 }
 
-function PaymentMethodRow({ source }) {
+function PaymentMethodRow({
+  stripeLoaded,
+  source,
+  setIsPaymentMethodModalOpen
+}) {
   let value;
   if (source.brand) {
     value = `${source.brand} ending in ${source.last4}. expiry ${
@@ -114,18 +120,39 @@ function PaymentMethodRow({ source }) {
     value = 'No payment method';
   }
 
-  return <SettingRow name="Payment method" value={value} />;
+  return (
+    <SettingRow
+      id="T-payment-method-row"
+      name="Payment method"
+      value={value}
+      actionContent={
+        <button
+          id="T-update-payment-method-button"
+          className={classnames('button-no-ui', settingsStyles.edit)}
+          type="button"
+          onClick={() => {
+            setIsPaymentMethodModalOpen(true);
+          }}
+          disabled={!stripeLoaded}
+        >
+          Update
+        </button>
+      }
+    />
+  );
 }
 
 function Content({
   subscription,
   source,
   setIsPlanModalOpen,
+  setIsPaymentMethodModalOpen,
   successMsg,
   failureMsg,
   setSuccessMsg,
   setFailureMsg,
-  doGetSubscription
+  doGetSubscription,
+  stripeLoaded
 }) {
   return (
     <div className="container-wide">
@@ -177,8 +204,27 @@ function Content({
           <section className={settingsStyles.section}>
             <h2 className={settingsStyles['section-heading']}>Payment</h2>
 
-            <PaymentMethodRow source={source} />
+            <PaymentMethodRow
+              source={source}
+              setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
+              stripeLoaded={stripeLoaded}
+            />
           </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorMessage({ desc, message }) {
+  return (
+    <div className="container-wide">
+      <div className="row">
+        <div className="col-12 col-md-12 col-lg-10">
+          <Flash type="danger" wrapperClassName={settingsStyles.flash}>
+            <div>{desc}</div>
+            {message}
+          </Flash>
         </div>
       </div>
     </div>
@@ -194,8 +240,13 @@ function Billing({
   doClearSource
 }) {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isPaymentMethodModalOpen, setIsPaymentMethodModalOpen] = useState(
+    false
+  );
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
+
+  const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
 
   useEffect(() => {
     doGetSubscription();
@@ -210,6 +261,13 @@ function Billing({
   const subscription = subscriptionData.data;
   const source = sourceData.data;
 
+  const key = `${__STRIPE_PUBLIC_KEY__}`;
+
+  let stripe = null;
+  if (stripeLoaded) {
+    stripe = window.Stripe(key);
+  }
+
   return (
     <div>
       <Helmet>
@@ -220,28 +278,22 @@ function Billing({
 
       <Body>
         {subscriptionData.errorMessage && (
-          <div className="container-wide">
-            <div className="row">
-              <div className="col-12 col-md-12 col-lg-10">
-                <Flash type="danger" wrapperClassName={settingsStyles.flash}>
-                  <div>Failed to fetch the billing information</div>
-                  {subscriptionData.errorMessage}
-                </Flash>
-              </div>
-            </div>
-          </div>
+          <ErrorMessage
+            desc="Failed to fetch the billing information"
+            message={subscriptionData.errorMessage}
+          />
         )}
         {sourceData.errorMessage && (
-          <div className="container-wide">
-            <div className="row">
-              <div className="col-12 col-md-12 col-lg-10">
-                <Flash type="danger" wrapperClassName={settingsStyles.flash}>
-                  <div>Failed to fetch the payment source</div>
-                  {sourceData.errorMessage}
-                </Flash>
-              </div>
-            </div>
-          </div>
+          <ErrorMessage
+            desc="Failed to fetch the payment source"
+            message={sourceData.errorMessage}
+          />
+        )}
+        {stripeLoadError && (
+          <ErrorMessage
+            desc="Failed to load Stripe"
+            message={stripeLoadError}
+          />
         )}
 
         {!subscriptionData.isFetched || !sourceData.isFetched ? (
@@ -256,6 +308,8 @@ function Billing({
             setSuccessMsg={setSuccessMsg}
             setFailureMsg={setFailureMsg}
             doGetSubscription={doGetSubscription}
+            setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
+            stripeLoaded={stripeLoaded}
           />
         )}
       </Body>
@@ -269,6 +323,16 @@ function Billing({
         setSuccessMsg={setSuccessMsg}
         setFailureMsg={setFailureMsg}
         doGetSubscription={doGetSubscription}
+      />
+
+      <PaymentMethodModal
+        isOpen={isPaymentMethodModalOpen}
+        onDismiss={() => {
+          setIsPaymentMethodModalOpen(false);
+        }}
+        setSuccessMsg={setSuccessMsg}
+        doGetSource={doGetSource}
+        stripe={stripe}
       />
     </div>
   );
