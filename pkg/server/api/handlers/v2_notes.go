@@ -38,7 +38,7 @@ type createNoteV2Payload struct {
 
 func validateCreateNoteV2Payload(p createNoteV2Payload) error {
 	if p.BookUUID == "" {
-		return errors.New("bookUUID is required")
+		return errors.New("book_uuid is required")
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (a *App) CreateNoteV2(w http.ResponseWriter, r *http.Request) {
 
 	err = validateCreateNoteV2Payload(params)
 	if err != nil {
-		handleError(w, "validating payload", err, http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

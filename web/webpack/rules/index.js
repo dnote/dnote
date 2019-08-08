@@ -21,7 +21,7 @@ const javascript = require('./javascript');
 const css = require('./css');
 
 module.exports = ({ production = false } = {}) => [
-  javascript({ production }),
+  ...javascript({ production }),
   ...css({ production }),
   image()
 ];

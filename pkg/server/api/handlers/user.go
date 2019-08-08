@@ -23,16 +23,16 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/api/crypt"
 	"github.com/dnote/dnote/pkg/server/api/helpers"
-	"github.com/dnote/dnote/pkg/server/api/operations"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type updateProfilePayload struct {
-	Name string `json:"name"`
+	Email string `json:"email"`
 }
 
 // updateProfile updates user
@@ -48,68 +48,12 @@ func (a *App) updateProfile(w http.ResponseWriter, r *http.Request) {
 	var params updateProfilePayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		handleError(w, "decoding params", err, http.StatusInternalServerError)
+		http.Error(w, errors.Wrap(err, "invalid params").Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Validate
-	if len(params.Name) > 50 {
-		http.Error(w, "Name is too long", http.StatusBadRequest)
-		return
-	}
-
-	var account database.Account
-	err = db.Where("user_id = ?", user.ID).First(&account).Error
-	if err != nil {
-		handleError(w, "finding account", err, http.StatusInternalServerError)
-		return
-	}
-
-	tx := db.Begin()
-	user.Name = params.Name
-	if err := tx.Save(&user).Error; err != nil {
-		tx.Rollback()
-		handleError(w, "saving user", err, http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Save(&account).Error; err != nil {
-		tx.Rollback()
-		handleError(w, "saving user", err, http.StatusInternalServerError)
-		return
-	}
-	tx.Commit()
-
-	session := makeSession(user, account)
-	respondJSON(w, session)
-}
-
-type updateEmailPayload struct {
-	NewEmail        string `json:"new_email"`
-	NewCipherKeyEnc string `json:"new_cipher_key_enc"`
-	OldAuthKey      string `json:"old_auth_key"`
-	NewAuthKey      string `json:"new_auth_key"`
-}
-
-// updateEmail updates user
-func (a *App) updateEmail(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
-	if !ok {
-		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
-		return
-	}
-
-	var params updateEmailPayload
-	err := json.NewDecoder(r.Body).Decode(&params)
-	if err != nil {
-		handleError(w, "decoding params", err, http.StatusInternalServerError)
-		return
-	}
-
-	// Validate
-	if len(params.NewEmail) > 100 {
+	if len(params.Email) > 60 {
 		http.Error(w, "Email is too long", http.StatusBadRequest)
 		return
 	}
@@ -121,34 +65,35 @@ func (a *App) updateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authKeyHash := crypt.HashAuthKey(params.OldAuthKey, account.Salt, account.ServerKDFIteration)
-	if account.AuthKeyHash != authKeyHash {
-		http.Error(w, "wrong password", http.StatusUnauthorized)
-		return
-	}
-
-	if account.Email.String == params.NewEmail {
-		http.Error(w, "New email is the same as the old", http.StatusBadRequest)
-		return
-	}
-
 	tx := db.Begin()
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		handleError(w, "saving user", err, http.StatusInternalServerError)
+		return
+	}
 
-	account.Email = database.ToNullString(params.NewEmail)
-	account.CipherKeyEnc = params.NewCipherKeyEnc
-	account.AuthKeyHash = crypt.HashAuthKey(params.NewAuthKey, account.Salt, crypt.ServerKDFIteration)
-	account.ServerKDFIteration = crypt.ServerKDFIteration
-	account.EmailVerified = false
+	// check if email was changed
+	if params.Email != account.Email.String {
+		account.EmailVerified = false
+	}
+	account.Email.String = params.Email
 
 	if err := tx.Save(&account).Error; err != nil {
 		tx.Rollback()
 		handleError(w, "saving account", err, http.StatusInternalServerError)
 		return
 	}
+
 	tx.Commit()
 
-	session := makeSession(user, account)
-	respondJSON(w, session)
+	respondWithSession(w, user.ID, http.StatusOK)
+}
+
+type updateEmailPayload struct {
+	NewEmail        string `json:"new_email"`
+	NewCipherKeyEnc string `json:"new_cipher_key_enc"`
+	OldAuthKey      string `json:"old_auth_key"`
+	NewAuthKey      string `json:"new_auth_key"`
 }
 
 func respondWithCalendar(w http.ResponseWriter, userID int) {
@@ -219,7 +164,7 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Email already verified", http.StatusGone)
 		return
 	}
-	if !account.Email.Valid {
+	if account.Email.String == "" {
 		http.Error(w, "Email not set", http.StatusUnprocessableEntity)
 		return
 	}
@@ -326,7 +271,6 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := makeSession(user, account)
-	setAuthCookie(w, user)
 	respondJSON(w, session)
 }
 
@@ -398,10 +342,8 @@ func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
 }
 
 type updatePasswordPayload struct {
-	OldAuthKey      string `json:"old_auth_key"`
-	NewAuthKey      string `json:"new_auth_key"`
-	NewCipherKeyEnc string `json:"new_cipher_key_enc"`
-	NewKDFIteration int    `json:"new_kdf_iteration"`
+	OldPassword string `json:"old_password"`
+	NewPassword string `json:"new_password"`
 }
 
 func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
@@ -412,44 +354,47 @@ func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
 		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
-	var account database.Account
-	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		handleError(w, "getting account", err, http.StatusInternalServerError)
-		return
-	}
+
 	var params updatePasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		handleError(w, "decoding params", err, http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if params.OldPassword == "" || params.NewPassword == "" {
+		http.Error(w, "invalid params", http.StatusBadRequest)
 		return
 	}
 
-	oldAuthKeyHash := crypt.HashAuthKey(params.OldAuthKey, account.Salt, account.ServerKDFIteration)
-	if oldAuthKeyHash != account.AuthKeyHash {
-		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
+	var account database.Account
+	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		handleError(w, "getting user", nil, http.StatusInternalServerError)
+		return
+	}
+
+	password := []byte(params.OldPassword)
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
 		log.WithFields(log.Fields{
-			"account_id": account.ID,
-		}).Error("Existing password mismatch")
+			"user_id": user.ID,
+		}).Warn("invalid password update attempt")
+		http.Error(w, "Wrong password", http.StatusUnauthorized)
 		return
 	}
 
-	newAuthKeyHash := crypt.HashAuthKey(params.NewAuthKey, account.Salt, account.ServerKDFIteration)
-
-	if err := db.
-		Model(&account).
-		Updates(map[string]interface{}{
-			"auth_key_hash":        newAuthKeyHash,
-			"client_kdf_iteration": params.NewKDFIteration,
-			"server_kdf_iteration": account.ServerKDFIteration,
-			"cipher_key_enc":       params.NewCipherKeyEnc,
-		}).Error; err != nil {
-		handleError(w, "updating account", err, http.StatusInternalServerError)
+	if err := validatePassword(params.NewPassword); err != nil {
+		http.Error(w, errors.Wrap(err, "validating password").Error(), http.StatusUnauthorized)
 		return
 	}
 
-	if err := operations.DeleteUserSessions(db, user.ID); err != nil {
-		handleError(w, "deleting user sessions", err, http.StatusBadRequest)
+	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(params.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "hashing password").Error(), http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(w, user.ID, account.CipherKeyEnc)
+	if err := db.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+		http.Error(w, errors.Wrap(err, "updating password").Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

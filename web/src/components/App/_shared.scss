@@ -17,6 +17,7 @@
  */
 
 @import './font';
+@import './responsive';
 
 @keyframes holderPulse {
   0% {
@@ -46,12 +47,12 @@ textarea:disabled {
 }
 
 // Replace the default browser outline with custom focus indicator
-textarea:focus {
-  outline: none;
-}
-input:focus {
-  outline: none;
-}
+// textarea:focus {
+//   outline: none;
+// }
+// input:focus {
+//   outline: none;
+// }
 
 .list-unstyled {
   list-style: none;
@@ -84,17 +85,24 @@ button {
 }
 
 .text-input {
-  border: 2px solid $border-color;
-  padding: rem(4px) rem(12px);
+  border: 1px solid $border-color;
+  padding: rem(8px) rem(12px);
   position: relative;
-  border-radius: 2px;
+  border-radius: rem(4px);
   display: block;
 
   &::placeholder {
     color: $gray;
   }
   &:focus {
-    border: 2px solid $third;
+    border-color: $light-blue;
+    box-shadow: inset 0 1px 2px rgba(24, 31, 35, 0.075),
+      0 0 0 0.2em rgba(4, 100, 210, 0.3);
+    outline: none;
+  }
+
+  &.text-input-small {
+    padding: rem(4px) rem(12px);
   }
 
   &.text-input-medium {
@@ -116,4 +124,39 @@ a {
   &:hover {
     color: $link-hover;
   }
+}
+
+// normalize
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 0;
+}
+
+// grid
+.container.mobile-nopadding {
+  @include breakpoint(mdonly) {
+    max-width: 100%;
+  }
+
+  @include breakpoint(mddown) {
+    padding-left: 0;
+    padding-right: 0;
+
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    [class*='col-'] {
+      // Apply to all column(s) inside the row
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}
+html {
+  overflow-y: scroll;
 }

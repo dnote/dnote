@@ -43,7 +43,7 @@ func CreateBook(user database.User, clock clock.Clock, name string) (database.Bo
 		Label:     name,
 		AddedOn:   clock.Now().UnixNano(),
 		USN:       nextUSN,
-		Encrypted: true,
+		Encrypted: false,
 	}
 	if err := tx.Create(&book).Error; err != nil {
 		tx.Rollback()

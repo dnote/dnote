@@ -1,0 +1,64 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../../App/theme';
+@import '../../../App/responsive';
+@import '../../../App/rem';
+@import '../../../App/font';
+
+.combobox-option {
+  position: relative;
+  padding: rem(4px) rem(16px) rem(4px) rem(28px);
+  flex-grow: 1;
+  color: black;
+
+  &:hover {
+    background: $third;
+    color: white;
+    text-decoration: none;
+  }
+
+  &.active {
+    background: $light;
+  }
+
+  &.focused {
+    background: $third;
+    color: white;
+
+    .check {
+      #check-core {
+        fill: white;
+      }
+    }
+  }
+}
+
+.check-icon {
+  position: absolute;
+  left: rem(8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: rem(260px);
+}

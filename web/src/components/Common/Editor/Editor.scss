@@ -1,0 +1,66 @@
+@import '../../App/font';
+@import '../../App/theme';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+$border-radius: rem(4px);
+
+.content-wrapper {
+  display: flex;
+  position: relative;
+  border-top: none;
+  padding: rem(16px);
+}
+
+.wrapper {
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+}
+
+.actions {
+  text-align: right;
+  padding: 0 rem(16px) rem(16px) 0;
+}
+
+.row {
+  border-style: solid;
+  border-color: $border-color;
+  border-top-width: 0px;
+  border-bottom-width: 1px;
+  border-left-width: 0;
+  border-right-width: 0;
+}
+
+.editor-header {
+  padding: rem(8px) rem(16px) 0;
+}
+
+.tabs {
+  margin-bottom: -1px;
+  margin-top: rem(16px);
+}
+
+button.tab {
+  padding: rem(8px) rem(20px);
+  color: $gray;
+  @include font-size('small');
+
+  & ~ & {
+    margin-left: 0;
+  }
+
+  &:focus {
+    outline: none;
+  }
+  &:hover {
+    color: $black;
+  }
+
+  &.tab-active {
+    background: white;
+    color: $black;
+    border: 1px solid $border-color;
+    border-bottom: 0;
+    border-radius: rem(4px) rem(4px) 0 0;
+  }
+}

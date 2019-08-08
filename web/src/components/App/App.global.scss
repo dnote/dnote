@@ -134,3 +134,10 @@ img {
   height: 50px;
   overflow: scroll;
 }
+
+.input {
+  border-radius: rem(4px);
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}

@@ -1,0 +1,205 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../../App/theme';
+@import '../../../App/responsive';
+@import '../../../App/rem';
+@import '../../../App/font';
+
+.popover-wrapper {
+  position: relative;
+
+  @include breakpoint(md) {
+    width: rem(352px);
+  }
+}
+
+.book-selector-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.book-selector-trigger-left {
+  display: flex;
+  align-items: center;
+}
+
+.trigger {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  z-index: 1;
+
+  padding: rem(8px) rem(12px);
+  position: relative;
+  border-radius: rem(4px);
+  display: block;
+  background-color: #f7f9fa;
+  border: 1px solid $border-color;
+
+  &:focus {
+    border-color: $light-blue;
+  }
+  &:hover {
+    border-color: darken($border-color, 5%);
+  }
+
+  &:focus,
+  &:hover {
+    background-color: darken(#f7f9fa, 2%);
+  }
+}
+
+.trigger-hidden {
+  visibility: hidden;
+}
+
+.book-label {
+  margin-left: rem(8px);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: rem(260px);
+  visibility: hidden;
+
+  &.book-label-visible {
+    visibility: visible;
+  }
+}
+
+.content {
+  width: 100%;
+}
+
+.combobox-label {
+  display: none;
+}
+
+.add-book-button {
+  padding: rem(12px) rem(24px);
+
+  &:hover {
+    color: $third;
+
+    .plus {
+      path {
+        fill: $third;
+      }
+      line {
+        stroke: $third;
+      }
+    }
+  }
+}
+
+.add-book-button-content {
+  display: flex;
+  align-content: center;
+}
+
+.add-book-cta {
+  margin-left: rem(8px);
+  display: inline-block;
+}
+
+.button-label {
+}
+
+.input-wrapper {
+  background: $white;
+}
+
+// searchable menu
+.content {
+  z-index: 3;
+}
+
+.caret {
+  margin-left: rem(4px);
+}
+
+.dropdown {
+  max-height: rem(200px);
+  overflow-y: auto;
+
+  @include breakpoint(md) {
+    max-height: rem(400px);
+  }
+}
+
+.combobox-item {
+  display: flex;
+
+  &:not(:first-child) {
+    border-top: 1px solid #e6e6e6;
+  }
+}
+
+.combobox-active-item {
+  background: $third;
+  color: white;
+}
+
+.combobox-option {
+  position: relative;
+  padding: rem(4px) rem(16px) rem(4px) rem(28px);
+  flex-grow: 1;
+  color: black;
+
+  &:hover {
+    background: $third;
+    color: white;
+    text-decoration: none;
+  }
+
+  &.active {
+    background: $light;
+  }
+
+  &.focused {
+    background: $third;
+    color: white;
+
+    .check {
+      #check-core {
+        fill: white;
+      }
+    }
+  }
+}
+
+.combobox-label {
+  display: block;
+  @include font-size('small');
+  font-weight: 600;
+  background: $light;
+  padding: rem(4px) rem(12px);
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.combobox {
+  border-bottom: 1px solid #e6e6e6;
+  background: $light;
+}
+.textbox {
+  @include font-size('small');
+}

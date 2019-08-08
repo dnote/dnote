@@ -4,8 +4,9 @@
     "node": true,
     "mocha": true
   },
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "rules": {
+    "camelcase": 0,
     "strict": 0,
     "react/no-multi-comp": 0,
     "import/default": 0,
@@ -34,10 +35,11 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/jsx-wrap-multilines": ["error", {"declaration": false, "assignment": false}],
-    "react/jsx-one-expression-per-line": 0
+    "react/jsx-one-expression-per-line": 0,
+    "@typescript-eslint/no-unused-vars": 1
   },
   "plugins": [
-    "react", "react-hooks", "import", "prettier"
+    "react", "react-hooks", "import", "prettier", "@typescript-eslint"
   ],
   "settings": {
     "import/parser": "babel-eslint",

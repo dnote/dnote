@@ -20,7 +20,7 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 
 import { updateEmailPreference } from '../../services/users';
-import { receiveEmailPreference } from '../../actions/auth';
+import { receiveEmailPreference } from '../../store/auth';
 import Button from './Button';
 
 import styles from './EmailPreferenceForm.module.scss';

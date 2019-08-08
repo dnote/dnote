@@ -1,0 +1,105 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
+@import '../App/variables';
+
+.wrapper {
+  padding: 0;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  border-bottom: 1px solid $border-color-light;
+  background: $first;
+  align-items: stretch;
+  justify-content: space-between;
+  flex: 1;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  padding: 0 rem(20px);
+  z-index: 4;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+    height: $header-height;
+  }
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.left {
+  display: flex;
+  align-items: stretch;
+  height: $header-height;
+  display: flex;
+  justify-content: space-between;
+
+  @include breakpoint(md) {
+    padding: 0;
+    height: auto;
+  }
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  margin-left: rem(24px);
+
+  @include breakpoint(md) {
+    flex: auto;
+    margin-left: 0;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.logo {
+  margin: 0 auto;
+  display: none;
+
+  @include breakpoint(md) {
+    display: block;
+  }
+}
+
+.logosm {
+  @include breakpoint(md) {
+    display: none;
+  }
+}
+
+.email {
+  @include font-size('regular');
+  color: $gray;
+}

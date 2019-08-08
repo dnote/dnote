@@ -20,7 +20,7 @@ const PATHS = require('./paths');
 
 module.exports = {
   modules: [PATHS.modules],
-  extensions: ['.js', '.jsx', '.css'],
+  extensions: ['.js', '.jsx', '.css', '.ts', '.tsx'],
   alias: {
     'react-dom': '@hot-loader/react-dom'
   }

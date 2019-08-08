@@ -31,7 +31,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/mux"
-	"github.com/markbates/goth/gothic"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
 )
@@ -350,10 +349,7 @@ func NewRouter(app *App) *mux.Router {
 		{"GET", "/me", auth(app.getMe, nil), true},
 		{"POST", "/verification-token", auth(app.createVerificationToken, nil), true},
 		{"PATCH", "/verify-email", app.verifyEmail, true},
-		{"GET", "/auth/{provider}", gothic.BeginAuthHandler, true},
-		{"GET", "/auth/{provider}/callback", app.oauthCallbackHandler, true},
 		{"PATCH", "/account/profile", auth(app.updateProfile, nil), true},
-		{"PATCH", "/account/email", auth(app.updateEmail, nil), true},
 		{"PATCH", "/account/password", auth(app.updatePassword, nil), true},
 		{"GET", "/account/email-preference", tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference), true},
 		{"PATCH", "/account/email-preference", tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference), true},
@@ -376,13 +372,6 @@ func NewRouter(app *App) *mux.Router {
 		//Route{"GET", "/books/{bookUUID}", cors(auth(app.getBook)), true},
 
 		// routes for user migration to use encryption
-		{"POST", "/legacy/signin", app.legacyPasswordLogin, true},
-		{"POST", "/legacy/register", legacyAuth(app.legacyRegister), true},
-		{"GET", "/legacy/me", legacyAuth(app.getMe), true},
-		{"GET", "/legacy/notes", auth(app.legacyGetNotes, &proOnly), false},
-		{"PATCH", "/legacy/migrate", auth(app.legacyMigrate, &proOnly), false},
-		{"GET", "/auth/{provider}", gothic.BeginAuthHandler, true},
-		{"GET", "/auth/{provider}/callback", app.oauthCallbackHandler, true},
 
 		// v1
 		{"POST", "/v1/sync", cors(app.Sync), true},
@@ -403,7 +392,6 @@ func NewRouter(app *App) *mux.Router {
 		{"DELETE", "/v1/notes/{noteUUID}", auth(app.DeleteNote, &proOnly), false},
 
 		{"POST", "/v1/register", app.register, true},
-		{"GET", "/v1/presignin", cors(app.presignin), true},
 		{"POST", "/v1/signin", cors(app.signin), true},
 		{"OPTIONS", "/v1/signout", cors(app.signoutOptions), true},
 		{"POST", "/v1/signout", cors(app.signout), true},

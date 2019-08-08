@@ -20,6 +20,7 @@ const PATHS = require('./paths');
 const rules = require('./rules');
 const plugins = require('./plugins');
 const resolve = require('./resolve');
+const externals = require('./externals');
 
 module.exports = env => {
   const isStandalone = env.standalone === 'true';
@@ -44,6 +45,7 @@ module.exports = env => {
       production: false,
       test: isTest,
       standalone: isStandalone
-    })
+    }),
+    externals
   };
 };

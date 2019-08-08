@@ -25,6 +25,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func generateResetToken() (string, error) {
@@ -85,65 +86,45 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 }
 
 // CreateUser creates a user
-func CreateUser(tx *gorm.DB, email, authKey, cipherKeyEnc string, iteration int) (database.User, error) {
-	salt, err := crypt.GetRandomStr(16)
+func CreateUser(email, password string) (database.User, error) {
+	db := database.DBConn
+	tx := db.Begin()
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return database.User{}, errors.Wrap(err, "generating salt")
+		tx.Rollback()
+		return database.User{}, errors.Wrap(err, "hashing password")
 	}
 
 	user := database.User{}
 	if err = tx.Save(&user).Error; err != nil {
+		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "saving user")
 	}
 	account := database.Account{
-		// TODO: email should not be nullable.
-		Email:              database.ToNullString(email),
-		UserID:             user.ID,
-		AuthKeyHash:        crypt.HashAuthKey(authKey, salt, crypt.ServerKDFIteration),
-		Salt:               salt,
-		ClientKDFIteration: iteration,
-		ServerKDFIteration: crypt.ServerKDFIteration,
-		CipherKeyEnc:       cipherKeyEnc,
+		Email:    database.ToNullString(email),
+		Password: database.ToNullString(string(hashedPassword)),
+		UserID:   user.ID,
 	}
 	if err = tx.Save(&account).Error; err != nil {
+		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "saving account")
 	}
 
 	if err := createEmailVerificaitonToken(user, tx); err != nil {
+		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating email verificaiton token")
 	}
 	if err := createEmailPreference(user, tx); err != nil {
+		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating email preference")
 	}
 	if err := TouchLastLoginAt(user, tx); err != nil {
+		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "updating last login")
 	}
+
+	tx.Commit()
+
 	return user, nil
-}
-
-// LegacyRegisterUser migrates the given user to the encrypted user
-func LegacyRegisterUser(tx *gorm.DB, userID int, email, authKey string, cipherKeyEnc string, iteration int) error {
-	salt, err := crypt.GetRandomStr(16)
-	if err != nil {
-		return errors.Wrap(err, "generating salt")
-	}
-
-	var account database.Account
-	if err := tx.Where("user_id = ?", userID).First(&account).Error; err != nil {
-		return errors.Wrap(err, "finding account")
-	}
-
-	account.Email = database.ToNullString(email)
-	account.AuthKeyHash = crypt.HashAuthKey(authKey, salt, crypt.ServerKDFIteration)
-	account.Salt = salt
-	account.ClientKDFIteration = iteration
-	account.ServerKDFIteration = crypt.ServerKDFIteration
-	account.CipherKeyEnc = cipherKeyEnc
-	account.Password = database.ToNullString("")
-
-	if err = tx.Save(&account).Error; err != nil {
-		return errors.Wrap(err, "saving account")
-	}
-
-	return nil
 }

@@ -23,11 +23,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/api/crypt"
 	"github.com/dnote/dnote/pkg/server/api/operations"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ErrLoginFailure is an error for failed login
@@ -35,14 +34,8 @@ var ErrLoginFailure = errors.New("Wrong email and password combination")
 
 // SessionResponse is a response containing a session information
 type SessionResponse struct {
-	Key          string `json:"key"`
-	ExpiresAt    int64  `json:"expires_at"`
-	CipherKeyEnc string `json:"cipher_key_enc"`
-}
-
-type signinPayload struct {
-	Email   string `json:"email"`
-	AuthKey string `json:"auth_key"`
+	Key       string `json:"key"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 func setSessionCookie(w http.ResponseWriter, key string, expires time.Time) {
@@ -70,16 +63,32 @@ func unsetSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &cookie)
 }
 
+func touchLastLoginAt(user database.User) error {
+	db := database.DBConn
+
+	t := time.Now()
+	if err := db.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
+		return errors.Wrap(err, "updating last_login_at")
+	}
+
+	return nil
+}
+
+type signinPayload struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	db := database.DBConn
 
 	var params signinPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
 		handleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
-
-	if params.Email == "" || params.AuthKey == "" {
+	if params.Email == "" || params.Password == "" {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -89,21 +98,32 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
-	} else if err := conn.Error; err != nil {
+	} else if conn.Error != nil {
 		handleError(w, "getting user", err, http.StatusInternalServerError)
 		return
 	}
 
-	authKeyHash := crypt.HashAuthKey(params.AuthKey, account.Salt, account.ServerKDFIteration)
-	if account.AuthKeyHash != authKeyHash {
-		log.WithFields(log.Fields{
-			"account_id": account.ID,
-		}).Error("Sign in password mismatch")
+	password := []byte(params.Password)
+	err = bcrypt.CompareHashAndPassword([]byte(account.Password.String), password)
+	if err != nil {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	respondWithSession(w, account.UserID, account.CipherKeyEnc)
+	var user database.User
+	err = db.Where("id = ?", account.UserID).First(&user).Error
+	if err != nil {
+		handleError(w, "finding user", err, http.StatusInternalServerError)
+		return
+	}
+
+	err = operations.TouchLastLoginAt(user, db)
+	if err != nil {
+		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
+		return
+	}
+
+	respondWithSession(w, account.UserID, http.StatusOK)
 }
 
 func (a *App) signoutOptions(w http.ResponseWriter, r *http.Request) {
@@ -134,24 +154,16 @@ func (a *App) signout(w http.ResponseWriter, r *http.Request) {
 }
 
 type registerPayload struct {
-	Email        string `json:"email"`
-	AuthKey      string `json:"auth_key"`
-	Iteration    int    `json:"iteration"`
-	CipherKeyEnc string `json:"cipher_key_enc"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func validateRegisterPayload(p registerPayload) error {
 	if p.Email == "" {
 		return errors.New("email is required")
 	}
-	if p.AuthKey == "" {
-		return errors.New("auth_key is required")
-	}
-	if p.Iteration == 0 {
-		return errors.New("iteration is required")
-	}
-	if p.CipherKeyEnc == "" {
-		return errors.New("cipher_key_enc is required")
+	if len(p.Password) < 8 {
+		return errors.New("Password should be longer than 8 characters")
 	}
 
 	return nil
@@ -166,13 +178,13 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := validateRegisterPayload(params); err != nil {
-		handleError(w, "validating payload", err, http.StatusBadRequest)
+		http.Error(w, "invalid password", http.StatusBadRequest)
 		return
 	}
 
 	var count int
 	if err := db.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
-		handleError(w, "checking duplicate", err, http.StatusInternalServerError)
+		handleError(w, "checking duplicate user", err, http.StatusInternalServerError)
 		return
 	}
 	if count > 0 {
@@ -180,31 +192,18 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := db.Begin()
-
-	user, err := operations.CreateUser(tx, params.Email, params.AuthKey, params.CipherKeyEnc, params.Iteration)
+	user, err := operations.CreateUser(params.Email, params.Password)
 	if err != nil {
-		tx.Rollback()
-
-		handleError(w, "creating user", nil, http.StatusBadRequest)
+		handleError(w, "creating user", err, http.StatusInternalServerError)
 		return
 	}
 
-	var account database.Account
-	if err := tx.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		tx.Rollback()
-		handleError(w, "finding account", nil, http.StatusBadRequest)
-		return
-	}
-
-	tx.Commit()
-
-	respondWithSession(w, user.ID, account.CipherKeyEnc)
+	respondWithSession(w, user.ID, http.StatusCreated)
 }
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.
 // It sets the HTTP-Only cookie for browser clients and also sends a JSON response for non-browser clients.
-func respondWithSession(w http.ResponseWriter, userID int, cipherKeyEnc string) {
+func respondWithSession(w http.ResponseWriter, userID int, statusCode int) {
 	db := database.DBConn
 
 	session, err := operations.CreateSession(db, userID)
@@ -216,53 +215,14 @@ func respondWithSession(w http.ResponseWriter, userID int, cipherKeyEnc string) 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
 
 	response := SessionResponse{
-		Key:          session.Key,
-		ExpiresAt:    session.ExpiresAt.Unix(),
-		CipherKeyEnc: cipherKeyEnc,
+		Key:       session.Key,
+		ExpiresAt: session.ExpiresAt.Unix(),
 	}
+
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		handleError(w, "encoding response", err, http.StatusInternalServerError)
-		return
-	}
-}
-
-// PresigninResponse is a response for presignin
-type PresigninResponse struct {
-	Iteration int `json:"iteration"`
-}
-
-func (a *App) presignin(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
-	q := r.URL.Query()
-	email := q.Get("email")
-	if email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
-		return
-	}
-
-	var account database.Account
-	conn := db.Where("email = ?", email).First(&account)
-	if !conn.RecordNotFound() && conn.Error != nil {
-		handleError(w, "getting user", conn.Error, http.StatusInternalServerError)
-		return
-	}
-
-	var response PresigninResponse
-	if conn.RecordNotFound() {
-		response = PresigninResponse{
-			Iteration: 100000,
-		}
-	} else {
-		response = PresigninResponse{
-			Iteration: account.ClientKDFIteration,
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		handleError(w, "encoding response", nil, http.StatusInternalServerError)
 		return
 	}
 }

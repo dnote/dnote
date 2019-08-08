@@ -84,6 +84,7 @@ type NoteBook struct {
 // NoteUser is a nested book for PresentNotesResult
 type NoteUser struct {
 	Name string `json:"name"`
+	UUID string `json:"uuid"`
 }
 
 // PresentNote presents note
@@ -101,7 +102,7 @@ func PresentNote(note database.Note) Note {
 			Label: note.Book.Label,
 		},
 		User: NoteUser{
-			Name: note.User.Name,
+			UUID: note.User.UUID,
 		},
 	}
 

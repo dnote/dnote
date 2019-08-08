@@ -1,0 +1,22 @@
+@import '../App/theme';
+@import '../App/responsive';
+@import '../App/rem';
+
+.wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: $footer-height;
+  background-color: $first;
+  border-top: 1px solid $border-color;
+
+  @include breakpoint(md) {
+    display: none;
+  }
+}
+
+.list {
+  display: flex;
+  height: 100%;
+}

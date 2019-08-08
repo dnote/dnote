@@ -131,7 +131,7 @@ func (a *App) getNotes(w http.ResponseWriter, r *http.Request) {
 func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 	err := validateGetNotesQuery(query)
 	if err != nil {
-		handleError(w, "validating query parameters", err, http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

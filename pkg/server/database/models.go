@@ -46,11 +46,11 @@ type Book struct {
 // Note is a model for a note
 type Note struct {
 	Model
+	UUID      string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
 	Book      Book   `json:"book" gorm:"foreignkey:BookUUID"`
 	User      User   `json:"user"`
 	UserID    int    `json:"user_id" gorm:"index"`
 	BookUUID  string `json:"book_uuid" gorm:"index;type:uuid"`
-	UUID      string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
 	Body      string `json:"content"`
 	AddedOn   int64  `json:"added_on"`
 	EditedOn  int64  `json:"edited_on"`
@@ -64,16 +64,16 @@ type Note struct {
 // User is a model for a user
 type User struct {
 	Model
-	APIKey           string `json:"-" gorm:"index"`
-	Name             string `json:"name"`
+	UUID             string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
 	StripeCustomerID string `json:"-"`
 	BillingCountry   string `json:"-"`
-	Cloud            bool   `json:"-" gorm:"default:false"`
-	IsAdmin          bool   `json:"-" gorm:"default:false"`
 	Account          Account
 	LastLoginAt      *time.Time `json:"-"`
 	MaxUSN           int        `json:"-" gorm:"default:0"`
-	Encrypted        bool       `json:"encrypted" gorm:"default:False"`
+	Cloud            bool       `json:"-" gorm:"default:false"`
+	APIKey           string     `json:"-" gorm:"index"`                 // Deprecated
+	Name             string     `json:"name"`                           // Deprecated
+	Encrypted        bool       `json:"encrypted" gorm:"default:False"` // Deprecated
 }
 
 // Account is a model for an account

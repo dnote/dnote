@@ -24,6 +24,7 @@
   position: relative;
   overflow: hidden;
   background: $light-gray;
+  padding: rem(8px);
 }
 
 .search-icon {
@@ -31,6 +32,7 @@
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 1;
 
   path {
     fill: $gray;

@@ -19,8 +19,8 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 
-import { receiveUser } from '../../actions/auth';
-import { updateMessage } from '../../actions/ui';
+import { receiveUser } from '../../store/auth';
+import { updateMessage } from '../../store/ui';
 import * as usersService from '../../services/users';
 
 function VerifyEmail({ match, history, doReceiveUser, doUpdateMessage }) {

@@ -21,6 +21,7 @@
 .wrapper {
   position: relative;
   padding: rem(8px) rem(16px);
+  margin-bottom: rem(16px);
 
   &.border {
     border: 1px solid transparent;

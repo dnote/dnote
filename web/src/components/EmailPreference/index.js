@@ -27,7 +27,7 @@ import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
 
 import { parseSearchString } from '../../libs/url';
-import { getEmailPreference } from '../../actions/auth';
+import { getEmailPreference } from '../../store/auth';
 import { getLoginPath } from '../../libs/paths';
 
 import styles from './EmailPreference.module.scss';

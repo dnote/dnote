@@ -46,13 +46,30 @@ module.exports = ({ production = false } = {}) => {
   ];
   const plugins = createPlugins(production);
 
-  return {
-    test: /\.js$|\.jsx$/,
-    loader: 'babel-loader',
-    options: {
-      presets,
-      plugins
+  return [
+    {
+      test: /\.js$|\.jsx$/,
+      loader: 'babel-loader',
+      options: {
+        presets,
+        plugins
+      },
+      exclude: PATHS.modules
     },
-    exclude: PATHS.modules
-  };
+    {
+      test: /\.ts(x?)$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: 'ts-loader'
+        }
+      ]
+    },
+    // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+    {
+      enforce: 'pre',
+      test: /\.js$/,
+      loader: 'source-map-loader'
+    }
+  ];
 };

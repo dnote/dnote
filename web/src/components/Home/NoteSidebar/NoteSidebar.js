@@ -253,7 +253,10 @@ function useSelectFirstNote({ notesData, location, history, demo, user }) {
     const firstNote = firstItem.data;
 
     const searchObj = parseSearchString(location.search);
-    const dest = getNotePath(firstNote.uuid, searchObj, { demo, isEditor: true });
+    const dest = getNotePath(firstNote.uuid, searchObj, {
+      demo,
+      isEditor: true
+    });
 
     history.replace(dest);
   });

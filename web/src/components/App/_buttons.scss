@@ -50,9 +50,6 @@
   white-space: nowrap;
   vertical-align: middle;
   user-select: none;
-  border-width: 1px;
-  border-style: solid;
-  border-color: transparent;
   border-image: initial;
   border-radius: 0.25rem;
   transition: all 0.2s ease-in-out;
@@ -61,6 +58,9 @@
   cursor: pointer;
 
   &:not(.button-no-ui) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
   }
 
   &:not(:disabled):hover {
