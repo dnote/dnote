@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # dev.sh builds a new binary and replaces the old one in the PATH with it
 set -eux
 

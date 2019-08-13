@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # release.sh releases the tarballs and checksum in the build directory
 # to GitHub and brew. A prerequisite is to build those files using build.sh.

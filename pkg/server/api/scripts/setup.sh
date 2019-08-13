@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # setup.sh installs programs and depedencies necessary to run the project locally
 # usage: ./setup.sh
 set -eux

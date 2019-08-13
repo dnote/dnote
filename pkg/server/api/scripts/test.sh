@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # test.sh runs api tests. It is to be invoked by other scripts that set
 # appropriate env vars.
 set -eux

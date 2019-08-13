@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function remove_notice {
   sed -i -e '/\/\* Copyright/,/\*\//d' "$1"

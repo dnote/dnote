@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # build.sh compiles dnote binary for target platforms. It is resonsible for creating
 # distributable files that can be released by a human or a script.

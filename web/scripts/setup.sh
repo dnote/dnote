@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # setup.sh prepares the directory structure and copies static files
 set -eux -o pipefail
 

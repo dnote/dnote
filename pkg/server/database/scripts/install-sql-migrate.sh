@@ -1,3 +1,3 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 go get -v github.com/rubenv/sql-migrate/...
