@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC1090
 # test-local.sh runs api tests using local setting
 set -eux

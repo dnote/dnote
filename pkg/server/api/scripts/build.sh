@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eux
 
 basePath="$GOPATH/src/github.com/dnote/dnote/pkg/server/api"

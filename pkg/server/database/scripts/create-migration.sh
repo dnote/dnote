@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # create-migration.sh creates a new SQL migration file for the
 # server side Postgres database using the sql-migrate tool.
 set -eux

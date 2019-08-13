@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # shellcheck disable=SC1090
 # dev.sh builds and starts development environment for standalone app
 set -eux -o pipefail
