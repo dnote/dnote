@@ -79,7 +79,7 @@ build-web:
 
 build-server: build-web
 ifndef version
-	$(error version is required. Usage: make version=v0.1.0 build-server)
+	$(error version is required. Usage: make version=0.1.0 build-server)
 endif
 
 	@echo "==> building server"
@@ -93,7 +93,7 @@ ifeq ($(debug), true)
 else
 
 ifndef version
-	$(error version is required. Usage: make version=v0.1.0 build-cli)
+	$(error version is required. Usage: make version=0.1.0 build-cli)
 endif
 
 	@echo "==> building cli"
@@ -104,7 +104,7 @@ endif
 ## release
 release-cli: build-cli
 ifndef version
-	$(error version is required. Usage: make version=v0.1.0 release-cli)
+	$(error version is required. Usage: make version=0.1.0 release-cli)
 endif
 ifndef HUB
 	$(error please install hub)
@@ -128,7 +128,7 @@ endif
 
 release-server: build-server
 ifndef version
-	$(error version is required. Usage: make version=v0.1.0 release-server)
+	$(error version is required. Usage: make version=0.1.0 release-server)
 endif
 ifndef HUB
 	$(error please install hub)
