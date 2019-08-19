@@ -18,79 +18,79 @@
 
 import React, { useEffect } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { Location } from 'history';
-// import classnames from 'classnames';
-//
-// import Workspace from './Workspace';
-//
-// import { resetNote } from '../../actions/note';
-// import { resetEditor, stageNote } from '../../actions/editor';
-// import { getCipherKey } from '../../crypto';
-// import { getNote } from '../../actions/note';
-// import { usePrevious } from '../../libs/hooks';
-//
-// import style from './Home.module.scss';
-
-import NoteGroupList from './NoteGroupList';
+import NoteGroupList from './NoteGroup/List';
 import HeadData from './HeadData';
 import { useDispatch, useSelector } from '../../store';
-import { getInitialNotes, resetNotes } from '../../store/notes';
-import { getFacetsFromSearchStr } from '../../libs/facets';
+import {
+  getFiltersFromSearchStr,
+  Filters,
+  checkFilterEqual
+} from '../../libs/filters';
+import { getNotes } from '../../store/notes';
+import { groupNotes } from '../../libs/notes';
+import { usePrevious } from '../../libs/hooks';
+import TopActions from './Actions/Top';
+import Flash from '../Common/Flash';
 
 interface Props extends RouteComponentProps {}
 
-function useFetchInitialNotes(location: Location<any>) {
+function useFetchNotes(filters: Filters) {
   const dispatch = useDispatch();
-  const { user, notes } = useSelector(state => {
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user.data,
+      notes: state.notes
+    };
+  });
+  const prevFilters = usePrevious(filters);
+
+  useEffect(() => {
+    if (!user.pro) {
+      return () => null;
+    }
+    if (prevFilters && checkFilterEqual(filters, prevFilters)) {
+      return () => null;
+    }
+
+    dispatch(getNotes(filters));
+
+    return () => null;
+  }, [dispatch, filters, prevFilters, user]);
+}
+
+const Home: React.SFC<Props> = ({ location }) => {
+  const { notes, user } = useSelector(state => {
     return {
       user: state.auth.user.data,
       notes: state.notes
     };
   });
 
-  useEffect(() => {
-    if (notes.initialized) {
-      return () => null;
-    }
-    if (user.uuid === '' || !user.pro) {
-      return () => null;
-    }
+  const filters = getFiltersFromSearchStr(location.search);
+  useFetchNotes(filters);
 
-    const date = new Date();
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth() + 1;
-    const facets = getFacetsFromSearchStr(location.search);
-
-    dispatch(resetNotes());
-    dispatch(
-      getInitialNotes({
-        facets,
-        year,
-        month
-      })
-    );
-
-    return () => null;
-  }, [location.search, user, dispatch, notes.initialized]);
-}
-
-const Home: React.SFC<Props> = ({ location }) => {
-  const { groups, user } = useSelector(state => {
-    return {
-      user: state.auth.user.data,
-      groups: state.notes.groups
-    };
-  });
-
-  useFetchInitialNotes(location);
+  const groups = groupNotes(notes.data);
 
   return (
     <div className="container mobile-nopadding">
-      <HeadData />
+      <HeadData filters={filters} />
 
       <h1 className="sr-only">Notes</h1>
 
-      <NoteGroupList groups={groups} pro={user.pro} />
+      <Flash kind="danger" when={Boolean(notes.errorMessage)}>
+        Error getting notes: {notes.errorMessage}
+      </Flash>
+
+      <TopActions />
+
+      <NoteGroupList
+        groups={groups}
+        pro={user.pro}
+        filters={filters}
+        isFetched={notes.isFetched}
+      />
+
+      {notes.data.length > 10 && <TopActions position="bottom" />}
     </div>
   );
 };

@@ -22,11 +22,12 @@
 
 .wrapper {
   background: $light-gray;
-  min-height: calc(100vh - #{$header-height});
+  min-height: calc(100vh - #{$header-height} - #{$footer-height});
   margin-bottom: $footer-height;
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     margin-bottom: 0;
     padding: rem(20px) 0;
+    min-height: calc(100vh - #{$header-height});
   }
 }

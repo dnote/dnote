@@ -20,6 +20,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
@@ -73,7 +74,7 @@ func (a *App) CreateNoteV2(w http.ResponseWriter, r *http.Request) {
 	var book database.Book
 	db := database.DBConn
 	if err := db.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
-		handleError(w, "finding book", err, http.StatusInternalServerError)
+		handleError(w, fmt.Sprintf("finding book %s", params.BookUUID), err, http.StatusInternalServerError)
 		return
 	}
 

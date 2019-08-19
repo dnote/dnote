@@ -19,10 +19,11 @@
 import qs from 'qs';
 import isArray from 'lodash/isArray';
 import omitBy from 'lodash/omitBy';
+import { Location } from 'history';
 
 // getPath returns a path optionally suffixed by query string
-export function getPath(path, queryObj) {
-  const queryStr = qs.stringify(queryObj);
+export function getPath(path, queryObj): string {
+  const queryStr = qs.stringify(queryObj, { arrayFormat: 'repeat' });
 
   if (!queryStr) {
     return path;
@@ -33,42 +34,35 @@ export function getPath(path, queryObj) {
 
 // getPathFromLocation returns a full path based on the location object used by
 // React Router
-export function getPathFromLocation(location) {
+export function getPathFromLocation(location): string {
   const { pathname, search } = location;
 
   return `${pathname}${search}`;
 }
 
-/**
- * parseSearchString parses the 'search' string in `location` object provided
- * by React Router.
- *
- * @param searchStr {String} - in a form of "?foo=bar&baz=1"
- * @return {Object} - in a form of "{foo: "bar", baz: "1"}"
- */
-export function parseSearchString(searchStr) {
-  if (!searchStr || searchStr === '') {
+// parseSearchString parses the 'search' string in `location` object provided
+// by React Router.
+export function parseSearchString(search: string): any {
+  if (!search || search === '') {
     return {};
   }
 
   // drop the leading '?'
-  const queryStr = searchStr.substring(1);
+  const queryStr = search.substring(1);
   return qs.parse(queryStr);
 }
 
-/**
- * addQueryToLocation returns a new location object for react-router given the
- * new `queryKey` and `val` to be set in loation.query.
- * If there exists the given key in the query object, addQueryToLocation sets its
- * value to be an array containing the old value and the new value.
- * Otherwise the value for the key is set to the `val`.
- *
- * @param location {Object} - location object from react-router
- * @param queryKey {String} - the new query key to be set in location.query
- * @param val {String} - the value corresponding to queryKey
- * @param override {Boolean} - whether to override any existing param
- */
-export function addQueryToLocation(location, queryKey, val, override = true) {
+// addQueryToLocation returns a new location object for react-router given the
+// new `queryKey` and `val` to be set in loation.query.
+// If there exists the given key in the query object, addQueryToLocation sets its
+// value to be an array containing the old value and the new value.
+// Otherwise the value for the key is set to the `val`.
+export function addQueryToLocation(
+  location: Location,
+  queryKey: string,
+  val: string,
+  override = true
+): Location {
   const queryObj = parseSearchString(location.search);
   const existingParam = queryObj[queryKey];
 
@@ -94,11 +88,13 @@ export function addQueryToLocation(location, queryKey, val, override = true) {
   };
 }
 
-/**
- * removeQueryFromLocation returns a new location object without the queryKey
- * and val
- */
-export function removeQueryFromLocation(location, queryKey, val) {
+// removeQueryFromLocation returns a new location object without the queryKey
+// and val
+export function removeQueryFromLocation(
+  location: Location,
+  queryKey: string,
+  val?: string
+): Location {
   const queryObj = parseSearchString(location.search);
   const existingParam = queryObj[queryKey];
   if (!existingParam) {
@@ -131,7 +127,7 @@ export function removeQueryFromLocation(location, queryKey, val) {
   };
 }
 
-export function getReferrer(location): string {
+export function getReferrer(location: Location): string {
   const queryObj = parseSearchString(location.search);
   const { referrer } = queryObj;
 

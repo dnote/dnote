@@ -19,6 +19,7 @@
 import { getPath } from '../libs/url';
 import { apiClient } from '../libs/http';
 import { NoteData } from '../operations/types';
+import { Filters } from '../libs/filters';
 
 interface CreateParams {
   book_uuid: string;
@@ -56,38 +57,40 @@ export function remove(noteUUID: string) {
   return apiClient.del(endpoint, {});
 }
 
-interface FetchQuery {
-  year?: number;
-  month?: number;
-  q?: string;
-  book?: string;
-  page?: number;
-}
-
 interface FetchResponse {
   notes: NoteData[];
   total: number;
-  prev_date: number;
 }
 
-export function fetch(query: FetchQuery) {
-  const { year, month, q, book, page } = query;
+export function fetch(filters: Filters) {
+  const params: any = {
+    page: filters.page
+  };
 
-  const endpoint = getPath('/notes', {
-    year,
-    month,
-    q,
-    book,
-    page
-  });
+  const { queries } = filters;
+  if (queries.q) {
+    params.q = queries.q;
+  }
+  if (queries.book) {
+    params.book = queries.book;
+  }
+
+  const endpoint = getPath('/notes', params);
 
   return apiClient.get<FetchResponse>(endpoint, {});
 }
 
 type FetchOneResponse = NoteData;
 
-export function fetchOne(noteUUID: string): Promise<FetchOneResponse> {
-  const endpoint = `/notes/${noteUUID}`;
+interface FetchOneQuery {
+  q?: string;
+}
+
+export function fetchOne(
+  noteUUID: string,
+  params: FetchOneQuery
+): Promise<FetchOneResponse> {
+  const endpoint = getPath(`/notes/${noteUUID}`, params);
 
   return apiClient.get<FetchOneResponse>(endpoint, {});
 }

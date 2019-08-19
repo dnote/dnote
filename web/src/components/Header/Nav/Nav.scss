@@ -26,7 +26,7 @@
   margin-left: rem(32px);
   display: none;
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     display: flex;
   }
 }

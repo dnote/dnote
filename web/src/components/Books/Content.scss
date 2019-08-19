@@ -1,0 +1,61 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/theme';
+
+.actions {
+  display: flex;
+  padding: rem(12px) rem(20px);
+  flex-direction: column;
+  border-radius: rem(4px);
+  background: $light;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+
+  @include breakpoint(md) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: rem(12px);
+  }
+}
+
+.search-input {
+  width: 100%;
+
+  @include breakpoint(lg) {
+    width: rem(400px);
+    margin-top: 0;
+  }
+}
+
+button.create-book-button {
+  margin-top: rem(12px);
+
+  @include breakpoint(md) {
+    margin-top: 0;
+    margin-left: rem(12px);
+  }
+
+  // display: none;
+
+  // @include breakpoint(md) {
+  //   display: inline-block;
+  // }
+}

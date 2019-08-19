@@ -17,30 +17,45 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
+import { Location } from 'history';
 
 import LogoWithText from '../Icons/LogoWithText';
 import Logo from '../Icons/Logo';
-import { getHomePath } from '../../libs/paths';
+import { getHomePath, checkCurrentPath, homePathDef } from '../../libs/paths';
 import AccountMenu from './AccountMenu';
 import Nav from './Nav';
 import SearchBar from './SearchBar';
+import { useFilters } from '../../store';
+import { FiltersState } from '../../store/filters';
+import { toSearchObj } from '../../libs/filters';
 import styles from './Normal.scss';
 
-interface Props {}
+interface Props extends RouteComponentProps {}
 
-const NormalHeader: React.SFC<Props> = () => {
+function getHomeDest(location: Location, filters: FiltersState) {
+  if (checkCurrentPath(location, homePathDef)) {
+    return getHomePath();
+  }
+
+  return getHomePath(filters);
+}
+
+const NormalHeader: React.SFC<Props> = ({ location }) => {
+  const filters = useFilters();
+  const searchObj = toSearchObj(filters);
+
   return (
     <header className={styles.wrapper}>
       <div className={classnames(styles.content, 'container mobile-nopadding')}>
         <div className={classnames(styles.left)}>
-          <Link to={getHomePath({})} className={styles.brand}>
+          <Link to={getHomeDest(location, searchObj)} className={styles.brand}>
             <LogoWithText width={75} fill="white" className={styles.logo} />
             <Logo width={24} fill="white" className={styles.logosm} />
           </Link>
 
-          <Nav />
+          <Nav filters={filters} />
         </div>
 
         <div className={classnames(styles.right)}>
@@ -53,4 +68,4 @@ const NormalHeader: React.SFC<Props> = () => {
   );
 };
 
-export default NormalHeader;
+export default withRouter(NormalHeader);

@@ -67,9 +67,17 @@ export default function(
       };
     }
     case ADD: {
+      const data = [...state.data, action.data.book];
+      const sorted = data.sort((a, b) => {
+        const aLabel = a.label.toLowerCase();
+        const bLabel = b.label.toLowerCase();
+
+        return aLabel.localeCompare(bLabel);
+      });
+
       return {
         ...state,
-        data: [...state.data, action.data.book]
+        data: sorted
       };
     }
     default:

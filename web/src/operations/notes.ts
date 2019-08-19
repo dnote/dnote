@@ -21,21 +21,18 @@
 
 import * as notesService from '../services/notes';
 import { NoteData } from './types';
+import { Filters } from '../libs/filters';
 
-export interface FetchParams {
-  year: number;
-  month: number;
-  q?: string;
-  book?: string;
-  page?: number;
-}
-
-export function fetch(params: FetchParams) {
+export function fetch(params: Filters) {
   return notesService.fetch(params);
 }
 
-export function fetchOne(noteUUID: string) {
-  return notesService.fetchOne(noteUUID);
+export interface FetchOneParams {
+  q?: string;
+}
+
+export function fetchOne(noteUUID: string, params: FetchOneParams = {}) {
+  return notesService.fetchOne(noteUUID, params);
 }
 
 interface CreateParams {

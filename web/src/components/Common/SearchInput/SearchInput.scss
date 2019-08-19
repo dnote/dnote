@@ -1,0 +1,84 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/rem';
+@import '../../App/responsive';
+@import '../../App/theme';
+
+.wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+
+  path {
+    fill: $gray;
+  }
+}
+
+input.input {
+  &.resettable:not(.expandable) {
+    padding-right: rem(40px);
+  }
+  &.expandable:not(.resettable) {
+    padding-right: rem(40px);
+  }
+  &.expandable.resettable {
+    padding-right: rem(80px);
+  }
+}
+
+.focused {
+  .input {
+    padding-left: rem(12px);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: -25px;
+  }
+}
+
+.actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+}
+
+.expand {
+  padding: 0 rem(12px);
+}
+
+.reset {
+  display: none;
+
+  &:hover {
+    color: $black;
+  }
+
+  &.reset-shown {
+    display: block;
+  }
+}

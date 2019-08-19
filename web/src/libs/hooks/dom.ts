@@ -25,13 +25,22 @@ import {
   KEYCODE_ENTER,
   KEYCODE_ESC
 } from '../../helpers/keyboard';
+import { scrollTo } from '../dom';
+import { Option } from '../../libs/select';
+
+interface ScrollToSelectedParams {
+  shouldScroll: boolean;
+  offset: number;
+  selectedOptEl: HTMLElement;
+  containerEl: HTMLElement;
+}
 
 export function useScrollToSelected({
   shouldScroll,
   offset,
   selectedOptEl,
   containerEl
-}) {
+}: ScrollToSelectedParams) {
   useEffect(() => {
     if (!shouldScroll || !selectedOptEl || !containerEl) {
       return;
@@ -49,29 +58,54 @@ export function useScrollToSelected({
   }, [shouldScroll, selectedOptEl, offset, containerEl]);
 }
 
+interface ScrollToFocusedParms {
+  shouldScroll: boolean;
+  offset?: number;
+  focusedOptEl: HTMLElement;
+  containerEl: HTMLElement;
+}
+
 export function useScrollToFocused({
   shouldScroll,
-  offset,
+  offset = 0,
   focusedOptEl,
   containerEl
-}) {
+}: ScrollToFocusedParms) {
   useEffect(() => {
     if (!shouldScroll || !focusedOptEl || !containerEl) {
       return;
     }
 
-    const scrollTop =
+    let visibleHeight;
+    if (containerEl === document.body) {
+      visibleHeight = window.innerHeight;
+    } else {
+      visibleHeight = containerEl.offsetHeight;
+    }
+
+    const posY =
       focusedOptEl.offsetTop +
       focusedOptEl.clientHeight -
-      containerEl.offsetHeight / 2 -
+      visibleHeight / 2 -
       offset;
 
-    // eslint-disable-next-line no-param-reassign
-    containerEl.scrollTop = scrollTop;
+    scrollTo(containerEl, posY);
   }, [containerEl, focusedOptEl, offset, shouldScroll]);
 }
 
-export function useSearchMenuKeydown({
+export type KeydownSelectFn<T> = (T) => void;
+
+interface SearchMenuKeydownParams<T> {
+  options: T[];
+  containerEl: HTMLElement;
+  focusedIdx: number;
+  setFocusedIdx: (number) => void;
+  onKeydownSelect: KeydownSelectFn<T>;
+  setIsOpen?: (boolean) => void;
+  disabled?: boolean;
+}
+
+export function useSearchMenuKeydown<T = Option>({
   options,
   containerEl,
   focusedIdx,
@@ -79,7 +113,7 @@ export function useSearchMenuKeydown({
   setIsOpen,
   onKeydownSelect,
   disabled
-}) {
+}: SearchMenuKeydownParams<T>) {
   useEventListener(containerEl, 'keydown', e => {
     if (disabled) {
       return;

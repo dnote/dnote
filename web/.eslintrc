@@ -36,7 +36,9 @@
     "react-hooks/exhaustive-deps": "warn",
     "react/jsx-wrap-multilines": ["error", {"declaration": false, "assignment": false}],
     "react/jsx-one-expression-per-line": 0,
-    "@typescript-eslint/no-unused-vars": 1
+    "@typescript-eslint/no-unused-vars": 1,
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*_test.ts"]}],
+    "lines-between-class-members": 0
   },
   "plugins": [
     "react", "react-hooks", "import", "prettier", "@typescript-eslint"

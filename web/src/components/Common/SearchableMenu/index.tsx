@@ -22,7 +22,7 @@ import classnames from 'classnames';
 
 import Result from './Result';
 import { makeOptionId, getOptIdxByValue } from '../../../helpers/accessibility';
-import { Option } from '../../../libs/select';
+import { Option, filterOptions } from '../../../libs/select';
 import {
   useScrollToFocused,
   useScrollToSelected,
@@ -34,41 +34,6 @@ function useFocusedIdx(options: Option[], currentValue) {
   const initialValue = getOptIdxByValue(options, currentValue);
 
   return useState(initialValue);
-}
-
-function filterOptions(
-  options: Option[],
-  textboxValue: string,
-  creatable: boolean
-): Option[] {
-  if (!textboxValue) {
-    return options;
-  }
-
-  const ret = [];
-  const searchReg = new RegExp(`${textboxValue}`, 'i');
-  let hit = null;
-
-  for (let i = 0; i < options.length; i++) {
-    const option = options[i];
-
-    if (option.label === textboxValue) {
-      hit = option;
-    } else if (searchReg.test(option.label) && option.value !== '') {
-      ret.push(option);
-    }
-  }
-
-  // if there is an exact match, display the option at the top
-  // otherwise, display a creatable option at the bottom
-  if (hit) {
-    ret.unshift(hit);
-  } else if (creatable) {
-    // creatable option has a value of an empty string
-    ret.push({ label: textboxValue, value: '' });
-  }
-
-  return ret;
 }
 
 function getScrollOffset(headerEl) {
@@ -91,18 +56,38 @@ interface Props extends RouteComponentProps<any> {
   setIsOpen: (boolean) => void;
   options: Option[];
   label: string;
-  listboxClassName: string;
   currentValue: string;
   textboxValue: string;
-  itemClassName: string;
-  labelClassName: string;
-  textboxWrapperClassName: string;
-  textboxClassName: string;
   renderOption: (Option, OptionParams) => React.ReactNode;
   renderCreateOption: (Option, OptionParams) => React.ReactNode;
   onKeydownSelect: (Option) => void;
   renderInput: (any) => React.ReactNode;
+  listboxClassName?: string;
+  itemClassName?: string;
+  labelClassName?: string;
+  textboxWrapperClassName?: string;
+  textboxClassName?: string;
   disabled?: boolean;
+}
+
+function useSetFocus({
+  filteredOptions,
+  currentValue,
+  setFocusedIdx,
+  textboxValue
+}) {
+  const currentIdx = getOptIdxByValue(filteredOptions, currentValue);
+
+  let targetIdx;
+  if (currentIdx === -1) {
+    targetIdx = 0;
+  } else {
+    targetIdx = currentIdx;
+  }
+
+  useEffect(() => {
+    setFocusedIdx(targetIdx);
+  }, [textboxValue, setFocusedIdx, targetIdx]);
 }
 
 const SearchableMenu: React.SFC<Props> = ({
@@ -138,10 +123,12 @@ const SearchableMenu: React.SFC<Props> = ({
     currentValue
   );
 
-  const currentIdx = getOptIdxByValue(filteredOptions, currentValue);
-  useEffect(() => {
-    setFocusedIdx(currentIdx);
-  }, [textboxValue, setFocusedIdx, currentIdx]);
+  useSetFocus({
+    filteredOptions,
+    currentValue,
+    setFocusedIdx,
+    textboxValue
+  });
 
   const offset = getScrollOffset(headerRef.current);
   useScrollToSelected({

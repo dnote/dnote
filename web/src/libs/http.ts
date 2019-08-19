@@ -36,12 +36,11 @@ function checkStatus(response: Response): Response | Promise<Response> {
 }
 
 function parseJSON<T>(response: Response): Promise<T> {
-  return response.json() as Promise<T>;
-  //  if (response.headers.get('Content-Type') === 'application/json') {
-  //    return response.json() as Promise<T>;
-  //  }
-  //
-  //  return Promise.resolve(response);
+  if (response.headers.get('Content-Type') === 'application/json') {
+    return response.json() as Promise<T>;
+  }
+
+  return Promise.resolve(null);
 }
 
 function request<T>(path: string, options: RequestInit) {

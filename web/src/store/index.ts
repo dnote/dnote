@@ -27,6 +27,7 @@ import note from './note/reducers';
 import ui from './ui/reducers';
 import route from './route/reducers';
 import notes from './notes/reducers';
+import filters from './filters/reducers';
 
 const rootReducer = combineReducers({
   auth,
@@ -36,7 +37,8 @@ const rootReducer = combineReducers({
   notes,
   note,
   ui,
-  route
+  route,
+  filters
 });
 
 // configuruStore returns a new store that contains the appliation state
@@ -55,3 +57,4 @@ export default function configureStore(initialState) {
 }
 
 export * from './types';
+export * from './hooks';

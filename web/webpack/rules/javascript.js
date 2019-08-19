@@ -58,7 +58,7 @@ module.exports = ({ production = false } = {}) => {
     },
     {
       test: /\.ts(x?)$/,
-      exclude: /node_modules/,
+      exclude: /node_modules|_test\.ts(x)$/,
       use: [
         {
           loader: 'ts-loader'

@@ -21,8 +21,8 @@
 $xl-breakpoint: 1441px;
 //$lg-breakpoint: 1280px;
 $lg-breakpoint: 992px;
-//$md-breakpoint: 600px;
-$md-breakpoint: 768px;
+$md-breakpoint: 576px;
+// $md-breakpoint: 768px;
 $sm-breakpoint: 321px;
 
 @mixin breakpoint($point) {
@@ -61,10 +61,9 @@ $sm-breakpoint: 321px;
   }
 }
 
-// overSidebarThreshold is a mixin that applies the given style if and only if
-// the current viewport width is above the sidebar threshold
-@mixin overSidebarThreshold() {
-  @media (min-width: $note-sidebar-threshold) {
+// landscape is the mobile landscape mode
+@mixin landscape() {
+  @media (max-height: 400px) {
     @content;
   }
 }

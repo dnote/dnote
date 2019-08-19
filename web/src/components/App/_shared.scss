@@ -72,11 +72,6 @@ textarea:disabled {
   overflow: scroll;
 }
 
-.page {
-  height: 100%;
-  overflow-y: scroll;
-}
-
 button {
   img,
   svg {
@@ -100,18 +95,18 @@ button {
       0 0 0 0.2em rgba(4, 100, 210, 0.3);
     outline: none;
   }
+}
 
-  &.text-input-small {
-    padding: rem(4px) rem(12px);
-  }
+.text-input-small {
+  padding: rem(4px) rem(12px);
+}
 
-  &.text-input-medium {
-    padding: rem(8px) rem(12px);
-  }
+.text-input-medium {
+  padding: rem(8px) rem(12px);
+}
 
-  &.text-input-stretch {
-    width: 100%;
-  }
+.text-input-stretch {
+  width: 100%;
 }
 
 .label-full {
@@ -157,6 +152,6 @@ h6 {
     }
   }
 }
-html {
+html body {
   overflow-y: scroll;
 }

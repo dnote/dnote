@@ -10,11 +10,24 @@ $border-radius: rem(4px);
   position: relative;
   border-top: none;
   padding: rem(16px);
+  flex-grow: 1;
+
+  @include breakpoint(lg) {
+    flex-grow: initial;
+  }
 }
 
 .wrapper {
   border-bottom-left-radius: $border-radius;
   border-bottom-right-radius: $border-radius;
+
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+
+  @include breakpoint(lg) {
+    display: block;
+  }
 }
 
 .actions {

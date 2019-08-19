@@ -90,10 +90,7 @@ function Modal({
   });
 
   useEffect(() => {
-    const pageEl = document.getElementsByClassName('page')[0];
-    if (!pageEl) {
-      return;
-    }
+    const pageEl = document.body;
 
     if (isOpen) {
       scrollbarWidth = getScrollbarWidth();

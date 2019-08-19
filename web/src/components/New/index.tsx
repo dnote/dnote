@@ -11,7 +11,7 @@ import { resetEditor } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
 import * as notesOperation from '../../operations/notes';
-import { getNotePath, notePath } from '../../libs/paths';
+import { getNotePath, notePathDef } from '../../libs/paths';
 import { useCleanupEditor, useFocusTextarea } from '../../libs/hooks/editor';
 import styles from './New.scss';
 
@@ -34,7 +34,7 @@ const New: React.SFC<Props> = ({ history }) => {
   useFocusTextarea(textareaEl, bookSelectorOpen);
 
   return (
-    <div className="container mobile-nopadding">
+    <div className={classnames(styles.container, 'container mobile-nopadding')}>
       <Helmet>
         <title>New</title>
       </Helmet>
@@ -43,63 +43,59 @@ const New: React.SFC<Props> = ({ history }) => {
         Error: {errMessage}
       </Flash>
 
-      <div className="row">
-        <div className="col-12">
-          <div className={styles.wrapper}>
-            <div
-              className={classnames(styles.overlay, {
-                [styles.active]: bookSelectorOpen
-              })}
-            />
-            <div className={styles.header}>
-              <h2 className={styles.heading}>New note</h2>
-            </div>
-
-            <Editor
-              isNew
-              isBusy={submitting}
-              setBookSelectorOpen={setBookSelectorOpen}
-              bookSelectorOpen={bookSelectorOpen}
-              textareaEl={textareaEl}
-              setTextareaEl={setTextareaEl}
-              onSubmit={async ({ draftContent, draftBookUUID }) => {
-                setSubmitting(true);
-
-                try {
-                  let bookUUID;
-
-                  if (!draftBookUUID) {
-                    const book = await dispatch(createBook(editor.bookLabel));
-                    bookUUID = book.uuid;
-                  } else {
-                    bookUUID = draftBookUUID;
-                  }
-
-                  const res = await notesOperation.create({
-                    bookUUID,
-                    content: draftContent
-                  });
-
-                  dispatch(resetEditor());
-
-                  const dest = getNotePath(res.result.uuid);
-                  history.push(dest);
-
-                  dispatch(
-                    setMessage({
-                      message: 'Created a note',
-                      kind: 'info',
-                      path: notePath
-                    })
-                  );
-                } catch (err) {
-                  setErrMessage(err.message);
-                  setSubmitting(false);
-                }
-              }}
-            />
-          </div>
+      <div className={styles.wrapper}>
+        <div
+          className={classnames(styles.overlay, {
+            [styles.active]: bookSelectorOpen
+          })}
+        />
+        <div className={styles.header}>
+          <h2 className={styles.heading}>New note</h2>
         </div>
+
+        <Editor
+          isNew
+          isBusy={submitting}
+          setBookSelectorOpen={setBookSelectorOpen}
+          bookSelectorOpen={bookSelectorOpen}
+          textareaEl={textareaEl}
+          setTextareaEl={setTextareaEl}
+          onSubmit={async ({ draftContent, draftBookUUID }) => {
+            setSubmitting(true);
+
+            try {
+              let bookUUID;
+
+              if (!draftBookUUID) {
+                const book = await dispatch(createBook(editor.bookLabel));
+                bookUUID = book.uuid;
+              } else {
+                bookUUID = draftBookUUID;
+              }
+
+              const res = await notesOperation.create({
+                bookUUID,
+                content: draftContent
+              });
+
+              dispatch(resetEditor());
+
+              const dest = getNotePath(res.result.uuid);
+              history.push(dest);
+
+              dispatch(
+                setMessage({
+                  message: 'Created a note',
+                  kind: 'info',
+                  path: notePathDef
+                })
+              );
+            } catch (err) {
+              setErrMessage(err.message);
+              setSubmitting(false);
+            }
+          }}
+        />
       </div>
 
       <Prompt

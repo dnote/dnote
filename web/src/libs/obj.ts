@@ -16,10 +16,13 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-function filterObjKeys(obj, keys, filterFn) {
+type FilterFn = (val: any, key: any) => boolean;
+
+export function filterObjKeys(obj: object, filterFn: FilterFn) {
   return Object.keys(obj)
     .filter(key => {
-      return filterFn(key);
+      const val = obj[key];
+      return filterFn(val, key);
     })
     .reduce((ret, key) => {
       return {
@@ -32,14 +35,14 @@ function filterObjKeys(obj, keys, filterFn) {
 // whitelist returns a new object whose keys are whitelisted by the given array
 // of keys
 export function whitelist(obj, keys) {
-  return filterObjKeys(obj, keys, key => {
+  return filterObjKeys(obj, (val, key) => {
     return keys.indexOf(key) > -1;
   });
 }
 
 // blacklist returns a new object where key-val pairs are filtered out by keys
 export function blacklist(obj, keys) {
-  return filterObjKeys(obj, keys, key => {
+  return filterObjKeys(obj, (val, key) => {
     return keys.indexOf(key) === -1;
   });
 }

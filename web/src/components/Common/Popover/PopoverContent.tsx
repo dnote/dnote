@@ -25,15 +25,16 @@ import { Alignment, Direction } from './types';
 
 interface Props {
   contentId: string;
-  contentClassName: string;
   onDismiss: () => void;
-  triggerEl: HTMLElement;
   children: React.ReactNode;
-  alignment: Alignment;
   direction: Direction;
-  hasBorder: boolean;
-  closeOnOutsideClick: boolean;
-  closeOnEscapeKeydown: boolean;
+  closeOnOutsideClick?: boolean;
+  closeOnEscapeKeydown?: boolean;
+  contentClassName?: string;
+  alignment?: Alignment;
+  triggerEl?: HTMLElement;
+  wrapperEl?: any;
+  hasBorder?: boolean;
 }
 
 const PopoverContent: React.SFC<Props> = ({
@@ -41,6 +42,7 @@ const PopoverContent: React.SFC<Props> = ({
   contentClassName,
   onDismiss,
   triggerEl,
+  wrapperEl,
   children,
   alignment,
   direction,
@@ -50,49 +52,80 @@ const PopoverContent: React.SFC<Props> = ({
 }) => {
   const contentRef = useRef(null);
 
-  function handleOutsideClick(e) {
-    const contentEl = contentRef.current;
-
-    if (!contentEl || !triggerEl) {
-      return;
-    }
-
-    if (triggerEl.contains(e.target)) {
-      return;
-    }
-
-    if (!contentEl.contains(e.target)) {
-      onDismiss();
-    }
-  }
-
-  function handleKeydown(e) {
-    if (e.keyCode === KEYCODE_ESC) {
-      onDismiss();
-    }
-  }
-
   useEffect(() => {
+    function handleOutsideClick(e) {
+      const contentEl = contentRef.current;
+
+      if (!contentEl) {
+        return;
+      }
+
+      if (triggerEl && triggerEl.contains(e.target)) {
+        return;
+      }
+
+      if (!contentEl.contains(e.target)) {
+        onDismiss();
+      }
+    }
+
+    // addLinkListeners adds event listeners to all links to handle outside click
+    // because click events on react-router's Link elements do not bubble up to document
+    function addLinkListeners() {
+      const links = document.links;
+      for (let i = 0, linksLength = links.length; i < linksLength; i++) {
+        const link = links[i];
+
+        link.addEventListener('click', handleOutsideClick);
+      }
+    }
+
+    // removeLinkListeners cleans up any event listeners for handling outside click attached to links
+    function removeLinkListeners() {
+      const links = document.links;
+      for (let i = 0, linksLength = links.length; i < linksLength; i++) {
+        const link = links[i];
+
+        link.removeEventListener('click', handleOutsideClick);
+      }
+    }
+
     if (closeOnOutsideClick) {
       document.addEventListener('click', handleOutsideClick);
       document.addEventListener('touchstart', handleOutsideClick);
+      addLinkListeners();
     }
 
     return () => {
       document.removeEventListener('click', handleOutsideClick);
       document.removeEventListener('touchstart', handleOutsideClick);
+      removeLinkListeners();
     };
-  });
+  }, [closeOnOutsideClick, onDismiss, triggerEl, wrapperEl]);
 
   useEffect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.keyCode === KEYCODE_ESC) {
+        e.stopPropagation();
+        onDismiss();
+      }
+    }
+
+    let targetEl;
+    if (wrapperEl) {
+      targetEl = wrapperEl;
+    } else {
+      targetEl = document;
+    }
+
     if (closeOnEscapeKeydown) {
-      document.addEventListener('keydown', handleKeydown);
+      targetEl.addEventListener('keyup', handleKeydown);
     }
 
     return () => {
-      document.addEventListener('keydown', handleKeydown);
+      targetEl.removeEventListener('keyup', handleKeydown);
     };
-  });
+  }, [closeOnEscapeKeydown, onDismiss, wrapperEl]);
 
   return (
     <div

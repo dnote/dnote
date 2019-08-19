@@ -6,8 +6,6 @@ import styles from './Header.scss';
 interface Props {
   year: number;
   month: number;
-  total: number;
-  isReady: boolean;
 }
 
 function toDatetime(year: number, month: number) {
@@ -21,19 +19,18 @@ function toDatetime(year: number, month: number) {
   return `${year}-${monthStr}`;
 }
 
-const Header: React.SFC<Props> = ({ year, month, total, isReady }) => {
+const Header: React.SFC<Props> = ({ year, month }) => {
   const monthName = monthNumToFullName(month);
   const datetime = toDatetime(year, month);
 
   return (
-    <div className={styles.wrapper}>
+    <header className={styles.wrapper}>
       <h2 className={styles.date}>
         <time dateTime={datetime}>
           {monthName} {year}
         </time>
       </h2>
-      <div className={styles.count}>{isReady && total} total</div>
-    </div>
+    </header>
   );
 };
 

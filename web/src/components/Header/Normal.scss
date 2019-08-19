@@ -37,10 +37,10 @@
   top: 0;
   padding: 0 rem(20px);
   z-index: 4;
+  height: $header-height;
 
   @include breakpoint(md) {
     flex-direction: row;
-    height: $header-height;
   }
 }
 
@@ -69,7 +69,7 @@
   flex: 1;
   margin-left: rem(24px);
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     flex: auto;
     margin-left: 0;
   }

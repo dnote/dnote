@@ -25,26 +25,10 @@ import BookIcon from '../../../Icons/Book';
 import CaretIcon from '../../../Icons/Caret';
 import SearchInput from '../../SearchInput';
 import { useDispatch, useSelector } from '../../../../store';
-import { BookData } from '../../../../operations/books';
 import { updateBook } from '../../../../store/editor';
-import { Option } from '../../../../libs/select';
+import { booksToOptions } from '../../../../libs/select';
 import OptionItem from './OptionItem';
 import styles from './index.scss';
-
-function makeOptions(books: BookData[]): Option[] {
-  const ret = [];
-
-  for (let i = 0; i < books.length; ++i) {
-    const book = books[i];
-
-    ret.push({
-      label: book.label,
-      value: book.uuid
-    });
-  }
-
-  return ret;
-}
 
 interface Props {
   wrapperClassName?: string;
@@ -80,7 +64,7 @@ const BookSelector: React.SFC<Props> = ({
     }
   }, [isOpen]);
 
-  const options = makeOptions(books.data);
+  const options = booksToOptions(books.data);
   const currentValue = editor.bookUUID;
   const currentLabel = editor.bookLabel;
 
@@ -184,14 +168,22 @@ const BookSelector: React.SFC<Props> = ({
             }}
             renderInput={inputProps => {
               return (
-                <SearchInput
-                  size="regular"
-                  placeholder="Find or create by name"
-                  wrapperClassName={styles['input-wrapper']}
-                  value={textboxValue}
-                  setValue={setTextboxValue}
-                  {...inputProps}
-                />
+                <div className={styles['input-wrapper-container']}>
+                  <SearchInput
+                    inputClassName={classnames(
+                      'text-input-small',
+                      styles.input
+                    )}
+                    placeholder="Find or create by name"
+                    wrapperClassName={styles['input-wrapper']}
+                    value={textboxValue}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setTextboxValue(val);
+                    }}
+                    {...inputProps}
+                  />
+                </div>
               );
             }}
           />

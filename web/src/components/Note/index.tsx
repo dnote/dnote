@@ -26,7 +26,8 @@ import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import { unsetMessage } from '../../store/ui';
-import { notePath } from '../../libs/paths';
+import { notePathDef } from '../../libs/paths';
+import { parseSearchString } from '../../libs/url';
 import styles from './index.scss';
 
 interface Match {
@@ -38,18 +39,28 @@ interface Props extends RouteComponentProps<Match> {}
 function useClearMessage(dispatch: ReduxDispatch) {
   useEffect(() => {
     return () => {
-      dispatch(unsetMessage(notePath));
+      dispatch(unsetMessage(notePathDef));
     };
   }, [dispatch]);
 }
 
-function useFetchData(dispatch: ReduxDispatch, noteUUID: string) {
+function useFetchData(
+  dispatch: ReduxDispatch,
+  noteUUID: string,
+  search: string
+) {
   useEffect(() => {
-    dispatch(getNote(noteUUID));
-  }, [dispatch, noteUUID]);
+    const searchObj = parseSearchString(search);
+
+    dispatch(
+      getNote(noteUUID, {
+        q: searchObj.q || ''
+      })
+    );
+  }, [dispatch, noteUUID, search]);
 }
 
-const Note: React.SFC<Props> = ({ match }) => {
+const Note: React.SFC<Props> = ({ match, location }) => {
   const { params } = match;
   const { noteUUID } = params;
 
@@ -60,7 +71,7 @@ const Note: React.SFC<Props> = ({ match }) => {
     };
   });
 
-  useFetchData(dispatch, noteUUID);
+  useFetchData(dispatch, noteUUID, location.search);
   useClearMessage(dispatch);
 
   if (note.errorMessage) {

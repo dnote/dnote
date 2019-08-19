@@ -11,13 +11,18 @@ $border-radius: rem(4px);
 
 textarea.textarea {
   width: 100%;
-  min-height: rem(500px);
   padding: rem(12px) rem(12px) rem(24px) rem(12px);
   background: #fafbfd;
+  min-height: 100%;
 
-  &:focus {
-    // border-color: $light-blue;
-    // outline: none;
+  @include breakpoint(lg) {
+    height: auto;
+    min-height: rem(500px);
+  }
+
+  @include landscape {
+    height: auto;
+    min-height: rem(500px);
   }
 }
 
@@ -28,8 +33,11 @@ textarea.textarea {
   color: $gray;
   font-style: italic;
   @include font-size('small');
+  display: none;
 
-  &:not(.shown) {
-    display: none;
+  @include breakpoint(md) {
+    &.shown {
+      display: block;
+    }
   }
 }

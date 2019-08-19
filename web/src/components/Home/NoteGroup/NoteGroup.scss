@@ -23,6 +23,16 @@
 
 .wrapper {
   position: relative;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+
+  &:not(.first) {
+    margin-top: rem(20px);
+
+    @include breakpoint(md) {
+      margin-top: rem(24px);
+    }
+  }
 }
 
 .mask {

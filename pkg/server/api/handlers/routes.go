@@ -315,9 +315,9 @@ func applyMiddleware(h http.Handler, rateLimit bool) http.Handler {
 	ret := h
 	ret = logging(ret)
 
-	if rateLimit && os.Getenv("GO_ENV") != "TEST" {
-		ret = limit(ret)
-	}
+	// if rateLimit && os.Getenv("GO_ENV") != "TEST" {
+	// 	ret = limit(ret)
+	// }
 
 	return ret
 }
@@ -360,18 +360,9 @@ func NewRouter(app *App) *mux.Router {
 		{"GET", "/stripe_source", auth(app.getStripeSource, nil), true},
 		{"PATCH", "/stripe_source", auth(app.updateStripeSource, nil), true},
 		{"GET", "/notes", auth(app.getNotes, &proOnly), false},
-		{"GET", "/demo/notes", app.getDemoNotes, true},
 		{"GET", "/notes/{noteUUID}", auth(app.getNote, &proOnly), true},
-		{"GET", "/demo/notes/{noteUUID}", app.getDemoNote, true},
 		{"GET", "/calendar", auth(app.getCalendar, &proOnly), true},
-		{"GET", "/demo/calendar", app.getDemoCalendar, true},
-		{"GET", "/digests/{digestUUID}", auth(app.getDigest, &proOnly), true},
-		{"GET", "/demo/digests/{digestUUID}", app.getDemoDigest, true},
-		{"GET", "/digests", auth(app.getDigests, &proOnly), true},
-		{"GET", "/demo/digests", app.getDemoDigests, true},
 		//Route{"GET", "/books/{bookUUID}", cors(auth(app.getBook)), true},
-
-		// routes for user migration to use encryption
 
 		// v1
 		{"POST", "/v1/sync", cors(app.Sync), true},

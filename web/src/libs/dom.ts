@@ -41,8 +41,12 @@ export function getScrollbarWidth() {
 
 // scrollTo scrolls the given element to the given position
 export function scrollTo(element: HTMLElement, posY: number) {
-  // eslint-disable-next-line no-param-reassign
-  element.scrollTop = posY;
+  if (document.body === element) {
+    window.scrollTo(0, posY);
+  } else {
+    // eslint-disable-next-line no-param-reassign
+    element.scrollTop = posY;
+  }
 }
 
 // focusTextarea focuses on the given text area element and moves the cursor to the last position

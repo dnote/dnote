@@ -5,18 +5,27 @@
 
 $border-radius: rem(4px);
 
+.container {
+  min-height: inherit;
+
+  @include breakpoint(lg) {
+    min-height: initial;
+  }
+}
+
 .wrapper {
+  display: flex;
+  flex-direction: column;
+
   position: relative;
   background: $white;
   min-height: rem(500px);
   border-radius: $border-radius;
+  min-height: inherit;
 
   @include breakpoint(md) {
     border: 1px solid $border-color;
   }
-
-  // padding: rem(24px) rem(20px);
-  // box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
 }
 
 .overlay {
@@ -37,7 +46,7 @@ $border-radius: rem(4px);
   border-top-left-radius: $border-radius;
   border-top-right-radius: $border-radius;
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     background-color: #f7f9fa;
     border-bottom: 1px solid $border-color;
   }

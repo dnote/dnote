@@ -60,6 +60,10 @@
   @include breakpoint(lg) {
     max-width: rem(600px);
   }
+
+  .book-label-link {
+    color: inherit;
+  }
 }
 
 .content {
@@ -88,4 +92,9 @@ $footer-text-color: #8c8c8c;
 
 .action {
   color: $footer-text-color;
+}
+
+.match {
+  display: inline-block;
+  background: #f7f77d;
 }

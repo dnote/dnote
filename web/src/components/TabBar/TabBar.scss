@@ -11,7 +11,7 @@
   background-color: $first;
   border-top: 1px solid $border-color;
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     display: none;
   }
 }

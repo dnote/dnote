@@ -26,7 +26,8 @@ import BookIcon from '../Icons/Book';
 import { parseMarkdown } from '../../helpers/markdown';
 import { nanosecToMillisec, getShortMonthName } from '../../helpers/time';
 import { useSelector } from '../../store';
-import { getNoteEditPath } from '../../libs/paths';
+import { getNoteEditPath, getHomePath } from '../../libs/paths';
+import { tokenize, TokenKind } from '../../libs/fts/lexer';
 import styles from './NoteContent.scss';
 
 function formatAddedOn(ts: number): string {
@@ -44,6 +45,42 @@ function getDatetimeISOString(ts: number): string {
   const ms = nanosecToMillisec(ts);
 
   return new Date(ms).toISOString();
+}
+
+function formatFTSSelection(content: string): string {
+  if (content.indexOf('<dnotehl>') === -1) {
+    return content;
+  }
+
+  const tokens = tokenize(content);
+
+  let output = '';
+  let buf = [];
+
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+
+    if (t.kind === TokenKind.hlBegin || t.kind === TokenKind.eol) {
+      output += buf.join('');
+
+      buf = [];
+    } else if (t.kind === TokenKind.hlEnd) {
+      output += `<span class="${styles.match}">
+        ${buf.join('')}
+      </span>`;
+
+      buf = [];
+    } else {
+      buf.push(t.value);
+    }
+  }
+
+  return output;
+}
+
+function formatContent(content: string): string {
+  const formatted = formatFTSSelection(content);
+  return parseMarkdown(formatted);
 }
 
 interface Props {}
@@ -66,13 +103,20 @@ const Content: React.SFC<Props> = () => {
           className={styles['book-icon']}
         />
 
-        <h1 className={styles['book-label']}>{note.book.label}</h1>
+        <h1 className={styles['book-label']}>
+          <Link
+            to={getHomePath({ book: note.book.label })}
+            className={styles['book-label-link']}
+          >
+            {note.book.label}
+          </Link>
+        </h1>
       </header>
 
       <section
         className={classnames('markdown-body', styles.content)}
         dangerouslySetInnerHTML={{
-          __html: parseMarkdown(note.content)
+          __html: formatContent(note.content)
         }}
       />
 

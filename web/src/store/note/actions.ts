@@ -18,7 +18,7 @@
 
 import { RECEIVE, START_FETCHING, ERROR, RESET } from './type';
 import { ThunkAction } from '../types';
-import * as notesService from '../../services/notes';
+import * as notesOperation from '../../operations/notes';
 import { NoteData } from '../../operations/types';
 
 export function receiveNote(note) {
@@ -47,12 +47,19 @@ function receiveNoteError(errorMessage) {
   };
 }
 
-export const getNote = (noteUUID: string): ThunkAction<NoteData | void> => {
+interface GetNoteFacets {
+  q?: string;
+}
+
+export const getNote = (
+  noteUUID: string,
+  params: GetNoteFacets
+): ThunkAction<NoteData | void> => {
   return dispatch => {
     dispatch(startFetchingNote());
 
-    return notesService
-      .fetchOne(noteUUID)
+    return notesOperation
+      .fetchOne(noteUUID, params)
       .then(note => {
         dispatch(receiveNote(note));
 

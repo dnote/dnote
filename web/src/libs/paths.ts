@@ -20,9 +20,18 @@ import qs from 'qs';
 import { matchPath } from 'react-router-dom';
 import { Location } from 'history';
 
+// path definitions
+export const homePathDef = '/';
+export const notePathDef = '/notes/:noteUUID';
+export const noteEditPathDef = '/notes/:noteUUID/edit';
+export const noteNewPathDef = '/new';
+export const booksPathDef = '/books';
+export const loginPathDef = '/login';
+export const joinPathDef = '/join';
+
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
-  const ret = {};
+  const ret: any = {};
 
   const keys = Object.keys(obj);
   for (let i = 0; i < keys.length; ++i) {
@@ -33,6 +42,11 @@ function filterSearchObj(obj) {
     if (val !== '') {
       ret[key] = val;
     }
+  }
+
+  // page is implicitly 1
+  if (ret.page === 1) {
+    delete ret.page;
   }
 
   return ret;
@@ -54,7 +68,7 @@ function getLocation({
   if (searchObj) {
     const o = filterSearchObj(searchObj);
 
-    ret.search = qs.stringify(o);
+    ret.search = qs.stringify(o, { arrayFormat: 'repeat' });
   }
   if (state) {
     ret.state = state;
@@ -63,76 +77,34 @@ function getLocation({
   return ret;
 }
 
-export function getNewPath() {
-  return getLocation({ pathname: '/new' });
+export function getNewPath(searchObj = {}): Location {
+  return getLocation({ pathname: '/new', searchObj });
 }
 
-export function getRandomPath() {
-  return getLocation({ pathname: '/random' });
+export function getRandomPath(searchObj = {}): Location {
+  return getLocation({ pathname: '/random', searchObj });
 }
 
-export function getHomePath(searchObj = {}, options = { demo: false }) {
-  const { demo } = options;
+export function getHomePath(searchObj = {}): Location {
+  return getLocation({ pathname: homePathDef, searchObj });
+}
 
-  let basePath;
-  if (demo) {
-    basePath = '/demo';
-  } else {
-    basePath = '/';
-  }
+export function getBooksPath(searchObj = {}): Location {
+  const basePath = '/books';
 
   return getLocation({ pathname: basePath, searchObj });
 }
 
-export function getBooksPath(options = { demo: false }) {
-  const { demo } = options;
-
-  let basePath;
-  if (demo) {
-    basePath = '/demo/books';
-  } else {
-    basePath = '/books';
-  }
-
-  return getLocation({ pathname: basePath });
-}
-
-export function getDigestsPath(options = { demo: false }) {
-  const { demo } = options;
-
-  let basePath;
-  if (demo) {
-    basePath = '/demo/digests';
-  } else {
-    basePath = '/digests';
-  }
-
-  return getLocation({ pathname: basePath });
-}
-
-export function getDigestPath(digestUUID, options = { demo: false }) {
-  const { demo } = options;
-
-  let basePath;
-  if (demo) {
-    basePath = '/demo/digests';
-  } else {
-    basePath = '/digests';
-  }
-
-  const path = `${basePath}/${digestUUID}`;
-  return getLocation({ pathname: path });
-}
-
-export function getNotePath(noteUUID: string) {
+export function getNotePath(noteUUID: string, searchObj = {}): Location {
   const path = `/notes/${noteUUID}`;
 
   return getLocation({
-    pathname: path
+    pathname: path,
+    searchObj
   });
 }
 
-export function getNoteEditPath(noteUUID: string) {
+export function getNoteEditPath(noteUUID: string): Location {
   const path = `/notes/${noteUUID}/edit`;
 
   return getLocation({
@@ -140,170 +112,32 @@ export function getNoteEditPath(noteUUID: string) {
   });
 }
 
-export function getJoinPath(searchObj) {
+export function getJoinPath(searchObj): Location {
   return getLocation({ pathname: '/join', searchObj });
 }
 
-export function getLoginPath(searchObj) {
+export function getLoginPath(searchObj): Location {
   return getLocation({ pathname: '/login', searchObj });
 }
 
-export function getSubscriptionPath(searchObj) {
+export function getSubscriptionPath(searchObj = {}): Location {
   return getLocation({ pathname: '/subscriptions', searchObj });
 }
 
-export function getSubscriptionCheckoutPath(searchObj) {
+export function getSubscriptionCheckoutPath(searchObj = {}): Location {
   return getLocation({ pathname: '/subscriptions/checkout', searchObj });
 }
 
-export function getSettingsPath(section) {
+export function getSettingsPath(section: string) {
   return `/settings/${section}`;
 }
 
-// mainSidebarPaths are paths that have the main sidebar and the main footer
-export const mainSidebarPaths = [
-  '/',
-  '/books',
-  '/digests',
-  '/demo',
-  '/demo/books',
-  '/demo/digests'
-];
-
-// noteSidebarPaths are paths that have the note sidebar
-export const noteSidebarPaths = ['/', '/demo'];
-
-// footerPaths are paths that have footers
-export const footerPaths = [
-  ...mainSidebarPaths,
-  '/settings/:section',
-  '/notes/:noteUUID',
-  '/demo/notes/:noteUUID'
-];
-
-function isEmailPreferencePath(pathname) {
-  const match = matchPath(pathname, {
-    path: '/email-preference',
-    exact: true
-  });
-
-  return Boolean(match);
-}
-
-// isNotePath checks if the given pathname is for the note path
-export function isNotePath(pathname) {
-  const match = matchPath(pathname, {
-    path: ['/notes/:noteUUID', '/demo/notes/:noteUUID'],
-    exact: true
-  });
-
-  return Boolean(match);
-}
-
-// isSubscriptionsPath checks if the given pathname is for the subscriptions path
-export function isSubscriptionsPath(pathname) {
-  const match = matchPath(pathname, {
-    path: '/subscriptions',
-    exact: true
-  });
-
-  return Boolean(match);
-}
-
-// isSubscriptionsCheckoutPath checks if the given pathname is for the subscriptions path
-export function isSubscriptionsCheckoutPath(pathname) {
-  const match = matchPath(pathname, {
-    path: '/subscriptions/checkout',
-    exact: true
-  });
-
-  return Boolean(match);
-}
-
-// isDigestPath checks if the given pathname is for the digest path
-export function isDigestPath(pathname) {
-  const match = matchPath(pathname, {
-    path: ['/digests/:digestUUID', '/demo/digests/:digestUUID'],
-    exact: true
-  });
-
-  return Boolean(match);
-}
-
-// isLegacyPath checks if the given pathname is for the legacy path
-export function isLegacyPath(pathname) {
-  const match = matchPath(pathname, {
-    path: '/legacy'
-  });
-
-  return Boolean(match);
-}
-
-// isHomePath checks if the given pathname is for the home path
-export function isHomePath(pathname, demo = false) {
-  let path;
-  if (demo) {
-    path = '/demo';
-  } else {
-    path = '/';
-  }
-
-  const match = matchPath(pathname, {
+// checkCurrentPath checks if the current path is the given path
+export function checkCurrentPath(location: Location, path: string): boolean {
+  const match = matchPath(location.pathname, {
     path,
     exact: true
   });
 
   return Boolean(match);
 }
-
-const demoPaths = [
-  '/demo',
-  '/demo/books',
-  '/demo/digests',
-  '/demo/digests/:digestUUID',
-  '/demo/notes/:noteUUID'
-];
-
-// isDemoPath checks if the given pathname is for the demo path
-export function isDemoPath(pathname) {
-  for (let i = 0; i < demoPaths.length; ++i) {
-    const p = demoPaths[i];
-
-    const match = matchPath(pathname, {
-      path: p,
-      exact: true
-    });
-
-    if (match) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// checkBoxedLayout determines if the layout for the given location is boxed
-export function checkBoxedLayout(location, isEditor) {
-  const { pathname } = location;
-
-  if (isNotePath(pathname)) {
-    return isEditor;
-  }
-  if (isLegacyPath(pathname)) {
-    return false;
-  }
-  if (isEmailPreferencePath(pathname)) {
-    return false;
-  }
-  if (isDigestPath(pathname)) {
-    return false;
-  }
-  if (isSubscriptionsCheckoutPath(pathname)) {
-    return false;
-  }
-
-  return !isSubscriptionsPath(pathname);
-}
-
-// path definitions
-export const notePath = '/notes/:noteUUID';

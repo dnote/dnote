@@ -9,9 +9,9 @@ import { resetEditor } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
 import * as notesOperation from '../../operations/notes';
-import { getNotePath, notePath } from '../../libs/paths';
+import { getNotePath, notePathDef } from '../../libs/paths';
 import { useCleanupEditor, useFocusTextarea } from '../../libs/hooks/editor';
-import styles from './Edit.scss';
+import styles from '../New/New.scss';
 
 interface Props extends RouteComponentProps {
   noteUUID: string;
@@ -79,7 +79,7 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
               setMessage({
                 message: 'Updated the note',
                 kind: 'info',
-                path: notePath
+                path: notePathDef
               })
             );
           } catch (err) {

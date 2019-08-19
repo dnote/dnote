@@ -21,7 +21,7 @@ import classnames from 'classnames';
 
 import CloseIcon from '../../Icons/Close';
 
-import styles from './Flash.module.scss';
+import styles from './Flash.scss';
 
 const TYPE_SUCCESS = 'success';
 const TYPE_INFO = 'info';
@@ -39,6 +39,7 @@ interface Props {
   kind: string;
   when?: boolean;
   hasBorder?: boolean;
+  noMargin?: boolean;
   onDismiss?: () => void;
   wrapperClassName?: string;
   contentClassName?: string;
@@ -52,6 +53,7 @@ const Flash: React.SFC<Props> = ({
   children,
   hasBorder,
   onDismiss,
+  noMargin,
   wrapperClassName,
   contentClassName
 }) => {
@@ -75,7 +77,8 @@ const Flash: React.SFC<Props> = ({
         [styles.warning]: kind === TYPE_WARNING,
         [styles.danger]: kind === TYPE_DANGER,
         [styles.dismissable]: dismissable,
-        [styles.border]: hasBorder
+        [styles.border]: hasBorder,
+        [styles.nomargin]: noMargin
       })}
     >
       <div className={contentClassName}>{children}</div>

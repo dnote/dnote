@@ -35,6 +35,8 @@ import NormalHeader from '../Header/Normal';
 import TabBar from '../TabBar';
 import SystemMessage from '../Common/SystemMessage';
 import styles from './App.scss';
+import { getFiltersFromSearchStr } from '../../libs/filters';
+import { updateQuery, updatePage } from '../../store/filters';
 
 import './App.global.scss';
 
@@ -73,15 +75,26 @@ function useSavePrevLocation(location: Location) {
     }
 
     if (hasLocationChanged(location, prevLocation)) {
-      console.log(location, prevLocation);
       dispatch(setPrevLocation(prevLocation));
     }
   }, [prevLocation, dispatch, location]);
 }
 
+function usePersistFilters(location: Location) {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    const f = getFiltersFromSearchStr(location.search);
+
+    dispatch(updateQuery('q', f.queries.q));
+    dispatch(updateQuery('book', f.queries.book));
+    dispatch(updatePage(f.page || 1));
+  }, [dispatch, location.search]);
+}
+
 const App: React.SFC<Props> = ({ location }) => {
   useFetchData();
   useSavePrevLocation(location);
+  usePersistFilters(location);
 
   const { user } = useSelector(state => {
     return {

@@ -122,6 +122,10 @@
 .button-label {
 }
 
+.input {
+  width: 100%;
+}
+
 .input-wrapper {
   background: $white;
 }
@@ -202,4 +206,8 @@
 }
 .textbox {
   @include font-size('small');
+}
+
+.input-wrapper-container {
+  padding: rem(8px);
 }

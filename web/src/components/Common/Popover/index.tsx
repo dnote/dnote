@@ -24,19 +24,19 @@ import styles from './Popover.module.scss';
 import { Alignment, Direction } from './types';
 
 interface Props {
-  contentClassName: string;
-  wrapperClassName: string;
-  renderContent: () => any;
   isOpen: boolean;
   setIsOpen: (boolean) => void;
+  renderTrigger: (any) => React.ReactNode;
+  renderContent: () => any;
   alignment: Alignment;
   direction: Direction;
-  renderTrigger: (any) => React.ReactNode;
-  contentId?: string;
-  closeOnOutsideClick?: boolean;
-  closeOnEscapeKeydown?: boolean;
   contentHasBorder?: boolean;
   hasArrow?: boolean;
+  contentClassName?: string;
+  wrapperClassName?: string;
+  contentId?: string;
+  closeOnEscapeKeydown?: boolean;
+  closeOnOutsideClick?: boolean;
 }
 
 const Popover: React.SFC<Props> = ({
@@ -55,9 +55,13 @@ const Popover: React.SFC<Props> = ({
   hasArrow
 }) => {
   const triggerRef = useRef(null);
+  const wrapperRef = useRef(null);
 
   return (
-    <div className={classnames(styles.wrapper, wrapperClassName)}>
+    <div
+      className={classnames(styles.wrapper, wrapperClassName)}
+      ref={wrapperRef}
+    >
       {renderTrigger({
         triggerClassName: classnames({
           [styles['is-open']]: isOpen,
@@ -76,6 +80,7 @@ const Popover: React.SFC<Props> = ({
             setIsOpen(false);
           }}
           contentClassName={contentClassName}
+          wrapperEl={wrapperRef.current}
           triggerEl={triggerRef.current}
           alignment={alignment}
           direction={direction}

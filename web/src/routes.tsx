@@ -32,62 +32,77 @@ import EmailPreference from './components/EmailPreference';
 import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
-import { notePath } from './libs/paths';
+import Books from './components/Books';
+import {
+  notePathDef,
+  homePathDef,
+  booksPathDef,
+  loginPathDef,
+  joinPathDef,
+  noteEditPathDef,
+  noteNewPathDef
+} from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
 const AuthenticatedNew = userOnly(New);
 const AuthenticatedEdit = userOnly(Edit);
+const AuthenticatedBooks = userOnly(Books);
 const GuestJoin = guestOnly(Join);
 const GuestLogin = guestOnly(Login);
 
-export default function render() {
-  const routes = [
-    {
-      path: '/',
-      exact: true,
-      render: () => {
-        return <Home />;
-      }
-    },
-    {
-      path: '/login',
-      exact: true,
-      component: GuestLogin
-    },
-    {
-      path: '/join',
-      exact: true,
-      component: GuestJoin
-    },
-    {
-      path: notePath,
-      exact: true,
-      component: Note
-    },
-    {
-      path: '/notes/:noteUUID/edit',
-      exact: true,
-      component: AuthenticatedEdit
-    },
-    {
-      path: '/verify-email/:token',
-      exact: true,
-      component: VerifyEmail
-    },
-    {
-      path: '/email-preference',
-      exact: true,
-      component: EmailPreference
-    },
-    {
-      path: '/new',
-      exact: true,
-      component: AuthenticatedNew
-    },
-    {
-      component: NotFound
+const routes = [
+  {
+    path: homePathDef,
+    exact: true,
+    render: () => {
+      return <AuthenticatedHome />;
     }
-  ];
+  },
+  {
+    path: loginPathDef,
+    exact: true,
+    component: GuestLogin
+  },
+  {
+    path: joinPathDef,
+    exact: true,
+    component: GuestJoin
+  },
+  {
+    path: notePathDef,
+    exact: true,
+    component: Note
+  },
+  {
+    path: booksPathDef,
+    exact: true,
+    component: AuthenticatedBooks
+  },
+  {
+    path: noteEditPathDef,
+    exact: true,
+    component: AuthenticatedEdit
+  },
+  {
+    path: '/verify-email/:token',
+    exact: true,
+    component: VerifyEmail
+  },
+  {
+    path: '/email-preference',
+    exact: true,
+    component: EmailPreference
+  },
+  {
+    path: noteNewPathDef,
+    exact: true,
+    component: AuthenticatedNew
+  },
+  {
+    component: NotFound
+  }
+];
 
+export default function render(): React.ReactNode {
   return renderRoutes(routes);
 }

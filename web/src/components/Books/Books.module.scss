@@ -31,14 +31,4 @@
 
 .count {
   display: none;
-
-  @include overSidebarThreshold {
-    @include font-size('small');
-    color: $black;
-    display: inline-block;
-
-    &.hidden {
-      display: none;
-    }
-  }
 }

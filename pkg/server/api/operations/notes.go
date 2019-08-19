@@ -61,7 +61,7 @@ func CreateNote(user database.User, clock clock.Clock, bookUUID, content string,
 		USN:       nextUSN,
 		Body:      content,
 		Public:    public,
-		Encrypted: true,
+		Encrypted: false,
 	}
 	if err := tx.Create(&note).Error; err != nil {
 		tx.Rollback()

@@ -62,7 +62,12 @@ test-api:
 
 test-web:
 	@echo "==> running web test"
+
+ifeq ($(WATCH), true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test:watch)
+else 
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test)
+endif
 .PHONY: test-web
 
 # development
