@@ -17,11 +17,32 @@
  */
 
 import React from 'react';
+import classnames from 'classnames';
 
-import styles from './ModalBody.module.scss';
+import CloseIcon from '../../Icons/Close';
+import styles from './ModalHeader.scss';
 
-function Body({ children }) {
-  return <div className={styles.wrapper}>{children}</div>;
+interface Props {
+  labelId: string;
+  heading: string;
+  onDismiss: () => void;
 }
 
-export default Body;
+const Header: React.SFC<Props> = ({ labelId, heading, onDismiss }) => {
+  return (
+    <div className={styles.wrapper}>
+      <strong id={labelId}>{heading}</strong>
+
+      <button
+        onClick={onDismiss}
+        type="button"
+        aria-label="Close the modal"
+        className={classnames('button-no-ui T-modal-close', styles.button)}
+      >
+        <CloseIcon width={16} height={16} />
+      </button>
+    </div>
+  );
+};
+
+export default Header;

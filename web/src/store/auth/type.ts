@@ -7,8 +7,11 @@ export interface UserData {
   pro: boolean;
 }
 
+export interface EmailPrefData {
+  digestWeekly: boolean;
+}
+
 // TODO: type
-export type EmailPrefData = any;
 export type SubscriptionData = any;
 export type SourceData = any;
 
@@ -42,62 +45,76 @@ export const RECEIVE_SOURCE_ERROR = 'auth/RECEIVE_SOURCE_ERROR';
 export interface StartFetchingUserAction {
   type: typeof START_FETCHING_USER;
 }
-export interface receiveUserAction {
+export interface ReceiveUserAction {
   type: typeof RECEIVE_USER;
-  data: any;
+  data: { user: UserData };
 }
-export interface receiveUserErrorAction {
+export interface ReceiveUserErrorAction {
   type: typeof RECEIVE_USER_ERROR;
-  data: any;
+  data: {
+    errorMessage: string;
+  };
 }
 export interface ReceiveEmailPreferenceAction {
   type: typeof RECEIVE_EMAIL_PREFERENCE;
-  data: any;
+  data: {
+    emailPreference: EmailPrefData;
+  };
 }
-export interface receiveEmailPreferenceErrorAction {
+export interface ReceiveEmailPreferenceErrorAction {
   type: typeof RECEIVE_EMAIL_PREFERENCE_ERROR;
-  data: any;
+  data: {
+    errorMessage: string;
+  };
 }
-export interface startFetchingSubscriptionAction {
+export interface StartFetchingSubscriptionAction {
   type: typeof START_FETCHING_SUBSCRIPTION;
 }
-export interface receiveSubscriptionAction {
+export interface ReceiveSubscriptionAction {
   type: typeof RECEIVE_SUBSCRIPTION;
-  data: any;
+  data: {
+    subscription: SubscriptionData;
+  };
 }
-export interface clearSubscriptionAction {
+export interface ClearSubscriptionAction {
   type: typeof CLEAR_SUBSCRIPTION;
 }
-export interface receiveSubscriptionErrorAction {
+export interface ReceiveSubscriptionErrorAction {
   type: typeof RECEIVE_SUBSCRIPTION_ERROR;
-  data: any;
+  data: {
+    errorMessage: string;
+  };
 }
-export interface startFetchingSourceAction {
+export interface StartFetchingSourceAction {
   type: typeof START_FETCHING_SOURCE;
 }
-export interface receiveSourceAction {
+export interface ReceiveSourceAction {
   type: typeof RECEIVE_SOURCE;
-  data: any;
+  data: {
+    source: SourceData;
+  };
 }
-export interface clearSourceAction {
+export interface ClearSourceAction {
   type: typeof CLEAR_SOURCE;
 }
-export interface receiveSourceErrorAction {
+export interface ReceiveSourceErrorAction {
   type: typeof RECEIVE_SOURCE_ERROR;
-  data: any;
+  data: {
+    errorMessage: string;
+  };
 }
 
 export type AuthActionType =
   | StartFetchingUserAction
-  | receiveUserAction
-  | receiveUserErrorAction
+  | ReceiveUserAction
+  | ReceiveUserErrorAction
   | ReceiveEmailPreferenceAction
-  | receiveEmailPreferenceErrorAction
-  | startFetchingSubscriptionAction
-  | receiveSubscriptionAction
-  | clearSubscriptionAction
-  | receiveSubscriptionErrorAction
-  | startFetchingSourceAction
-  | receiveSourceAction
-  | clearSourceAction
-  | receiveSourceErrorAction;
+  | ReceiveEmailPreferenceErrorAction
+  | StartFetchingSubscriptionAction
+  | ReceiveSubscriptionAction
+  | ClearSubscriptionAction
+  | ReceiveSubscriptionErrorAction
+  | StartFetchingSourceAction
+  | ReceiveSourceAction
+  | ClearSourceAction
+  | ReceiveSourceErrorAction;

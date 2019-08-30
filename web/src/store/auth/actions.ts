@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UserData } from './type';
+import { UserData, EmailPrefData, SourceData, SubscriptionData } from './type';
 import { ThunkAction } from '../types';
 import { getMe } from '../../services/users';
 import { apiClient } from '../../libs/http';
@@ -37,7 +37,19 @@ import {
   RECEIVE_SOURCE,
   CLEAR_SOURCE,
   RECEIVE_SOURCE_ERROR,
-  StartFetchingUserAction
+  StartFetchingUserAction,
+  ReceiveUserAction,
+  ReceiveUserErrorAction,
+  ReceiveEmailPreferenceAction,
+  ReceiveEmailPreferenceErrorAction,
+  StartFetchingSubscriptionAction,
+  ReceiveSubscriptionAction,
+  ClearSubscriptionAction,
+  ReceiveSubscriptionErrorAction,
+  StartFetchingSourceAction,
+  ReceiveSourceAction,
+  ClearSourceAction,
+  ReceiveSourceErrorAction
 } from './type';
 
 function startFetchingUser(): StartFetchingUserAction {
@@ -46,35 +58,39 @@ function startFetchingUser(): StartFetchingUserAction {
   };
 }
 
-export function receiveUser(user) {
+export function receiveUser(user: UserData): ReceiveUserAction {
   return {
     type: RECEIVE_USER,
     data: { user }
   };
 }
 
-function receiveUserError(errorMessage) {
+function receiveUserError(errorMessage): ReceiveUserErrorAction {
   return {
     type: RECEIVE_USER_ERROR,
     data: { errorMessage }
   };
 }
 
-export function receiveEmailPreference(emailPreference) {
+export function receiveEmailPreference(
+  emailPreference: EmailPrefData
+): ReceiveEmailPreferenceAction {
   return {
     type: RECEIVE_EMAIL_PREFERENCE,
     data: { emailPreference }
   };
 }
 
-export function getEmailPreferenceError(errorMessage) {
+export function getEmailPreferenceError(
+  errorMessage: string
+): ReceiveEmailPreferenceErrorAction {
   return {
     type: RECEIVE_EMAIL_PREFERENCE_ERROR,
     data: { errorMessage }
   };
 }
 
-export function getEmailPreference(token) {
+export function getEmailPreference(token?: string) {
   return dispatch => {
     return usersService
       .getEmailPreference({ token })
@@ -109,7 +125,14 @@ export function getCurrentUser(
       .catch(err => {
         // 401 if not logged in
         if (err.response.status === 401) {
-          dispatch(receiveUser({}));
+          dispatch(
+            receiveUser({
+              uuid: '',
+              email: '',
+              emailVerified: false,
+              pro: false
+            })
+          );
           return;
         }
 
@@ -118,33 +141,35 @@ export function getCurrentUser(
   };
 }
 
-export function startFetchingSubscription() {
+export function startFetchingSubscription(): StartFetchingSubscriptionAction {
   return {
     type: START_FETCHING_SUBSCRIPTION
   };
 }
 
-export function receiveSubscription(subscription) {
+export function receiveSubscription(subscription): ReceiveSubscriptionAction {
   return {
     type: RECEIVE_SUBSCRIPTION,
     data: { subscription }
   };
 }
 
-export function clearSubscription() {
+export function clearSubscription(): ClearSubscriptionAction {
   return {
     type: CLEAR_SUBSCRIPTION
   };
 }
 
-export function receiveSubscriptionError(errorMessage) {
+export function receiveSubscriptionError(
+  errorMessage
+): ReceiveSubscriptionErrorAction {
   return {
     type: RECEIVE_SUBSCRIPTION_ERROR,
     data: { errorMessage }
   };
 }
 
-export function getSubscription() {
+export function getSubscription(): ThunkAction<SubscriptionData> {
   return dispatch => {
     dispatch(startFetchingSubscription());
 
@@ -160,33 +185,35 @@ export function getSubscription() {
   };
 }
 
-export function startFetchingSource() {
+export function startFetchingSource(): StartFetchingSourceAction {
   return {
     type: START_FETCHING_SOURCE
   };
 }
 
-export function receiveSource(source) {
+export function receiveSource(source): ReceiveSourceAction {
   return {
     type: RECEIVE_SOURCE,
     data: { source }
   };
 }
 
-export function clearSource() {
+export function clearSource(): ClearSourceAction {
   return {
     type: CLEAR_SOURCE
   };
 }
 
-export function receiveSourceError(errorMessage) {
+export function receiveSourceError(
+  errorMessage: string
+): ReceiveSourceErrorAction {
   return {
     type: RECEIVE_SOURCE_ERROR,
     data: { errorMessage }
   };
 }
 
-export function getSource() {
+export function getSource(): ThunkAction<SourceData> {
   return dispatch => {
     dispatch(startFetchingSource());
 

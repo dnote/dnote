@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
+	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -338,7 +339,8 @@ func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, pref)
+	presented := presenters.PresentEmailPreference(pref)
+	respondJSON(w, presented)
 }
 
 type updatePasswordPayload struct {

@@ -46,14 +46,6 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-// Replace the default browser outline with custom focus indicator
-// textarea:focus {
-//   outline: none;
-// }
-// input:focus {
-//   outline: none;
-// }
-
 .list-unstyled {
   list-style: none;
   padding-left: 0;
@@ -154,4 +146,8 @@ h6 {
 }
 html body {
   overflow-y: scroll;
+}
+
+.page {
+  padding: rem(20px) 0;
 }

@@ -20,7 +20,7 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import Modal, { Header } from '../Common/Modal';
+import Modal, { Header, Body } from '../Common/Modal';
 import { createBook } from '../../store/books';
 import { useSelector, useDispatch } from '../../store';
 import Button from '../Common/Button';
@@ -28,7 +28,6 @@ import Flash from '../Common/Flash';
 import { checkDuplicate, validateBookName } from '../../libs/books';
 
 import styles from './CreateBookModal.scss';
-import bodyStyles from '../Common/Modal/ModalBody.module.scss';
 
 interface Props extends RouteComponentProps {
   isOpen: boolean;
@@ -86,91 +85,92 @@ const CreateBookModal: React.SFC<Props> = ({
         </Flash>
       )}
 
-      <form
-        className={bodyStyles.wrapper}
-        onSubmit={e => {
-          e.preventDefault();
-          setInProgress(true);
+      <Body>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            setInProgress(true);
 
-          if (!bookName) {
-            setInProgress(false);
-            setErrMessage('Book label is empty');
-            return;
-          }
-
-          // Check if the book label already exists. If the client somehow posts a duplicate label,
-          // Duplicate book labels will be resolved when they are locally synced, anyway.
-          // TODO: resolve any duplicate book labels on the web as well.
-          if (checkDuplicate(books.data, bookName)) {
-            setInProgress(false);
-            setErrMessage('Duplicate book exists');
-            return;
-          }
-
-          try {
-            validateBookName(bookName);
-          } catch (err) {
-            setInProgress(false);
-            setErrMessage(err.message);
-            return;
-          }
-
-          dispatch(createBook(bookName))
-            .then(() => {
+            if (!bookName) {
               setInProgress(false);
+              setErrMessage('Book label is empty');
+              return;
+            }
 
-              setSuccessMessage(`Created a book: ${bookName}`);
+            // Check if the book label already exists. If the client somehow posts a duplicate label,
+            // Duplicate book labels will be resolved when they are locally synced, anyway.
+            // TODO: resolve any duplicate book labels on the web as well.
+            if (checkDuplicate(books.data, bookName)) {
               setInProgress(false);
-              setBookName('');
+              setErrMessage('Duplicate book exists');
+              return;
+            }
 
-              onSuccess();
-              onDismiss();
-            })
-            .catch(err => {
+            try {
+              validateBookName(bookName);
+            } catch (err) {
               setInProgress(false);
               setErrMessage(err.message);
-            });
-        }}
-      >
-        <label htmlFor={nameInputId} className={styles.label}>
-          <div className={styles['label-text']}>
-            Please enter the name of the book
-          </div>
-          <input
-            id={nameInputId}
-            autoFocus
-            type="text"
-            placeholder="Wisdom"
-            className={classnames('text-input', styles.input)}
-            value={bookName}
-            onChange={e => {
-              const val = e.target.value;
-              setBookName(val);
-            }}
-          />
-        </label>
+              return;
+            }
 
-        <div className={styles.actions}>
-          <Button
-            type="button"
-            size="normal"
-            kind="second"
-            onClick={onDismiss}
-            disabled={inProgress}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            size="normal"
-            kind="third"
-            disabled={inProgress}
-            isBusy={inProgress}
-          >
-            Create
-          </Button>
-        </div>
-      </form>
+            dispatch(createBook(bookName))
+              .then(() => {
+                setInProgress(false);
+
+                setSuccessMessage(`Created a book: ${bookName}`);
+                setInProgress(false);
+                setBookName('');
+
+                onSuccess();
+                onDismiss();
+              })
+              .catch(err => {
+                setInProgress(false);
+                setErrMessage(err.message);
+              });
+          }}
+        >
+          <label htmlFor={nameInputId} className={styles.label}>
+            <div className={styles['label-text']}>
+              Please enter the name of the book
+            </div>
+            <input
+              id={nameInputId}
+              autoFocus
+              type="text"
+              placeholder="Wisdom"
+              className={classnames('text-input', styles.input)}
+              value={bookName}
+              onChange={e => {
+                const val = e.target.value;
+                setBookName(val);
+              }}
+            />
+          </label>
+
+          <div className={styles.actions}>
+            <Button
+              type="button"
+              size="normal"
+              kind="second"
+              onClick={onDismiss}
+              disabled={inProgress}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="normal"
+              kind="third"
+              disabled={inProgress}
+              isBusy={inProgress}
+            >
+              Create
+            </Button>
+          </div>
+        </form>
+      </Body>
     </Modal>
   );
 };

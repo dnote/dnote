@@ -17,6 +17,7 @@
  */
 
 import React, { useEffect } from 'react';
+import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import NoteGroupList from './NoteGroup/List';
 import HeadData from './HeadData';
@@ -31,6 +32,7 @@ import { groupNotes } from '../../libs/notes';
 import { usePrevious } from '../../libs/hooks';
 import TopActions from './Actions/Top';
 import Flash from '../Common/Flash';
+import styles from './Home.scss';
 
 interface Props extends RouteComponentProps {}
 
@@ -72,7 +74,9 @@ const Home: React.SFC<Props> = ({ location }) => {
   const groups = groupNotes(notes.data);
 
   return (
-    <div className="container mobile-nopadding">
+    <div
+      className={classnames('container mobile-nopadding page', styles.wrapper)}
+    >
       <HeadData filters={filters} />
 
       <h1 className="sr-only">Notes</h1>

@@ -18,30 +18,40 @@
 
 import React, { useEffect, useCallback, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { withRouter } from 'react-router-dom';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 
 import scopeTab from '../../../libs/scopeTab';
 import { getScrollbarWidth } from '../../../libs/dom';
 import { useEventListener } from '../../../libs/hooks';
 import { KEYCODE_ESC, KEYCODE_TAB } from '../../../helpers/keyboard';
 
-import styles from './Modal.module.scss';
+import styles from './Modal.scss';
 
 let scrollbarWidth = 0;
 
-function Modal({
+interface Props extends RouteComponentProps {
+  isOpen: boolean;
+  onDismiss: () => void;
+  ariaLabelledBy: string;
+  modalId?: string;
+  ariaDescribedBy?: string;
+  size?: string;
+  overlayClassName?: string;
+  modalClassName?: string;
+}
+
+const Modal: React.SFC<Props> = ({
   isOpen,
   onDismiss,
   overlayClassName,
   modalClassName,
   ariaLabelledBy,
   ariaDescribedBy,
-  size,
+  size = 'regular',
   children,
   modalId
-}) {
+}) => {
   const [contentEl, setContentEl] = useState(null);
 
   const focusContent = useCallback(() => {
@@ -122,7 +132,7 @@ function Modal({
         ref={el => {
           setContentEl(el);
         }}
-        tabIndex="-1"
+        tabIndex={-1}
         role="dialog"
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
@@ -133,14 +143,6 @@ function Modal({
     </div>,
     modalRoot
   );
-}
-
-Modal.propTypes = {
-  onDismiss: PropTypes.func.isRequired
-};
-
-Modal.defaultProps = {
-  size: 'regular'
 };
 
 export default withRouter(Modal);

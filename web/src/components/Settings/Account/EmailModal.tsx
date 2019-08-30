@@ -19,23 +19,28 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 
-import { updateEmail, presignin } from '../../../services/users';
-import { loginHelper, aes256GcmEncrypt } from '../../../crypto';
-import { b64ToBuf, bufToB64 } from '../../../libs/encoding';
-import { getCipherKey } from '../../../crypto';
-import { getCurrentUser } from '../../../actions/auth';
+import * as usersService from '../../../services/users';
+import { getCurrentUser } from '../../../store/auth';
+import { useDispatch } from '../../../store';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
 
-import settingsStyles from '../Settings.module.scss';
+import settingsStyles from '../Settings.scss';
 
-function EmailModal({ currentEmail, doGetCurrentUser, isOpen, onDismiss }) {
+interface Props {
+  currentEmail: string;
+  isOpen: boolean;
+  onDismiss: () => void;
+}
+
+const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
   const [passwordVal, setPasswordVal] = useState('');
   const [emailVal, setEmailVal] = useState('');
   const [inProgress, setInProgress] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!isOpen) {
@@ -56,40 +61,11 @@ function EmailModal({ currentEmail, doGetCurrentUser, isOpen, onDismiss }) {
         throw new Error('The new email is the same as the old email');
       }
 
-      const { iteration } = await presignin({
-        email: currentEmail,
-        password: passwordVal
-      });
-      const { authKey: oldAuthKey } = await loginHelper({
-        email: currentEmail,
-        password: passwordVal,
-        iteration
-      });
-      const {
-        masterKey: newMasterKey,
-        authKey: newAuthKey
-      } = await loginHelper({
-        email: emailVal,
-        password: passwordVal,
-        iteration
+      await usersService.updateEmail({
+        email: emailVal
       });
 
-      const cipherKeyBuf = getCipherKey();
-
-      const newCipherKeyEncBuf = await aes256GcmEncrypt(
-        b64ToBuf(newMasterKey),
-        cipherKeyBuf
-      );
-      const newCipherKeyEnc = bufToB64(newCipherKeyEncBuf);
-
-      await updateEmail({
-        oldAuthKey,
-        newAuthKey,
-        newEmail: emailVal,
-        newCipherKeyEnc
-      });
-
-      await doGetCurrentUser({ refresh: true });
+      await dispatch(getCurrentUser({ refresh: true }));
 
       setSuccessMsg('Updated the email');
       setEmailVal('');
@@ -112,29 +88,27 @@ function EmailModal({ currentEmail, doGetCurrentUser, isOpen, onDismiss }) {
     >
       <Header labelId={labelId} heading="Change email" onDismiss={onDismiss} />
 
-      {successMsg && (
-        <Flash
-          id="T-change-email-modal-success"
-          type="success"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setSuccessMsg('');
-          }}
-        >
-          {successMsg}
-        </Flash>
-      )}
-      {failureMsg && (
-        <Flash
-          type="danger"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setFailureMsg('');
-          }}
-        >
-          {failureMsg}
-        </Flash>
-      )}
+      <Flash
+        when={successMsg !== ''}
+        id="T-change-email-modal-success"
+        kind="success"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setSuccessMsg('');
+        }}
+      >
+        {successMsg}
+      </Flash>
+      <Flash
+        when={failureMsg !== ''}
+        kind="danger"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setFailureMsg('');
+        }}
+      >
+        {failureMsg}
+      </Flash>
 
       <Body>
         <form onSubmit={handleSubmit} autoComplete="off">
@@ -184,13 +158,19 @@ function EmailModal({ currentEmail, doGetCurrentUser, isOpen, onDismiss }) {
           </div>
 
           <div className={settingsStyles.actions}>
-            <Button type="submit" kind="first" isBusy={inProgress}>
+            <Button
+              type="submit"
+              kind="first"
+              size="normal"
+              isBusy={inProgress}
+            >
               Update
             </Button>
 
             <Button
               type="button"
               kind="second"
+              size="normal"
               isBusy={inProgress}
               onClick={onDismiss}
             >
@@ -201,7 +181,7 @@ function EmailModal({ currentEmail, doGetCurrentUser, isOpen, onDismiss }) {
       </Body>
     </Modal>
   );
-}
+};
 
 const mapDispatchToProps = {
   doGetCurrentUser: getCurrentUser

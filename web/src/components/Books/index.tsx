@@ -16,7 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
+import classnames from 'classnames';
 
 import { getBooks } from '../../store/books';
 import { useDispatch, useSelector } from '../../store';
@@ -24,6 +25,7 @@ import SubscriberWall from '../Common/SubscriberWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
 import HeadData from './HeadData';
+import styles from './Books.scss';
 
 interface ContentWrapperProps {
   setSuccessMessage: (string) => void;
@@ -54,12 +56,17 @@ const Books: React.SFC = () => {
   }, [dispatch]);
 
   return (
-    <div>
+    <Fragment>
       <HeadData />
 
-      {/* <h1 className="sr-only">Books</h1> */}
+      <h1 className="sr-only">Books</h1>
 
-      <div className="container mobile-nopadding">
+      <div
+        className={classnames(
+          'container mobile-nopadding page',
+          styles.wrapper
+        )}
+      >
         <Flash
           kind="success"
           when={Boolean(successMessage)}
@@ -76,7 +83,7 @@ const Books: React.SFC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Fragment>
   );
 };
 

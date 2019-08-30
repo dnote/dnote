@@ -20,74 +20,50 @@
 @import '../App/font';
 @import '../App/theme';
 
-.section {
-  margin-top: rem(24px);
-
-  &:first-child {
-    margin-top: 0;
-  }
+.row {
+  padding: rem(16px) rem(20px);
 }
 
-.section-heading {
-  @include font-size('regular');
-  font-weight: 400;
-  padding-bottom: rem(4px);
-  background: $light;
-  padding: rem(4px) rem(12px);
-}
-.section-content {
-  margin-top: rem(20px);
-}
-
-.actions {
-  margin-top: rem(12px);
-  text-align: right;
-}
-
-.input-row {
-  &:not(:first-child) {
-    margin-top: rem(8px);
-  }
-}
-
-.flash {
-  margin-bottom: rem(12px);
-}
-
-button.edit {
-  color: $link;
-  padding: 0;
-
-  &:hover {
-    color: $link-hover;
-  }
-  @include breakpoint(md) {
-    margin-left: rem(16px);
-  }
-}
-
-.input-label {
-  width: 100%;
-}
-
-.verification-banner {
+.wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 
-  @include breakpoint(lg) {
+  &:not(:last-child) {
+    border-bottom: 1px solid $border-color;
+  }
+
+  @include breakpoint(md) {
     flex-direction: row;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
   }
 }
 
-.verification-banner-cta {
-  margin-top: rem(12px);
-  align-self: flex-end;
+.name {
+  font-weight: 400;
+  @include font-size('regular');
+  margin-bottom: 0;
+}
+.desc {
+  margin-bottom: 0;
+  @include font-size('small');
+  color: $gray;
+}
+.action {
+  display: flex;
+  flex-direction: column;
 
-  @include breakpoint(lg) {
-    margin-top: 0;
-    align-self: initial;
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+
+  @include breakpoint(md) {
+    flex-direction: row;
   }
 }

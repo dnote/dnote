@@ -17,7 +17,7 @@ export interface RemoteData<T> {
   isFetching: boolean;
   isFetched: boolean;
   data: T;
-  errorMessage: null | string;
+  errorMessage: string;
 }
 
 // AppState represents the application state

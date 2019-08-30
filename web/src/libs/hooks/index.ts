@@ -56,7 +56,7 @@ export function useEventListener(target, type, listener) {
 }
 
 // useScript loads a third party script
-export function useScript(src: string) {
+export function useScript(src: string): [boolean, string] {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
 

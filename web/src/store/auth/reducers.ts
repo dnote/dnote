@@ -49,25 +49,27 @@ export const initialState: AuthState = {
       emailVerified: false,
       pro: false
     },
-    errorMessage: null
+    errorMessage: ''
   },
   emailPreference: {
     isFetching: false,
     isFetched: false,
-    data: {},
-    errorMessage: null
+    data: {
+      digestWeekly: false
+    },
+    errorMessage: ''
   },
   subscription: {
     isFetching: false,
     isFetched: false,
     data: {},
-    errorMessage: null
+    errorMessage: ''
   },
   source: {
     isFetching: false,
     isFetched: false,
     data: {},
-    errorMessage: null
+    errorMessage: ''
   }
 };
 
@@ -90,10 +92,10 @@ function reduceUsers(
         data: {
           uuid: user.uuid,
           email: user.email,
-          emailVerified: user.email_verified,
+          emailVerified: user.emailVerified,
           pro: user.pro
         },
-        errorMessage: null,
+        errorMessage: '',
         isFetching: false,
         isFetched: true
       };
@@ -119,7 +121,7 @@ function reducerEmailPreference(
     case RECEIVE_EMAIL_PREFERENCE:
       return {
         ...state,
-        errorMessage: null,
+        errorMessage: '',
         isFetching: false,
         isFetched: true,
         data: action.data.emailPreference
@@ -145,14 +147,14 @@ function reducerSubscription(
     case START_FETCHING_SUBSCRIPTION:
       return {
         ...state,
-        errorMessage: null,
+        errorMessage: '',
         isFetching: true,
         isFetched: false
       };
     case RECEIVE_SUBSCRIPTION:
       return {
         ...state,
-        errorMessage: null,
+        errorMessage: '',
         isFetching: false,
         isFetched: true,
         data: action.data.subscription
@@ -181,14 +183,14 @@ function reducerSource(
     case START_FETCHING_SOURCE:
       return {
         ...state,
-        errorMessage: null,
+        errorMessage: '',
         isFetching: true,
         isFetched: false
       };
     case RECEIVE_SOURCE:
       return {
         ...state,
-        errorMessage: null,
+        errorMessage: '',
         isFetching: false,
         isFetched: true,
         data: action.data.source

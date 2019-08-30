@@ -21,9 +21,21 @@ import React from 'react';
 import classnames from 'classnames';
 
 import CountrySelect from './CountrySelect';
-import styles from './PaymentInput.module.scss';
+import styles from './PaymentInput.scss';
 
-function NameOnCard({ value, onUpdate, containerClassName, labelClassName }) {
+interface Props {
+  value: string;
+  onUpdate: (string) => void;
+  containerClassName?: string;
+  labelClassName?: string;
+}
+
+const Country: React.SFC<Props> = ({
+  value,
+  onUpdate,
+  containerClassName,
+  labelClassName
+}) => {
   return (
     <div className={classnames(containerClassName)}>
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
@@ -41,6 +53,6 @@ function NameOnCard({ value, onUpdate, containerClassName, labelClassName }) {
       </label>
     </div>
   );
-}
+};
 
-export default NameOnCard;
+export default Country;

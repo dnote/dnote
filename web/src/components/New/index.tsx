@@ -34,7 +34,12 @@ const New: React.SFC<Props> = ({ history }) => {
   useFocusTextarea(textareaEl, bookSelectorOpen);
 
   return (
-    <div className={classnames(styles.container, 'container mobile-nopadding')}>
+    <div
+      className={classnames(
+        styles.container,
+        'container mobile-nopadding page'
+      )}
+    >
       <Helmet>
         <title>New</title>
       </Helmet>

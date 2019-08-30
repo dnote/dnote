@@ -16,17 +16,39 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../App/theme';
-@import '../App/responsive';
-@import '../App/rem';
+import React from 'react';
+import classnames from 'classnames';
 
-.wrapper {
-  background: $light-gray;
-  min-height: calc(100vh - #{$header-height} - #{$footer-height});
-  margin-bottom: $footer-height;
+import styles from './SettingRow.scss';
 
-  @include breakpoint(lg) {
-    margin-bottom: 0;
-    min-height: calc(100vh - #{$header-height});
-  }
+interface Props {
+  name: string;
+  actionContent: React.ReactNode;
+  id?: string;
+  desc?: string;
+  value?: string;
 }
+
+const SettingRow: React.SFC<Props> = ({
+  name,
+  desc,
+  value,
+  actionContent,
+  id
+}) => {
+  return (
+    <div className={classnames(styles.wrapper, styles.row)} id={id}>
+      <div>
+        <h3 className={styles.name}>{name}</h3>
+        <p className={styles.desc}>{desc}</p>
+      </div>
+
+      <div className={styles.right}>
+        {value}
+        <div className={styles.action}>{actionContent}</div>
+      </div>
+    </div>
+  );
+};
+
+export default SettingRow;

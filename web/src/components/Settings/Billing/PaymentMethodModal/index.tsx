@@ -17,20 +17,25 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 import { StripeProvider, Elements } from 'react-stripe-elements';
 
 import Modal, { Header, Body } from '../../../Common/Modal';
 import Flash from '../../../Common/Flash';
 import Form from './Form';
 
-function PaymentMethodModal({
+interface Props {
+  isOpen: boolean;
+  onDismiss: () => void;
+  setSuccessMsg: (string) => void;
+  stripe: any;
+}
+
+const PaymentMethodModal: React.SFC<Props> = ({
   isOpen,
   onDismiss,
   setSuccessMsg,
-  doGetSource,
   stripe
-}) {
+}) => {
   const [nameOnCard, setNameOnCard] = useState('');
   const [billingCountry, setBillingCountry] = useState('');
   const [inProgress, setInProgress] = useState(false);
@@ -52,16 +57,15 @@ function PaymentMethodModal({
         onDismiss={onDismiss}
       />
 
-      {errMessage && (
-        <Flash
-          type="danger"
-          onDismiss={() => {
-            setErrMessage('');
-          }}
-        >
-          {errMessage}
-        </Flash>
-      )}
+      <Flash
+        when={errMessage !== ''}
+        kind="danger"
+        onDismiss={() => {
+          setErrMessage('');
+        }}
+      >
+        {errMessage}
+      </Flash>
 
       <Body>
         <StripeProvider stripe={stripe}>
@@ -75,7 +79,6 @@ function PaymentMethodModal({
               onDismiss={handleDismiss}
               setSuccessMsg={setSuccessMsg}
               setInProgress={setInProgress}
-              doGetSource={doGetSource}
               setErrMessage={setErrMessage}
             />
           </Elements>
@@ -83,11 +86,6 @@ function PaymentMethodModal({
       </Body>
     </Modal>
   );
-}
+};
 
-const mapDispatchToProps = {};
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(PaymentMethodModal);
+export default PaymentMethodModal;

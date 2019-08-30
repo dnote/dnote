@@ -17,45 +17,83 @@
  */
 
 @import '../App/rem';
-@import '../App/responsive';
+@import '../App/font';
 @import '../App/theme';
 
-.actions {
-  display: flex;
-  padding: rem(12px) rem(20px);
-  flex-direction: column;
-  border-radius: rem(4px);
-  background: $light;
+.wrapper {
+  background: white;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+}
 
-  @include breakpoint(md) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    //    margin-top: rem(12px);
+.section {
+  margin-top: rem(24px);
+
+  &:first-child {
+    margin-top: 0;
   }
 }
 
-.search-input {
+.section-heading {
+  @include font-size('regular');
+  font-weight: 400;
+  padding-bottom: rem(4px);
+  background: $light;
+  padding: rem(16px) rem(20px);
+  text-transform: uppercase;
+}
+.section-content {
+  margin-top: rem(20px);
+}
+
+.actions {
+  margin-top: rem(12px);
+  text-align: right;
+}
+
+.input-row {
+  &:not(:first-child) {
+    margin-top: rem(8px);
+  }
+}
+
+.flash {
+  margin-bottom: rem(12px);
+}
+
+button.edit {
+  color: $link;
+  padding: 0;
+
+  &:hover {
+    color: $link-hover;
+  }
+  @include breakpoint(md) {
+    margin-left: rem(16px);
+  }
+}
+
+.input-label {
   width: 100%;
+}
+
+.verification-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 
   @include breakpoint(lg) {
-    width: rem(400px);
-    margin-top: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
-button.create-book-button {
+.verification-banner-cta {
   margin-top: rem(12px);
+  align-self: flex-end;
 
-  @include breakpoint(md) {
+  @include breakpoint(lg) {
     margin-top: 0;
-    margin-left: rem(12px);
+    align-self: initial;
   }
-
-  // display: none;
-
-  // @include breakpoint(md) {
-  //   display: inline-block;
-  // }
 }

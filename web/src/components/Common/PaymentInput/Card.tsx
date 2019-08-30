@@ -20,8 +20,7 @@ import React, { useState } from 'react';
 import { CardElement } from 'react-stripe-elements';
 
 import classnames from 'classnames';
-
-import styles from './PaymentInput.module.scss';
+import styles from './PaymentInput.scss';
 
 const elementStyles = {
   base: {
@@ -46,12 +45,19 @@ const elementStyles = {
   }
 };
 
-function Card({
+interface Props {
+  cardElementRef?: React.MutableRefObject<any>;
+  setCardElementLoaded: (boolean) => void;
+  containerClassName?: string;
+  labelClassName?: string;
+}
+
+const Card: React.SFC<Props> = ({
   cardElementRef,
   setCardElementLoaded,
   containerClassName,
   labelClassName
-}) {
+}) => {
   const [cardElementFocused, setCardElementFocused] = useState(false);
 
   return (
@@ -83,6 +89,6 @@ function Card({
       </label>
     </div>
   );
-}
+};
 
 export default Card;

@@ -17,18 +17,18 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 
 import { updateEmailPreference } from '../../services/users';
+import { useDispatch } from '../../store';
 import { receiveEmailPreference } from '../../store/auth';
 import Button from './Button';
 
-import styles from './EmailPreferenceForm.module.scss';
+import styles from './EmailPreferenceForm.scss';
 
 const digestWeekly = 'weekly';
 const digestNever = 'never';
 
-function getDigestFrequency(emailPreference) {
+function getDigestFrequency(emailPreference: any): string {
   if (emailPreference.digest_weekly) {
     return digestWeekly;
   }
@@ -36,17 +36,25 @@ function getDigestFrequency(emailPreference) {
   return digestNever;
 }
 
-function EmailPreferenceForm({
+interface Props {
+  emailPreference: any;
+  setSuccessMsg: (string) => void;
+  setFailureMsg: (string) => void;
+  token?: string;
+  actionsClassName?: string;
+}
+
+const EmailPreferenceForm: React.SFC<Props> = ({
   emailPreference,
-  doReceiveEmailPreference,
   token,
   setSuccessMsg,
   setFailureMsg,
   actionsClassName
-}) {
+}) => {
   const freq = getDigestFrequency(emailPreference);
   const [digestFrequency, setDigestFrequency] = useState(freq);
   const [inProgress, setInProgress] = useState(false);
+  const dispatch = useDispatch();
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -57,7 +65,7 @@ function EmailPreferenceForm({
 
     updateEmailPreference({ digestFrequency, token })
       .then(updatedPreference => {
-        doReceiveEmailPreference(updatedPreference);
+        dispatch(receiveEmailPreference(updatedPreference));
 
         setSuccessMsg('Updated email preference');
         setInProgress(false);
@@ -111,7 +119,12 @@ function EmailPreferenceForm({
           </div>
 
           <div className={actionsClassName}>
-            <Button type="submit" kind="first" isBusy={inProgress}>
+            <Button
+              type="submit"
+              kind="first"
+              size="normal"
+              isBusy={inProgress}
+            >
               Update
             </Button>
           </div>
@@ -119,13 +132,6 @@ function EmailPreferenceForm({
       </div>
     </div>
   );
-}
-
-const mapDispatchToProps = {
-  doReceiveEmailPreference: receiveEmailPreference
 };
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(EmailPreferenceForm);
+export default EmailPreferenceForm;

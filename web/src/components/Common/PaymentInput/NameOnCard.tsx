@@ -17,12 +17,23 @@
  */
 
 import React from 'react';
-
 import classnames from 'classnames';
 
-import styles from './PaymentInput.module.scss';
+import styles from './PaymentInput.scss';
 
-function NameOnCard({ value, onUpdate, containerClassName, labelClassName }) {
+interface Props {
+  value: string;
+  onUpdate: (string) => void;
+  containerClassName?: string;
+  labelClassName?: string;
+}
+
+const NameOnCard: React.SFC<Props> = ({
+  value,
+  onUpdate,
+  containerClassName,
+  labelClassName
+}) => {
   return (
     <div className={classnames(containerClassName)}>
       <label htmlFor="name-on-card" className="label-full">
@@ -44,6 +55,6 @@ function NameOnCard({ value, onUpdate, containerClassName, labelClassName }) {
       </label>
     </div>
   );
-}
+};
 
 export default NameOnCard;

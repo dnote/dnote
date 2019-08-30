@@ -19,16 +19,30 @@
 import React, { useState, useRef } from 'react';
 import { injectStripe } from 'react-stripe-elements';
 
+import { useDispatch } from '../../../../store';
+import { getSource } from '../../../../store/auth';
 import Button from '../../../Common/Button';
 import NameOnCardInput from '../../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../../Common/PaymentInput/Card';
 import CountryInput from '../../../Common/PaymentInput/Country';
-
-import settingsStyles from '../../Settings.module.scss';
 import * as paymentService from '../../../../services/payment';
-import styles from './Form.module.scss';
+import settingsStyles from '../../Settings.scss';
+import styles from './Form.scss';
 
-function Form({
+interface Props {
+  stripe: any;
+  nameOnCard: string;
+  setNameOnCard: (string) => void;
+  billingCountry: string;
+  setBillingCountry: (string) => void;
+  inProgress: boolean;
+  onDismiss: () => void;
+  setSuccessMsg: (string) => void;
+  setInProgress: (boolean) => void;
+  setErrMessage: (string) => void;
+}
+
+const Form: React.SFC<Props> = ({
   stripe,
   nameOnCard,
   setNameOnCard,
@@ -38,11 +52,11 @@ function Form({
   onDismiss,
   setSuccessMsg,
   setInProgress,
-  doGetSource,
   setErrMessage
-}) {
+}) => {
   const [cardElementLoaded, setCardElementLoaded] = useState(false);
   const cardElementRef = useRef(null);
+  const dispatch = useDispatch();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -77,7 +91,7 @@ function Form({
       }
 
       await paymentService.updateSource({ source, country: billingCountry });
-      await doGetSource();
+      await dispatch(getSource());
 
       setSuccessMsg('Your payment method was successfully updated.');
       setInProgress(false);
@@ -114,6 +128,7 @@ function Form({
         <Button
           type="submit"
           kind="first"
+          size="normal"
           isBusy={!cardElementLoaded || inProgress}
         >
           Update
@@ -122,6 +137,7 @@ function Form({
         <Button
           type="button"
           kind="second"
+          size="normal"
           disabled={inProgress}
           onClick={onDismiss}
         >
@@ -130,6 +146,6 @@ function Form({
       </div>
     </form>
   );
-}
+};
 
 export default injectStripe(Form);

@@ -44,8 +44,13 @@
   }
 }
 
-.content {
+.content-wrapper {
   display: flex;
+  padding: 0;
+}
+
+.content {
+  flex-grow: 1;
   justify-content: space-between;
 }
 

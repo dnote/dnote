@@ -24,10 +24,10 @@ import classnames from 'classnames';
 import LogoIcon from '../../Icons/Logo';
 import { getPlanLabel } from '../../../libs/subscription';
 
-import styles from './PlanRow.module.scss';
-import settingRowStyles from '../SettingRow.module.scss';
+import styles from './PlanRow.scss';
+import settingRowStyles from '../SettingRow.scss';
 
-function getPlanPeriodMessage(subscription) {
+function getPlanPeriodMessage(subscription: any): string {
   if (!subscription.id) {
     return 'You do not have a subscription.';
   }
@@ -46,11 +46,15 @@ function getPlanPeriodMessage(subscription) {
   return `Your ${label} plan will renew on ${renewDate.format('YYYY MMM Do')}.`;
 }
 
-function PlanRow({ subscription }) {
+interface Props {
+  subscription: any;
+}
+
+const PlanRow: React.SFC<Props> = ({ subscription }) => {
   return (
     <div className={classnames(settingRowStyles.row, styles.wrapper)}>
       <div className={styles.content}>
-        <LogoIcon width="40" height="40" />
+        <LogoIcon width={40} height={40} />
         <div className={styles.detail}>
           <div>
             <strong className={styles.label}>
@@ -77,6 +81,6 @@ function PlanRow({ subscription }) {
       </div>
     </div>
   );
-}
+};
 
 export default PlanRow;

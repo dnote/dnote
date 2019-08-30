@@ -16,42 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-.settings-page {
-  .form-container {
-    .actions {
-      margin-top: 12px;
-    }
-  }
+import React from 'react';
 
-  .input-help {
-    font-size: 1.3rem;
-    color: gray;
-    margin-top: 5px;
-  }
+import styles from './ModalBody.scss';
 
-  .input-group {
-    .copy-button {
-      border-width: 1px;
-      background: transparent;
-      border-color: #ced4da;
-      color: #333744;
-      width: 85px;
+interface Props {}
 
-      &:hover {
-        box-shadow: 0px 0px 4px 2px #eaeaea;
-        background: #fbfbfb;
-      }
+const Body: React.SFC<Props> = ({ children }) => {
+  return <div className={styles.wrapper}>{children}</div>;
+};
 
-      &.copied {
-      }
-    }
-  }
-
-  .danger-zone {
-    margin-top: 26px;
-
-    .danger-zone-heading {
-      margin-bottom: 18px;
-    }
-  }
-}
+export default Body;

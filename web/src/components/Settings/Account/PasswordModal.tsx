@@ -18,16 +18,20 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { updatePassword, presignin } from '../../../services/users';
-import { loginHelper, aes256GcmEncrypt } from '../../../crypto';
-import { b64ToBuf, bufToB64 } from '../../../libs/encoding';
+import * as usersService from '../../../services/users';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
+import settingsStyles from '../Settings.scss';
 
-import settingsStyles from '../Settings.module.scss';
+interface Props {
+  isOpen: boolean;
+  onDismiss: () => void;
+}
 
-function PasswordModal({ email, isOpen, onDismiss }) {
+const labelId = 'password-modal';
+
+const PasswordModal: React.SFC<Props> = ({ isOpen, onDismiss }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirmation, setNewPasswordConfirmation] = useState('');
@@ -55,31 +59,9 @@ function PasswordModal({ email, isOpen, onDismiss }) {
         throw new Error('Password and its confirmation do not match');
       }
 
-      const { iteration } = await presignin({ email, oldPassword });
-      const { authKey: oldAuthKey } = await loginHelper({
-        email,
-        password: oldPassword,
-        iteration
-      });
-      const {
-        masterKey: newMasterKey,
-        authKey: newAuthKey
-      } = await loginHelper({ email, password: newPassword, iteration });
-
-      const cipherKey = localStorage.getItem('cipherKey');
-      const cipherKeyBuf = b64ToBuf(cipherKey);
-
-      const newCipherKeyEncBuf = await aes256GcmEncrypt(
-        b64ToBuf(newMasterKey),
-        cipherKeyBuf
-      );
-      const newCipherKeyEnc = bufToB64(newCipherKeyEncBuf);
-
-      await updatePassword({
-        oldAuthKey,
-        newAuthKey,
-        newCipherKeyEnc,
-        newKdfIteration: iteration
+      await usersService.updatePassword({
+        oldPassword,
+        newPassword
       });
 
       setSuccessMsg('Updated the password');
@@ -93,40 +75,40 @@ function PasswordModal({ email, isOpen, onDismiss }) {
     }
   }
 
-  const labelId = 'password-modal';
-
   return (
-    <Modal modalId="T-password-modal" isOpen={isOpen} onDismiss={onDismiss}>
+    <Modal
+      modalId="T-password-modal"
+      isOpen={isOpen}
+      onDismiss={onDismiss}
+      ariaLabelledBy={labelId}
+    >
       <Header
         labelId={labelId}
         heading="Change password"
         onDismiss={onDismiss}
-        ariaLabelledBy={labelId}
       />
 
-      {successMsg && (
-        <Flash
-          id="T-password-modal-success"
-          type="success"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setSuccessMsg('');
-          }}
-        >
-          {successMsg}
-        </Flash>
-      )}
-      {failureMsg && (
-        <Flash
-          type="danger"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setFailureMsg('');
-          }}
-        >
-          {failureMsg}
-        </Flash>
-      )}
+      <Flash
+        when={successMsg !== ''}
+        id="T-password-modal-success"
+        kind="success"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setSuccessMsg('');
+        }}
+      >
+        {successMsg}
+      </Flash>
+      <Flash
+        when={successMsg !== ''}
+        kind="danger"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setFailureMsg('');
+        }}
+      >
+        {failureMsg}
+      </Flash>
 
       <Body>
         <form onSubmit={handleSubmit}>
@@ -196,13 +178,19 @@ function PasswordModal({ email, isOpen, onDismiss }) {
           </div>
 
           <div className={settingsStyles.actions}>
-            <Button type="submit" kind="first" isBusy={inProgress}>
+            <Button
+              type="submit"
+              kind="first"
+              size="normal"
+              isBusy={inProgress}
+            >
               Update
             </Button>
 
             <Button
               type="button"
               kind="second"
+              size="normal"
               isBusy={inProgress}
               onClick={onDismiss}
             >
@@ -213,6 +201,6 @@ function PasswordModal({ email, isOpen, onDismiss }) {
       </Body>
     </Modal>
   );
-}
+};
 
 export default PasswordModal;

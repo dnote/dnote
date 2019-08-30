@@ -17,15 +17,32 @@
  */
 
 @import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
 
-.note-sidebar-toggle {
-  display: inline-block;
+.wrapper {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  background: white;
+  margin-bottom: rem(20px);
 
   @include breakpoint(lg) {
-    display: none;
+    margin-bottom: 0;
   }
 }
 
-.wrapper {
-  height: 100%;
+.item {
+  display: block;
+  padding: rem(12px) rem(16px);
+  border-left: 4px solid transparent;
+
+  &:hover {
+    text-decoration: none;
+    background: $light;
+  }
+
+  &.active {
+    font-weight: 600;
+    border-left-color: $first;
+  }
 }

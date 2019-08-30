@@ -26,6 +26,7 @@ import guestOnly from './hocs/guestOnly';
 import Home from './components/Home';
 import Login from './components/Login';
 import Join from './components/Join';
+import Settings from './components/Settings';
 import NotFound from './components/Common/NotFound';
 import VerifyEmail from './components/VerifyEmail';
 import EmailPreference from './components/EmailPreference';
@@ -49,6 +50,7 @@ const AuthenticatedEdit = userOnly(Edit);
 const AuthenticatedBooks = userOnly(Books);
 const GuestJoin = guestOnly(Join);
 const GuestLogin = guestOnly(Login);
+const AuthenticatedSettings = userOnly(Settings);
 
 const routes = [
   {
@@ -82,6 +84,11 @@ const routes = [
     path: noteEditPathDef,
     exact: true,
     component: AuthenticatedEdit
+  },
+  {
+    path: '/settings/:section',
+    exact: true,
+    component: AuthenticatedSettings
   },
   {
     path: '/verify-email/:token',

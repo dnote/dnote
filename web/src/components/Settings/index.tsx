@@ -16,46 +16,59 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import Helmet from 'react-helmet';
+import { RouteComponentProps } from 'react-router-dom';
 
 import Account from './Account';
+import Sidebar from './Sidebar';
+import { SettingSections } from '../../libs/paths';
 import Notification from './Notification';
 import Billing from './Billing';
 
-import './module.scss';
-
-const SectionAccount = 'account';
-const SectionEmail = 'notification';
-const SectionBilling = 'billing';
-
-function renderContent(section) {
-  if (section === SectionAccount) {
+function renderContent(section: string): React.ReactNode {
+  if (section === SettingSections.account) {
     return <Account />;
   }
-  if (section === SectionEmail) {
+  if (section === SettingSections.notification) {
     return <Notification />;
   }
-  if (section === SectionBilling) {
+  if (section === SettingSections.billing) {
     return <Billing />;
   }
 
   return <div>Not found</div>;
 }
 
-function Settings({ match }) {
+interface Match {
+  section: string;
+}
+
+interface Props extends RouteComponentProps<Match> {}
+
+const Settings: React.SFC<Props> = ({ match }) => {
   const { params } = match;
   const { section } = params;
 
   return (
-    <div className="page">
+    <Fragment>
       <Helmet>
         <meta name="description" content="Dnote settings" />
       </Helmet>
 
-      {renderContent(section)}
-    </div>
+      <div className="container page">
+        <div className="row">
+          <div className="col-12 col-md-12 col-lg-3">
+            <Sidebar />
+          </div>
+
+          <div className="col-12 col-md-12 col-lg-9">
+            {renderContent(section)}
+          </div>
+        </div>
+      </div>
+    </Fragment>
   );
-}
+};
 
 export default Settings;

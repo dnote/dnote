@@ -22,50 +22,63 @@ import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
 import EmailPreferenceForm from '../../Common/EmailPreferenceForm';
 
-import settingsStyles from '../Settings.module.scss';
+import settingsStyles from '../Settings.scss';
 
-function FrequencyModal({ emailPreferenceData, isOpen, onDismiss }) {
+interface Props {
+  emailPreference: any;
+  isOpen: boolean;
+  onDismiss: () => void;
+}
+
+const FrequencyModal: React.SFC<Props> = ({
+  emailPreference,
+  isOpen,
+  onDismiss
+}) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
 
   const labelId = 'frequency-modal';
 
   return (
-    <Modal modalId="T-frequency-modal" isOpen={isOpen} onDismiss={onDismiss}>
+    <Modal
+      modalId="T-frequency-modal"
+      isOpen={isOpen}
+      onDismiss={onDismiss}
+      ariaLabelledBy={labelId}
+    >
       <Header
         labelId={labelId}
         heading="Change diegst frequency"
         onDismiss={onDismiss}
       />
 
-      {successMsg && (
-        <Flash
-          id="T-frequency-modal-success"
-          type="success"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setSuccessMsg('');
-          }}
-        >
-          {successMsg}
-        </Flash>
-      )}
-      {failureMsg && (
-        <Flash
-          type="danger"
-          wrapperClassName={settingsStyles.flash}
-          onDismiss={() => {
-            setFailureMsg('');
-          }}
-        >
-          {failureMsg}
-        </Flash>
-      )}
+      <Flash
+        when={successMsg !== ''}
+        id="T-frequency-modal-success"
+        kind="success"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setSuccessMsg('');
+        }}
+      >
+        {successMsg}
+      </Flash>
+      <Flash
+        when={failureMsg !== ''}
+        kind="danger"
+        wrapperClassName={settingsStyles.flash}
+        onDismiss={() => {
+          setFailureMsg('');
+        }}
+      >
+        {failureMsg}
+      </Flash>
 
       <Body>
-        {emailPreferenceData.isFetched ? (
+        {emailPreference.isFetched ? (
           <EmailPreferenceForm
-            emailPreference={emailPreferenceData.data}
+            emailPreference={emailPreference.data}
             actionsClassName={settingsStyles.actions}
             setSuccessMsg={setSuccessMsg}
             setFailureMsg={setFailureMsg}
@@ -76,6 +89,6 @@ function FrequencyModal({ emailPreferenceData, isOpen, onDismiss }) {
       </Body>
     </Modal>
   );
-}
+};
 
 export default FrequencyModal;

@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import Modal, { Header } from '../Common/Modal';
+import Modal, { Header, Body } from '../Common/Modal';
 import Flash from '../Common/Flash';
 import * as booksOperation from '../../operations/books';
 import { removeBook } from '../../store/books';
@@ -28,7 +28,6 @@ import { useSelector, useDispatch } from '../../store';
 import Button from '../Common/Button';
 
 import styles from './DeleteBookModal.scss';
-import bodyStyles from '../Common/Modal/ModalBody.module.scss';
 
 function getBookByUUID(books, uuid) {
   for (let i = 0; i < books.length; ++i) {
@@ -114,77 +113,80 @@ const DeleteBookModal: React.SFC<Props> = ({
         <span className={styles['book-label']}>{book.label}</span>
       </Flash>
 
-      <form
-        className={bodyStyles.wrapper}
-        onSubmit={e => {
-          e.preventDefault();
+      <Body>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
 
-          setSuccessMessage('');
-          setInProgress(true);
+            setSuccessMessage('');
+            setInProgress(true);
 
-          if (bookLabel !== book.label) {
-            setErrMessage('The book label did not match');
-            setInProgress(false);
-            return;
-          }
-
-          booksOperation
-            .remove(bookUUID)
-            .then(() => {
-              dispatch(removeBook(bookUUID));
+            if (bookLabel !== book.label) {
+              setErrMessage('The book label did not match');
               setInProgress(false);
-              onDismiss();
+              return;
+            }
 
-              // Scroll to top so that the message is visible.
-              setSuccessMessage(`Successfully removed the book: ${book.label}`);
-              window.scrollTo(0, 0);
-            })
-            .catch(err => {
-              console.log('Error deleting book', err);
-              setInProgress(false);
-              setErrMessage(err.message);
-            });
-        }}
-      >
-        <label htmlFor={nameInputId} className={styles.label}>
-          <div className={styles['label-text']}>
-            To confirm, please enter the label of the book.
+            booksOperation
+              .remove(bookUUID)
+              .then(() => {
+                dispatch(removeBook(bookUUID));
+                setInProgress(false);
+                onDismiss();
+
+                // Scroll to top so that the message is visible.
+                setSuccessMessage(
+                  `Successfully removed the book: ${book.label}`
+                );
+                window.scrollTo(0, 0);
+              })
+              .catch(err => {
+                console.log('Error deleting book', err);
+                setInProgress(false);
+                setErrMessage(err.message);
+              });
+          }}
+        >
+          <label htmlFor={nameInputId} className={styles.label}>
+            <div className={styles['label-text']}>
+              To confirm, please enter the label of the book.
+            </div>
+            <input
+              id={nameInputId}
+              autoFocus
+              type="text"
+              placeholder="Wisdom"
+              className={classnames('text-input', styles.input)}
+              value={bookLabel}
+              onChange={e => {
+                const val = e.target.value;
+                setBookLabel(val);
+              }}
+            />
+          </label>
+
+          <div className={styles.actions}>
+            <Button
+              type="button"
+              size="normal"
+              kind="second"
+              onClick={onDismiss}
+              disabled={inProgress}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="normal"
+              kind="danger"
+              disabled={inProgress}
+              isBusy={inProgress}
+            >
+              Delete
+            </Button>
           </div>
-          <input
-            id={nameInputId}
-            autoFocus
-            type="text"
-            placeholder="Wisdom"
-            className={classnames('text-input', styles.input)}
-            value={bookLabel}
-            onChange={e => {
-              const val = e.target.value;
-              setBookLabel(val);
-            }}
-          />
-        </label>
-
-        <div className={styles.actions}>
-          <Button
-            type="button"
-            size="normal"
-            kind="second"
-            onClick={onDismiss}
-            disabled={inProgress}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            size="normal"
-            kind="danger"
-            disabled={inProgress}
-            isBusy={inProgress}
-          >
-            Delete
-          </Button>
-        </div>
-      </form>
+        </form>
+      </Body>
     </Modal>
   );
 };

@@ -16,54 +16,13 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@import '../App/responsive';
 @import '../App/rem';
-@import '../App/font';
-@import '../App/theme';
-
-.row {
-  padding: rem(12px) rem(12px);
-}
 
 .wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  margin-top: rem(-20px);
 
-  &:not(:last-child) {
-    border-bottom: 1px solid $border-color;
-  }
-
-  @include breakpoint(md) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-.name {
-  font-weight: 400;
-  @include font-size('regular');
-  margin-bottom: 0;
-}
-.desc {
-  margin-bottom: 0;
-  @include font-size('small');
-  color: $gray;
-}
-.action {
-  display: flex;
-  flex-direction: column;
-
-  @include breakpoint(md) {
-    flex-direction: row;
-  }
-}
-
-.right {
-  display: flex;
-  flex-direction: column;
-
-  @include breakpoint(md) {
-    flex-direction: row;
+  @include breakpoint(lg) {
+    margin-top: 0;
   }
 }

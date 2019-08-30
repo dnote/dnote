@@ -16,28 +16,40 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import classnames from 'classnames';
-
-import CloseIcon from '../../Icons/Close';
-
-import styles from './ModalHeader.module.scss';
-
-function Header({ labelId, heading, onDismiss }) {
-  return (
-    <div className={styles.wrapper}>
-      <strong id={labelId}>{heading}</strong>
-
-      <button
-        onClick={onDismiss}
-        type="button"
-        aria-label="Close the modal"
-        className={classnames('button-no-ui T-modal-close', styles.button)}
-      >
-        <CloseIcon width={16} height={16} />
-      </button>
-    </div>
-  );
-}
-
-export default Header;
+// .form-container {
+//   .actions {
+//     margin-top: 12px;
+//   }
+// }
+//
+// .input-help {
+//   font-size: 1.3rem;
+//   color: gray;
+//   margin-top: 5px;
+// }
+//
+// .input-group {
+//   .copy-button {
+//     border-width: 1px;
+//     background: transparent;
+//     border-color: #ced4da;
+//     color: #333744;
+//     width: 85px;
+//
+//     &:hover {
+//       box-shadow: 0px 0px 4px 2px #eaeaea;
+//       background: #fbfbfb;
+//     }
+//
+//     &.copied {
+//     }
+//   }
+// }
+//
+// .danger-zone {
+//   margin-top: 26px;
+//
+//   .danger-zone-heading {
+//     margin-bottom: 18px;
+//   }
+// }

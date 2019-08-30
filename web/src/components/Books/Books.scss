@@ -16,25 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import classnames from 'classnames';
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/theme';
 
-import styles from './SettingRow.module.scss';
+.wrapper {
+  margin-top: rem(-10px);
 
-function SettingRow({ name, desc, value, actionContent, id }) {
-  return (
-    <div className={classnames(styles.wrapper, styles.row)} id={id}>
-      <div>
-        <h3 className={styles.name}>{name}</h3>
-        <p className={styles.desc}>{desc}</p>
-      </div>
-
-      <div className={styles.right}>
-        {value}
-        <div className={styles.action}>{actionContent}</div>
-      </div>
-    </div>
-  );
+  @include breakpoint(lg) {
+    margin-top: 0;
+  }
 }
-
-export default SettingRow;

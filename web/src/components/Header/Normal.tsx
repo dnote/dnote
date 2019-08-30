@@ -48,20 +48,30 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
 
   return (
     <header className={styles.wrapper}>
-      <div className={classnames(styles.content, 'container mobile-nopadding')}>
-        <div className={classnames(styles.left)}>
-          <Link to={getHomeDest(location, searchObj)} className={styles.brand}>
-            <LogoWithText width={75} fill="white" className={styles.logo} />
-            <Logo width={24} fill="white" className={styles.logosm} />
-          </Link>
+      <div
+        className={classnames(
+          styles['content-wrapper'],
+          'container mobile-nopadding'
+        )}
+      >
+        <div className={classnames('row', styles.content)}>
+          <div className={classnames(styles.left)}>
+            <Link
+              to={getHomeDest(location, searchObj)}
+              className={styles.brand}
+            >
+              <LogoWithText width={75} fill="white" className={styles.logo} />
+              <Logo width={24} fill="white" className={styles.logosm} />
+            </Link>
 
-          <Nav filters={filters} />
-        </div>
+            <Nav filters={filters} />
+          </div>
 
-        <div className={classnames(styles.right)}>
-          <SearchBar />
+          <div className={classnames(styles.right)}>
+            <SearchBar />
 
-          <AccountMenu />
+            <AccountMenu />
+          </div>
         </div>
       </div>
     </header>

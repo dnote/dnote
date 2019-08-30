@@ -19,10 +19,10 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import settingsStyles from '../Settings.module.scss';
-import styles from './Placeholder.module.scss';
+import settingsStyles from '../Settings.scss';
+import styles from './Placeholder.scss';
 
-function Placeholder() {
+const Placeholder: React.SFC = () => {
   return (
     <div className="container-wide">
       <div className="row">
@@ -79,6 +79,6 @@ function Placeholder() {
       </div>
     </div>
   );
-}
+};
 
 export default Placeholder;

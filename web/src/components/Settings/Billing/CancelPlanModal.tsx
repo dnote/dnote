@@ -17,22 +17,30 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 
+import { useDispatch } from '../../../store';
 import * as paymentService from '../../../services/payment';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
+import styles from '../Settings.scss';
+import { getSubscription } from '../../../store/auth';
 
-import settingsStyles from '../Settings.module.scss';
+interface Props {
+  isOpen: boolean;
+  onDismiss: () => void;
+  subscriptionId: string;
+  setSuccessMsg: (string) => void;
+  setFailureMsg: (string) => void;
+}
 
-function CancelPlanModal({
+const CancelPlanModal: React.SFC<Props> = ({
   isOpen,
   onDismiss,
   subscriptionId,
   setSuccessMsg,
-  setFailureMsg,
-  doGetSubscription
-}) {
+  setFailureMsg
+}) => {
+  const dispatch = useDispatch();
   const [inProgress, setInProgress] = useState(false);
 
   async function handleSubmit(e) {
@@ -44,7 +52,7 @@ function CancelPlanModal({
 
     try {
       await paymentService.cancelSubscription({ subscriptionId });
-      await doGetSubscription();
+      await dispatch(getSubscription());
 
       setSuccessMsg(
         'Your subscription is cancelled. You can still continue using Dnote until the end of billing cycle.'
@@ -71,17 +79,23 @@ function CancelPlanModal({
         <form onSubmit={handleSubmit} autoComplete="off">
           <div>Sorry to see you go. Hope Dnote was helpful to you.</div>
 
-          <div className={settingsStyles.actions}>
+          <div className={styles.actions}>
             <Button
               type="button"
               kind="first"
+              size="small"
               isBusy={inProgress}
               onClick={onDismiss}
             >
               No, I changed my mind. Go back.
             </Button>
 
-            <Button type="submit" kind="second" isBusy={inProgress}>
+            <Button
+              type="submit"
+              kind="second"
+              size="small"
+              isBusy={inProgress}
+            >
               Cancel my plan.
             </Button>
           </div>
@@ -89,11 +103,6 @@ function CancelPlanModal({
       </Body>
     </Modal>
   );
-}
+};
 
-const mapDispatchToProps = {};
-
-export default connect(
-  null,
-  mapDispatchToProps
-)(CancelPlanModal);
+export default CancelPlanModal;

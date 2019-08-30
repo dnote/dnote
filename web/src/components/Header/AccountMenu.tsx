@@ -25,7 +25,7 @@ import Lock from '../Icons/Lock';
 import Menu from '../Common/Menu';
 import UserIcon from '../Icons/User';
 import { signout } from '../../services/users';
-import { getSettingsPath } from '../../libs/paths';
+import { SettingSections, getSettingsPath } from '../../libs/paths';
 import { AppState } from '../../store';
 import { UserData } from '../../store/auth';
 
@@ -71,7 +71,7 @@ const AccountMenu: React.SFC<Props> = ({ user }) => {
         <Link
           role="menuitem"
           className={classnames(styles.link, {})}
-          to={getSettingsPath('account')}
+          to={getSettingsPath(SettingSections.account)}
           onClick={() => {
             setIsOpen(false);
           }}

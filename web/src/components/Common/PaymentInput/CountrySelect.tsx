@@ -24,7 +24,19 @@ import CaretIcon from '../../Icons/Caret';
 
 import styles from './CountrySelect.module.scss';
 
-function CountrySelect({ id, className, onChange, value }) {
+interface Props {
+  id: string;
+  className: string;
+  onChange: (string) => void;
+  value: string;
+}
+
+const CountrySelect: React.SFC<Props> = ({
+  id,
+  className,
+  onChange,
+  value
+}) => {
   return (
     <div className={styles.wrapper}>
       <select
@@ -44,9 +56,9 @@ function CountrySelect({ id, className, onChange, value }) {
         })}
       </select>
 
-      <CaretIcon width="12" height="12" className={styles.caret} />
+      <CaretIcon width={12} height={12} className={styles.caret} />
     </div>
   );
-}
+};
 
 export default CountrySelect;
