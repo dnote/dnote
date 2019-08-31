@@ -32,11 +32,20 @@ import HeaderData from './HeaderData';
 import render from '../../routes';
 import NoteHeader from '../Header/Note';
 import NormalHeader from '../Header/Normal';
+import SubscriptionHeader from '../Header/SubscriptionHeader';
 import TabBar from '../TabBar';
 import SystemMessage from '../Common/SystemMessage';
 import styles from './App.scss';
 import { getFiltersFromSearchStr } from '../../libs/filters';
 import { updateQuery, updatePage } from '../../store/filters';
+import {
+  homePathDef,
+  notePathDef,
+  joinPathDef,
+  loginPathDef,
+  subscriptionsPathDef,
+  subscriptionsCheckoutPathDef
+} from '../../libs/paths';
 
 import './App.global.scss';
 
@@ -112,9 +121,14 @@ const App: React.SFC<Props> = ({ location }) => {
       <HeaderData />
 
       <Switch>
-        <Route path={['/login', '/join']} exact component={null} />
-        <Route path="/notes/:noteUUID" exact render={() => <NoteHeader />} />
-        <Route path="/" component={NormalHeader} />
+        <Route path={[loginPathDef, joinPathDef]} exact component={null} />
+        <Route
+          path={[subscriptionsPathDef, subscriptionsCheckoutPathDef]}
+          exact
+          component={SubscriptionHeader}
+        />
+        <Route path={notePathDef} exact component={NoteHeader} />
+        <Route path={homePathDef} component={NormalHeader} />
       </Switch>
 
       <main className={styles.wrapper}>
@@ -123,7 +137,16 @@ const App: React.SFC<Props> = ({ location }) => {
       </main>
 
       <Switch>
-        <Route path={['/login', '/join']} exact component={null} />
+        <Route
+          path={[
+            loginPathDef,
+            joinPathDef,
+            subscriptionsPathDef,
+            subscriptionsCheckoutPathDef
+          ]}
+          exact
+          component={null}
+        />
         <Route path="/" component={TabBar} />
       </Switch>
     </Fragment>

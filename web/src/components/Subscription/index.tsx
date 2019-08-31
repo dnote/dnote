@@ -17,7 +17,6 @@
  */
 
 import React from 'react';
-import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
@@ -25,9 +24,10 @@ import classnames from 'classnames';
 import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
+import { useSelector } from '../../store';
 import { getSubscriptionCheckoutPath } from '../../libs/paths';
 
-import styles from './Subscription.module.scss';
+import styles from './Subscription.scss';
 
 const proFeatures = [
   {
@@ -49,10 +49,6 @@ const proFeatures = [
 ];
 
 const baseFeatures = [
-  {
-    id: 'backup',
-    label: <div>Encrypted backup using AES256</div>
-  },
   {
     id: 'sync',
     label: <div>Multi-device sync</div>
@@ -86,70 +82,18 @@ const baseFeatures = [
     label: <div>Forum support</div>
   }
 ];
-function Subscription({ userData }) {
-  const user = userData.data;
 
-  //  function handlePayment() {
-  //    if (user.cloud) {
-  //      return;
-  //    }
-  //
-  //    let key;
-  //    if (__PRODUCTION__) {
-  //      key = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
-  //    } else {
-  //      key = 'pk_test_5926f65DQoIilZeNOiKydfoN';
-  //    }
-  //
-  //    const handler = StripeCheckout.configure({
-  //      key,
-  //      image: 'https://s3.amazonaws.com/dnote-asset/images/logo-circle.png',
-  //      locale: 'auto',
-  //      token: async token => {
-  //        try {
-  //          await paymentService.createSubscription({ token });
-  //        } catch (err) {
-  //          hideOverlay();
-  //          console.log('Payment error', err);
-  //          alert('error happened with payment', err);
-  //
-  //          return;
-  //        }
-  //
-  //        try {
-  //          const u = await getMe();
-  //          doReceiveUser(u);
-  //          doUpdateMessage('Welcome to Dnote Cloud!', 'info');
-  //          history.push(getHomePath({}, { demo: false }));
-  //        } catch (err) {
-  //          // gracefully handle error by simply redirecting to home
-  //          console.log('error getting user', err.message);
-  //          window.location = '/';
-  //        }
-  //      },
-  //      opened: () => {
-  //        document.body.classList.add('no-scroll');
-  //
-  //        setTransacting(true);
-  //        setOpeningCheckout(true);
-  //      },
-  //      closed: () => {
-  //        hideOverlay();
-  //        setOpeningCheckout(false);
-  //      }
-  //    });
-  //
-  //    handler.open({
-  //      name: 'Dnote Pro',
-  //      description: 'An encrypted home for your knowledge',
-  //      amount: 300,
-  //      currency: 'usd',
-  //      panelLabel: '{{amount}} monthly'
-  //    });
-  //  }
+interface Props {}
+
+const Subscription: React.SFC<Props> = () => {
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user.data
+    };
+  });
 
   function renderPlanCta() {
-    if (user && user.cloud) {
+    if (user && user.pro) {
       return (
         <Link
           to="/"
@@ -217,12 +161,6 @@ function Subscription({ userData }) {
       </div>
     </div>
   );
-}
+};
 
-function mapStateToProps(state) {
-  return {
-    userData: state.auth.user
-  };
-}
-
-export default connect(mapStateToProps)(Subscription);
+export default Subscription;

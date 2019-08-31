@@ -46,7 +46,7 @@ const Account: React.SFC<Props> = () => {
   return (
     <div id="T-account-page">
       <Helmet>
-        <title>Account Settings</title>
+        <title>Account</title>
       </Helmet>
 
       <h1 className="sr-only">Account settings</h1>

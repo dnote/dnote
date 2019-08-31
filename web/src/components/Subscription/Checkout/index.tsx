@@ -22,14 +22,14 @@ import { StripeProvider, Elements } from 'react-stripe-elements';
 import { useScript } from '../../../libs/hooks';
 import CheckoutForm from './Form';
 
-function Checkout() {
+const Checkout: React.SFC = () => {
   const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
 
   const key = `${__STRIPE_PUBLIC_KEY__}`;
 
   let stripe = null;
   if (stripeLoaded) {
-    stripe = window.Stripe(key);
+    stripe = (window as any).Stripe(key);
   }
 
   return (
@@ -39,6 +39,6 @@ function Checkout() {
       </Elements>
     </StripeProvider>
   );
-}
+};
 
 export default Checkout;

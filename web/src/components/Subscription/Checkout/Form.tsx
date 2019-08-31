@@ -17,37 +17,38 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import Helmet from 'react-helmet';
 import { injectStripe } from 'react-stripe-elements';
+import { History } from 'history';
 
 import Sidebar from './Sidebar';
 import Flash from '../../Common/Flash';
 import * as paymentService from '../../../services/payment';
-import { getCurrentUser } from '../../../actions/auth';
-import { updateMessage } from '../../../actions/ui';
+import { getCurrentUser } from '../../../store/auth';
+import { useDispatch } from '../../../store';
+import { setMessage } from '../../../store/ui';
 import { getHomePath } from '../../../libs/paths';
 import NameOnCardInput from '../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../Common/PaymentInput/Card';
 import CountryInput from '../../Common/PaymentInput/Country';
+import styles from './Form.scss';
 
-import styles from './Form.module.scss';
+interface Props extends RouteComponentProps {
+  stripe: any;
+  stripeLoadError: string;
+  history: History;
+}
 
-function Form({
-  stripe,
-  stripeLoadError,
-  doGetCurrentUser,
-  doUpdateMessage,
-  history
-}) {
+const Form: React.SFC<Props> = ({ stripe, stripeLoadError, history }) => {
   const [nameOnCard, setNameOnCard] = useState('');
   const cardElementRef = useRef(null);
   const [cardElementLoaded, setCardElementLoaded] = useState(false);
   const [billingCountry, setBillingCountry] = useState('');
   const [transacting, setTransacting] = useState(false);
   const [errMessage, setErrMessage] = useState('');
+  const dispatch = useDispatch();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -95,23 +96,30 @@ function Form({
     cardElementRef.current.clear();
     setTransacting(false);
 
-    await doGetCurrentUser();
-    doUpdateMessage('Welcome to Dnote Pro', 'info');
-    history.push(getHomePath({}, { demo: false }));
+    await dispatch(getCurrentUser());
+
+    const homePath = getHomePath();
+
+    dispatch(
+      setMessage({
+        message: 'Welcome to Dnote Pro',
+        kind: 'info',
+        path: homePath.pathname
+      })
+    );
+    history.push(homePath);
   }
 
   return (
-    <form
-      className={classnames('container', styles.wrapper)}
-      onSubmit={handleSubmit}
-    >
-      <Helmet>
-        <title>Subscriptions</title>
-      </Helmet>
+    <div className={styles.wrapper}>
+      <form className={classnames('container')} onSubmit={handleSubmit}>
+        <Helmet>
+          <title>Subscriptions</title>
+        </Helmet>
 
-      {errMessage && (
         <Flash
-          type="danger"
+          when={errMessage !== ''}
+          kind="danger"
           wrapperClassName={styles.flash}
           onDismiss={() => {
             setErrMessage('');
@@ -119,61 +127,51 @@ function Form({
         >
           {errMessage}
         </Flash>
-      )}
-      {stripeLoadError && (
-        <Flash type="danger" wrapperClassName={styles.flash}>
+        <Flash
+          when={stripeLoadError !== ''}
+          kind="danger"
+          wrapperClassName={styles.flash}
+        >
           Failed to load stripe. {stripeLoadError}
         </Flash>
-      )}
 
-      <div className="row">
-        <div className="col-12 col-lg-7 col-xl-8">
-          <div className={styles['content-wrapper']}>
-            <h1 className={styles.heading}>You are almost there.</h1>
+        <div className="row">
+          <div className="col-12 col-lg-7 col-xl-8">
+            <div className={styles['content-wrapper']}>
+              <h1 className={styles.heading}>You are almost there.</h1>
 
-            <div className={styles.content}>
-              <NameOnCardInput
-                value={nameOnCard}
-                onUpdate={setNameOnCard}
-                containerClassName={styles['input-row']}
-                labelClassName={styles.label}
-              />
+              <div className={styles.content}>
+                <NameOnCardInput
+                  value={nameOnCard}
+                  onUpdate={setNameOnCard}
+                  containerClassName={styles['input-row']}
+                  labelClassName={styles.label}
+                />
 
-              <CardInput
-                cardElementRef={cardElementRef}
-                setCardElementLoaded={setCardElementLoaded}
-                containerClassName={styles['input-row']}
-                labelClassName={styles.label}
-              />
+                <CardInput
+                  cardElementRef={cardElementRef}
+                  setCardElementLoaded={setCardElementLoaded}
+                  containerClassName={styles['input-row']}
+                  labelClassName={styles.label}
+                />
 
-              <CountryInput
-                value={billingCountry}
-                onUpdate={setBillingCountry}
-                containerClassName={styles['input-row']}
-                labelClassName={styles.label}
-              />
+                <CountryInput
+                  value={billingCountry}
+                  onUpdate={setBillingCountry}
+                  containerClassName={styles['input-row']}
+                  labelClassName={styles.label}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-12 col-lg-5 col-xl-4">
-          <Sidebar isReady={cardElementLoaded} transacting={transacting} />
+          <div className="col-12 col-lg-5 col-xl-4">
+            <Sidebar isReady={cardElementLoaded} transacting={transacting} />
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   );
-}
-
-const mapDispatchToProps = {
-  doGetCurrentUser: getCurrentUser,
-  doUpdateMessage: updateMessage
 };
 
-export default injectStripe(
-  withRouter(
-    connect(
-      null,
-      mapDispatchToProps
-    )(Form)
-  )
-);
+export default injectStripe(withRouter(Form));

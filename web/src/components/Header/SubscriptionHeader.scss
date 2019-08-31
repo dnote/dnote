@@ -16,45 +16,44 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../../App/responsive';
-@import '../../App/theme';
-@import '../../App/font';
-@import '../../App/rem';
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
 
 .wrapper {
-  margin-top: rem(52px);
-}
-
-.cvc,
-.expiry {
-  width: rem(100px);
-}
-
-.flash {
-  margin-bottom: rem(24px);
-}
-
-.heading {
-  @include font-size('3x-large');
-  font-weight: 400;
-}
-
-.content-wrapper {
-  @include breakpoint(lg) {
-    padding-right: rem(52px);
-  }
+  height: 60px;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  border-bottom: 1px solid $border-color;
+  align-items: center;
+  height: $header-height;
+  padding-left: rem(20px);
+  padding-right: rem(20px);
 }
 
 .content {
-  margin-top: rem(32px);
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.input-row {
-  &:not(:first-child) {
-    margin-top: rem(20px);
+.brand {
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: none;
   }
 }
 
-.label {
-  @include font-size('medium');
+.logo {
+  display: block;
+}
+
+.email {
+  @include font-size('regular');
+  color: $gray;
 }

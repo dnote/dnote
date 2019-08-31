@@ -28,6 +28,9 @@ export const noteNewPathDef = '/new';
 export const booksPathDef = '/books';
 export const loginPathDef = '/login';
 export const joinPathDef = '/join';
+export const settingsPathDef = '/settings/:section';
+export const subscriptionsPathDef = '/subscriptions';
+export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
 
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
@@ -112,20 +115,20 @@ export function getNoteEditPath(noteUUID: string): Location {
   });
 }
 
-export function getJoinPath(searchObj): Location {
-  return getLocation({ pathname: '/join', searchObj });
+export function getJoinPath(searchObj = {}): Location {
+  return getLocation({ pathname: joinPathDef, searchObj });
 }
 
 export function getLoginPath(searchObj): Location {
-  return getLocation({ pathname: '/login', searchObj });
+  return getLocation({ pathname: loginPathDef, searchObj });
 }
 
 export function getSubscriptionPath(searchObj = {}): Location {
-  return getLocation({ pathname: '/subscriptions', searchObj });
+  return getLocation({ pathname: subscriptionsPathDef, searchObj });
 }
 
 export function getSubscriptionCheckoutPath(searchObj = {}): Location {
-  return getLocation({ pathname: '/subscriptions/checkout', searchObj });
+  return getLocation({ pathname: subscriptionsCheckoutPathDef, searchObj });
 }
 
 export enum SettingSections {

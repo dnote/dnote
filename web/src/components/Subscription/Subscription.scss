@@ -21,7 +21,9 @@
 @import '../App/rem';
 
 .wrapper {
-  padding-bottom: rem(80px);
+  // padding-bottom: rem(80px);
+  background: white;
+  height: calc(100vh - #{$header-height});
 }
 
 .hero {

@@ -34,6 +34,8 @@ import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
 import Books from './components/Books';
+import Subscription from './components/Subscription';
+import Checkout from './components/Subscription/Checkout';
 import {
   notePathDef,
   homePathDef,
@@ -41,7 +43,11 @@ import {
   loginPathDef,
   joinPathDef,
   noteEditPathDef,
-  noteNewPathDef
+  noteNewPathDef,
+  settingsPathDef,
+  subscriptionsPathDef,
+  subscriptionsCheckoutPathDef,
+  getJoinPath
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -51,14 +57,20 @@ const AuthenticatedBooks = userOnly(Books);
 const GuestJoin = guestOnly(Join);
 const GuestLogin = guestOnly(Login);
 const AuthenticatedSettings = userOnly(Settings);
+const AuthenticatedSubscription = userOnly(
+  Subscription,
+  getJoinPath().pathname
+);
+const AuthenticatedSubscriptionCheckout = userOnly(
+  Checkout,
+  getJoinPath().pathname
+);
 
 const routes = [
   {
     path: homePathDef,
     exact: true,
-    render: () => {
-      return <AuthenticatedHome />;
-    }
+    component: AuthenticatedHome
   },
   {
     path: loginPathDef,
@@ -86,9 +98,19 @@ const routes = [
     component: AuthenticatedEdit
   },
   {
-    path: '/settings/:section',
+    path: settingsPathDef,
     exact: true,
     component: AuthenticatedSettings
+  },
+  {
+    path: subscriptionsPathDef,
+    exact: true,
+    component: AuthenticatedSubscription
+  },
+  {
+    path: subscriptionsCheckoutPathDef,
+    exact: true,
+    component: AuthenticatedSubscriptionCheckout
   },
   {
     path: '/verify-email/:token',

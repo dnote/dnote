@@ -42,7 +42,9 @@ SOFTWARE.
 
 import React from 'react';
 
-const Icon = ({ fill, width, height, className }) => {
+import { IconProps } from './types';
+
+const Icon = ({ fill, width, height, className }: IconProps) => {
   const h = `${height}px`;
   const w = `${width}px`;
 

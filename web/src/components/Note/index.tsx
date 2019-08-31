@@ -82,7 +82,7 @@ const Note: React.SFC<Props> = ({ match, location }) => {
     <div className={styles.wrapper}>
       <HeaderData note={note} />
 
-      <div className="container mobile-nopadding">
+      <div className="container mobile-nopadding page">
         {note.isFetched ? <NoteContent /> : <Placeholder />}
       </div>
     </div>
