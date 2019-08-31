@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { Prompt, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import Helmet from 'react-helmet';
@@ -35,82 +35,84 @@ const New: React.SFC<Props> = ({ history }) => {
   useFocusTextarea(textareaEl, bookSelectorOpen);
 
   return (
-    <div
-      className={classnames(
-        styles.container,
-        'container mobile-nopadding page'
-      )}
-    >
+    <Fragment>
       <Helmet>
         <title>New</title>
       </Helmet>
 
       <PayWall>
-        <Flash kind="danger" when={Boolean(errMessage)}>
-          Error: {errMessage}
-        </Flash>
+        <div
+          className={classnames(
+            styles.container,
+            'container mobile-nopadding page'
+          )}
+        >
+          <Flash kind="danger" when={Boolean(errMessage)}>
+            Error: {errMessage}
+          </Flash>
 
-        <div className={styles.wrapper}>
-          <div
-            className={classnames(styles.overlay, {
-              [styles.active]: bookSelectorOpen
-            })}
-          />
-          <div className={styles.header}>
-            <h2 className={styles.heading}>New note</h2>
+          <div className={styles.wrapper}>
+            <div
+              className={classnames(styles.overlay, {
+                [styles.active]: bookSelectorOpen
+              })}
+            />
+            <div className={styles.header}>
+              <h2 className={styles.heading}>New note</h2>
+            </div>
+
+            <Editor
+              isNew
+              isBusy={submitting}
+              setBookSelectorOpen={setBookSelectorOpen}
+              bookSelectorOpen={bookSelectorOpen}
+              textareaEl={textareaEl}
+              setTextareaEl={setTextareaEl}
+              onSubmit={async ({ draftContent, draftBookUUID }) => {
+                setSubmitting(true);
+
+                try {
+                  let bookUUID;
+
+                  if (!draftBookUUID) {
+                    const book = await dispatch(createBook(editor.bookLabel));
+                    bookUUID = book.uuid;
+                  } else {
+                    bookUUID = draftBookUUID;
+                  }
+
+                  const res = await notesOperation.create({
+                    bookUUID,
+                    content: draftContent
+                  });
+
+                  dispatch(resetEditor());
+
+                  const dest = getNotePath(res.result.uuid);
+                  history.push(dest);
+
+                  dispatch(
+                    setMessage({
+                      message: 'Created a note',
+                      kind: 'info',
+                      path: notePathDef
+                    })
+                  );
+                } catch (err) {
+                  setErrMessage(err.message);
+                  setSubmitting(false);
+                }
+              }}
+            />
           </div>
 
-          <Editor
-            isNew
-            isBusy={submitting}
-            setBookSelectorOpen={setBookSelectorOpen}
-            bookSelectorOpen={bookSelectorOpen}
-            textareaEl={textareaEl}
-            setTextareaEl={setTextareaEl}
-            onSubmit={async ({ draftContent, draftBookUUID }) => {
-              setSubmitting(true);
-
-              try {
-                let bookUUID;
-
-                if (!draftBookUUID) {
-                  const book = await dispatch(createBook(editor.bookLabel));
-                  bookUUID = book.uuid;
-                } else {
-                  bookUUID = draftBookUUID;
-                }
-
-                const res = await notesOperation.create({
-                  bookUUID,
-                  content: draftContent
-                });
-
-                dispatch(resetEditor());
-
-                const dest = getNotePath(res.result.uuid);
-                history.push(dest);
-
-                dispatch(
-                  setMessage({
-                    message: 'Created a note',
-                    kind: 'info',
-                    path: notePathDef
-                  })
-                );
-              } catch (err) {
-                setErrMessage(err.message);
-                setSubmitting(false);
-              }
-            }}
+          <Prompt
+            message="You have unsaved changes. Continue?"
+            when={editor.dirty}
           />
         </div>
-
-        <Prompt
-          message="You have unsaved changes. Continue?"
-          when={editor.dirty}
-        />
       </PayWall>
-    </div>
+    </Fragment>
   );
 };
 

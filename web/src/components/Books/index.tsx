@@ -20,7 +20,7 @@ import React, { useEffect, useState, Fragment } from 'react';
 import classnames from 'classnames';
 
 import { getBooks } from '../../store/books';
-import { useDispatch } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import PayWall from '../Common/PayWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
@@ -39,32 +39,32 @@ const Books: React.SFC = () => {
     <Fragment>
       <HeadData />
 
-      <h1 className="sr-only">Books</h1>
+      <PayWall>
+        <h1 className="sr-only">Books</h1>
 
-      <div
-        className={classnames(
-          'container mobile-nopadding page',
-          styles.wrapper
-        )}
-      >
-        <Flash
-          kind="success"
-          when={Boolean(successMessage)}
-          onDismiss={() => {
-            setSuccessMessage('');
-          }}
+        <div
+          className={classnames(
+            'container mobile-nopadding page',
+            styles.wrapper
+          )}
         >
-          {successMessage}
-        </Flash>
+          <Flash
+            kind="success"
+            when={Boolean(successMessage)}
+            onDismiss={() => {
+              setSuccessMessage('');
+            }}
+          >
+            {successMessage}
+          </Flash>
 
-        <div className="row">
-          <div className="col-12">
-            <PayWall>
+          <div className="row">
+            <div className="col-12">
               <Content setSuccessMessage={setSuccessMessage} />;
-            </PayWall>
+            </div>
           </div>
         </div>
-      </div>
+      </PayWall>
     </Fragment>
   );
 };
