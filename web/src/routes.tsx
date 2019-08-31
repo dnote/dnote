@@ -47,7 +47,9 @@ import {
   settingsPathDef,
   subscriptionsPathDef,
   subscriptionsCheckoutPathDef,
-  getJoinPath
+  getJoinPath,
+  emailPrefPathDef,
+  verifyEmailPathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -113,12 +115,12 @@ const routes = [
     component: AuthenticatedSubscriptionCheckout
   },
   {
-    path: '/verify-email/:token',
+    path: verifyEmailPathDef,
     exact: true,
     component: VerifyEmail
   },
   {
-    path: '/email-preference',
+    path: emailPrefPathDef,
     exact: true,
     component: EmailPreference
   },

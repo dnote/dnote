@@ -31,6 +31,8 @@ export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
 export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
+export const emailPrefPathDef = '/email-preference';
+export const verifyEmailPathDef = '/verify-email/:token';
 
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
@@ -119,7 +121,7 @@ export function getJoinPath(searchObj = {}): Location {
   return getLocation({ pathname: joinPathDef, searchObj });
 }
 
-export function getLoginPath(searchObj): Location {
+export function getLoginPath(searchObj = {}): Location {
   return getLocation({ pathname: loginPathDef, searchObj });
 }
 

@@ -45,7 +45,9 @@ import {
   joinPathDef,
   loginPathDef,
   subscriptionsPathDef,
-  subscriptionsCheckoutPathDef
+  subscriptionsCheckoutPathDef,
+  emailPrefPathDef,
+  verifyEmailPathDef
 } from '../../libs/paths';
 
 import './App.global.scss';
@@ -134,7 +136,16 @@ const App: React.SFC<Props> = ({ location }) => {
     <Fragment>
       <HeaderData />
       <Switch>
-        <Route path={[loginPathDef, joinPathDef]} exact component={null} />
+        <Route
+          path={[
+            loginPathDef,
+            joinPathDef,
+            emailPrefPathDef,
+            verifyEmailPathDef
+          ]}
+          exact
+          component={null}
+        />
         <Route
           path={[subscriptionsPathDef, subscriptionsCheckoutPathDef]}
           exact
@@ -153,7 +164,9 @@ const App: React.SFC<Props> = ({ location }) => {
             loginPathDef,
             joinPathDef,
             subscriptionsPathDef,
-            subscriptionsCheckoutPathDef
+            subscriptionsCheckoutPathDef,
+            emailPrefPathDef,
+            verifyEmailPathDef
           ]}
           exact
           component={null}

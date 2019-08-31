@@ -16,41 +16,44 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
-import { Link, withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 
 import EmailPreferenceForm from '../Common/EmailPreferenceForm';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
-
 import { parseSearchString } from '../../libs/url';
 import { getEmailPreference } from '../../store/auth';
 import { getLoginPath } from '../../libs/paths';
+import { useSelector, useDispatch } from '../../store';
+import styles from './EmailPreference.scss';
 
-import styles from './EmailPreference.module.scss';
+interface Props extends RouteComponentProps {}
 
-function EmailPreference({
-  location,
-  emailPreferenceData,
-  doGetEmailPreference
-}) {
-  const emailPreference = emailPreferenceData.data;
-  const { isFetched, isFetching, errorMessage } = emailPreferenceData;
+const EmailPreference: React.SFC<Props> = ({ location }) => {
+  const { emailPreference } = useSelector(state => {
+    return {
+      emailPreference: state.auth.emailPreference
+    };
+  });
+  const dispatch = useDispatch();
+
+  const emailPreferenceData = emailPreference.data;
+  const { isFetched, isFetching, errorMessage } = emailPreference;
   const { token } = parseSearchString(location.search);
 
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
 
-  useState(() => {
+  useEffect(() => {
     if (isFetched || isFetching) {
       return;
     }
 
-    doGetEmailPreference(token);
-  }, []);
+    dispatch(getEmailPreference(token));
+  }, [dispatch, isFetched, isFetching, token]);
 
   return (
     <div className={styles.wrapper}>
@@ -59,37 +62,42 @@ function EmailPreference({
       </Helmet>
 
       <Link to="/">
-        <Logo fill="#252833" width="60" height="60" />
+        <Logo fill="#252833" width={60} height={60} />
       </Link>
       <h1 className={styles.heading}>Dnote email settings</h1>
 
       <div className="container">
         <div className={styles.body}>
-          {errorMessage && (
-            <Flash type="danger" wrapperClassName={styles.flash}>
-              Error fetching email preference: {errorMessage}.{' '}
-              <span>
-                Please <Link to={getLoginPath()}>login</Link> and try again.
-              </span>
-            </Flash>
-          )}
-          {successMsg && (
-            <Flash
-              type="success"
-              wrapperClassName={classnames(styles.flash, 'T-success')}
-            >
-              {successMsg}
-            </Flash>
-          )}
-          {failureMsg && (
-            <Flash type="danger" wrapperClassName={styles.flash}>
-              {failureMsg}
-            </Flash>
-          )}
+          <Flash
+            when={errorMessage !== ''}
+            kind="danger"
+            wrapperClassName={styles.flash}
+          >
+            Error fetching email preference: {errorMessage}.{' '}
+            <span>
+              Please <Link to={getLoginPath()}>login</Link> and try again.
+            </span>
+          </Flash>
+
+          <Flash
+            when={successMsg !== ''}
+            kind="success"
+            wrapperClassName={classnames(styles.flash, 'T-success')}
+          >
+            {successMsg}
+          </Flash>
+          <Flash
+            when={failureMsg !== ''}
+            kind="danger"
+            wrapperClassName={styles.flash}
+          >
+            {failureMsg}
+          </Flash>
+
           {isFetched && (
             <EmailPreferenceForm
               token={token}
-              emailPreference={emailPreference}
+              emailPreference={emailPreferenceData}
               setSuccessMsg={setSuccessMsg}
               setFailureMsg={setFailureMsg}
             />
@@ -101,21 +109,6 @@ function EmailPreference({
       </div>
     </div>
   );
-}
-
-function mapStateToProps(state) {
-  return {
-    emailPreferenceData: state.auth.emailPreference
-  };
-}
-
-const mapDispatchToProps = {
-  doGetEmailPreference: getEmailPreference
 };
 
-export default withRouter(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(EmailPreference)
-);
+export default withRouter(EmailPreference);

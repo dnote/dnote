@@ -17,38 +17,52 @@
  */
 
 import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { RouteComponentProps } from 'react-router-dom';
 
 import { receiveUser } from '../../store/auth';
-import { updateMessage } from '../../store/ui';
+import { setMessage } from '../../store/ui';
+import { useDispatch } from '../../store';
+import { getHomePath, homePathDef, emailPrefPathDef } from '../../libs/paths';
 import * as usersService from '../../services/users';
 
-function VerifyEmail({ match, history, doReceiveUser, doUpdateMessage }) {
+interface Match {
+  token: string;
+}
+
+interface Props extends RouteComponentProps<Match> {}
+
+const VerifyEmail: React.SFC<Props> = ({ match, history }) => {
+  const dispatch = useDispatch();
   const { token } = match.params;
 
   useEffect(() => {
+    const homePath = getHomePath();
+
     usersService
       .verifyEmail({ token })
       .then(res => {
-        doReceiveUser(res);
-        doUpdateMessage('Email was successfully verified', 'info');
-        history.push('/');
+        dispatch(receiveUser(res));
+        dispatch(
+          setMessage({
+            message: 'Email was successfully verified',
+            kind: 'info',
+            path: homePathDef
+          })
+        );
+        history.push(homePath);
       })
       .catch(err => {
-        doUpdateMessage(err.message, 'error');
-        history.push('/');
+        dispatch(
+          setMessage({
+            message: err.message,
+            kind: 'error',
+            path: emailPrefPathDef
+          })
+        );
       });
-  }, [doReceiveUser, doUpdateMessage, history, token]);
+  }, [dispatch, history, token]);
 
-  return <div />;
-}
-
-const mapDispatchToProps = {
-  doReceiveUser: receiveUser,
-  doUpdateMessage: updateMessage
+  return null;
 };
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(VerifyEmail);
+export default VerifyEmail;
