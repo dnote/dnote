@@ -13,6 +13,7 @@ import { setMessage } from '../../store/ui';
 import * as notesOperation from '../../operations/notes';
 import { getNotePath, notePathDef } from '../../libs/paths';
 import { useCleanupEditor, useFocusTextarea } from '../../libs/hooks/editor';
+import PayWall from '../Common/PayWall';
 import styles from './New.scss';
 
 interface Props extends RouteComponentProps {}
@@ -44,69 +45,71 @@ const New: React.SFC<Props> = ({ history }) => {
         <title>New</title>
       </Helmet>
 
-      <Flash kind="danger" when={Boolean(errMessage)}>
-        Error: {errMessage}
-      </Flash>
+      <PayWall>
+        <Flash kind="danger" when={Boolean(errMessage)}>
+          Error: {errMessage}
+        </Flash>
 
-      <div className={styles.wrapper}>
-        <div
-          className={classnames(styles.overlay, {
-            [styles.active]: bookSelectorOpen
-          })}
-        />
-        <div className={styles.header}>
-          <h2 className={styles.heading}>New note</h2>
+        <div className={styles.wrapper}>
+          <div
+            className={classnames(styles.overlay, {
+              [styles.active]: bookSelectorOpen
+            })}
+          />
+          <div className={styles.header}>
+            <h2 className={styles.heading}>New note</h2>
+          </div>
+
+          <Editor
+            isNew
+            isBusy={submitting}
+            setBookSelectorOpen={setBookSelectorOpen}
+            bookSelectorOpen={bookSelectorOpen}
+            textareaEl={textareaEl}
+            setTextareaEl={setTextareaEl}
+            onSubmit={async ({ draftContent, draftBookUUID }) => {
+              setSubmitting(true);
+
+              try {
+                let bookUUID;
+
+                if (!draftBookUUID) {
+                  const book = await dispatch(createBook(editor.bookLabel));
+                  bookUUID = book.uuid;
+                } else {
+                  bookUUID = draftBookUUID;
+                }
+
+                const res = await notesOperation.create({
+                  bookUUID,
+                  content: draftContent
+                });
+
+                dispatch(resetEditor());
+
+                const dest = getNotePath(res.result.uuid);
+                history.push(dest);
+
+                dispatch(
+                  setMessage({
+                    message: 'Created a note',
+                    kind: 'info',
+                    path: notePathDef
+                  })
+                );
+              } catch (err) {
+                setErrMessage(err.message);
+                setSubmitting(false);
+              }
+            }}
+          />
         </div>
 
-        <Editor
-          isNew
-          isBusy={submitting}
-          setBookSelectorOpen={setBookSelectorOpen}
-          bookSelectorOpen={bookSelectorOpen}
-          textareaEl={textareaEl}
-          setTextareaEl={setTextareaEl}
-          onSubmit={async ({ draftContent, draftBookUUID }) => {
-            setSubmitting(true);
-
-            try {
-              let bookUUID;
-
-              if (!draftBookUUID) {
-                const book = await dispatch(createBook(editor.bookLabel));
-                bookUUID = book.uuid;
-              } else {
-                bookUUID = draftBookUUID;
-              }
-
-              const res = await notesOperation.create({
-                bookUUID,
-                content: draftContent
-              });
-
-              dispatch(resetEditor());
-
-              const dest = getNotePath(res.result.uuid);
-              history.push(dest);
-
-              dispatch(
-                setMessage({
-                  message: 'Created a note',
-                  kind: 'info',
-                  path: notePathDef
-                })
-              );
-            } catch (err) {
-              setErrMessage(err.message);
-              setSubmitting(false);
-            }
-          }}
+        <Prompt
+          message="You have unsaved changes. Continue?"
+          when={editor.dirty}
         />
-      </div>
-
-      <Prompt
-        message="You have unsaved changes. Continue?"
-        when={editor.dirty}
-      />
+      </PayWall>
     </div>
   );
 };

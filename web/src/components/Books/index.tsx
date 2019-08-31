@@ -20,32 +20,12 @@ import React, { useEffect, useState, Fragment } from 'react';
 import classnames from 'classnames';
 
 import { getBooks } from '../../store/books';
-import { useDispatch, useSelector } from '../../store';
-import SubscriberWall from '../Common/SubscriberWall';
+import { useDispatch } from '../../store';
+import PayWall from '../Common/PayWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
 import HeadData from './HeadData';
 import styles from './Books.scss';
-
-interface ContentWrapperProps {
-  setSuccessMessage: (string) => void;
-}
-
-const ContentWrapper: React.SFC<ContentWrapperProps> = ({
-  setSuccessMessage
-}) => {
-  const { user } = useSelector(state => {
-    return {
-      user: state.auth.user
-    };
-  });
-
-  if (user.data.pro) {
-    return <Content setSuccessMessage={setSuccessMessage} />;
-  }
-
-  return <SubscriberWall />;
-};
 
 const Books: React.SFC = () => {
   const [successMessage, setSuccessMessage] = useState('');
@@ -79,7 +59,9 @@ const Books: React.SFC = () => {
 
         <div className="row">
           <div className="col-12">
-            <ContentWrapper setSuccessMessage={setSuccessMessage} />
+            <PayWall>
+              <Content setSuccessMessage={setSuccessMessage} />;
+            </PayWall>
           </div>
         </div>
       </div>

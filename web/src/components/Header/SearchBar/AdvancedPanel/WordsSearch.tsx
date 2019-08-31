@@ -6,9 +6,10 @@ import styles from './AdvancedPanel.scss';
 interface Props {
   words: string;
   setWords: (string) => void;
+  disabled: boolean;
 }
 
-const WordsSearch: React.SFC<Props> = ({ words, setWords }) => {
+const WordsSearch: React.SFC<Props> = ({ words, setWords, disabled }) => {
   return (
     <section className={styles.section}>
       <label htmlFor="has-words" className={styles.label}>
@@ -21,6 +22,7 @@ const WordsSearch: React.SFC<Props> = ({ words, setWords }) => {
             styles.input
           )}
           value={words}
+          disabled={disabled}
           onChange={e => {
             const val = e.target.value;
             setWords(val);

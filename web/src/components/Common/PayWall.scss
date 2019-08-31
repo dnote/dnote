@@ -33,6 +33,7 @@
 
 .lead {
   @include font-size('x-large');
+  font-weight: 400;
   margin-top: rem(16px);
   text-align: center;
 }

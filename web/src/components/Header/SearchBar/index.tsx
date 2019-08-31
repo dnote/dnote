@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import * as filtersLib from '../../../libs/filters';
 import * as queriesLib from '../../../libs/queries';
 import { usePrevious } from '../../../libs/hooks';
-import { useFilters } from '../../../store';
+import { useFilters, useSelector } from '../../../store';
 import SearchInput from '../../Common/SearchInput';
 import AdvancedPanel from './AdvancedPanel';
 import styles from './SearchBar.scss';
@@ -22,13 +22,23 @@ const SearchBar: React.SFC<Props> = ({ location, history }) => {
   const [value, setValue] = useState(initialValue);
   const [expanded, setExpanded] = useState(false);
 
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user.data
+    };
+  });
+
   const handleSearch = useCallback(
     (queryText: string) => {
+      if (!user.pro) {
+        return;
+      }
+
       const queries = queriesLib.parse(queryText);
       const dest = queriesLib.getSearchDest(location, queries);
       history.push(dest);
     },
-    [history, location]
+    [history, location, user]
   );
 
   const prevFilters = usePrevious(filters);
@@ -47,6 +57,8 @@ const SearchBar: React.SFC<Props> = ({ location, history }) => {
     setExpanded(false);
   };
 
+  const disabled = !user.pro;
+
   return (
     <div className={styles.wrapper}>
       <form
@@ -62,6 +74,7 @@ const SearchBar: React.SFC<Props> = ({ location, history }) => {
           wrapperClassName={styles['input-wrapper']}
           inputClassName={classnames(styles.input, ' text-input-small')}
           value={value}
+          disabled={disabled}
           onChange={e => {
             const val = e.target.value;
             setValue(val);
@@ -88,7 +101,7 @@ const SearchBar: React.SFC<Props> = ({ location, history }) => {
         </button>
       </form>
 
-      {expanded && <AdvancedPanel onDismiss={onDismiss} />}
+      {expanded && <AdvancedPanel onDismiss={onDismiss} disabled={disabled} />}
     </div>
   );
 };

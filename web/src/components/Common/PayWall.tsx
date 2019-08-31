@@ -16,25 +16,39 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
 import LockIcon from '../Icons/Lock';
-import { getSubscriptionPath, getHomePath } from '../../libs/paths';
+import { getSubscriptionPath } from '../../libs/paths';
+import { useSelector } from '../../store';
 
-import styles from './SubscriberWall.module.scss';
+import styles from './PayWall.scss';
 
 interface Props {
   wrapperClassName?: string;
 }
 
-const SubscriberWall: React.SFC<Props> = ({ wrapperClassName }) => {
+const PayWall: React.FunctionComponent<Props> = ({
+  wrapperClassName,
+  children
+}) => {
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user
+    };
+  });
+
+  if (user.data.pro) {
+    return <Fragment>{children}</Fragment>;
+  }
+
   return (
     <div className={classnames(styles.wrapper, wrapperClassName)}>
       <LockIcon width="64" height="64" />
 
-      <div className={styles.lead}>Unlock Dnote Pro to get started.</div>
+      <h1 className={styles.lead}>Unlock Dnote Pro to get started.</h1>
 
       <div className={styles.actions}>
         <Link
@@ -43,15 +57,17 @@ const SubscriberWall: React.SFC<Props> = ({ wrapperClassName }) => {
         >
           Get started
         </Link>
-        <Link
-          to={getHomePath({})}
-          className="button button-normal button-first-outline "
-        >
-          Live demo
-        </Link>
+        {/*
+          <Link
+            to={getHomePath({})}
+            className="button button-normal button-first-outline "
+          >
+            Live demo
+          </Link>
+         */}
       </div>
     </div>
   );
 };
 
-export default SubscriberWall;
+export default PayWall;
