@@ -104,10 +104,10 @@ function usePersistFilters(location: Location) {
 function useMobileMenuState(
   location: Location
 ): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(true);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // setMobileMenuOpen(false);
+    setMobileMenuOpen(false);
   }, [location, setMobileMenuOpen]);
 
   return [isMobileMenuOpen, setMobileMenuOpen];
@@ -133,7 +133,6 @@ const App: React.SFC<Props> = ({ location }) => {
   return (
     <Fragment>
       <HeaderData />
-
       <Switch>
         <Route path={[loginPathDef, joinPathDef]} exact component={null} />
         <Route
@@ -144,14 +143,10 @@ const App: React.SFC<Props> = ({ location }) => {
         <Route path={notePathDef} exact component={NoteHeader} />
         <Route path={homePathDef} component={NormalHeader} />
       </Switch>
-
       <main className={styles.wrapper}>
         <SystemMessage />
         <Switch>{render()}</Switch>
-
-        {isMobileMenuOpen && <MobileMenu />}
       </main>
-
       <Switch>
         <Route
           path={[
@@ -175,6 +170,13 @@ const App: React.SFC<Props> = ({ location }) => {
           }}
         />
       </Switch>
+
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onDismiss={() => {
+          setMobileMenuOpen(false);
+        }}
+      />
     </Fragment>
   );
 };

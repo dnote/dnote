@@ -24,20 +24,12 @@ import { connect } from 'react-redux';
 import Lock from '../Icons/Lock';
 import Menu from '../Common/Menu';
 import UserIcon from '../Icons/User';
-import { signout } from '../../services/users';
+import * as usersService from '../../services/users';
 import { SettingSections, getSettingsPath } from '../../libs/paths';
 import { AppState } from '../../store';
 import { UserData } from '../../store/auth';
 
 import styles from './AccountMenu.scss';
-
-function handleSignout(e) {
-  e.preventDefault();
-
-  signout().then(() => {
-    window.location.href = '/';
-  });
-}
 
 interface Props {
   user: UserData;
@@ -85,7 +77,15 @@ const AccountMenu: React.SFC<Props> = ({ user }) => {
     {
       name: 'logout',
       value: (
-        <form onSubmit={handleSignout}>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+
+            usersService.signout().then(() => {
+              window.location.href = '/';
+            });
+          }}
+        >
           <input
             role="menuitem"
             id="T-logout-button"

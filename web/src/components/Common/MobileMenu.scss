@@ -24,26 +24,46 @@
 .wrapper {
   position: absolute;
   top: 0;
-  bottom: 0;
+  bottom: $footer-height;
   left: 0;
   right: 0;
   background: $first;
-
-  z-index: 4;
-  margin-top: -1px;
-  margin-bottom: -1px;
-  border-top: 1px solid $gray;
-  border-bottom: 1px solid $gray;
-  padding-top: rem(10px);
+  z-index: 5;
 
   @include breakpoint(lg) {
     display: none;
   }
 }
 
+.close-wrapper {
+  padding: rem(20px) rem(20px) 0;
+  text-align: right;
+}
+
+.section {
+  padding: rem(24px) rem(32px);
+}
+
+.subheading {
+  color: #a6a6a6;
+  text-transform: uppercase;
+  @include font-size('medium');
+}
+
+.list {
+  margin-top: rem(12px);
+}
+
+.logout-button {
+  width: 100%;
+}
+
 .link {
   display: block;
   color: $white;
-  padding: rem(16px) rem(28px) rem(16px);
-  @include font-size('medium');
+  padding: rem(12px) rem(16px);
+}
+
+.item {
+  border-top: 1px solid $gray;
 }
