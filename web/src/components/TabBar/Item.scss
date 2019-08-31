@@ -7,22 +7,3 @@
   display: flex;
   flex-grow: 1;
 }
-
-.link {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  justify-content: center;
-  align-items: center;
-  padding-top: rem(8px);
-
-  &:focus {
-    outline: currentcolor none 0px;
-  }
-}
-
-.label {
-  color: #cecece;
-  margin-top: rem(4px);
-  @include font-size('small');
-}

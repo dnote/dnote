@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { hot } from 'react-hot-loader/root';
 import { Switch, Route } from 'react-router';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
@@ -35,6 +35,7 @@ import NormalHeader from '../Header/Normal';
 import SubscriptionHeader from '../Header/SubscriptionHeader';
 import TabBar from '../TabBar';
 import SystemMessage from '../Common/SystemMessage';
+import MobileMenu from '../Common/MobileMenu';
 import styles from './App.scss';
 import { getFiltersFromSearchStr } from '../../libs/filters';
 import { updateQuery, updatePage } from '../../store/filters';
@@ -100,10 +101,23 @@ function usePersistFilters(location: Location) {
   }, [dispatch, location.search]);
 }
 
+function useMobileMenuState(
+  location: Location
+): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(true);
+
+  useEffect(() => {
+    // setMobileMenuOpen(false);
+  }, [location, setMobileMenuOpen]);
+
+  return [isMobileMenuOpen, setMobileMenuOpen];
+}
+
 const App: React.SFC<Props> = ({ location }) => {
   useFetchData();
   useSavePrevLocation(location);
   usePersistFilters(location);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useMobileMenuState(location);
 
   const { user } = useSelector(state => {
     return {
@@ -134,6 +148,8 @@ const App: React.SFC<Props> = ({ location }) => {
       <main className={styles.wrapper}>
         <SystemMessage />
         <Switch>{render()}</Switch>
+
+        {isMobileMenuOpen && <MobileMenu />}
       </main>
 
       <Switch>
@@ -147,7 +163,17 @@ const App: React.SFC<Props> = ({ location }) => {
           exact
           component={null}
         />
-        <Route path="/" component={TabBar} />
+        <Route
+          path="/"
+          render={() => {
+            return (
+              <TabBar
+                isMobileMenuOpen={isMobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+              />
+            );
+          }}
+        />
       </Switch>
     </Fragment>
   );
