@@ -6,7 +6,7 @@ import styles from './TabBar.scss';
 import Item from './Item';
 import NoteIcon from '../Icons/Note';
 import BookIcon from '../Icons/Book';
-import DashboardIcon from '../Icons/Dashboard';
+// import DashboardIcon from '../Icons/Dashboard';
 import DotsIcon from '../Icons/Dots';
 import HomeIcon from '../Icons/Home';
 
@@ -33,7 +33,7 @@ const TabBar: React.SFC<Props> = ({
 }) => {
   const isHomeActive = !isMobileMenuOpen && location.pathname === '/';
   const isBookActive = !isMobileMenuOpen && location.pathname === '/books';
-  const isRandomActive = !isMobileMenuOpen && location.pathname === '/random';
+  // const isRandomActive = !isMobileMenuOpen && location.pathname === '/random';
   const isNewActive = !isMobileMenuOpen && location.pathname === '/new';
 
   return (
@@ -63,6 +63,7 @@ const TabBar: React.SFC<Props> = ({
           </Link>
         </Item>
 
+        {/*
         <Item>
           <Link
             to="/random"
@@ -78,6 +79,7 @@ const TabBar: React.SFC<Props> = ({
             <span className={styles.label}>Random</span>
           </Link>
         </Item>
+        */}
 
         <Item>
           <Link

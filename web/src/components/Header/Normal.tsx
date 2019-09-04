@@ -54,7 +54,7 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
           'container mobile-nopadding'
         )}
       >
-        <div className={classnames('row', styles.content)}>
+        <div className={classnames(styles.content)}>
           <div className={classnames(styles.left)}>
             <Link
               to={getHomeDest(location, searchObj)}

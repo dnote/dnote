@@ -28,19 +28,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
-
-// CreateNote creates a note by generating an action and feeding it to the reducer
-func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not supported. Please upgrade your client.", http.StatusGone)
-	return
-}
-
-// NotesOptions is a handler for OPTIONS endpoint for notes
-func (a *App) NotesOptions(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
-}
 
 type updateNotePayload struct {
 	BookUUID *string `json:"book_uuid"`
@@ -155,4 +144,74 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		Result: presenters.PresentNote(n),
 	}
 	respondJSON(w, resp)
+}
+
+type createNotePayload struct {
+	BookUUID string `json:"book_uuid"`
+	Content  string `json:"content"`
+	AddedOn  *int64 `json:"added_on"`
+	EditedOn *int64 `json:"edited_on"`
+}
+
+func validateCreateNotePayload(p createNotePayload) error {
+	if p.BookUUID == "" {
+		return errors.New("bookUUID is required")
+	}
+
+	return nil
+}
+
+// CreateNoteResp is a response for creating a note
+type CreateNoteResp struct {
+	Result presenters.Note `json:"result"`
+}
+
+// CreateNote creates a note
+func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		return
+	}
+
+	var params createNotePayload
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
+		return
+	}
+
+	err = validateCreateNotePayload(params)
+	if err != nil {
+		handleError(w, "validating payload", err, http.StatusBadRequest)
+		return
+	}
+
+	var book database.Book
+	db := database.DBConn
+	if err := db.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
+		handleError(w, "finding book", err, http.StatusInternalServerError)
+		return
+	}
+
+	note, err := operations.CreateNote(user, a.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
+	if err != nil {
+		handleError(w, "creating note", err, http.StatusInternalServerError)
+		return
+	}
+
+	// preload associations
+	note.User = user
+	note.Book = book
+
+	resp := CreateNoteResp{
+		Result: presenters.PresentNote(note),
+	}
+	respondJSON(w, resp)
+}
+
+// NotesOptions is a handler for OPTIONS endpoint for notes
+func (a *App) NotesOptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }

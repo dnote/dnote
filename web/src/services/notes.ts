@@ -31,7 +31,7 @@ interface CreateResponse {
 }
 
 export function create(params: CreateParams): Promise<CreateResponse> {
-  return apiClient.post<CreateResponse>('/v2/notes', params);
+  return apiClient.post<CreateResponse>('/v3/notes', params);
 }
 
 interface UpdateParams {
@@ -46,13 +46,13 @@ interface UpdateNoteResp {
 }
 
 export function update(noteUUID: string, params: UpdateParams) {
-  const endpoint = `/v1/notes/${noteUUID}`;
+  const endpoint = `/v3/notes/${noteUUID}`;
 
   return apiClient.patch<UpdateNoteResp>(endpoint, params);
 }
 
 export function remove(noteUUID: string) {
-  const endpoint = `/v1/notes/${noteUUID}`;
+  const endpoint = `/v3/notes/${noteUUID}`;
 
   return apiClient.del(endpoint, {});
 }
@@ -95,8 +95,8 @@ export function fetchOne(
   return apiClient.get<FetchOneResponse>(endpoint, {});
 }
 
-export function legacyFetchNotes() {
-  const endpoint = '/legacy/notes';
+export function classicFetch() {
+  const endpoint = '/classic/notes';
 
   return apiClient.get(endpoint, { credentials: 'include' });
 }

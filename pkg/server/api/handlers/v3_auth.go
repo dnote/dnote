@@ -169,16 +169,24 @@ func validateRegisterPayload(p registerPayload) error {
 	return nil
 }
 
+func parseRegisterPaylaod(r *http.Request) (registerPayload, bool) {
+	var ret registerPayload
+	if err := json.NewDecoder(r.Body).Decode(&ret); err != nil {
+		return ret, false
+	}
+	if err := validateRegisterPayload(ret); err != nil {
+		return ret, false
+	}
+
+	return ret, true
+}
+
 func (a *App) register(w http.ResponseWriter, r *http.Request) {
 	db := database.DBConn
 
-	var params registerPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		handleError(w, "decoding payload", err, http.StatusInternalServerError)
-		return
-	}
-	if err := validateRegisterPayload(params); err != nil {
-		http.Error(w, "invalid password", http.StatusBadRequest)
+	params, ok := parseRegisterPaylaod(r)
+	if !ok {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
 		return
 	}
 

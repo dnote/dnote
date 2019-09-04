@@ -20,7 +20,7 @@ import React, { useEffect, useState, Fragment } from 'react';
 import classnames from 'classnames';
 
 import { getBooks } from '../../store/books';
-import { useDispatch, useSelector } from '../../store';
+import { useDispatch } from '../../store';
 import PayWall from '../Common/PayWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
@@ -43,10 +43,7 @@ const Books: React.SFC = () => {
         <h1 className="sr-only">Books</h1>
 
         <div
-          className={classnames(
-            'container mobile-nopadding page',
-            styles.wrapper
-          )}
+          className={classnames('container mobile-nopadding', styles.wrapper)}
         >
           <Flash
             kind="success"

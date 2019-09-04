@@ -130,7 +130,8 @@ export function getCurrentUser(
               uuid: '',
               email: '',
               emailVerified: false,
-              pro: false
+              pro: false,
+              classic: false
             })
           );
           return;
@@ -230,10 +231,10 @@ export function getSource(): ThunkAction<SourceData> {
   };
 }
 
-export function legacyGetCurrentUser() {
+export function classicGetCurrentUser() {
   return dispatch => {
     return apiClient
-      .get('/legacy/me')
+      .get('/classic/me')
       .then(res => {
         const { user } = res;
 

@@ -33,6 +33,35 @@ export const subscriptionsPathDef = '/subscriptions';
 export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
 export const emailPrefPathDef = '/email-preference';
 export const verifyEmailPathDef = '/verify-email/:token';
+export const classicMigrationPathDef = '/classic/:step?';
+export const passwordResetRequestPathDef = '/password-reset';
+export const passwordResetConfirmPathDef = '/password-reset/:token';
+
+// layout definitions
+export const noHeaderPaths = [
+  loginPathDef,
+  joinPathDef,
+  emailPrefPathDef,
+  verifyEmailPathDef,
+  classicMigrationPathDef,
+  passwordResetRequestPathDef,
+  passwordResetConfirmPathDef
+];
+export const noFooterPaths = [
+  loginPathDef,
+  joinPathDef,
+  subscriptionsPathDef,
+  subscriptionsCheckoutPathDef,
+  emailPrefPathDef,
+  verifyEmailPathDef,
+  classicMigrationPathDef,
+  passwordResetRequestPathDef,
+  passwordResetConfirmPathDef
+];
+export const subscriptionPaths = [
+  subscriptionsPathDef,
+  subscriptionsCheckoutPathDef
+];
 
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
@@ -133,6 +162,14 @@ export function getSubscriptionCheckoutPath(searchObj = {}): Location {
   return getLocation({ pathname: subscriptionsCheckoutPathDef, searchObj });
 }
 
+export function getPasswordResetRequestPath(searchObj = {}): Location {
+  return getLocation({ pathname: passwordResetRequestPathDef, searchObj });
+}
+
+export function getPasswordResetConfirmPath(searchObj = {}): Location {
+  return getLocation({ pathname: passwordResetConfirmPathDef, searchObj });
+}
+
 export enum SettingSections {
   account = 'account',
   notification = 'notification',
@@ -143,6 +180,20 @@ export function getSettingsPath(section: SettingSections) {
   return `/settings/${section}`;
 }
 
+export enum ClassicMigrationSteps {
+  login = 'login',
+  setPassword = 'set-password',
+  decrypt = 'decrypt'
+}
+
+export function getClassicMigrationPath(step: ClassicMigrationSteps) {
+  if (step === ClassicMigrationSteps.login) {
+    return '/classic';
+  }
+
+  return `/classic/${step}`;
+}
+
 // checkCurrentPath checks if the current path is the given path
 export function checkCurrentPath(location: Location, path: string): boolean {
   const match = matchPath(location.pathname, {
@@ -151,4 +202,21 @@ export function checkCurrentPath(location: Location, path: string): boolean {
   });
 
   return Boolean(match);
+}
+
+// checkCurrentPathIn checks if the current path is one of the given paths
+export function checkCurrentPathIn(
+  location: Location,
+  paths: string[]
+): boolean {
+  for (let i = 0; i < paths.length; ++i) {
+    const p = paths[i];
+    const match = checkCurrentPath(location, p);
+
+    if (match) {
+      return true;
+    }
+  }
+
+  return false;
 }

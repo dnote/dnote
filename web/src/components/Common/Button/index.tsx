@@ -37,6 +37,7 @@ interface Props {
   stretch?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  tabIndex?: number;
 }
 
 const Button: React.SFC<Props> = ({
@@ -49,7 +50,8 @@ const Button: React.SFC<Props> = ({
   isBusy,
   stretch,
   disabled,
-  onClick
+  onClick,
+  tabIndex
 }) => {
   return (
     <button
@@ -67,6 +69,7 @@ const Button: React.SFC<Props> = ({
       )}
       disabled={isBusy || disabled}
       onClick={onClick}
+      tabIndex={tabIndex}
     >
       <span className={styles.content}>{children}</span>
 

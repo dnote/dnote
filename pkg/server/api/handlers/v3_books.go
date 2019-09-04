@@ -32,6 +32,74 @@ import (
 	"github.com/pkg/errors"
 )
 
+type createBookPayload struct {
+	Name string `json:"name"`
+}
+
+// CreateBookResp is the response from create book api
+type CreateBookResp struct {
+	Book presenters.Book `json:"book"`
+}
+
+func validateCreateBookPayload(p createBookPayload) error {
+	if p.Name == "" {
+		return errors.New("name is required")
+	}
+
+	return nil
+}
+
+// CreateBook creates a new book
+func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		return
+	}
+
+	var params createBookPayload
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		handleError(w, "decoding payload", err, http.StatusInternalServerError)
+		return
+	}
+
+	err = validateCreateBookPayload(params)
+	if err != nil {
+		handleError(w, "validating payload", err, http.StatusBadRequest)
+		return
+	}
+
+	db := database.DBConn
+
+	var bookCount int
+	err = db.Model(database.Book{}).
+		Where("user_id = ? AND label = ?", user.ID, params.Name).
+		Count(&bookCount).Error
+	if err != nil {
+		handleError(w, "checking duplicate", err, http.StatusInternalServerError)
+		return
+	}
+	if bookCount > 0 {
+		http.Error(w, "duplicate book exists", http.StatusConflict)
+		return
+	}
+
+	book, err := operations.CreateBook(user, a.Clock, params.Name)
+	if err != nil {
+		handleError(w, "inserting book", err, http.StatusInternalServerError)
+	}
+	resp := CreateBookResp{
+		Book: presenters.PresentBook(book),
+	}
+	respondJSON(w, resp)
+}
+
+// BooksOptions is a handler for OPTIONS endpoint for notes
+func (a *App) BooksOptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
+}
+
 func respondWithBooks(userID int, query url.Values, w http.ResponseWriter) {
 	db := database.DBConn
 
@@ -115,29 +183,6 @@ func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
 
 	p := presenters.PresentBook(book)
 	respondJSON(w, p)
-}
-
-type createBookPayload struct {
-	Name string `json:"name"`
-}
-
-// CreateBookResp is the response from create book api
-type CreateBookResp struct {
-	Book presenters.Book `json:"book"`
-}
-
-func validateCreateBookPayload(p createBookPayload) error {
-	if p.Name == "" {
-		return errors.New("name is required")
-	}
-
-	return nil
-}
-
-// CreateBook creates a new book
-func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not supported. Please upgrade your client.", http.StatusGone)
-	return
 }
 
 type updateBookPayload struct {
@@ -239,10 +284,4 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 		Book:   presenters.PresentBook(b),
 	}
 	respondJSON(w, resp)
-}
-
-// BooksOptions handles OPTIONS endpoint
-func (a *App) BooksOptions(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }

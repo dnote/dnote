@@ -30,10 +30,10 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/stripe/stripe-go"
-
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/stripe/stripe-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // InitTestDB establishes connection pool with the test database specified by
@@ -68,7 +68,31 @@ func SetupUserData() database.User {
 }
 
 // SetupAccountData creates and returns a new account for the user
-func SetupAccountData(user database.User, email string) database.Account {
+func SetupAccountData(user database.User, email, password string) database.Account {
+	db := database.DBConn
+
+	account := database.Account{
+		UserID: user.ID,
+	}
+	if email != "" {
+		account.Email = database.ToNullString(email)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(errors.Wrap(err, "Failed to hash password"))
+	}
+	account.Password = database.ToNullString(string(hashedPassword))
+
+	if err := db.Save(&account).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to prepare account"))
+	}
+
+	return account
+}
+
+// SetupClassicAccountData creates and returns a new account for the user
+func SetupClassicAccountData(user database.User, email string) database.Account {
 	db := database.DBConn
 
 	// email: alice@example.com

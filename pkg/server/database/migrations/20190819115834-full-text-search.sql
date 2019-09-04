@@ -29,7 +29,7 @@ FOR EACH ROW EXECUTE PROCEDURE note_tsv_trigger();
 -- +migrate StatementEnd
 
 -- index tsv
-CREATE INDEX idx_notes_tsv
+CREATE INDEX IF NOT EXISTS idx_notes_tsv
 ON notes
 USING gin(tsv);
 

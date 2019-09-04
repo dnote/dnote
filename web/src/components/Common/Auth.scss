@@ -68,10 +68,10 @@
   background: $white;
   border-radius: 2px;
   padding: rem(20px);
+  text-align: left;
 }
 
 .form {
-  text-align: left;
 }
 
 .auth-button {
@@ -88,4 +88,10 @@
   font-weight: 600;
   width: 100%;
   margin-bottom: 0;
+}
+
+.forgot {
+  @include font-size('small');
+  float: right;
+  font-weight: 400;
 }

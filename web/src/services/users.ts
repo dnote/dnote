@@ -65,7 +65,7 @@ export function register(params: RegisterParams) {
     password: params.password
   };
 
-  return apiClient.post('/v1/register', payload);
+  return apiClient.post('/v3/register', payload);
 }
 
 interface SigninParams {
@@ -79,11 +79,11 @@ export function signin(params: SigninParams) {
     password: params.password
   };
 
-  return apiClient.post('/v1/signin', payload);
+  return apiClient.post('/v3/signin', payload);
 }
 
 export function signout() {
-  return apiClient.post('/v1/signout');
+  return apiClient.post('/v3/signout');
 }
 
 export function sendResetPasswordEmail({ email }) {
@@ -134,29 +134,55 @@ export function getMe() {
   });
 }
 
-export function legacySignin({ email, password }) {
-  const payload = { email, password };
-
-  return apiClient.post('/legacy/signin', payload);
+interface ResetPasswordParams {
+  token: string;
+  password: string;
 }
 
-export function legacyGetMe() {
-  return apiClient.get('/legacy/me').then(res => {
-    return res.user;
+export function resetPassword({ token, password }: ResetPasswordParams) {
+  const payload = { token, password };
+
+  return apiClient.patch('/reset-password', payload);
+}
+
+// classic
+export function classicPresignin({ email }) {
+  return apiClient.get(`/classic/presignin?email=${email}`);
+}
+
+interface classicPresigninPayload {
+  key: string;
+  expiresAt: number;
+  cipherKeyEnc: string;
+}
+
+export function classicSignin({
+  email,
+  authKey
+}): Promise<classicPresigninPayload> {
+  const payload = { email, auth_key: authKey };
+
+  return apiClient.post<any>('/classic/signin', payload).then(resp => {
+    return {
+      key: resp.key,
+      expiresAt: resp.expires_at,
+      cipherKeyEnc: resp.cipher_key_enc
+    };
   });
 }
 
-export function legacyRegister({ email, authKey, cipherKeyEnc, iteration }) {
-  const payload = {
-    email,
-    auth_key: authKey,
-    iteration,
-    cipher_key_enc: cipherKeyEnc
-  };
-
-  return apiClient.post('/legacy/register', payload);
+interface classicSetPasswordPayload {
+  password: string;
 }
 
-export function legacyMigrate() {
-  return apiClient.patch('/legacy/migrate', {});
+export function classicSetPassword({ password }: classicSetPasswordPayload) {
+  const payload = {
+    password
+  };
+
+  return apiClient.patch<any>('/classic/set-password', payload);
+}
+
+export function classicCompleteMigrate() {
+  return apiClient.patch('/classic/migrate', '');
 }

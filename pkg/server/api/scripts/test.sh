@@ -4,5 +4,5 @@
 set -eux
 
 pushd "$GOPATH"/src/github.com/dnote/dnote/pkg/server/api
-go test ./handlers/... ./operations/...  -cover -p 1
+go test ./... -cover -p 1
 popd

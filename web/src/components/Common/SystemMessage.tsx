@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import classnames from 'classnames';
 import { matchPath } from 'react-router';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Location } from 'history';
@@ -62,7 +63,7 @@ const SystemMessage: React.SFC<Props> = ({ location }) => {
   const messageData = message[matchedPath];
 
   return (
-    <div className="container mobile-nopadding">
+    <div className={classnames('container mobile-nopadding')}>
       <Flash
         kind={messageData.kind}
         onDismiss={() => {

@@ -19,9 +19,27 @@
 import React, { useState } from 'react';
 
 import Button from '../Common/Button';
-import authStyles from '../Common/Auth.module.scss';
+import authStyles from '../Common/Auth.scss';
 
-function JoinForm({ onJoin, submitting, email, onUpdateEmail }) {
+interface Props {
+  onJoin: (
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ) => void;
+  submitting: boolean;
+  onUpdateEmail?: (string) => void;
+  email?: string;
+  cta?: string;
+}
+
+const JoinForm: React.SFC<Props> = ({
+  onJoin,
+  submitting,
+  email,
+  onUpdateEmail,
+  cta = 'Join'
+}) => {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
 
@@ -35,24 +53,26 @@ function JoinForm({ onJoin, submitting, email, onUpdateEmail }) {
       id="T-join-form"
       className={authStyles.form}
     >
-      <div className={authStyles['input-row']}>
-        <label htmlFor="email-input" className={authStyles.label}>
-          Your email
-          <input
-            autoFocus
-            id="email-input"
-            type="email"
-            placeholder="you@example.com"
-            className="form-control"
-            value={email}
-            onChange={e => {
-              const val = e.target.value;
+      {email !== undefined && (
+        <div className={authStyles['input-row']}>
+          <label htmlFor="email-input" className={authStyles.label}>
+            Your email
+            <input
+              autoFocus
+              id="email-input"
+              type="email"
+              placeholder="you@example.com"
+              className="form-control"
+              value={email}
+              onChange={e => {
+                const val = e.target.value;
 
-              onUpdateEmail(val);
-            }}
-          />
-        </label>
-      </div>
+                onUpdateEmail(val);
+              }}
+            />
+          </label>
+        </div>
+      )}
 
       <div className={authStyles['input-row']}>
         <label htmlFor="password-input" className={authStyles.label}>
@@ -96,14 +116,15 @@ function JoinForm({ onJoin, submitting, email, onUpdateEmail }) {
       <Button
         type="submit"
         kind="third"
+        size="normal"
         stretch
         className={authStyles['auth-button']}
         isBusy={submitting}
       >
-        Join
+        {cta}
       </Button>
     </form>
   );
-}
+};
 
 export default JoinForm;

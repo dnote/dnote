@@ -383,7 +383,7 @@ func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := validatePassword(params.NewPassword); err != nil {
-		http.Error(w, errors.Wrap(err, "validating password").Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

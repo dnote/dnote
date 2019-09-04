@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -184,6 +185,8 @@ func TestGetCredential(t *testing.T) {
 }
 
 func TestAuthMiddleware(t *testing.T) {
+	defer testutils.ClearData()
+
 	// set up
 	db := database.DBConn
 
@@ -297,6 +300,8 @@ func TestAuthMiddleware(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare(t *testing.T) {
+	defer testutils.ClearData()
+
 	// set up
 	db := database.DBConn
 
@@ -423,4 +428,48 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 		// test
 		assert.Equal(t, res.StatusCode, http.StatusUnauthorized, "status code mismatch")
 	})
+}
+
+func TestNotSupportedVersions(t *testing.T) {
+	testCases := []struct {
+		path string
+	}{
+		// v1
+		{
+			path: "/v1",
+		},
+		{
+			path: "/v1/foo",
+		},
+		{
+			path: "/v1/bar/baz",
+		},
+		// v2
+		{
+			path: "/v2",
+		},
+		{
+			path: "/v2/foo",
+		},
+		{
+			path: "/v2/bar/baz",
+		},
+	}
+
+	// setup
+	server := httptest.NewServer(NewRouter(&App{
+		Clock: clock.NewMock(),
+	}))
+	defer server.Close()
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			// execute
+			req := testutils.MakeReq(server, "GET", tc.path, "")
+			res := testutils.HTTPDo(t, req)
+
+			// test
+			assert.Equal(t, res.StatusCode, http.StatusGone, "status code mismatch")
+		})
+	}
 }

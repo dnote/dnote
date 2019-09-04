@@ -29,7 +29,7 @@ import { FormState, updateAuthEmail } from '../../store/form';
 import { AppState } from '../../store';
 import * as usersService from '../../services/users';
 import { getCurrentUser } from '../../store/auth';
-import authStyles from '../Common/Auth.module.scss';
+import authStyles from '../Common/Auth.scss';
 
 interface Props extends RouteComponentProps<any> {
   doGetCurrentUser: () => Promise<any>;

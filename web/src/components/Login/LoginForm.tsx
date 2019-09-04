@@ -17,11 +17,25 @@
  */
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import authStyles from '../Common/Auth.module.scss';
+import styles from '../Common/Auth.scss';
 import Button from '../Common/Button';
+import { getPasswordResetRequestPath } from '../../libs/paths';
 
-function LoginForm({ onLogin, submitting, email, onUpdateEmail }) {
+interface Props {
+  email: string;
+  submitting: boolean;
+  onLogin: (email: string, password: string) => void;
+  onUpdateEmail: (string) => void;
+}
+
+const LoginForm: React.SFC<Props> = ({
+  onLogin,
+  submitting,
+  email,
+  onUpdateEmail
+}) => {
   const [password, setPassword] = useState('');
 
   return (
@@ -32,12 +46,13 @@ function LoginForm({ onLogin, submitting, email, onUpdateEmail }) {
         onLogin(email, password);
       }}
       id="T-login-form"
-      className={authStyles.form}
+      className={styles.form}
     >
-      <div className={authStyles['input-row']}>
-        <label htmlFor="email-input" className={authStyles.label}>
+      <div className={styles['input-row']}>
+        <label htmlFor="email-input" className={styles.label}>
           Email
           <input
+            tabIndex={1}
             id="email-input"
             type="email"
             placeholder="you@example.com"
@@ -54,10 +69,14 @@ function LoginForm({ onLogin, submitting, email, onUpdateEmail }) {
         </label>
       </div>
 
-      <div className={authStyles['input-row']}>
-        <label htmlFor="password-input" className={authStyles.label}>
+      <div className={styles['input-row']}>
+        <label htmlFor="password-input" className={styles.label}>
           Password
+          <Link to={getPasswordResetRequestPath()} className={styles.forgot}>
+            Forgot?
+          </Link>
           <input
+            tabIndex={2}
             id="password-input"
             type="password"
             placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
@@ -73,16 +92,18 @@ function LoginForm({ onLogin, submitting, email, onUpdateEmail }) {
       </div>
 
       <Button
+        tabIndex={3}
         type="submit"
+        size="normal"
         kind="first"
         stretch
-        className={authStyles['auth-button']}
+        className={styles['auth-button']}
         isBusy={submitting}
       >
         Sign in
       </Button>
     </form>
   );
-}
+};
 
 export default LoginForm;

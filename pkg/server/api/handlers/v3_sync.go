@@ -303,10 +303,3 @@ func (a *App) GetSyncState(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, response)
 }
-
-// Sync is a deprecated endpoint that used to support cli versions below v0.5.0
-// using transaction-based replication
-func (a *App) Sync(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not supported. Please upgrade your client.", http.StatusGone)
-	return
-}

@@ -73,7 +73,7 @@ type User struct {
 	Cloud            bool       `json:"-" gorm:"default:false"`
 	APIKey           string     `json:"-" gorm:"index"`                 // Deprecated
 	Name             string     `json:"name"`                           // Deprecated
-	Encrypted        bool       `json:"encrypted" gorm:"default:False"` // Deprecated
+	Encrypted        bool       `json:"encrypted" gorm:"default:false"` // Deprecated
 }
 
 // Account is a model for an account

@@ -28,6 +28,16 @@
   min-height: calc(100vh - #{$header-height} - #{$footer-height});
   margin-bottom: $footer-height;
 
+  &.noheader:not(.nofooter) {
+    min-height: calc(100vh - #{$footer-height});
+  }
+  &.nofooter:not(.noheader) {
+    min-height: calc(100vh - #{$header-height});
+  }
+  &.nofooter.noheader {
+    min-height: 100vh;
+  }
+
   @include breakpoint(lg) {
     margin-bottom: 0;
     min-height: calc(100vh - #{$header-height});

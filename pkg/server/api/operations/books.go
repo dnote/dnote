@@ -97,7 +97,7 @@ func UpdateBook(tx *gorm.DB, c clock.Clock, user database.User, book database.Bo
 	book.EditedOn = c.Now().UnixNano()
 	book.Deleted = false
 	// TODO: remove after all users have been migrated
-	book.Encrypted = true
+	book.Encrypted = false
 
 	if err := tx.Save(&book).Error; err != nil {
 		return book, errors.Wrap(err, "updating the book")

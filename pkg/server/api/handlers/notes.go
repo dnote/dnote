@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
 	"github.com/dnote/dnote/pkg/server/api/presenters"
@@ -259,6 +260,23 @@ func parseGetNotesQuery(q url.Values) (getNotesQuery, error) {
 	return ret, nil
 }
 
+func getDateBounds(year, month int) (int64, int64) {
+	var yearUpperbound, monthUpperbound int
+
+	if month == 12 {
+		monthUpperbound = 1
+		yearUpperbound = year + 1
+	} else {
+		monthUpperbound = month + 1
+		yearUpperbound = year
+	}
+
+	lower := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).UnixNano()
+	upper := time.Date(yearUpperbound, time.Month(monthUpperbound), 1, 0, 0, 0, 0, time.UTC).UnixNano()
+
+	return lower, upper
+}
+
 func getNotesBaseQuery(userID int, q getNotesQuery) *gorm.DB {
 	db := database.DBConn
 
@@ -275,6 +293,11 @@ func getNotesBaseQuery(userID int, q getNotesQuery) *gorm.DB {
 	if len(q.Books) > 0 {
 		conn = conn.Joins("INNER JOIN books ON books.uuid = notes.book_uuid").
 			Where("books.label in (?)", q.Books)
+	}
+
+	if q.Year != 0 || q.Month != 0 {
+		dateLowerbound, dateUpperbound := getDateBounds(q.Year, q.Month)
+		conn = conn.Where("notes.added_on >= ? AND notes.added_on < ?", dateLowerbound, dateUpperbound)
 	}
 
 	return conn
