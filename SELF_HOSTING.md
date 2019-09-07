@@ -122,3 +122,20 @@ UPDATE users SET cloud = true FROM accounts WHERE accounts.user_id = users.id AN
 ```
 
 Replace `$yourEmail` with the email you used to create the account.
+
+### Configure clients
+
+Let's configure Dnote clients to connect to the self-hosted web API endpoint.
+
+#### CLI
+
+We need to modify the configuration file for the CLI. It should have been generated at `~/.dnote/dnoterc` upon running the CLI for the first time.
+
+The following is an example configuration:
+
+```yaml
+editor: nvim
+apiEndpoint: https://api.dnote.io
+```
+
+Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, and save the configuration file.
