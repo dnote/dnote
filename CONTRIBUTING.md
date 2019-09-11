@@ -32,8 +32,13 @@ You can build either a development version or a production version:
 # Build a development version for your platform and place it in your `PATH`.
 make debug=true build-cli
 
-# Build a production version
+# Build a production version for all platforms
 make version=v0.1.0 build-cli
+
+# Build a production version for a specific platform
+# Note: You cannot cross-compile using this method because Dnote uses CGO
+# and requires the OS specific headers.
+GOOS=[insert OS] GOARCH=[insert arch] make version=v0.1.0 build-cli
 ```
 
 ### Test
