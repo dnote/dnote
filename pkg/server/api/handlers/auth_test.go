@@ -114,7 +114,7 @@ func TestResetPassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "oldpassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -160,7 +160,7 @@ func TestResetPassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -198,7 +198,7 @@ func TestResetPassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -235,7 +235,7 @@ func TestResetPassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := database.Token{
@@ -283,7 +283,7 @@ func TestResetPassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",

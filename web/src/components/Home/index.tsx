@@ -75,7 +75,10 @@ const Home: React.SFC<Props> = ({ location }) => {
   const groups = groupNotes(notes.data);
 
   return (
-    <div className={classnames('container mobile-nopadding', styles.wrapper)}>
+    <div
+      id="T-home-page"
+      className={classnames('container mobile-nopadding', styles.wrapper)}
+    >
       <HeadData filters={filters} />
 
       <PayWall>

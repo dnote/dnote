@@ -45,14 +45,13 @@ const rootReducer = combineReducers({
 export default function configureStore(initialState) {
   const typedWindow = window as any;
 
+  const composeEnhancers =
+    typedWindow.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
   return createStore(
     rootReducer,
     initialState,
-    compose(
-      applyMiddleware(thunkMiddleware),
-      typedWindow.__REDUX_DEVTOOLS_EXTENSION__ &&
-        typedWindow.__REDUX_DEVTOOLS_EXTENSION__()
-    )
+    composeEnhancers(applyMiddleware(thunkMiddleware))
   );
 }
 

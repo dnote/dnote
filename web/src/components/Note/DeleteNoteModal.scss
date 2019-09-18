@@ -16,32 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const PATHS = require('./paths');
-const rules = require('./rules');
-const plugins = require('./plugins');
-const resolve = require('./resolve');
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/theme';
 
-module.exports = env => {
-  const isTest = env.isTest === 'true';
-
-  return {
-    mode: 'production',
-    devtool: 'cheap-module-source-map',
-    entry: { app: ['./src/client'] },
-    output: {
-      path: PATHS.output,
-      filename: '[chunkhash].js',
-      chunkFilename: '[name].[chunkhash:6].js', // for code splitting. will work without but useful to set
-      publicPath: PATHS.public
-    },
-    module: { rules: rules({ production: true }) },
-    resolve,
-    plugins: plugins({
-      production: true,
-      test: isTest
-    }),
-    optimization: {
-      minimize: true
-    }
-  };
-};
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: rem(8px);
+}

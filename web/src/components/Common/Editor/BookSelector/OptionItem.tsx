@@ -9,8 +9,10 @@ interface Props {
   option: Option;
   isSelected: boolean;
   isFocused: boolean;
-  isNew?: boolean;
   onSelect: (Option) => void;
+  isNew?: boolean;
+  id?: string;
+  className?: string;
 }
 
 function renderBody(isNew: boolean, label: string) {
@@ -25,11 +27,13 @@ const OptionItem: React.SFC<Props> = ({
   option,
   isSelected,
   isFocused,
+  onSelect,
   isNew,
-  onSelect
+  id
 }) => {
   return (
     <button
+      id={id}
       role="option"
       type="button"
       aria-selected={isSelected}
@@ -37,6 +41,7 @@ const OptionItem: React.SFC<Props> = ({
         onSelect(option);
       }}
       className={classnames(
+        'T-book-item-option',
         'button-no-ui',
         `book-item-${option.value}`,
         styles['combobox-option'],
@@ -54,9 +59,9 @@ const OptionItem: React.SFC<Props> = ({
           className={styles['check-icon']}
         />
       )}
-      <div className={styles['option-label']}>
+      <span className={styles['option-label']}>
         {renderBody(isNew, option.label)}
-      </div>
+      </span>
     </button>
   );
 };

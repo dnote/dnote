@@ -44,14 +44,6 @@ const Classic: React.SFC<Props> = () => {
     return <Redirect to={getHomePath()} />;
   }
 
-  if (loggedIn && userData.classic) {
-    return (
-      <Redirect
-        to={getClassicMigrationPath(ClassicMigrationSteps.setPassword)}
-      />
-    );
-  }
-
   return (
     <div className="container">
       <Switch>

@@ -195,7 +195,7 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		subject,
 		tokenValue,
 	}
-	email := mailer.NewEmail("noreply@dnote.io", []string{account.Email.String}, subject)
+	email := mailer.NewEmail("noreply@getdnote.com", []string{account.Email.String}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeEmailVerification, data); err != nil {
 		handleError(w, "parsing template", err, http.StatusInternalServerError)
 		return

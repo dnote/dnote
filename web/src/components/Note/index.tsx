@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import HeaderData from './HeaderData';
@@ -28,6 +28,7 @@ import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import { unsetMessage } from '../../store/ui';
 import { notePathDef } from '../../libs/paths';
 import { parseSearchString } from '../../libs/url';
+import DeleteNoteModal from './DeleteNoteModal';
 import styles from './index.scss';
 
 interface Match {
@@ -70,6 +71,7 @@ const Note: React.SFC<Props> = ({ match, location }) => {
       note: state.note
     };
   });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useFetchData(dispatch, noteUUID, location.search);
   useClearMessage(dispatch);
@@ -79,12 +81,28 @@ const Note: React.SFC<Props> = ({ match, location }) => {
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div id="T-note-page" className={styles.wrapper}>
       <HeaderData note={note} />
 
       <div className="container mobile-nopadding page">
-        {note.isFetched ? <NoteContent /> : <Placeholder />}
+        {note.isFetched ? (
+          <NoteContent
+            onDeleteModalOpen={() => {
+              setIsDeleteModalOpen(true);
+            }}
+          />
+        ) : (
+          <Placeholder />
+        )}
       </div>
+
+      <DeleteNoteModal
+        isOpen={isDeleteModalOpen}
+        onDismiss={() => {
+          setIsDeleteModalOpen(false);
+        }}
+        noteUUID={note.data.uuid}
+      />
     </div>
   );
 };

@@ -220,3 +220,7 @@ export function checkCurrentPathIn(
 
   return false;
 }
+
+export function getRootUrl() {
+  return __ROOT_URL__;
+}

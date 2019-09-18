@@ -135,7 +135,7 @@ The following is an example configuration:
 
 ```yaml
 editor: nvim
-apiEndpoint: https://api.dnote.io
+apiEndpoint: https://api.getdnote.com
 ```
 
 Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, and save the configuration file.

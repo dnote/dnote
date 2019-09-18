@@ -23,7 +23,6 @@ const resolve = require('./resolve');
 const externals = require('./externals');
 
 module.exports = env => {
-  const isStandalone = env.standalone === 'true';
   const isTest = env.isTest === 'true';
 
   return {
@@ -43,8 +42,7 @@ module.exports = env => {
     resolve,
     plugins: plugins({
       production: false,
-      test: isTest,
-      standalone: isStandalone
+      test: isTest
     }),
     externals
   };

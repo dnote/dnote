@@ -45,7 +45,7 @@ const ReactivateRow: React.SFC<Props> = ({
               })
               .catch(err => {
                 setFailureMsg(
-                  `Failed to reactivate the plan. Error: ${err.message}. Please contact sung@dnote.io.`
+                  `Failed to reactivate the plan. Error: ${err.message}. Please contact sung@getdnote.com.`
                 );
                 setInProgress(false);
               });

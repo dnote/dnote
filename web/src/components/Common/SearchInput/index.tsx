@@ -36,6 +36,7 @@ interface Props {
   onReset?: (Event) => void;
   expanded?: boolean;
   setExpanded?: (boolean) => void;
+  inputId?: string;
 }
 
 const SearchInput: React.SFC<Props> = ({
@@ -51,7 +52,8 @@ const SearchInput: React.SFC<Props> = ({
   inputRef,
   onReset,
   expanded,
-  setExpanded
+  setExpanded,
+  inputId
 }: Props) => {
   const resettable = Boolean(onReset);
   const expandable = Boolean(setExpanded);
@@ -59,6 +61,7 @@ const SearchInput: React.SFC<Props> = ({
   return (
     <div className={classnames(styles.wrapper, wrapperClassName)}>
       <input
+        id={inputId}
         ref={inputRef}
         type="text"
         value={value}

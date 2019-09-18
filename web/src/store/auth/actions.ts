@@ -110,7 +110,7 @@ interface GetCurrentUserOptions {
 
 export function getCurrentUser(
   options: GetCurrentUserOptions = {}
-): ThunkAction<UserData> {
+): ThunkAction<UserData | void> {
   return dispatch => {
     if (!options.refresh) {
       dispatch(startFetchingUser());

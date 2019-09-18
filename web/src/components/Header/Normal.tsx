@@ -47,7 +47,7 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
   const searchObj = toSearchObj(filters);
 
   return (
-    <header className={styles.wrapper}>
+    <header id="T-main-header" className={styles.wrapper}>
       <div
         className={classnames(
           styles['content-wrapper'],

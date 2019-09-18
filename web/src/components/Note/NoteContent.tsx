@@ -83,9 +83,11 @@ function formatContent(content: string): string {
   return parseMarkdown(formatted);
 }
 
-interface Props {}
+interface Props {
+  onDeleteModalOpen: () => void;
+}
 
-const Content: React.SFC<Props> = () => {
+const Content: React.SFC<Props> = ({ onDeleteModalOpen }) => {
   const { note, user } = useSelector(state => {
     return {
       note: state.note.data,
@@ -130,7 +132,24 @@ const Content: React.SFC<Props> = () => {
 
         {note.user.uuid === user.uuid && (
           <div className={styles.actions}>
-            <Link to={getNoteEditPath(note.uuid)} className={styles.action}>
+            <button
+              id="T-delete-note-button"
+              type="button"
+              className={classnames('button-no-ui', styles.action)}
+              onClick={e => {
+                e.preventDefault();
+
+                onDeleteModalOpen();
+              }}
+            >
+              Delete
+            </button>
+
+            <Link
+              id="T-edit-note-button"
+              to={getNoteEditPath(note.uuid)}
+              className={styles.action}
+            >
               Edit
             </Link>
           </div>

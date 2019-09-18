@@ -84,7 +84,7 @@ func MakeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
 		EmailSessionToken: tok.Value,
 	}
 
-	email := mailer.NewEmail("notebot@dnote.io", []string{emailAddr}, subject)
+	email := mailer.NewEmail("notebot@getdnote.com", []string{emailAddr}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeWeeklyDigest, tmplData); err != nil {
 		return nil, err
 	}

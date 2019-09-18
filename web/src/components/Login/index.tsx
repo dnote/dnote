@@ -22,6 +22,7 @@ import { Link, RouteComponentProps } from 'react-router-dom';
 
 import LoginForm from './LoginForm';
 import { getReferrer } from '../../libs/url';
+import { getRootUrl } from '../../libs/paths';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
 import * as usersService from '../../services/users';
@@ -70,12 +71,12 @@ const Login: React.SFC<Props> = ({ location }) => {
   const referrer = getReferrer(location);
 
   return (
-    <div className={authStyles.page}>
+    <div id="T-login-page" className={authStyles.page}>
       <Helmet>
         <title>Sign In</title>
       </Helmet>
       <div className="container">
-        <a href="/">
+        <a href={getRootUrl()}>
           <Logo fill="#252833" width={60} height={60} />
         </a>
         <h1 className={authStyles.heading}>Sign in to Dnote</h1>

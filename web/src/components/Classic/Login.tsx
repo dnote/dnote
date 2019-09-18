@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Helmet from 'react-helmet';
+import { Redirect } from 'react-router-dom';
 
-import { useDispatch } from '../../store';
+import { useSelector, useDispatch } from '../../store';
 import { loginHelper, aes256GcmDecrypt } from '../../crypto';
 import { bufToB64, b64ToBuf } from '../../libs/encoding';
 import { getCurrentUser } from '../../store/auth';
@@ -10,6 +11,10 @@ import authStyles from '../Common/Auth.scss';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
 import LoginForm from '../Login/LoginForm';
+import {
+  ClassicMigrationSteps,
+  getClassicMigrationPath
+} from '../../libs/paths';
 
 interface Props {}
 
@@ -58,6 +63,23 @@ const ClassicLogin: React.SFC<Props> = () => {
       setErrMsg(err.message);
       setSubmitting(false);
     }
+  }
+
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user
+    };
+  });
+
+  const userData = user.data;
+  const loggedIn = userData.uuid !== '';
+
+  if (loggedIn && userData.classic) {
+    return (
+      <Redirect
+        to={getClassicMigrationPath(ClassicMigrationSteps.setPassword)}
+      />
+    );
   }
 
   return (

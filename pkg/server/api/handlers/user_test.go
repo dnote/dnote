@@ -35,7 +35,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "sung@dnote.io", "oldpassword")
+		testutils.SetupAccountData(user, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "newpassword"}`
@@ -63,7 +63,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "oldpassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "randompassword", "new_password": "newpassword"}`
@@ -89,7 +89,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "sung@dnote.io", "oldpassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "a"}`
@@ -123,7 +123,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "sung@dnote.io", "pass1234")
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
 		// Execute
 		req := testutils.MakeReq(server, "POST", "/verification-token", "")
@@ -156,7 +156,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		a := testutils.SetupAccountData(user, "sung@dnote.io", "pass1234")
+		a := testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 		a.EmailVerified = true
 		testutils.MustExec(t, db.Save(&a), "preparing account")
 
@@ -189,7 +189,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "sung@dnote.io", "pass1234")
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 		tok := database.Token{
 			UserID: user.ID,
 			Type:   database.TokenTypeEmailVerification,
@@ -230,7 +230,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "sung@dnote.io", "pass1234")
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := database.Token{
@@ -274,7 +274,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "sung@dnote.io", "pass1234")
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
 		tok := database.Token{
 			UserID: user.ID,
@@ -316,7 +316,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
-		a := testutils.SetupAccountData(user, "sung@dnote.io", "oldpass1234")
+		a := testutils.SetupAccountData(user, "alice@example.com", "oldpass1234")
 		a.EmailVerified = true
 		testutils.MustExec(t, db.Save(&a), "preparing account")
 

@@ -173,9 +173,9 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	defer server.Close()
 
 	u := testutils.SetupUserData()
-	testutils.SetupAccountData(u, "sung@dnote.io", "somepassword")
+	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
-	dat := `{"email": "sung@dnote.io", "password": "foobarbaz"}`
+	dat := `{"email": "alice@example.com", "password": "foobarbaz"}`
 	req := testutils.MakeReq(server, "POST", "/v3/register", dat)
 
 	// Execute

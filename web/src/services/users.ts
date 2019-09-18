@@ -17,7 +17,7 @@
  */
 
 import { apiClient } from '../libs/http';
-import { EmailPrefData } from '../store/auth';
+import { EmailPrefData, UserData } from '../store/auth';
 
 export function updateUser({ name }) {
   const payload = { name };
@@ -25,16 +25,16 @@ export function updateUser({ name }) {
   return apiClient.patch('/account/profile', payload);
 }
 
-interface UpdateEmailParams {
+interface UpdateProfileParams {
   email: string;
 }
 
-export function updateEmail({ email }: UpdateEmailParams) {
+export function updateProfile({ email }: UpdateProfileParams) {
   const payload = {
     email
   };
 
-  return apiClient.patch('/account/email', payload);
+  return apiClient.patch('/account/profile', payload);
 }
 
 interface UpdatePasswordParams {
@@ -128,9 +128,27 @@ export function getEmailPreference({
   return apiClient.get<EmailPrefData>(endpoint);
 }
 
-export function getMe() {
-  return apiClient.get('/me').then(res => {
-    return res.user;
+interface GetMeResponse {
+  user: {
+    uuid: string;
+    email: string;
+    email_verified: boolean;
+    pro: boolean;
+    classic: boolean;
+  };
+}
+
+export function getMe(): Promise<UserData> {
+  return apiClient.get<GetMeResponse>('/me').then(res => {
+    const { user } = res;
+
+    return {
+      uuid: user.uuid,
+      email: user.email,
+      emailVerified: user.email_verified,
+      pro: user.pro,
+      classic: user.classic
+    };
   });
 }
 

@@ -75,6 +75,7 @@ const Editor: React.SFC<Props> = ({
 
   return (
     <form
+      id="T-editor"
       className={styles.wrapper}
       onSubmit={e => {
         e.preventDefault();
@@ -143,7 +144,13 @@ const Editor: React.SFC<Props> = ({
       </div>
 
       <div className={styles.actions}>
-        <Button type="submit" kind="third" size="normal" disabled={isBusy}>
+        <Button
+          id="T-save-button"
+          type="submit"
+          kind="third"
+          size="normal"
+          disabled={isBusy}
+        >
           {isNew ? 'Save' : 'Update'}
         </Button>
 

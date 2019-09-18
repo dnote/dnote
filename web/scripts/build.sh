@@ -4,9 +4,8 @@ set -ex
 
 basePath="$GOPATH/src/github.com/dnote/dnote"
 
-standalone=${STANDALONE:-false}
 isTest=${IS_TEST:-false}
-baseUrl=$BASE_URL
+bundleBaseUrl=$BUNDLE_BASE_URL
 assetBaseUrl=$ASSET_BASE_URL
 
 set -u
@@ -19,15 +18,15 @@ pushd "$basePath/web"
     "$basePath"/web/scripts/setup.sh
 
   OUTPUT_PATH="$COMPILED_PATH" \
+  ROOT_URL="$ROOT_URL" \
     "$basePath"/web/node_modules/.bin/webpack\
       --colors\
       --display-error-details\
-      --env.standalone="$standalone"\
       --env.isTest="$isTest"\
       --config "$basePath"/web/webpack/prod.config.js
 
   NODE_ENV=PRODUCTION \
-  BASE_URL=$baseUrl \
+  BUNDLE_BASE_URL=$bundleBaseUrl \
   ASSET_BASE_URL=$assetBaseUrl \
   PUBLIC_PATH=$PUBLIC_PATH \
   COMPILED_PATH=$COMPILED_PATH \

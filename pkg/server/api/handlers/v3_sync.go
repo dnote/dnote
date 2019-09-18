@@ -33,7 +33,7 @@ import (
 )
 
 // fullSyncBefore is the system-wide timestamp that represents the point in time
-// before which clients much perform a full-sync rather than incremental sync.
+// before which clients must perform a full-sync rather than incremental sync.
 const fullSyncBefore = 0
 
 // SyncFragment contains a piece of information about the server's state.

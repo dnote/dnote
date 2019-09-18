@@ -89,7 +89,7 @@ const BookSelector: React.SFC<Props> = ({
       renderTrigger={triggerProps => {
         return (
           <button
-            id="T-move-book-btn"
+            id="T-book-selector-trigger"
             ref={triggerProps.triggerRef}
             type="button"
             className={classnames(
@@ -170,6 +170,7 @@ const BookSelector: React.SFC<Props> = ({
               return (
                 <div className={styles['input-wrapper-container']}>
                   <SearchInput
+                    inputId="T-book-select-search"
                     inputClassName={classnames(
                       'text-input-small',
                       styles.input

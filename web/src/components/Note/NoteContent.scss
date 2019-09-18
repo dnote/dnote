@@ -92,6 +92,15 @@ $footer-text-color: #8c8c8c;
 
 .action {
   color: $footer-text-color;
+
+  &:hover {
+    color: $link-hover;
+    text-decoration: underline;
+  }
+
+  & ~ & {
+    margin-left: rem(12px);
+  }
 }
 
 .match {

@@ -41,7 +41,8 @@ const PasswordResetConfirmForm: React.SFC<Props> = ({
           />
         </label>
       </div>
-      <div className="input-row">
+
+      <div className={authStyles['input-row']}>
         <label
           htmlFor="password-confirmation-input"
           className={authStyles.label}
@@ -77,71 +78,3 @@ const PasswordResetConfirmForm: React.SFC<Props> = ({
 };
 
 export default PasswordResetConfirmForm;
-
-// export default class LoginForm extends React.Component {
-//   constructor(props) {
-//     super(props);
-//
-//     this.state = {
-//       password: '',
-//       passwordConfirmation: ''
-//     };
-//   }
-//
-//   render() {
-//     const { onResetPassword } = this.props;
-//     const { password, passwordConfirmation } = this.state;
-//
-//     return (
-//       <form
-//         onSubmit={(e) => {
-//           e.preventDefault();
-//
-//           onResetPassword(password, passwordConfirmation);
-//         }}
-//         className="auth-form"
-//       >
-//         <div className="input-row">
-//           <label htmlFor="password-input" className="label">
-//             Password
-//           </label>
-//           <input
-//             id="password-input"
-//             type="password"
-//             placeholder="********"
-//             className="form-control"
-//             value={password}
-//             onChange={(e) => {
-//               const val = e.target.value;
-//
-//               this.setState({ password: val });
-//             }}
-//           />
-//         </div>
-//         <div className="input-row">
-//           <label htmlFor="password-confirmation-input" className="label">
-//             Password Confirmation
-//           </label>
-//           <input
-//             id="password-confirmation-input"
-//             type="password"
-//             placeholder="********"
-//             className="form-control"
-//             value={passwordConfirmation}
-//             onChange={(e) => {
-//               const val = e.target.value;
-//
-//               this.setState({ passwordConfirmation: val });
-//             }}
-//           />
-//         </div>
-//
-//         <input
-//           type="submit"
-//           value="Reset password"
-//           className="button button-first button-stretch auth-button"
-//         />
-//       </form>
-//     );
-//   }
-// }

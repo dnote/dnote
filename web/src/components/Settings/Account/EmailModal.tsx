@@ -61,7 +61,7 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
         throw new Error('The new email is the same as the old email');
       }
 
-      await usersService.updateEmail({
+      await usersService.updateProfile({
         email: emailVal
       });
 

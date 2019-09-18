@@ -110,6 +110,11 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if account.AuthKeyHash != "" {
+		http.Error(w, "Please migrate your account from Dnote classic before resetting password", http.StatusBadRequest)
+		return
+	}
+
 	resetToken, err := generateResetToken()
 	if err != nil {
 		handleError(w, errors.Wrap(err, "generating token").Error(), nil, http.StatusInternalServerError)
@@ -135,7 +140,7 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 		subject,
 		resetToken,
 	}
-	email := mailer.NewEmail("noreply@dnote.io", []string{params.Email}, subject)
+	email := mailer.NewEmail("noreply@getdnote.com", []string{params.Email}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeResetPassword, data); err != nil {
 		handleError(w, errors.Wrap(err, "parsing template").Error(), nil, http.StatusInternalServerError)
 		return
