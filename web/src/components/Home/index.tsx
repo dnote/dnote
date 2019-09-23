@@ -19,17 +19,18 @@
 import React, { useEffect } from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import NoteGroupList from './NoteGroup/List';
-import HeadData from './HeadData';
-import { useDispatch, useSelector } from '../../store';
+
+import { usePrevious } from 'web/libs/hooks';
+import { groupNotes } from 'web/libs/notes';
 import {
   getFiltersFromSearchStr,
   Filters,
   checkFilterEqual
-} from '../../libs/filters';
+} from 'jslib/helpers/filters';
+import NoteGroupList from './NoteGroup/List';
+import HeadData from './HeadData';
+import { useDispatch, useSelector } from '../../store';
 import { getNotes } from '../../store/notes';
-import { groupNotes } from '../../libs/notes';
-import { usePrevious } from '../../libs/hooks';
 import TopActions from './Actions/Top';
 import Flash from '../Common/Flash';
 import PayWall from '../Common/PayWall';

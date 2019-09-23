@@ -17,7 +17,7 @@
  */
 
 import { nanosecToMillisec } from '../helpers/time';
-import { NoteData } from '../operations/types';
+import { NoteData } from '../../../jslib/src/operations/types';
 
 export interface NotesGroupData {
   year: number;

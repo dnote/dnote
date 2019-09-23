@@ -21,14 +21,14 @@ import Helmet from 'react-helmet';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { connect } from 'react-redux';
 
+import services from 'web/libs/services';
+import { getReferrer } from 'jslib/helpers/url';
+import { getRootUrl } from 'web/libs/paths';
 import JoinForm from './JoinForm';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
-import { getReferrer } from '../../libs/url';
-import { getRootUrl } from '../../libs/paths';
 import { FormState, updateAuthEmail } from '../../store/form';
 import { AppState } from '../../store';
-import * as usersService from '../../services/users';
 import { getCurrentUser } from '../../store/auth';
 import authStyles from '../Common/Auth.scss';
 
@@ -67,7 +67,7 @@ const Join: React.SFC<Props> = ({
     setSubmitting(true);
 
     try {
-      await usersService.register({ email, password });
+      await services.users.register({ email, password });
 
       // guestOnly HOC will redirect the user accordingly after the current user is fetched
       await doGetCurrentUser();

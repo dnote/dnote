@@ -23,13 +23,13 @@ import Helmet from 'react-helmet';
 import { injectStripe } from 'react-stripe-elements';
 import { History } from 'history';
 
+import services from 'web/libs/services';
+import { getHomePath } from 'web/libs/paths';
 import Sidebar from './Sidebar';
 import Flash from '../../Common/Flash';
-import * as paymentService from '../../../services/payment';
 import { getCurrentUser } from '../../../store/auth';
 import { useDispatch } from '../../../store';
 import { setMessage } from '../../../store/ui';
-import { getHomePath } from '../../../libs/paths';
 import NameOnCardInput from '../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../Common/PaymentInput/Card';
 import CountryInput from '../../Common/PaymentInput/Country';
@@ -80,7 +80,7 @@ const Form: React.SFC<Props> = ({ stripe, stripeLoadError, history }) => {
         throw error;
       }
 
-      await paymentService.createSubscription({
+      await services.payment.createSubscription({
         source,
         country: billingCountry
       });

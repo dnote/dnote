@@ -21,7 +21,7 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
 import LockIcon from '../Icons/Lock';
-import { getSubscriptionPath } from '../../libs/paths';
+import { getSubscriptionPath } from 'web/libs/paths';
 import { useSelector } from '../../store';
 
 import styles from './PayWall.scss';

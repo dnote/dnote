@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 
+import { booksToOptions, filterOptions, Option } from 'jslib/helpers/select';
 import { useSelector } from '../../../../store';
 import PopoverContent from '../../../Common/Popover/PopoverContent';
-import { booksToOptions, filterOptions, Option } from '../../../../libs/select';
-import { usePrevious } from '../../../../libs/hooks';
+import { usePrevious } from 'web/libs/hooks';
 import styles from './AdvancedPanel.scss';
 
 import {
   useScrollToFocused,
   useSearchMenuKeydown
-} from '../../../../libs/hooks/dom';
+} from 'web/libs/hooks/dom';
 
 interface Props {
   value: string;

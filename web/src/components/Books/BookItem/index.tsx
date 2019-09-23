@@ -20,10 +20,10 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import { getHomePath } from '../../../libs/paths';
+import { getHomePath } from 'web/libs/paths';
 import Actions from './Actions';
 import MobileActions from './MobileActions';
-import { BookData } from '../../../operations/books';
+import { BookData } from 'jslib/operations/books';
 
 import styles from './BookItem.scss';
 

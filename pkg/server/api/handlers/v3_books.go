@@ -96,7 +96,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 
 // BooksOptions is a handler for OPTIONS endpoint for notes
 func (a *App) BooksOptions(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }
 

@@ -2,7 +2,7 @@ import React from 'react';
 import classnames from 'classnames';
 import { NavLink } from 'react-router-dom';
 
-import { SettingSections, getSettingsPath } from '../../libs/paths';
+import { SettingSections, getSettingsPath } from 'web/libs/paths';
 import styles from './Sidebar.scss';
 
 interface Props {}

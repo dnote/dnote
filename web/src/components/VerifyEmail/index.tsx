@@ -19,11 +19,11 @@
 import React, { useEffect } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
+import { getHomePath, homePathDef, emailPrefPathDef } from 'web/libs/paths';
+import services from 'web/libs/services';
 import { receiveUser } from '../../store/auth';
 import { setMessage } from '../../store/ui';
 import { useDispatch } from '../../store';
-import { getHomePath, homePathDef, emailPrefPathDef } from '../../libs/paths';
-import * as usersService from '../../services/users';
 
 interface Match {
   token: string;
@@ -38,7 +38,7 @@ const VerifyEmail: React.SFC<Props> = ({ match, history }) => {
   useEffect(() => {
     const homePath = getHomePath();
 
-    usersService
+    services.users
       .verifyEmail({ token })
       .then(res => {
         dispatch(receiveUser(res));

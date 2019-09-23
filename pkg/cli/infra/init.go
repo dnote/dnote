@@ -22,7 +22,6 @@ package infra
 
 import (
 	"database/sql"
-	"encoding/base64"
 	"fmt"
 	"os"
 	"os/user"
@@ -106,25 +105,16 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	db := ctx.DB
 
-	var sessionKey, cipherKeyB64 string
+	var sessionKey string
 	var sessionKeyExpiry int64
 
 	err := db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemSessionKey).Scan(&sessionKey)
 	if err != nil && err != sql.ErrNoRows {
 		return ctx, errors.Wrap(err, "finding sesison key")
 	}
-	err = db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemCipherKey).Scan(&cipherKeyB64)
-	if err != nil && err != sql.ErrNoRows {
-		return ctx, errors.Wrap(err, "finding sesison key")
-	}
 	err = db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemSessionKeyExpiry).Scan(&sessionKeyExpiry)
 	if err != nil && err != sql.ErrNoRows {
 		return ctx, errors.Wrap(err, "finding sesison key expiry")
-	}
-
-	cipherKey, err := base64.StdEncoding.DecodeString(cipherKeyB64)
-	if err != nil {
-		return ctx, errors.Wrap(err, "decoding cipherKey from base64")
 	}
 
 	cf, err := config.Read(ctx)
@@ -139,7 +129,6 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		DB:               ctx.DB,
 		SessionKey:       sessionKey,
 		SessionKeyExpiry: sessionKeyExpiry,
-		CipherKey:        cipherKey,
 		APIEndpoint:      cf.APIEndpoint,
 		Editor:           cf.Editor,
 		Clock:            clock.New(),

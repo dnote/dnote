@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 import { Link } from 'react-router-dom';
 import { useFilters, useSelector } from '../../../store';
-import { getHomePath } from '../../../libs/paths';
+import { getHomePath } from 'web/libs/paths';
 import CaretIcon from '../../Icons/Caret';
 import styles from './Paginator.scss';
 

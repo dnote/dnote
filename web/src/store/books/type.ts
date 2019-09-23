@@ -1,5 +1,5 @@
 import { RemoteData } from '../types';
-import { BookData } from '../../operations/books';
+import { BookData } from 'jslib/operations/books';
 
 export type BooksState = RemoteData<BookData[]>;
 

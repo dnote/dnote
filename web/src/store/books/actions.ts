@@ -16,10 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import operations from 'web/libs/operations';
+import { BookData } from 'jslib/operations/books';
 import { RECEIVE, ADD, REMOVE, START_FETCHING, FINISH_FETCHING } from './type';
-import { BookData } from '../../operations/books';
 import { ThunkAction } from '../types';
-import * as booksOperation from '../../operations/books';
 
 function receiveBooks(books: BookData[]) {
   return {
@@ -44,7 +44,7 @@ export const getBooks = (): ThunkAction<void> => {
   return dispatch => {
     dispatch(startFetchingBooks());
 
-    return booksOperation
+    return operations.books
       .fetch()
       .then(books => {
         dispatch(receiveBooks(books));
@@ -66,7 +66,7 @@ export function addBook(book: BookData) {
 
 export const createBook = (name: string): ThunkAction<BookData> => {
   return dispatch => {
-    return booksOperation.create({ name }).then(book => {
+    return operations.books.create({ name }).then(book => {
       dispatch(addBook(book));
 
       return book;

@@ -20,9 +20,9 @@ import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import operations from 'web/libs/operations';
 import Modal, { Header, Body } from '../Common/Modal';
 import Flash from '../Common/Flash';
-import * as booksOperation from '../../operations/books';
 import { removeBook } from '../../store/books';
 import { useSelector, useDispatch } from '../../store';
 import Button from '../Common/Button';
@@ -127,7 +127,7 @@ const DeleteBookModal: React.SFC<Props> = ({
               return;
             }
 
-            booksOperation
+            operations.books
               .remove(bookUUID)
               .then(() => {
                 dispatch(removeBook(bookUUID));

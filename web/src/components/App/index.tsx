@@ -28,7 +28,7 @@ import { getCurrentUser } from '../../store/auth';
 import { getBooks } from '../../store/books';
 import { setPrevLocation } from '../../store/route';
 import { useDispatch, useSelector } from '../../store';
-import { usePrevious } from '../../libs/hooks';
+import { usePrevious } from 'web/libs/hooks';
 import HeaderData from './HeaderData';
 import render from '../../routes';
 import NoteHeader from '../Header/Note';
@@ -38,7 +38,7 @@ import TabBar from '../TabBar';
 import SystemMessage from '../Common/SystemMessage';
 import MobileMenu from '../Common/MobileMenu';
 import styles from './App.scss';
-import { getFiltersFromSearchStr } from '../../libs/filters';
+import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
 import { updateQuery, updatePage } from '../../store/filters';
 import {
   homePathDef,
@@ -47,7 +47,7 @@ import {
   subscriptionPaths,
   noFooterPaths,
   checkCurrentPathIn
-} from '../../libs/paths';
+} from 'web/libs/paths';
 
 import './App.global.scss';
 

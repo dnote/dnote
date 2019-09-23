@@ -21,9 +21,8 @@ import { Link } from 'react-router-dom';
 import moment from 'moment';
 import classnames from 'classnames';
 
+import { getPlanLabel } from 'web/libs/subscription';
 import LogoIcon from '../../Icons/Logo';
-import { getPlanLabel } from '../../../libs/subscription';
-
 import styles from './PlanRow.scss';
 import settingRowStyles from '../SettingRow.scss';
 

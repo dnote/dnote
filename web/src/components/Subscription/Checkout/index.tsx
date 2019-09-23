@@ -19,7 +19,7 @@
 import React from 'react';
 import { StripeProvider, Elements } from 'react-stripe-elements';
 
-import { useScript } from '../../../libs/hooks';
+import { useScript } from 'web/libs/hooks';
 import CheckoutForm from './Form';
 
 const Checkout: React.SFC = () => {

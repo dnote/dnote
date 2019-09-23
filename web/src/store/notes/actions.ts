@@ -16,6 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import operations from 'web/libs/operations';
+import { Filters } from 'jslib/helpers/filters';
 import {
   ADD,
   REFRESH,
@@ -33,8 +35,6 @@ import {
   ResetAction
 } from './type';
 import { ThunkAction } from '../types';
-import * as notesOperation from '../../operations/notes';
-import { Filters } from '../../libs/filters';
 
 export function addNote(note): AddAction {
   return {
@@ -101,7 +101,7 @@ export function getNotes(filters: Filters): ThunkAction<void> {
   return async dispatch => {
     dispatch(startFetchingNotes());
 
-    return notesOperation
+    return operations.notes
       .fetch(filters)
       .then(res => {
         const { notes, total } = res;

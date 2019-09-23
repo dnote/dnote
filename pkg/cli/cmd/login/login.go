@@ -19,13 +19,11 @@
 package login
 
 import (
-	"encoding/base64"
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/client"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/crypt"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -51,28 +49,10 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 // Do dervies credentials on the client side and requests a session token from the server
 func Do(ctx context.DnoteCtx, email, password string) error {
-	presigninResp, err := client.GetPresignin(ctx, email)
-	if err != nil {
-		return errors.Wrap(err, "getting presiginin")
-	}
-
-	masterKey, authKey, err := crypt.MakeKeys([]byte(password), []byte(email), presigninResp.Iteration)
-	if err != nil {
-		return errors.Wrap(err, "making keys")
-	}
-
-	authKeyB64 := base64.StdEncoding.EncodeToString(authKey)
-	signinResp, err := client.Signin(ctx, email, authKeyB64)
+	signinResp, err := client.Signin(ctx, email, password)
 	if err != nil {
 		return errors.Wrap(err, "requesting session")
 	}
-
-	cipherKeyDec, err := crypt.AesGcmDecrypt(masterKey, signinResp.CipherKeyEnc)
-	if err != nil {
-		return errors.Wrap(err, "decrypting cipher key")
-	}
-
-	cipherKeyDecB64 := base64.StdEncoding.EncodeToString(cipherKeyDec)
 
 	db := ctx.DB
 	tx, err := db.Begin()
@@ -80,9 +60,6 @@ func Do(ctx context.DnoteCtx, email, password string) error {
 		return errors.Wrap(err, "beginning a transaction")
 	}
 
-	if err := database.UpsertSystem(tx, consts.SystemCipherKey, cipherKeyDecB64); err != nil {
-		return errors.Wrap(err, "saving enc key")
-	}
 	if err := database.UpsertSystem(tx, consts.SystemSessionKey, signinResp.Key); err != nil {
 		return errors.Wrap(err, "saving session key")
 	}

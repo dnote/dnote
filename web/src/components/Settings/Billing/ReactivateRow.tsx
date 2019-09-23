@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import classnames from 'classnames';
 
+import services from 'web/libs/services';
 import { useDispatch } from '../../../store';
 import { getSubscription } from '../../../store/auth';
 import SettingRow from '../SettingRow';
-import * as paymentService from '../../../services/payment';
 import styles from '../Settings.scss';
 
 interface Props {
@@ -34,7 +34,7 @@ const ReactivateRow: React.SFC<Props> = ({
           onClick={() => {
             setInProgress(true);
 
-            paymentService
+            services.payment
               .reactivateSubscription({ subscriptionId })
               .then(() => {
                 return dispatch(getSubscription()).then(() => {

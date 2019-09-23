@@ -25,7 +25,7 @@ import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
 import { useSelector } from '../../store';
-import { getSubscriptionCheckoutPath } from '../../libs/paths';
+import { getSubscriptionCheckoutPath } from 'web/libs/paths';
 
 import styles from './Subscription.scss';
 

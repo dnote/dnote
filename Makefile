@@ -41,13 +41,17 @@ endif
 
 ifeq ($(CI), true)
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm=true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/browser && npm install --unsafe-perm=true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm install --unsafe-perm=true)
 else
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/browser && npm install)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm install)
 endif
 .PHONY: install-js
 
 ## test
-test: test-cli test-api test-web
+test: test-cli test-api test-web test-jslib
 .PHONY: test
 
 test-cli:
@@ -69,6 +73,16 @@ else
 	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test)
 endif
 .PHONY: test-web
+
+test-jslib:
+	@echo "==> running jslib test"
+
+ifeq ($(WATCH), true)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm run test:watch)
+else
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm run test)
+endif
+.PHONY: test-jslib
 
 # development
 dev-server:

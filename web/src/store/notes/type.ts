@@ -1,5 +1,5 @@
-import { NoteData } from '../../operations/types';
-import { BookData } from '../../operations/books';
+import { NoteData } from 'jslib/operations/types';
+import { BookData } from 'jslib/operations/books';
 import { RemoteData } from '../types';
 
 export interface NotesState extends RemoteData<NoteData[]> {

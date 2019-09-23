@@ -41,8 +41,6 @@ var (
 	SystemLastMaxUSN = "last_max_usn"
 	// SystemLastUpgrade is the timestamp at which the system more recently checked for an upgrade
 	SystemLastUpgrade = "last_upgrade"
-	// SystemCipherKey is the encryption key
-	SystemCipherKey = "enc_key"
 	// SystemSessionKey is the session key
 	SystemSessionKey = "session_token"
 	// SystemSessionKeyExpiry is the timestamp at which the session key will expire

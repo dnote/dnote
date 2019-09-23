@@ -19,13 +19,13 @@
 import React, { useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import { homePathDef, getHomePath } from 'web/libs/paths';
+import operations from 'web/libs/operations';
 import Modal, { Header, Body } from '../Common/Modal';
 import Flash from '../Common/Flash';
-import * as notesOperation from '../../operations/notes';
 import { setMessage } from '../../store/ui';
 import { useDispatch } from '../../store';
 import Button from '../Common/Button';
-import { homePathDef, getHomePath } from '../../libs/paths';
 import styles from './DeleteNoteModal.scss';
 
 interface Props extends RouteComponentProps {
@@ -85,7 +85,7 @@ const DeleteNoteModal: React.SFC<Props> = ({
 
             setInProgress(true);
 
-            notesOperation
+            operations.notes
               .remove(noteUUID)
               .then(() => {
                 // dispatch(removeBook(bookUUID));

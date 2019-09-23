@@ -25,7 +25,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/client"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/crypt"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -107,23 +106,9 @@ func processFragments(fragments []client.SyncFragment, cipherKey []byte) (syncLi
 
 	for _, fragment := range fragments {
 		for _, note := range fragment.Notes {
-			log.Debug("decrypting note %s\n", note.UUID)
-			bodyDec, err := crypt.AesGcmDecrypt(cipherKey, note.Body)
-			if err != nil {
-				return syncList{}, errors.Wrapf(err, "decrypting body for note %s", note.UUID)
-			}
-
-			note.Body = string(bodyDec)
 			notes[note.UUID] = note
 		}
 		for _, book := range fragment.Books {
-			log.Debug("decrypting book %s\n", book.UUID)
-			labelDec, err := crypt.AesGcmDecrypt(cipherKey, book.Label)
-			if err != nil {
-				return syncList{}, errors.Wrapf(err, "decrypting label for book %s", book.UUID)
-			}
-
-			book.Label = string(labelDec)
 			books[book.UUID] = book
 		}
 		for _, uuid := range fragment.ExpungedBooks {

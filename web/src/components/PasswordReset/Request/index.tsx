@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 
+import { getLoginPath } from 'web/libs/paths';
+import services from 'web/libs/services';
 import Flash from '../../Common/Flash';
 import Form from './Form';
 import Logo from '../../Icons/Logo';
-import * as usersService from '../../../services/users';
 import authStyles from '../../Common/Auth.scss';
-import { getLoginPath } from '../../../libs/paths';
 import styles from './Request.scss';
 
 interface Props {}
@@ -26,7 +26,7 @@ const PasswordResetRequest: React.SFC<Props> = () => {
     setErrorMsg('');
     setSubmitting(true);
 
-    usersService
+    services.users
       .sendResetPasswordEmail({ email })
       .then(() => {
         setSubmitting(false);

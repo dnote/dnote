@@ -19,8 +19,8 @@
 import React, { useEffect, useRef } from 'react';
 import classnames from 'classnames';
 
+import { KEYCODE_ESC } from 'jslib/helpers/keyboard';
 import styles from './PopoverContent.scss';
-import { KEYCODE_ESC } from '../../../helpers/keyboard';
 import { Alignment, Direction } from './types';
 
 interface Props {

@@ -22,12 +22,12 @@ import React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
+import { getNoteEditPath, getHomePath } from 'web/libs/paths';
+import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import BookIcon from '../Icons/Book';
 import { parseMarkdown } from '../../helpers/markdown';
 import { nanosecToMillisec, getShortMonthName } from '../../helpers/time';
 import { useSelector } from '../../store';
-import { getNoteEditPath, getHomePath } from '../../libs/paths';
-import { tokenize, TokenKind } from '../../libs/fts/lexer';
 import styles from './NoteContent.scss';
 
 function formatAddedOn(ts: number): string {

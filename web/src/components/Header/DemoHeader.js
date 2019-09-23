@@ -21,7 +21,7 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
-import { getSubscriptionPath, getJoinPath } from '../../libs/paths';
+import { getSubscriptionPath, getJoinPath } from 'web/libs/paths';
 
 import styles from './DemoHeader.module.scss';
 

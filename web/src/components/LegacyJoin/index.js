@@ -24,7 +24,7 @@ import { connect } from 'react-redux';
 import JoinForm from './JoinForm';
 import Logo from '../Icons/Logo';
 
-import { legacyRegister } from '../../services/users';
+import { legacyRegister } from 'jslib/services/users';
 import { receiveUser, legacyGetCurrentUser } from '../../actions/auth';
 import { updateAuthEmail } from '../../actions/form';
 import LegacyFooter from '../Common/LegacyFooter';

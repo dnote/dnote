@@ -22,9 +22,9 @@ import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
+import { getPathFromLocation } from 'jslib//helpers/url';
 import { AppState, RemoteData } from '../store';
 import { UserData } from '../store/auth';
-import { getPathFromLocation } from '../libs/url';
 
 // userOnly returns a HOC that redirects to Login page if user is not logged in
 export default function(

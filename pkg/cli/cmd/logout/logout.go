@@ -70,9 +70,6 @@ func Do(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "requesting logout")
 	}
 
-	if err := database.DeleteSystem(tx, consts.SystemCipherKey); err != nil {
-		return errors.Wrap(err, "deleting enc key")
-	}
 	if err := database.DeleteSystem(tx, consts.SystemSessionKey); err != nil {
 		return errors.Wrap(err, "deleting session key")
 	}

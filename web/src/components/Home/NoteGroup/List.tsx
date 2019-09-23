@@ -19,11 +19,11 @@
 import React from 'react';
 import classnames from 'classnames';
 
+import { Filters } from 'jslib/helpers/filters';
+import { NotesGroupData } from 'web/libs/notes';
 import NoteGroup from './index';
 import Placeholder from './Placeholder';
 import styles from './List.scss';
-import { Filters } from '../../../libs/filters';
-import { NotesGroupData } from '../../../libs/notes';
 
 function renderResult({
   groups,

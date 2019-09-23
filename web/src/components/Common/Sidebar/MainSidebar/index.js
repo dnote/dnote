@@ -20,7 +20,7 @@ import React from 'react';
 import { Switch, Route } from 'react-router';
 
 import MainSidebar from './MainSidebar';
-import { mainSidebarPaths } from '../../../../libs/paths';
+import { mainSidebarPaths } from 'web/libs/paths';
 
 export default ({ isEditor, demo }) => {
   return (

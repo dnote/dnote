@@ -19,7 +19,7 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import { countries } from '../../../libs/countries';
+import { countries } from 'web/libs/countries';
 import CaretIcon from '../../Icons/Caret';
 
 import styles from './CountrySelect.module.scss';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { focusTextarea } from '../../libs/dom';
+import { focusTextarea } from 'web/libs/dom';
 import { resetEditor } from '../../store/editor';
 import { useDispatch } from '../../store';
 

@@ -3,14 +3,14 @@ import { RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { withRouter } from 'react-router-dom';
 
+import operations from 'web/libs/operations';
+import { getNotePath, notePathDef } from 'web/libs/paths';
+import { useCleanupEditor, useFocusTextarea } from 'web/libs/hooks/editor';
 import Editor from '../Common/Editor';
 import { useDispatch, useSelector } from '../../store';
 import { resetEditor } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
-import * as notesOperation from '../../operations/notes';
-import { getNotePath, notePathDef } from '../../libs/paths';
-import { useCleanupEditor, useFocusTextarea } from '../../libs/hooks/editor';
 import styles from '../New/New.scss';
 
 interface Props extends RouteComponentProps {
@@ -65,7 +65,7 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
               bookUUID = draftBookUUID;
             }
 
-            const note = await notesOperation.update(noteUUID, {
+            const note = await operations.notes.update(noteUUID, {
               book_uuid: bookUUID,
               content: draftContent
             });

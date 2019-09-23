@@ -20,7 +20,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import Logo from '../../Icons/Logo';
-import { getHomePath } from '../../../libs/paths';
+import { getHomePath } from 'web/libs/paths';
 import styles from './Guest.scss';
 
 const UserNoteHeader: React.SFC = () => {

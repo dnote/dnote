@@ -20,12 +20,12 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { Link, RouteComponentProps } from 'react-router-dom';
 
+import { getReferrer } from 'jslib/helpers/url';
+import { getRootUrl } from 'web/libs/paths';
+import services from 'web/libs/services';
 import LoginForm from './LoginForm';
-import { getReferrer } from '../../libs/url';
-import { getRootUrl } from '../../libs/paths';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
-import * as usersService from '../../services/users';
 import { getCurrentUser } from '../../store/auth';
 import { updateAuthEmail } from '../../store/form';
 import authStyles from '../Common/Auth.scss';
@@ -57,7 +57,7 @@ const Login: React.SFC<Props> = ({ location }) => {
     setSubmitting(true);
 
     try {
-      await usersService.signin({ email, password });
+      await services.users.signin({ email, password });
 
       // guestOnly HOC will redirect the user accordingly after the current user is fetched
       await dispatch(getCurrentUser());

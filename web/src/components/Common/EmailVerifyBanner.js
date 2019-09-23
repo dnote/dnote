@@ -23,7 +23,7 @@ import classnames from 'classnames';
 import Flash from './Flash';
 import Button from './Button';
 
-import * as usersService from '../../services/users';
+import * as usersService from 'jslib/services/users';
 
 import styles from './EmailVerifyBanner.module.scss';
 

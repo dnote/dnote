@@ -8,8 +8,8 @@
     "test:watch": "./node_modules/karma/bin/karma start ./karma.conf.js --watch",
     "lint": "./node_modules/.bin/eslint ./src"
   },
-  "author": "Sung Won Cho <sung@monomax.sh> (https://dnote.com)",
-  "license": "AGPL",
+  "author": "Monomax Software Pty Ltd",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-react-constant-elements": "^7.5.0",

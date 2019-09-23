@@ -1,7 +1,7 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 
-import { Filters } from '../../libs/filters';
+import { Filters } from 'jslib/helpers/filters';
 
 interface Props {
   filters: Filters;

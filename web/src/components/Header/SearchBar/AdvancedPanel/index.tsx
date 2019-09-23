@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import * as queriesLib from 'jslib/helpers/queries';
+import { getSearchDest } from 'web/libs/search';
 import { useFilters } from '../../../../store';
 import Button from '../../../Common/Button';
 import PopoverContent from '../../../Common/Popover/PopoverContent';
 import BookSearch from './BookSearch';
 import WordsSearch from './WordsSearch';
-import * as queriesLib from '../../../../libs/queries';
 import styles from './AdvancedPanel.scss';
 
 interface Props extends RouteComponentProps {
@@ -103,7 +104,7 @@ const AdvancedPanel: React.SFC<Props> = ({
       book: encodeBookStr(books)
     };
 
-    const dest = queriesLib.getSearchDest(location, q);
+    const dest = getSearchDest(location, q);
     history.push(dest);
 
     onDismiss();

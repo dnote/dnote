@@ -24,9 +24,9 @@ import Helmet from 'react-helmet';
 import EmailPreferenceForm from '../Common/EmailPreferenceForm';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
-import { parseSearchString } from '../../libs/url';
+import { parseSearchString } from 'jslib/helpers/url';
 import { getEmailPreference } from '../../store/auth';
-import { getLoginPath } from '../../libs/paths';
+import { getLoginPath } from 'web/libs/paths';
 import { useSelector, useDispatch } from '../../store';
 import styles from './EmailPreference.scss';
 

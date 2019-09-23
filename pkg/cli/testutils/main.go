@@ -45,7 +45,6 @@ func Login(t *testing.T, ctx *context.DnoteCtx) {
 
 	database.MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, "someSessionKey")
 	database.MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
-	database.MustExec(t, "inserting cipherKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemCipherKey, "QUVTMjU2S2V5LTMyQ2hhcmFjdGVyczEyMzQ1Njc4OTA=")
 
 	ctx.SessionKey = "someSessionKey"
 	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()

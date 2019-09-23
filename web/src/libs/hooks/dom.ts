@@ -18,15 +18,15 @@
 
 import { useEffect } from 'react';
 
-import { useEventListener } from './index';
 import {
   KEYCODE_DOWN,
   KEYCODE_UP,
   KEYCODE_ENTER,
   KEYCODE_ESC
-} from '../../helpers/keyboard';
+} from 'jslib/helpers/keyboard';
+import { Option } from 'jslib/helpers/select';
+import { useEventListener } from './index';
 import { scrollTo } from '../dom';
-import { Option } from '../../libs/select';
 
 interface ScrollToSelectedParams {
   shouldScroll: boolean;

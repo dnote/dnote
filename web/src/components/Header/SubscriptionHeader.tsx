@@ -21,7 +21,7 @@ import { Link } from 'react-router-dom';
 
 import { useSelector } from '../../store';
 import Logo from '../Icons/LogoWithText';
-import { getHomePath } from '../../libs/paths';
+import { getHomePath } from 'web/libs/paths';
 import styles from './SubscriptionHeader.scss';
 
 interface Props {}

@@ -18,8 +18,8 @@
 
 import React, { useState } from 'react';
 
+import services from 'web/libs/services';
 import { useDispatch } from '../../../store';
-import * as paymentService from '../../../services/payment';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
 import styles from '../Settings.scss';
@@ -51,7 +51,7 @@ const CancelPlanModal: React.SFC<Props> = ({
     setInProgress(true);
 
     try {
-      await paymentService.cancelSubscription({ subscriptionId });
+      await services.payment.cancelSubscription({ subscriptionId });
       await dispatch(getSubscription());
 
       setSuccessMsg(

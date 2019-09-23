@@ -2,8 +2,8 @@ import React from 'react';
 import classnames from 'classnames';
 
 import Item from './Item';
-import { getNewPath, getBooksPath } from '../../../libs/paths';
-import { Filters, toSearchObj } from '../../../libs/filters';
+import { getNewPath, getBooksPath } from 'web/libs/paths';
+import { Filters, toSearchObj } from 'jslib/helpers/filters';
 import styles from './Nav.scss';
 
 interface Props {

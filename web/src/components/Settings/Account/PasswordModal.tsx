@@ -18,7 +18,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import * as usersService from '../../../services/users';
+import services from 'web/libs/services';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
@@ -59,7 +59,7 @@ const PasswordModal: React.SFC<Props> = ({ isOpen, onDismiss }) => {
         throw new Error('Password and its confirmation do not match');
       }
 
-      await usersService.updatePassword({
+      await services.users.updatePassword({
         oldPassword,
         newPassword
       });

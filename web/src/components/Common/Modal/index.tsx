@@ -21,11 +21,10 @@ import ReactDOM from 'react-dom';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
-import scopeTab from '../../../libs/scopeTab';
-import { getScrollbarWidth } from '../../../libs/dom';
-import { useEventListener } from '../../../libs/hooks';
-import { KEYCODE_ESC, KEYCODE_TAB } from '../../../helpers/keyboard';
-
+import { KEYCODE_ESC, KEYCODE_TAB } from 'jslib/helpers/keyboard';
+import scopeTab from 'web/libs/scopeTab';
+import { getScrollbarWidth } from 'web/libs/dom';
+import { useEventListener } from 'web/libs/hooks';
 import styles from './Modal.scss';
 
 let scrollbarWidth = 0;

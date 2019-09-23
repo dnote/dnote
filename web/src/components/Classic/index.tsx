@@ -12,7 +12,7 @@ import {
   getClassicMigrationPath,
   getHomePath,
   homePathDef
-} from '../../libs/paths';
+} from 'web/libs/paths';
 
 interface Props {}
 

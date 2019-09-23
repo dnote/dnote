@@ -22,12 +22,12 @@ import classnames from 'classnames';
 
 import Result from './Result';
 import { makeOptionId, getOptIdxByValue } from '../../../helpers/accessibility';
-import { Option, filterOptions } from '../../../libs/select';
+import { Option, filterOptions } from 'jslib/helpers/select';
 import {
   useScrollToFocused,
   useScrollToSelected,
   useSearchMenuKeydown
-} from '../../../libs/hooks/dom';
+} from 'web/libs/hooks/dom';
 import styles from './SearchableMenu.scss';
 
 function useFocusedIdx(options: Option[], currentValue) {

@@ -18,7 +18,7 @@
 
 import React, { useState } from 'react';
 
-import { updateEmailPreference } from '../../services/users';
+import services from 'web/libs/services';
 import { useDispatch } from '../../store';
 import { receiveEmailPreference } from '../../store/auth';
 import Button from './Button';
@@ -63,7 +63,8 @@ const EmailPreferenceForm: React.SFC<Props> = ({
     setFailureMsg('');
     setInProgress(true);
 
-    updateEmailPreference({ digestFrequency, token })
+    services.users
+      .updateEmailPreference({ digestFrequency, token })
       .then(updatedPreference => {
         dispatch(receiveEmailPreference(updatedPreference));
 

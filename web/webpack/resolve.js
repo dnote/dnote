@@ -16,12 +16,15 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const path = require('path');
 const PATHS = require('./paths');
 
 module.exports = {
   modules: [PATHS.modules],
   extensions: ['.js', '.jsx', '.css', '.ts', '.tsx'],
   alias: {
-    'react-dom': '@hot-loader/react-dom'
+    'react-dom': '@hot-loader/react-dom',
+    jslib: path.join(__dirname, '../../jslib/src'),
+    web: path.join(__dirname, '../../web/src')
   }
 };

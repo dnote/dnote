@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 
+import { homePathDef } from 'web/libs/paths';
+import services from 'web/libs/services';
 import Form from './Form';
 import Logo from '../../Icons/Logo';
-import * as usersService from '../../../services/users';
 import { getCurrentUser } from '../../../store/auth';
 import { setMessage } from '../../../store/ui';
 import { useDispatch } from '../../../store';
-import { homePathDef } from '../../../libs/paths';
 import authStyles from '../../Common/Auth.scss';
 import Flash from '../../Common/Flash';
 
@@ -38,7 +38,7 @@ const PasswordResetConfirm: React.SFC<Props> = ({ match, history }) => {
     setSubmitting(true);
     setErrorMsg('');
 
-    usersService
+    services.users
       .resetPassword({ token, password })
       .then(() => {
         return dispatch(getCurrentUser());

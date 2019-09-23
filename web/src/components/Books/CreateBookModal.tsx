@@ -25,7 +25,7 @@ import { createBook } from '../../store/books';
 import { useSelector, useDispatch } from '../../store';
 import Button from '../Common/Button';
 import Flash from '../Common/Flash';
-import { checkDuplicate, validateBookName } from '../../libs/books';
+import { checkDuplicate, validateBookName } from 'jslib/helpers/books';
 
 import styles from './CreateBookModal.scss';
 

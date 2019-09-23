@@ -1,0 +1,16 @@
+{ "extends": ["eslint-config-airbnb"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "@typescript-eslint/no-unused-vars": 1,
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+  },
+  "plugins": [
+     "react-hooks", "@typescript-eslint"
+  ],
+}

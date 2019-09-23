@@ -2,10 +2,10 @@ import React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import CloseIcon from '../Icons/Close';
-import { SettingSections, getSettingsPath } from '../../libs/paths';
-import * as usersService from '../../services/users';
+import { SettingSections, getSettingsPath } from 'web/libs/paths';
+import services from 'web/libs/services';
 import styles from './MobileMenu.scss';
+import CloseIcon from '../Icons/Close';
 
 interface Props {
   onDismiss: () => void;
@@ -51,7 +51,7 @@ const MobileMenu: React.SFC<Props> = ({ onDismiss, isOpen }) => {
               onSubmit={e => {
                 e.preventDefault();
 
-                usersService.signout().then(() => {
+                services.users.signout().then(() => {
                   window.location.href = '/';
                 });
               }}

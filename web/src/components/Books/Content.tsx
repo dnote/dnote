@@ -21,21 +21,21 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { History } from 'history';
 
+import { escapesRegExp } from 'web/libs/string';
+import { getHomePath } from 'web/libs/paths';
+import {
+  KeydownSelectFn,
+  useSearchMenuKeydown,
+  useScrollToFocused
+} from 'web/libs/hooks/dom';
+import { useSelector } from '../../store';
+import { BookData } from 'jslib/operations/books';
 import CreateBookModal from './CreateBookModal';
 import BookList from './BookList';
 import EmptyList from './EmptyList';
 import SearchInput from '../Common/SearchInput';
 import Button from '../Common/Button';
-import { escapesRegExp } from '../../libs/string';
-import { getHomePath } from '../../libs/paths';
 import DeleteBookModal from './DeleteBookModal';
-import {
-  KeydownSelectFn,
-  useSearchMenuKeydown,
-  useScrollToFocused
-} from '../../libs/hooks/dom';
-import { useSelector } from '../../store';
-import { BookData } from '../../operations/books';
 import styles from './Content.scss';
 
 function filterBooks(books: BookData[], searchInput: string): BookData[] {

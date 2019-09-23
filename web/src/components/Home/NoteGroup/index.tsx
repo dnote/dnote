@@ -19,10 +19,10 @@
 import React from 'react';
 import classnames from 'classnames';
 
+import { NotesGroupData } from 'web/libs/notes';
+import { Filters } from 'jslib/helpers/filters';
 import NoteItem from './NoteItem';
 import Header from './Header';
-import { NotesGroupData } from '../../../libs/notes';
-import { Filters } from '../../../libs/filters';
 import styles from './NoteGroup.scss';
 
 function renderItems(group: NotesGroupData, filters: Filters) {

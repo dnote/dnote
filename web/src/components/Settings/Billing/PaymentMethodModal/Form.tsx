@@ -19,13 +19,13 @@
 import React, { useState, useRef } from 'react';
 import { injectStripe } from 'react-stripe-elements';
 
+import services from 'web/libs/services';
 import { useDispatch } from '../../../../store';
 import { getSource } from '../../../../store/auth';
 import Button from '../../../Common/Button';
 import NameOnCardInput from '../../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../../Common/PaymentInput/Card';
 import CountryInput from '../../../Common/PaymentInput/Country';
-import * as paymentService from '../../../../services/payment';
 import settingsStyles from '../../Settings.scss';
 import styles from './Form.scss';
 
@@ -90,7 +90,7 @@ const Form: React.SFC<Props> = ({
         throw error;
       }
 
-      await paymentService.updateSource({ source, country: billingCountry });
+      await services.payment.updateSource({ source, country: billingCountry });
       await dispatch(getSource());
 
       setSuccessMsg('Your payment method was successfully updated.');

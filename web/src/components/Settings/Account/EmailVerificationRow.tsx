@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import classnames from 'classnames';
 
+import services from 'web/libs/services';
 import SettingRow from '../SettingRow';
-import * as usersService from '../../../services/users';
-
 import settingsStyles from '../Settings.scss';
 
 interface Props {
@@ -37,7 +36,7 @@ const EmailVerificationRow: React.SFC<Props> = ({
         onClick={() => {
           setInProgress(true);
 
-          usersService
+          services.users
             .sendEmailVerificationEmail()
             .then(() => {
               setIsSent(true);

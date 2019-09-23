@@ -1,5 +1,5 @@
 import { RemoteData } from '../types';
-import { NoteData } from '../../operations/types';
+import { NoteData } from 'jslib/operations/types';
 
 export type NoteState = RemoteData<NoteData>;
 

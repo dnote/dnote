@@ -26,7 +26,7 @@ import { getEmailPreference } from '../../../store/auth';
 import { useSelector, useDispatch } from '../../../store';
 import FrequencyModal from './FrequencyModal';
 import SettingRow from '../SettingRow';
-import { SettingSections, getSettingsPath } from '../../../libs/paths';
+import { SettingSections, getSettingsPath } from 'web/libs/paths';
 import styles from '../Settings.scss';
 
 function getFrequencyLabel(emailPreference) {

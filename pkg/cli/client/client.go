@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/crypt"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
 )
@@ -126,7 +125,7 @@ type GetSyncStateResp struct {
 func GetSyncState(ctx context.DnoteCtx) (GetSyncStateResp, error) {
 	var ret GetSyncStateResp
 
-	res, err := doAuthorizedReq(ctx, "GET", "/v1/sync/state", "", nil)
+	res, err := doAuthorizedReq(ctx, "GET", "/v3/sync/state", "", nil)
 	if err != nil {
 		return ret, errors.Wrap(err, "constructing http request")
 	}
@@ -192,7 +191,7 @@ func GetSyncFragment(ctx context.DnoteCtx, afterUSN int) (GetSyncFragmentResp, e
 	v.Set("after_usn", strconv.Itoa(afterUSN))
 	queryStr := v.Encode()
 
-	path := fmt.Sprintf("/v1/sync/fragment?%s", queryStr)
+	path := fmt.Sprintf("/v3/sync/fragment?%s", queryStr)
 	res, err := doAuthorizedReq(ctx, "GET", path, "", nil)
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -230,13 +229,8 @@ type CreateBookResp struct {
 
 // CreateBook creates a new book in the server
 func CreateBook(ctx context.DnoteCtx, label string) (CreateBookResp, error) {
-	encLabel, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(label))
-	if err != nil {
-		return CreateBookResp{}, errors.Wrap(err, "encrypting the label")
-	}
-
 	payload := CreateBookPayload{
-		Name: encLabel,
+		Name: label,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -267,20 +261,15 @@ type UpdateBookResp struct {
 
 // UpdateBook updates a book in the server
 func UpdateBook(ctx context.DnoteCtx, label, uuid string) (UpdateBookResp, error) {
-	encName, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(label))
-	if err != nil {
-		return UpdateBookResp{}, errors.Wrap(err, "encrypting the content")
-	}
-
 	payload := updateBookPayload{
-		Name: &encName,
+		Name: &label,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return UpdateBookResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
+	endpoint := fmt.Sprintf("/v3/books/%s", uuid)
 	res, err := doAuthorizedReq(ctx, "PATCH", endpoint, string(b), nil)
 	if err != nil {
 		return UpdateBookResp{}, errors.Wrap(err, "posting a book to the server")
@@ -302,7 +291,7 @@ type DeleteBookResp struct {
 
 // DeleteBook deletes a book in the server
 func DeleteBook(ctx context.DnoteCtx, uuid string) (DeleteBookResp, error) {
-	endpoint := fmt.Sprintf("/v1/books/%s", uuid)
+	endpoint := fmt.Sprintf("/v3/books/%s", uuid)
 	res, err := doAuthorizedReq(ctx, "DELETE", endpoint, "", nil)
 	if err != nil {
 		return DeleteBookResp{}, errors.Wrap(err, "deleting a book in the server")
@@ -351,14 +340,9 @@ type RespNote struct {
 
 // CreateNote creates a note in the server
 func CreateNote(ctx context.DnoteCtx, bookUUID, content string) (CreateNoteResp, error) {
-	encBody, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(content))
-	if err != nil {
-		return CreateNoteResp{}, errors.Wrap(err, "encrypting the content")
-	}
-
 	payload := CreateNotePayload{
 		BookUUID: bookUUID,
-		Body:     encBody,
+		Body:     content,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -392,14 +376,9 @@ type UpdateNoteResp struct {
 
 // UpdateNote updates a note in the server
 func UpdateNote(ctx context.DnoteCtx, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
-	encBody, err := crypt.AesGcmEncrypt(ctx.CipherKey, []byte(content))
-	if err != nil {
-		return UpdateNoteResp{}, errors.Wrap(err, "encrypting the content")
-	}
-
 	payload := updateNotePayload{
 		BookUUID: &bookUUID,
-		Body:     &encBody,
+		Body:     &content,
 		Public:   &public,
 	}
 	b, err := json.Marshal(payload)
@@ -407,7 +386,7 @@ func UpdateNote(ctx context.DnoteCtx, uuid, bookUUID, content string, public boo
 		return UpdateNoteResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
+	endpoint := fmt.Sprintf("/v3/notes/%s", uuid)
 	res, err := doAuthorizedReq(ctx, "PATCH", endpoint, string(b), nil)
 	if err != nil {
 		return UpdateNoteResp{}, errors.Wrap(err, "patching a note to the server")
@@ -429,7 +408,7 @@ type DeleteNoteResp struct {
 
 // DeleteNote removes a note in the server
 func DeleteNote(ctx context.DnoteCtx, uuid string) (DeleteNoteResp, error) {
-	endpoint := fmt.Sprintf("/v1/notes/%s", uuid)
+	endpoint := fmt.Sprintf("/v3/notes/%s", uuid)
 	res, err := doAuthorizedReq(ctx, "DELETE", endpoint, "", nil)
 	if err != nil {
 		return DeleteNoteResp{}, errors.Wrap(err, "patching a note to the server")
@@ -451,7 +430,7 @@ type GetBooksResp []struct {
 
 // GetBooks gets books from the server
 func GetBooks(ctx context.DnoteCtx, sessionKey string) (GetBooksResp, error) {
-	res, err := doAuthorizedReq(ctx, "GET", "/v1/books", "", nil)
+	res, err := doAuthorizedReq(ctx, "GET", "/v3/books", "", nil)
 	if err != nil {
 		return GetBooksResp{}, errors.Wrap(err, "making http request")
 	}
@@ -464,14 +443,14 @@ func GetBooks(ctx context.DnoteCtx, sessionKey string) (GetBooksResp, error) {
 	return resp, nil
 }
 
-// PresigninResponse is a reponse from /v1/presignin endpoint
+// PresigninResponse is a reponse from /v3/presignin endpoint
 type PresigninResponse struct {
 	Iteration int `json:"iteration"`
 }
 
 // GetPresignin gets presignin credentials
 func GetPresignin(ctx context.DnoteCtx, email string) (PresigninResponse, error) {
-	res, err := doReq(ctx, "GET", fmt.Sprintf("/v1/presignin?email=%s", email), "", nil)
+	res, err := doReq(ctx, "GET", fmt.Sprintf("/v3/presignin?email=%s", email), "", nil)
 	if err != nil {
 		return PresigninResponse{}, errors.Wrap(err, "making http request")
 	}
@@ -484,30 +463,29 @@ func GetPresignin(ctx context.DnoteCtx, email string) (PresigninResponse, error)
 	return resp, nil
 }
 
-// SigninPayload is a payload for /v1/signin
+// SigninPayload is a payload for /v3/signin
 type SigninPayload struct {
-	Email   string `json:"email"`
-	AuthKey string `json:"auth_key"`
+	Email    string `json:"email"`
+	Passowrd string `json:"password"`
 }
 
-// SigninResponse is a response from /v1/signin endpoint
+// SigninResponse is a response from /v3/signin endpoint
 type SigninResponse struct {
-	Key          string `json:"key"`
-	ExpiresAt    int64  `json:"expires_at"`
-	CipherKeyEnc string `json:"cipher_key_enc"`
+	Key       string `json:"key"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 // Signin requests a session token
-func Signin(ctx context.DnoteCtx, email, authKey string) (SigninResponse, error) {
+func Signin(ctx context.DnoteCtx, email, password string) (SigninResponse, error) {
 	payload := SigninPayload{
-		Email:   email,
-		AuthKey: authKey,
+		Email:    email,
+		Passowrd: password,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
 		return SigninResponse{}, errors.Wrap(err, "marshaling payload")
 	}
-	res, err := doReq(ctx, "POST", "/v1/signin", string(b), nil)
+	res, err := doReq(ctx, "POST", "/v3/signin", string(b), nil)
 	if err != nil {
 		return SigninResponse{}, errors.Wrap(err, "making http request")
 	}
@@ -536,7 +514,7 @@ func Signout(ctx context.DnoteCtx, sessionKey string) error {
 	opts := requestOptions{
 		HTTPClient: &hc,
 	}
-	_, err := doAuthorizedReq(ctx, "POST", "/v1/signout", "", &opts)
+	_, err := doAuthorizedReq(ctx, "POST", "/v3/signout", "", &opts)
 	if err != nil {
 		return errors.Wrap(err, "making http request")
 	}

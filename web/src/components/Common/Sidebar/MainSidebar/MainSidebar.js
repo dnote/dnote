@@ -30,23 +30,23 @@ import {
   getNotePath,
   getDigestsPath,
   getSubscriptionPath
-} from '../../../../libs/paths';
-import { parseSearchString } from '../../../../libs/url';
+} from 'web/libs/paths';
+import { parseSearchString } from 'jslib/helpers/url';
 import {
   getWindowWidth,
   noteSidebarThreshold,
   sidebarOverlayThreshold
-} from '../../../../libs/ui';
+} from 'jslib/helpers/ui';
 import { addNote } from '../../../../actions/notes';
 import { addBook } from '../../../../actions/books';
 import { closeSidebar, closeNoteSidebar } from '../../../../actions/ui';
-import { getFacetsFromSearchStr } from '../../../../libs/facets';
+import { getFacetsFromSearchStr } from 'jslib/helpers/facets';
 import NoteIcon from '../../../Icons/Note';
 import CloseIcon from '../../../Icons/Close';
 import BookIcon from '../../../Icons/Book';
 import DashboardIcon from '../../../Icons/Dashboard';
-import * as notesOperation from '../../../../operations/notes';
-import * as booksOperation from '../../../../operations/books';
+import * as notesOperation from 'jslib/operations/notes';
+import * as booksOperation from 'jslib/operations/books';
 
 import styles from './MainSidebar.module.scss';
 import sidebarStyles from '../Sidebar.module.scss';

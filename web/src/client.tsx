@@ -24,10 +24,10 @@ import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
+import { debounce } from 'jslib/helpers/perf';
 import App from './components/App';
 import configureStore from './store';
 import { loadState, saveState } from './libs/localStorage';
-import { debounce } from './libs/perf';
 import './libs/restoreScroll';
 
 const persistedState = loadState();

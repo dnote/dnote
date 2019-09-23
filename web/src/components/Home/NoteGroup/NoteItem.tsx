@@ -21,12 +21,12 @@ import moment from 'moment';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
-import { getNotePath } from '../../../libs/paths';
-import { tokenize, TokenKind } from '../../../libs/fts/lexer';
-import { NoteData } from '../../../operations/types';
+import { getNotePath } from 'web/libs/paths';
+import { tokenize, TokenKind } from 'web/libs/fts/lexer';
+import { NoteData } from 'jslib/operations/types';
+import { excerpt } from 'web/libs/string';
+import { Filters } from 'jslib/helpers/filters';
 import { nanosecToSec } from '../../../helpers/time';
-import { excerpt } from '../../../libs/string';
-import { Filters } from '../../../libs/filters';
 import styles from './NoteItem.scss';
 
 function formatFTSSnippet(content: string): React.ReactNode[] {

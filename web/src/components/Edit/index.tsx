@@ -4,10 +4,10 @@ import { Prompt, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 import { withRouter } from 'react-router-dom';
 
+import operations from 'web/libs/operations';
 import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
 import { stageNote } from '../../store/editor';
-import * as notesOperation from '../../operations/notes';
 import Content from './Content';
 import styles from '../New/New.scss';
 
@@ -31,7 +31,7 @@ const Edit: React.SFC<Props> = ({ match }) => {
   const { noteUUID } = match.params;
 
   useEffect(() => {
-    notesOperation
+    operations.notes
       .fetchOne(noteUUID)
       .then(note => {
         dispatch(

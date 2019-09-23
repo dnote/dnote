@@ -26,8 +26,8 @@ import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import { unsetMessage } from '../../store/ui';
-import { notePathDef } from '../../libs/paths';
-import { parseSearchString } from '../../libs/url';
+import { notePathDef } from 'web/libs/paths';
+import { parseSearchString } from 'jslib/helpers/url';
 import DeleteNoteModal from './DeleteNoteModal';
 import styles from './index.scss';
 

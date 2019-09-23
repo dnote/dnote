@@ -2,19 +2,16 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { Redirect } from 'react-router-dom';
 
+import { ClassicMigrationSteps, getClassicMigrationPath } from 'web/libs/paths';
+import services from 'web/libs/services';
+import { bufToB64, b64ToBuf } from 'web/libs/encoding';
 import { useSelector, useDispatch } from '../../store';
 import { loginHelper, aes256GcmDecrypt } from '../../crypto';
-import { bufToB64, b64ToBuf } from '../../libs/encoding';
 import { getCurrentUser } from '../../store/auth';
-import { classicPresignin, classicSignin } from '../../services/users';
 import authStyles from '../Common/Auth.scss';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
 import LoginForm from '../Login/LoginForm';
-import {
-  ClassicMigrationSteps,
-  getClassicMigrationPath
-} from '../../libs/paths';
 
 interface Props {}
 
@@ -38,7 +35,7 @@ const ClassicLogin: React.SFC<Props> = () => {
     setSubmitting(true);
 
     try {
-      const { iteration } = await classicPresignin({ email });
+      const { iteration } = await services.users.classicPresignin({ email });
 
       if (iteration === 0) {
         throw new Error('Please login from /login');
@@ -49,7 +46,7 @@ const ClassicLogin: React.SFC<Props> = () => {
         password,
         iteration
       });
-      const signinResp = await classicSignin({ email, authKey });
+      const signinResp = await services.users.classicSignin({ email, authKey });
 
       const cipherKey = await aes256GcmDecrypt(
         b64ToBuf(masterKey),

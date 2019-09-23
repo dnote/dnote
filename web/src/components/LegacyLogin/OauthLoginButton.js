@@ -18,7 +18,7 @@
 
 import React from 'react';
 
-import { handleLogin } from '../../libs/auth';
+import { handleLogin } from 'jslib/helpers/auth';
 import google from '../../img/google.png';
 import github from '../../img/github.png';
 

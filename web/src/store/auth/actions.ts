@@ -16,12 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import services from 'web/libs/services';
 import { UserData, EmailPrefData, SourceData, SubscriptionData } from './type';
 import { ThunkAction } from '../types';
-import { getMe } from '../../services/users';
-import { apiClient } from '../../libs/http';
-import * as paymentService from '../../services/payment';
-import * as usersService from '../../services/users';
 
 import {
   RECEIVE_EMAIL_PREFERENCE,
@@ -92,7 +89,7 @@ export function getEmailPreferenceError(
 
 export function getEmailPreference(token?: string) {
   return dispatch => {
-    return usersService
+    return services.users
       .getEmailPreference({ token })
       .then(emailPreference => {
         dispatch(receiveEmailPreference(emailPreference));
@@ -116,7 +113,8 @@ export function getCurrentUser(
       dispatch(startFetchingUser());
     }
 
-    return getMe()
+    return services.users
+      .getMe()
       .then(user => {
         dispatch(receiveUser(user));
 
@@ -174,7 +172,7 @@ export function getSubscription(): ThunkAction<SubscriptionData> {
   return dispatch => {
     dispatch(startFetchingSubscription());
 
-    return paymentService
+    return services.payment
       .getSubscription()
       .then(subscription => {
         dispatch(receiveSubscription(subscription));
@@ -218,7 +216,7 @@ export function getSource(): ThunkAction<SourceData> {
   return dispatch => {
     dispatch(startFetchingSource());
 
-    return paymentService
+    return services.payment
       .getSource()
       .then(source => {
         console.log('source', source);
@@ -227,26 +225,6 @@ export function getSource(): ThunkAction<SourceData> {
       .catch(err => {
         console.log('error fetching source', err.message);
         dispatch(receiveSourceError(err.message));
-      });
-  };
-}
-
-export function classicGetCurrentUser() {
-  return dispatch => {
-    return apiClient
-      .get('/classic/me')
-      .then(res => {
-        const { user } = res;
-
-        dispatch(receiveUser(user));
-      })
-      .catch(err => {
-        // 401 if not logged in
-        if (err.status === 401) {
-          return;
-        }
-
-        console.log('getUser error', err);
       });
   };
 }

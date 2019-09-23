@@ -16,10 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import operations from 'web/libs/operations';
+import { NoteData } from 'jslib/operations/types';
 import { RECEIVE, START_FETCHING, ERROR, RESET } from './type';
 import { ThunkAction } from '../types';
-import * as notesOperation from '../../operations/notes';
-import { NoteData } from '../../operations/types';
 
 export function receiveNote(note) {
   return {
@@ -58,7 +58,7 @@ export const getNote = (
   return dispatch => {
     dispatch(startFetchingNote());
 
-    return notesOperation
+    return operations.notes
       .fetchOne(noteUUID, params)
       .then(note => {
         dispatch(receiveNote(note));

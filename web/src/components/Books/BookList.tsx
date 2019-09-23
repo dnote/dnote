@@ -21,7 +21,7 @@ import classnames from 'classnames';
 
 import BookItem from './BookItem';
 import BookHolder from './BookHolder';
-import { BookData } from '../../operations/books';
+import { BookData } from 'jslib/operations/books';
 import styles from './BookList.scss';
 
 function Placeholder() {

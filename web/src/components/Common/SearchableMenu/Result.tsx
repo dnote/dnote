@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 
-import { Option } from '../../../libs/select';
+import { Option } from 'jslib/helpers/select';
 import { makeOptionId } from '../../../helpers/accessibility';
 import Item from './Item';
 

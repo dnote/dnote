@@ -34,7 +34,7 @@ import SettingRow from '../SettingRow';
 import ReactivateRow from './ReactivateRow';
 import PlanRow from './PlanRow';
 import Placeholder from './Placeholder';
-import { useScript } from '../../../libs/hooks';
+import { useScript } from 'web/libs/hooks';
 import styles from '../Settings.scss';
 
 function CancelRow({ setIsPlanModalOpen }) {

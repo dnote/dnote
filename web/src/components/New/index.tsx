@@ -4,15 +4,15 @@ import classnames from 'classnames';
 import Helmet from 'react-helmet';
 import { withRouter } from 'react-router-dom';
 
+import operations from 'web/libs/operations';
+import { getNotePath, notePathDef } from 'web/libs/paths';
+import { useCleanupEditor, useFocusTextarea } from 'web/libs/hooks/editor';
 import Editor from '../Common/Editor';
 import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
 import { resetEditor } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
-import * as notesOperation from '../../operations/notes';
-import { getNotePath, notePathDef } from '../../libs/paths';
-import { useCleanupEditor, useFocusTextarea } from '../../libs/hooks/editor';
 import PayWall from '../Common/PayWall';
 import styles from './New.scss';
 
@@ -78,7 +78,7 @@ const New: React.SFC<Props> = ({ history }) => {
                     bookUUID = draftBookUUID;
                   }
 
-                  const res = await notesOperation.create({
+                  const res = await operations.notes.create({
                     bookUUID,
                     content: draftContent
                   });

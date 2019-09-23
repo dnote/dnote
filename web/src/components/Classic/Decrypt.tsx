@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import { b64ToBuf, bufToUtf8 } from 'web/libs/encoding';
+import { homePathDef } from 'web/libs/paths';
+import services from 'web/libs/services';
 import Logo from '../Icons/Logo';
 import { aes256GcmDecrypt } from '../../crypto';
-import { b64ToBuf, bufToUtf8 } from '../../libs/encoding';
 import { useDispatch } from '../../store';
 import { setMessage } from '../../store/ui';
-import { homePathDef } from '../../libs/paths';
-import * as booksService from '../../services/books';
-import * as notesService from '../../services/notes';
-import * as usersService from '../../services/users';
 
 interface Props extends RouteComponentProps {}
 
@@ -28,7 +26,7 @@ const ClassicDecrypt: React.SFC<Props> = ({ history }) => {
       const cipherKey = localStorage.getItem('cipherKey');
       const cipherKeyBuf = b64ToBuf(cipherKey);
 
-      const books = await booksService.fetch({ encrypted: true });
+      const books = await services.books.fetch({ encrypted: true });
       for (let i = 0; i < books.length; i++) {
         const book = books[i];
         const labelBuf = b64ToBuf(book.label);
@@ -42,12 +40,12 @@ const ClassicDecrypt: React.SFC<Props> = ({ history }) => {
         console.log(labelDec);
 
         // eslint-disable-next-line no-await-in-loop
-        await booksService.update(book.uuid, {
+        await services.books.update(book.uuid, {
           name: bufToUtf8(labelDec)
         });
       }
 
-      const notes = await notesService.classicFetch();
+      const notes = await services.notes.classicFetch();
       for (let i = 0; i < notes.length; i++) {
         const note = notes[i];
 
@@ -71,12 +69,12 @@ const ClassicDecrypt: React.SFC<Props> = ({ history }) => {
         }
 
         // eslint-disable-next-line no-await-in-loop
-        await notesService.update(note.uuid, {
+        await services.notes.update(note.uuid, {
           content: contentDec
         });
       }
 
-      await usersService.classicCompleteMigrate();
+      await services.users.classicCompleteMigrate();
 
       dispatch(
         setMessage({

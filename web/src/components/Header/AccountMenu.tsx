@@ -21,11 +21,11 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
+import services from 'web/libs/services';
+import { SettingSections, getSettingsPath } from 'web/libs/paths';
 import Lock from '../Icons/Lock';
 import Menu from '../Common/Menu';
 import UserIcon from '../Icons/User';
-import * as usersService from '../../services/users';
-import { SettingSections, getSettingsPath } from '../../libs/paths';
 import { AppState } from '../../store';
 import { UserData } from '../../store/auth';
 
@@ -81,7 +81,7 @@ const AccountMenu: React.SFC<Props> = ({ user }) => {
           onSubmit={e => {
             e.preventDefault();
 
-            usersService.signout().then(() => {
+            services.users.signout().then(() => {
               window.location.href = '/';
             });
           }}

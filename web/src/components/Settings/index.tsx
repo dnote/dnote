@@ -22,7 +22,7 @@ import { RouteComponentProps } from 'react-router-dom';
 
 import Account from './Account';
 import Sidebar from './Sidebar';
-import { SettingSections } from '../../libs/paths';
+import { SettingSections } from 'web/libs/paths';
 import Notification from './Notification';
 import Billing from './Billing';
 

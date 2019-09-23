@@ -2,9 +2,10 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
-import * as filtersLib from '../../../libs/filters';
-import * as queriesLib from '../../../libs/queries';
-import { usePrevious } from '../../../libs/hooks';
+import * as filtersLib from 'jslib/helpers/filters';
+import * as queriesLib from 'jslib/helpers/queries';
+import { getSearchDest } from 'web/libs/search';
+import { usePrevious } from 'web/libs/hooks';
 import { useFilters, useSelector } from '../../../store';
 import SearchInput from '../../Common/SearchInput';
 import AdvancedPanel from './AdvancedPanel';
@@ -35,7 +36,7 @@ const SearchBar: React.SFC<Props> = ({ location, history }) => {
       }
 
       const queries = queriesLib.parse(queryText);
-      const dest = queriesLib.getSearchDest(location, queries);
+      const dest = getSearchDest(location, queries);
       history.push(dest);
     },
     [history, location, user]

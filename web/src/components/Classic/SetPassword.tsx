@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import services from 'web/libs/services';
+import { getClassicMigrationPath, ClassicMigrationSteps } from 'web/libs/paths';
 import Logo from '../Icons/Logo';
 import authStyles from '../Common/Auth.scss';
 import Flash from '../Common/Flash';
 import JoinForm from '../Join/JoinForm';
-import * as usersService from '../../services/users';
-import {
-  getClassicMigrationPath,
-  ClassicMigrationSteps
-} from '../../libs/paths';
 
 interface Props extends RouteComponentProps {}
 
@@ -32,7 +29,7 @@ const SetPassword: React.SFC<Props> = ({ history }) => {
     setSubmitting(true);
 
     try {
-      await usersService.classicSetPassword({ password });
+      await services.users.classicSetPassword({ password });
 
       const p = getClassicMigrationPath(ClassicMigrationSteps.decrypt);
       history.push(p);

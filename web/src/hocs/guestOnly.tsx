@@ -21,9 +21,9 @@ import { connect } from 'react-redux';
 import { Redirect, RouteComponentProps } from 'react-router-dom';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
+import { getReferrer } from 'jslib//helpers/url';
 import { AppState, RemoteData } from '../store';
 import { UserData } from '../store/auth';
-import { getReferrer } from '../libs/url';
 
 function renderFallback(referrer?: string) {
   let destination;

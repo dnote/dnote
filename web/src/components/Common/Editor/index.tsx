@@ -9,8 +9,8 @@ import { flushContent, markDirty } from '../../../store/editor';
 import Textarea from './Textarea';
 import Preview from './Preview';
 import Button from '../Button';
-import { focusTextarea } from '../../../libs/dom';
-import { getHomePath } from '../../../libs/paths';
+import { focusTextarea } from 'web/libs/dom';
+import { getHomePath } from 'web/libs/paths';
 import styles from './Editor.scss';
 
 interface Props {

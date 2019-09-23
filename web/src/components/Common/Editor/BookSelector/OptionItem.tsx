@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import { Option } from '../../../../libs/select';
+import { Option } from 'jslib/helpers/select';
 import CheckIcon from '../../../Icons/Check';
 import styles from './OptionItem.scss';
 

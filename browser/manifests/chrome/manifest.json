@@ -1,0 +1,31 @@
+{
+  "name": "Dnote",
+  "version": "__VERSION__",
+  "description": "Capture your microlessons without leaving the browser.",
+  "icons": {
+    "16": "images/iconx16.png",
+    "48": "images/iconx48.png",
+    "128": "images/iconx128.png"
+  },
+  "manifest_version": 2,
+  "browser_action": {
+    "default_icon": {
+      "16": "images/iconx16.png",
+      "32": "images/iconx32.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": []
+  },
+  "content_scripts": [],
+  "permissions": ["storage"],
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+D",
+        "mac": "MacCtrl+D"
+      }
+    }
+  }
+}

@@ -19,7 +19,7 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 
-import * as usersService from '../../../services/users';
+import services from 'web/libs/services';
 import { getCurrentUser } from '../../../store/auth';
 import { useDispatch } from '../../../store';
 import Button from '../../Common/Button';
@@ -61,7 +61,7 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
         throw new Error('The new email is the same as the old email');
       }
 
-      await usersService.updateProfile({
+      await services.users.updateProfile({
         email: emailVal
       });
 
