@@ -58,6 +58,20 @@ func MakeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 3")
 	}
 
+	noteInfos := []mailer.DigestNoteInfo{}
+	for _, note := range stage1 {
+		info := mailer.NewNoteInfo(note, 1)
+		noteInfos = append(noteInfos, info)
+	}
+	for _, note := range stage2 {
+		info := mailer.NewNoteInfo(note, 2)
+		noteInfos = append(noteInfos, info)
+	}
+	for _, note := range stage3 {
+		info := mailer.NewNoteInfo(note, 3)
+		noteInfos = append(noteInfos, info)
+	}
+
 	notes := append(append(stage1, stage2...), stage3...)
 	digest := database.Digest{
 		UserID: user.ID,
@@ -78,7 +92,7 @@ func MakeDigest(user database.User, emailAddr string) (*mailer.Email, error) {
 
 	tmplData := mailer.DigestTmplData{
 		Subject:           subject,
-		DigestUUID:        digest.UUID,
+		NoteInfo:          noteInfos,
 		ActiveBookCount:   bookCount,
 		ActiveNoteCount:   len(notes),
 		EmailSessionToken: tok.Value,

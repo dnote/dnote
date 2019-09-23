@@ -276,6 +276,70 @@
           color: gray;
           font-size: 12px;
         }
+        .icon {
+          margin-right: 1px;
+          vertical-align: middle;
+        }
+        .meta-label {
+          vertical-align: middle;
+          font-size: 12px;
+          padding-right: 5px;
+        }
+        .note {
+          padding: 6px 9px;
+          border-radius: 2px;
+        }
+        .timeago {
+          font-weight: 600;
+        }
+        .note.stage1 {
+          border: 1px solid #ffe3b9;
+        }
+        .note.stage2 {
+          border: 2px solid #ffc107;
+        }
+        .note.stage3 {
+          border: 2px solid #6d983a;
+
+        }
+        .stage1 .timeago {
+          color: #ffe3b9;
+        }
+        .stage2 .timeago {
+          color: #FF9800;
+        }
+        .stage3 .timeago {
+          color: green;
+        }
+        .note-meta {
+          color: #585858;
+          text-align: right;
+        }
+        .note-content {
+          font-size: 15px;
+        }
+        .spacer td {
+          padding-top: 7px;
+        }
+        .text-center {
+          text-align: center;
+        }
+        .intro {
+          text-align: center;
+        }
+        .intro p {
+          margin-bottom: 7px;
+        }
+
+        .outro {
+          text-align: center;
+        }
+        .outro p {
+          margin-bottom: 7px;
+        }
+        .notes-container {
+          padding: 12px 0;
+        }
     </style>
   </head>
   <body class="">
@@ -300,47 +364,44 @@
                         This is your weekly Dnote digest, featuring {{ .ActiveNoteCount }} notes from {{ .ActiveBookCount }} books.
                       </td>
                     </tr>
-                    <tr>
-                      <td class="content-block">
-                        Please navigate to the link below to view the digest.
-                      </td>
-                    </tr>
 
                     <tr>
-                      <td align="center">
-                        <table border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
+                      <td class="notes-container">
+                        <table border="0" cellpadding="0" cellspacing="0">
                           <tbody>
-                            <tr>
-                              <td align="left">
-                                <table border="0" cellpadding="0" cellspacing="0">
-                                  <tbody>
-                                    <tr>
-                                      <td>
-                                        <a href="https://app.getdnote.com/digests/{{ .DigestUUID }}" target="_blank">View digest</a>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
+                            {{ range .NoteInfo }}
+                              <tr>
+                                <td class="note {{if eq .Stage 1 }}stage1{{ else if eq .Stage 2 }}stage2{{ else if eq .Stage 3 }}stage3{{ end }}">
+                                  <table>
+                                    <tbody>
+                                      <tr>
+                                        <td class="note-content">
+                                          {{ .Content }}
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td class="note-meta">
+                                          <a target="_blank" rel="noreferrer noopener" href="https://app.getdnote.com/notes/{{ .UUID }}"><span class="meta-label">Open</span></a>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td class="note-meta">
+                                          <img src="https://cdn.getdnote.com/img/book-gray.png" alt="book label" width="13" height="13" class="icon"><span class="meta-label">{{ .BookLabel }}</span> <span class="meta-label timeago">{{ .TimeAgo }}</span>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                              <tr class="spacer">
+                                <td></td>
+                              </tr>
+                            {{ end }}
                           </tbody>
                         </table>
 
                       </td>
                     </tr>
-
-                    <tr>
-                      <td class="content-block">
-                        — Dnote
-                      </td>
-                    </tr>
-
-                    <tr>
-                      <td class="content-block text-muted">
-                        <b>Your data is safe and private.</b> Dnote has zero knowledge about contents of your notes. Only you can decrypt them.
-                      </td>
-                    </tr>
-
 
                   </table>
 
