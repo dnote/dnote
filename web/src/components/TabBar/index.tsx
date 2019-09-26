@@ -46,7 +46,7 @@ const TabBar: React.SFC<Props> = ({
               [styles.active]: isHomeActive
             })}
           >
-            <HomeIcon width={20} height={20} fill={getFill(isHomeActive)} />
+            <HomeIcon width={16} height={16} fill={getFill(isHomeActive)} />
             <span className={styles.label}>Home</span>
           </Link>
         </Item>
@@ -58,7 +58,7 @@ const TabBar: React.SFC<Props> = ({
               [styles.active]: isBookActive
             })}
           >
-            <BookIcon width={20} height={20} fill={getFill(isBookActive)} />
+            <BookIcon width={16} height={16} fill={getFill(isBookActive)} />
             <span className={styles.label}>Books</span>
           </Link>
         </Item>
@@ -72,8 +72,8 @@ const TabBar: React.SFC<Props> = ({
             })}
           >
             <DashboardIcon
-              width={20}
-              height={20}
+              width={16}
+              height={16}
               fill={getFill(isRandomActive)}
             />
             <span className={styles.label}>Random</span>
@@ -88,7 +88,7 @@ const TabBar: React.SFC<Props> = ({
               [styles.active]: isNewActive
             })}
           >
-            <NoteIcon width={20} height={20} fill={getFill(isNewActive)} />
+            <NoteIcon width={16} height={16} fill={getFill(isNewActive)} />
             <span className={styles.label}>New</span>
           </Link>
         </Item>
@@ -103,7 +103,7 @@ const TabBar: React.SFC<Props> = ({
               setMobileMenuOpen(!isMobileMenuOpen);
             }}
           >
-            <DotsIcon width={20} height={20} fill={getFill(isMobileMenuOpen)} />
+            <DotsIcon width={16} height={16} fill={getFill(isMobileMenuOpen)} />
             <span className={styles.label}>More</span>
           </button>
         </Item>
