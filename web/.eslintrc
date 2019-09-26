@@ -60,6 +60,7 @@
     "__BASE_NAME__": true,
     "__STRIPE_PUBLIC_KEY__": true,
     "__ROOT_URL__": true,
+    "__CDN_URL__": true,
     "socket": true,
     "webpackIsomorphicTools": true,
     "StripeCheckout": true

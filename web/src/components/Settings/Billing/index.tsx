@@ -20,6 +20,7 @@ import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import classnames from 'classnames';
 
+import { useScript } from 'web/libs/hooks';
 import { useSelector, useDispatch } from '../../../store';
 import Flash from '../../Common/Flash';
 import CancelPlanModal from './CancelPlanModal';
@@ -34,7 +35,6 @@ import SettingRow from '../SettingRow';
 import ReactivateRow from './ReactivateRow';
 import PlanRow from './PlanRow';
 import Placeholder from './Placeholder';
-import { useScript } from 'web/libs/hooks';
 import styles from '../Settings.scss';
 
 function CancelRow({ setIsPlanModalOpen }) {

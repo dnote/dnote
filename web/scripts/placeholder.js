@@ -24,8 +24,8 @@ const fs = require('fs');
 const path = require('path');
 
 // bundleBaseURL is the base URL from which the application javascript bundle
-// In production, it should be the same as assetBaseURL. In development, it is
-// configured to be the webpack development server
+// In production, it should be the same as assetBaseURL. It is used for development
+// environment, in which it is configured to be the webpack development server.
 const bundleBaseURL = process.env.BUNDLE_BASE_URL;
 // assetBaseURL is the base URL from which all assets excluding the application
 // bundle is served.

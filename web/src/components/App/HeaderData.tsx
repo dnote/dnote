@@ -19,6 +19,8 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 
+import config from 'web/libs/config';
+
 const title = 'Dnote - A Simple Personal Knowledge Base';
 const description =
   'Dnote is a personal knowledge base with an automated spaced repetition. Give a home to your knowledge and let your knowledge flow.';
@@ -33,14 +35,14 @@ export default () => {
       <meta name="twitter:description" content={description} />
       <meta
         name="twitter:image"
-        content="https://s3.amazonaws.com/dnote-asset/images/logo-text-horizontal-large.png"
+        content={`${config.cdnUrl}/brands/logo-text-horizontal-large.png`}
       />
       <meta name="twitter:image:alt" content="A logo of dnote" />
       <meta name="og:title" content="Dnote" />
       <meta name="og:site_name" content="Dnote" />
       <meta
         name="og:image"
-        content="https://s3.amazonaws.com/dnote-asset/images/logo-text-horizontal-large.png"
+        content={`${config.cdnUrl}/brands/logo-text-horizontal-large.png`}
       />
       <meta name="og:description" content={description} />
     </Helmet>

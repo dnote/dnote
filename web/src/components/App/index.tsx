@@ -23,12 +23,21 @@ import { Switch, Route } from 'react-router';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Location } from 'history';
 
+import { usePrevious } from 'web/libs/hooks';
+import {
+  homePathDef,
+  notePathDef,
+  noHeaderPaths,
+  subscriptionPaths,
+  noFooterPaths,
+  checkCurrentPathIn
+} from 'web/libs/paths';
+import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
 import Splash from '../Splash';
 import { getCurrentUser } from '../../store/auth';
 import { getBooks } from '../../store/books';
 import { setPrevLocation } from '../../store/route';
 import { useDispatch, useSelector } from '../../store';
-import { usePrevious } from 'web/libs/hooks';
 import HeaderData from './HeaderData';
 import render from '../../routes';
 import NoteHeader from '../Header/Note';
@@ -38,16 +47,7 @@ import TabBar from '../TabBar';
 import SystemMessage from '../Common/SystemMessage';
 import MobileMenu from '../Common/MobileMenu';
 import styles from './App.scss';
-import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
 import { updateQuery, updatePage } from '../../store/filters';
-import {
-  homePathDef,
-  notePathDef,
-  noHeaderPaths,
-  subscriptionPaths,
-  noFooterPaths,
-  checkCurrentPathIn
-} from 'web/libs/paths';
 
 import './App.global.scss';
 

@@ -30,9 +30,12 @@ module.exports = ({ production = false, test = false } = {}) => {
     stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
   }
 
+  const cdnUrl = 'https://cdn.getdnote.com';
+
   const compileTimeConstantForMinification = {
     __ROOT_URL__: JSON.stringify(rootUrl),
-    __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey)
+    __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey),
+    __CDN_URL__: JSON.stringify(cdnUrl)
   };
 
   if (!production) {
