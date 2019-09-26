@@ -32,6 +32,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/crypt"
+	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
 )
 
@@ -82,6 +83,8 @@ func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOpti
 	if err != nil {
 		return nil, errors.Wrap(err, "getting request")
 	}
+
+	log.Debug("HTTP request: %+v\n", req)
 
 	var hc http.Client
 	if options != nil && options.HTTPClient != nil {
