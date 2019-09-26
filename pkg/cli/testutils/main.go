@@ -48,7 +48,6 @@ func Login(t *testing.T, ctx *context.DnoteCtx) {
 
 	ctx.SessionKey = "someSessionKey"
 	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()
-	ctx.CipherKey = []byte("AES256Key-32Characters1234567890")
 }
 
 // RemoveDir cleans up the test env represented by the given context

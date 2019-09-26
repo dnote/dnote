@@ -237,7 +237,7 @@ func CreateBook(ctx context.DnoteCtx, label string) (CreateBookResp, error) {
 		return CreateBookResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	res, err := doAuthorizedReq(ctx, "POST", "/v2/books", string(b), nil)
+	res, err := doAuthorizedReq(ctx, "POST", "/v3/books", string(b), nil)
 	if err != nil {
 		return CreateBookResp{}, errors.Wrap(err, "posting a book to the server")
 	}
@@ -349,7 +349,7 @@ func CreateNote(ctx context.DnoteCtx, bookUUID, content string) (CreateNoteResp,
 		return CreateNoteResp{}, errors.Wrap(err, "marshaling payload")
 	}
 
-	res, err := doAuthorizedReq(ctx, "POST", "/v2/notes", string(b), nil)
+	res, err := doAuthorizedReq(ctx, "POST", "/v3/notes", string(b), nil)
 	if err != nil {
 		return CreateNoteResp{}, errors.Wrap(err, "posting a book to the server")
 	}

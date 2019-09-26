@@ -96,7 +96,7 @@ func (l syncList) getLength() int {
 
 // processFragments categorizes items in sync fragments into a sync list. It also decrypts any
 // encrypted data in sync fragments.
-func processFragments(fragments []client.SyncFragment, cipherKey []byte) (syncList, error) {
+func processFragments(fragments []client.SyncFragment) (syncList, error) {
 	notes := map[string]client.SyncFragNote{}
 	books := map[string]client.SyncFragBook{}
 	expungedNotes := map[string]bool{}
@@ -146,7 +146,7 @@ func getSyncList(ctx context.DnoteCtx, afterUSN int) (syncList, error) {
 		return syncList{}, errors.Wrap(err, "getting sync fragments")
 	}
 
-	ret, err := processFragments(fragments, ctx.CipherKey)
+	ret, err := processFragments(fragments)
 	if err != nil {
 		return syncList{}, errors.Wrap(err, "making sync list")
 	}
@@ -887,7 +887,7 @@ func saveSyncState(tx *database.DB, serverTime int64, serverMaxUSN int) error {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		if ctx.SessionKey == "" || ctx.CipherKey == nil {
+		if ctx.SessionKey == "" {
 			return errors.New("not logged in")
 		}
 

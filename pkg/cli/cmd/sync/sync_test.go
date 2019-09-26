@@ -31,40 +31,38 @@ import (
 	"github.com/dnote/dnote/pkg/cli/client"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/crypt"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/testutils"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 )
 
-var cipherKey = []byte("AES256Key-32Characters1234567890")
 var dbPath = "../../tmp/.dnote.db"
 
 func TestProcessFragments(t *testing.T) {
 	fragments := []client.SyncFragment{
-		client.SyncFragment{
+		{
 			FragMaxUSN:  10,
 			UserMaxUSN:  10,
 			CurrentTime: 1550436136,
 			Notes: []client.SyncFragNote{
-				client.SyncFragNote{
+				{
 					UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
-					Body: "7GgIppDdxDn+4DUoVoLXbncZDRqXGwbDVNF/eCssu+1BXMdq+HAziJHGgK7drdcIBtYDDXj0OwHz9dQDDOyWeNqkLWEIQ2Roygs229dRxdO3Z6ST+qSOr/9TTjDlFxydF5Ps7nAXdN9KVxH8FKIZDsxJ45qeLKpQK/6poAM39BCOiysqAXJQz9ngOJiqImAuftS6d/XhwX77QvnM91VCKK0tFmsMdDDw0J9QMwnlYU1CViHy1Hdhhcf9Ea38Mj4SCrWMPscXyP2fpAu5ukbIK3vS2pvbnH5vC8ZuvihrQif1BsiwfYmN981mLYs069Dn4B72qcXPwU7qrN3V0k57JGcAlTiEoOD5QowyraensQlR1doorLb43SjTiJLItougn5K5QPRiHuNxfv39pa7A0gKA1n/3UhG/SBuCpDuPYjwmBkvkzCKJNgpbLQ8p29JXMQcWrm4e9GfnVjMhAEtxttIta3MN6EcYG7cB1dJ04OLYVcJuRA==",
+					Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n Donec ac libero efficitur, posuere dui non, egestas lectus.\n Aliquam urna ligula, sagittis eu volutpat vel, consequat et augue.\n\n Ut mi urna, dignissim a ex eget, venenatis accumsan sem. Praesent facilisis, ligula hendrerit auctor varius, mauris metus hendrerit dolor, sit amet pulvinar.",
 				},
-				client.SyncFragNote{
+				{
 					UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
-					Body: "WGzcYA6kLuUFEU7HLTDJt7UWF7fEmbCPHfC16VBrAyfT2wDejXbIuFpU5L7g0aU=",
+					Body: "foo bar baz quz\nqux",
 				},
 			},
 			Books: []client.SyncFragBook{
-				client.SyncFragBook{
+				{
 					UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
-					Label: "qBrSrAcnTUHu51bIrv6jSA/dNffr/kRlIg+MklxeQQ==",
+					Label: "foo",
 				},
-				client.SyncFragBook{
+				{
 					UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
-					Label: "uHWoBFdKT78gTkFR7qhyzZkrn59c8ktEa8idrLkksKzIQ3VVAXxq0QZp7Uc=",
+					Label: "foo-bar-baz-1000",
 				},
 			},
 			ExpungedNotes: []string{},
@@ -73,28 +71,28 @@ func TestProcessFragments(t *testing.T) {
 	}
 
 	// exec
-	sl, err := processFragments(fragments, cipherKey)
+	sl, err := processFragments(fragments)
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "executing").Error())
 	}
 
 	expected := syncList{
 		Notes: map[string]client.SyncFragNote{
-			"45546de0-40ed-45cf-9bfc-62ce729a7d3d": client.SyncFragNote{
+			"45546de0-40ed-45cf-9bfc-62ce729a7d3d": {
 				UUID: "45546de0-40ed-45cf-9bfc-62ce729a7d3d",
 				Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n Donec ac libero efficitur, posuere dui non, egestas lectus.\n Aliquam urna ligula, sagittis eu volutpat vel, consequat et augue.\n\n Ut mi urna, dignissim a ex eget, venenatis accumsan sem. Praesent facilisis, ligula hendrerit auctor varius, mauris metus hendrerit dolor, sit amet pulvinar.",
 			},
-			"a25a5336-afe9-46c4-b881-acab911c0bc3": client.SyncFragNote{
+			"a25a5336-afe9-46c4-b881-acab911c0bc3": {
 				UUID: "a25a5336-afe9-46c4-b881-acab911c0bc3",
 				Body: "foo bar baz quz\nqux",
 			},
 		},
 		Books: map[string]client.SyncFragBook{
-			"e8ac6f25-d95b-435a-9fae-094f7506a5ac": client.SyncFragBook{
+			"e8ac6f25-d95b-435a-9fae-094f7506a5ac": {
 				UUID:  "e8ac6f25-d95b-435a-9fae-094f7506a5ac",
 				Label: "foo",
 			},
-			"05fd8b95-ddcd-4071-9380-4358ffb8a436": client.SyncFragBook{
+			"05fd8b95-ddcd-4071-9380-4358ffb8a436": {
 				UUID:  "05fd8b95-ddcd-4071-9380-4358ffb8a436",
 				Label: "foo-bar-baz-1000",
 			},
@@ -1907,7 +1905,7 @@ func TestSendBooks(t *testing.T) {
 
 	// fire up a test server. It decrypts the payload for test purposes.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v2/books" && r.Method == "POST" {
+		if r.URL.String() == "/v3/books" && r.Method == "POST" {
 			var payload client.CreateBookPayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -1916,18 +1914,11 @@ func TestSendBooks(t *testing.T) {
 				return
 			}
 
-			labelDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Name)
-			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decrypting label").Error())
-			}
-
-			labelDecStr := string(labelDec)
-
-			createdLabels = append(createdLabels, labelDecStr)
+			createdLabels = append(createdLabels, payload.Name)
 
 			resp := client.CreateBookResp{
 				Book: client.RespBook{
-					UUID: fmt.Sprintf("server-%s-uuid", labelDecStr),
+					UUID: fmt.Sprintf("server-%s-uuid", payload.Name),
 				},
 			}
 
@@ -1940,7 +1931,7 @@ func TestSendBooks(t *testing.T) {
 		}
 
 		p := strings.Split(r.URL.Path, "/")
-		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
+		if len(p) == 4 && p[0] == "" && p[1] == "v3" && p[2] == "books" {
 			if r.Method == "PATCH" {
 				uuid := p[3]
 				updatesUUIDs = append(updatesUUIDs, uuid)
@@ -2033,7 +2024,7 @@ func TestSendBooks(t *testing.T) {
 
 func TestSendBooks_isBehind(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v2/books" && r.Method == "POST" {
+		if r.URL.String() == "/v3/books" && r.Method == "POST" {
 			var payload client.CreateBookPayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -2057,7 +2048,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 		}
 
 		p := strings.Split(r.URL.Path, "/")
-		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "books" {
+		if len(p) == 4 && p[0] == "" && p[1] == "v3" && p[2] == "books" {
 			if r.Method == "PATCH" {
 				resp := client.UpdateBookResp{
 					Book: client.RespBook{
@@ -2278,7 +2269,7 @@ func TestSendNotes(t *testing.T) {
 
 	// fire up a test server. It decrypts the payload for test purposes.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v2/notes" && r.Method == "POST" {
+		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			var payload client.CreateNotePayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -2287,17 +2278,11 @@ func TestSendNotes(t *testing.T) {
 				return
 			}
 
-			bodyDec, err := crypt.AesGcmDecrypt(cipherKey, payload.Body)
-			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decrypting body").Error())
-			}
-			bodyDecStr := string(bodyDec)
-
-			createdBodys = append(createdBodys, bodyDecStr)
+			createdBodys = append(createdBodys, payload.Body)
 
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
-					UUID: fmt.Sprintf("server-%s-uuid", bodyDecStr),
+					UUID: fmt.Sprintf("server-%s-uuid", payload.Body),
 				},
 			}
 
@@ -2310,7 +2295,7 @@ func TestSendNotes(t *testing.T) {
 		}
 
 		p := strings.Split(r.URL.Path, "/")
-		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
+		if len(p) == 4 && p[0] == "" && p[1] == "v3" && p[2] == "notes" {
 			if r.Method == "PATCH" {
 				uuid := p[3]
 				updatedUUIDs = append(updatedUUIDs, uuid)
@@ -2413,7 +2398,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 
 	// fire up a test server. It decrypts the payload for test purposes.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v2/notes" && r.Method == "POST" {
+		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
 					UUID: utils.GenerateUUID(),
@@ -2455,7 +2440,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 
 func TestSendNotes_isBehind(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v1/notes" && r.Method == "POST" {
+		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			var payload client.CreateBookPayload
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
@@ -2479,7 +2464,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		}
 
 		p := strings.Split(r.URL.Path, "/")
-		if len(p) == 4 && p[0] == "" && p[1] == "v1" && p[2] == "notes" {
+		if len(p) == 4 && p[0] == "" && p[1] == "v3" && p[2] == "notes" {
 			if r.Method == "PATCH" {
 				resp := client.UpdateNoteResp{
 					Result: client.RespNote{
@@ -2928,18 +2913,18 @@ func TestCheckBookPristine(t *testing.T) {
 func TestCheckNoteInList(t *testing.T) {
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
-			"n1-uuid": client.SyncFragNote{
+			"n1-uuid": {
 				UUID: "n1-uuid",
 			},
-			"n2-uuid": client.SyncFragNote{
+			"n2-uuid": {
 				UUID: "n2-uuid",
 			},
 		},
 		Books: map[string]client.SyncFragBook{
-			"b1-uuid": client.SyncFragBook{
+			"b1-uuid": {
 				UUID: "b1-uuid",
 			},
-			"b2-uuid": client.SyncFragBook{
+			"b2-uuid": {
 				UUID: "b2-uuid",
 			},
 		},
@@ -2990,18 +2975,18 @@ func TestCheckNoteInList(t *testing.T) {
 func TestCheckBookInList(t *testing.T) {
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
-			"n1-uuid": client.SyncFragNote{
+			"n1-uuid": {
 				UUID: "n1-uuid",
 			},
-			"n2-uuid": client.SyncFragNote{
+			"n2-uuid": {
 				UUID: "n2-uuid",
 			},
 		},
 		Books: map[string]client.SyncFragBook{
-			"b1-uuid": client.SyncFragBook{
+			"b1-uuid": {
 				UUID: "b1-uuid",
 			},
-			"b2-uuid": client.SyncFragBook{
+			"b2-uuid": {
 				UUID: "b2-uuid",
 			},
 		},
@@ -3056,18 +3041,18 @@ func TestCleanLocalNotes(t *testing.T) {
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
-			"n1-uuid": client.SyncFragNote{
+			"n1-uuid": {
 				UUID: "n1-uuid",
 			},
-			"n2-uuid": client.SyncFragNote{
+			"n2-uuid": {
 				UUID: "n2-uuid",
 			},
 		},
 		Books: map[string]client.SyncFragBook{
-			"b1-uuid": client.SyncFragBook{
+			"b1-uuid": {
 				UUID: "b1-uuid",
 			},
-			"b2-uuid": client.SyncFragBook{
+			"b2-uuid": {
 				UUID: "b2-uuid",
 			},
 		},
@@ -3128,18 +3113,18 @@ func TestCleanLocalBooks(t *testing.T) {
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
-			"n1-uuid": client.SyncFragNote{
+			"n1-uuid": {
 				UUID: "n1-uuid",
 			},
-			"n2-uuid": client.SyncFragNote{
+			"n2-uuid": {
 				UUID: "n2-uuid",
 			},
 		},
 		Books: map[string]client.SyncFragBook{
-			"b1-uuid": client.SyncFragBook{
+			"b1-uuid": {
 				UUID: "b1-uuid",
 			},
-			"b2-uuid": client.SyncFragBook{
+			"b2-uuid": {
 				UUID: "b2-uuid",
 			},
 		},
