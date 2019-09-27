@@ -54,7 +54,7 @@ const Edit: React.SFC<Props> = ({ match }) => {
     <div
       className={classnames(
         styles.container,
-        'container mobile-nopadding page'
+        'container mobile-nopadding page page-mobile-full'
       )}
     >
       <Helmet>

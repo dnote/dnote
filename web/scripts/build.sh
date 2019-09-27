@@ -3,10 +3,7 @@
 set -ex
 
 basePath="$GOPATH/src/github.com/dnote/dnote"
-
 isTest=${IS_TEST:-false}
-bundleBaseUrl=$BUNDLE_BASE_URL
-assetBaseUrl=$ASSET_BASE_URL
 
 set -u
 rm -rf "$basePath/web/public"
@@ -15,6 +12,7 @@ mkdir -p "$basePath/web/public/static"
 pushd "$basePath/web"
   PUBLIC_PATH="$PUBLIC_PATH" \
   COMPILED_PATH="$COMPILED_PATH" \
+  ASSET_BASE_URL="$ASSET_BASE_URL" \
     "$basePath"/web/scripts/setup.sh
 
   OUTPUT_PATH="$COMPILED_PATH" \
@@ -26,8 +24,8 @@ pushd "$basePath/web"
       --config "$basePath"/web/webpack/prod.config.js
 
   NODE_ENV=PRODUCTION \
-  BUNDLE_BASE_URL=$bundleBaseUrl \
-  ASSET_BASE_URL=$assetBaseUrl \
+  BUNDLE_BASE_URL=$BUNDLE_BASE_URL \
+  ASSET_BASE_URL=$ASSET_BASE_URL \
   PUBLIC_PATH=$PUBLIC_PATH \
   COMPILED_PATH=$COMPILED_PATH \
     node "$basePath"/web/scripts/placeholder.js

@@ -156,7 +156,7 @@ html body {
     padding-top: 0;
     padding-bottom: 0;
 
-    @include breakpoint(md) {
+    @include breakpoint(lg) {
       padding-top: rem(20px);
       padding-bottom: rem(20px);
     }

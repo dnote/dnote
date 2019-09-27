@@ -19,4 +19,3 @@ cp -r "$basePath"/web/assets/* "$publicPath"
 # populate placeholders
 assetBaseUrlEscaped=$(echo "$assetBaseUrl" | sed -e 's/[\/&]/\\&/g')
 sed -i -e "s/ASSET_BASE_PLACEHOLDER/$assetBaseUrlEscaped/g" "$publicPath"/static/manifest.json
-

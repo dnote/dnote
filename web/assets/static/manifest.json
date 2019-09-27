@@ -1,5 +1,6 @@
 {
   "name": "Dnote",
+  "short_name": "Dnote",
   "icons": [
     {
       "src": "ASSET_BASE_PLACEHOLDER\/android-icon-36x36.png",
@@ -36,10 +37,16 @@
       "sizes": "192x192",
       "type": "image\/png",
       "density": "4.0"
+    },
+    {
+      "src": "ASSET_BASE_PLACEHOLDER\/logo-512x512.png",
+      "sizes": "512x512",
+      "type": "image\/png",
+      "density": "4.0"
     }
   ],
-  "start_url": "https://app.getdnote.com/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#072a40",
-  "theme_color": "#2F3BA2"
+  "theme_color": "#ffffff"
 }

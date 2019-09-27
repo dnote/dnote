@@ -21,7 +21,7 @@
   <link rel="apple-touch-icon" sizes="152x152" href="<!--ASSET_BASE_PLACEHOLDER-->/apple-icon-152x152.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="<!--ASSET_BASE_PLACEHOLDER-->/apple-icon-180x180.png" />
   <link rel="icon" type="image/png" sizes="192x192"  href="<!--ASSET_BASE_PLACEHOLDER-->/android-icon-192x192.png" />
-  <link rel="manifest" href="<!--ASSET_BASE_PLACEHOLDER-->/manifest.json" />
+  <link rel="manifest" href="/static/manifest.json" />
   <meta name="msapplication-TileColor" content="#ffffff" />
   <meta name="msapplication-TileImage" content="<!--ASSET_BASE_PLACEHOLDER-->/ms-icon-144x144.png" />
   <meta name="theme-color" content="#ffffff" />
@@ -39,5 +39,11 @@
   <div id="app"></div>
   <div id="modal-root"></div>
   <!--JS_BUNDLE_PLACEHOLDER-->
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+    }
+  </script>
 </body>
 </html>

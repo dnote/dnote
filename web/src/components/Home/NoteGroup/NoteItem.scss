@@ -75,7 +75,8 @@
   font-weight: 700;
   @include font-size('small');
 
-  width: 224px;
+  width: 212px;
+
   @include breakpoint('md') {
     width: 320px;
   }
