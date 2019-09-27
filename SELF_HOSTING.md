@@ -138,4 +138,11 @@ editor: nvim
 apiEndpoint: https://api.dnote.io
 ```
 
-Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, and save the configuration file.
+Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, followed by '/api', and save the configuration file.
+
+e.g.
+
+```yaml
+editor: nvim
+apiEndpoint: my-dnote-server.com/api
+```
