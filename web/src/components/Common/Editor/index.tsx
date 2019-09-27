@@ -3,26 +3,24 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 import { Location } from 'history';
 
+import { focusTextarea } from 'web/libs/dom';
+import { getHomePath } from 'web/libs/paths';
 import BooksSelector from './BookSelector';
 import { useDispatch, useSelector } from '../../../store';
 import { flushContent, markDirty } from '../../../store/editor';
 import Textarea from './Textarea';
 import Preview from './Preview';
 import Button from '../Button';
-import { focusTextarea } from 'web/libs/dom';
-import { getHomePath } from 'web/libs/paths';
 import styles from './Editor.scss';
 
 interface Props {
   onSubmit: (param: { draftContent: string; draftBookUUID: string }) => void;
   isBusy: boolean;
-  bookSelectorOpen: boolean;
-  setBookSelectorOpen: (boolean) => void;
   cancelPath?: Location<any>;
   isNew?: boolean;
   disabled?: boolean;
-  textareaEl: HTMLTextAreaElement;
-  setTextareaEl: React.Dispatch<any>;
+  textareaRef: React.MutableRefObject<any>;
+  bookSelectorTriggerRef?: React.MutableRefObject<HTMLElement>;
 }
 
 enum Mode {
@@ -33,12 +31,10 @@ enum Mode {
 const Editor: React.SFC<Props> = ({
   onSubmit,
   isBusy,
-  bookSelectorOpen,
-  setBookSelectorOpen,
   disabled,
-  textareaEl,
-  setTextareaEl,
+  textareaRef,
   isNew,
+  bookSelectorTriggerRef,
   cancelPath = getHomePath()
 }) => {
   const { editor, books } = useSelector(state => {
@@ -48,6 +44,7 @@ const Editor: React.SFC<Props> = ({
     };
   });
   const dispatch = useDispatch();
+  const [bookSelectorOpen, setBookSelectorOpen] = useState(false);
 
   const [content, setContent] = useState(editor.content);
   const [mode, setMode] = useState(Mode.write);
@@ -88,11 +85,12 @@ const Editor: React.SFC<Props> = ({
             isReady={books.isFetched}
             isOpen={bookSelectorOpen}
             setIsOpen={setBookSelectorOpen}
+            triggerRef={bookSelectorTriggerRef}
             onAfterChange={() => {
               dispatch(markDirty());
 
-              if (textareaEl) {
-                focusTextarea(textareaEl);
+              if (textareaRef.current) {
+                focusTextarea(textareaRef.current);
               }
             }}
           />
@@ -132,7 +130,7 @@ const Editor: React.SFC<Props> = ({
       <div className={styles['content-wrapper']}>
         {mode === Mode.write ? (
           <Textarea
-            setTextareaEl={setTextareaEl}
+            textareaRef={textareaRef}
             inputTimerRef={inputTimerRef}
             content={content}
             onChange={setContent}

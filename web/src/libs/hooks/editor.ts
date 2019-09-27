@@ -6,19 +6,12 @@ import { useDispatch } from '../../store';
 
 // useFocusTextarea is a hook that, when the given textareaEl becomes
 // defined, focuses on it.
-export function useFocusTextarea(
-  textareaEl: HTMLTextAreaElement,
-  skip: boolean = false
-) {
+export function useFocusTextarea(textareaEl: HTMLTextAreaElement) {
   useEffect(() => {
-    if (skip) {
-      return;
-    }
-
     if (textareaEl) {
       focusTextarea(textareaEl);
     }
-  }, [textareaEl, skip]);
+  }, [textareaEl]);
 }
 
 // useCleanupEditor is a hook that cleans up the editor state

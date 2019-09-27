@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, useRef, useEffect, Fragment } from 'react';
 import { Prompt, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import Helmet from 'react-helmet';
@@ -6,7 +6,8 @@ import { withRouter } from 'react-router-dom';
 
 import operations from 'web/libs/operations';
 import { getNotePath, notePathDef } from 'web/libs/paths';
-import { useCleanupEditor, useFocusTextarea } from 'web/libs/hooks/editor';
+import { useCleanupEditor } from 'web/libs/hooks/editor';
+import { useFocus } from 'web/libs/hooks/dom';
 import Editor from '../Common/Editor';
 import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
@@ -18,6 +19,22 @@ import styles from './New.scss';
 
 interface Props extends RouteComponentProps {}
 
+// useInitFocus initializes the focus on HTML elements depending on the current
+// state of the editor.
+function useInitFocus({ bookLabel, textareaRef, setTriggerFocus }) {
+  useEffect(() => {
+    if (!bookLabel) {
+      setTriggerFocus();
+    } else {
+      const textareaEl = textareaRef.current;
+
+      if (textareaEl) {
+        textareaEl.focus();
+      }
+    }
+  }, [setTriggerFocus, bookLabel, textareaRef]);
+}
+
 const New: React.SFC<Props> = ({ history }) => {
   const { editor } = useSelector(state => {
     return {
@@ -25,14 +42,17 @@ const New: React.SFC<Props> = ({ history }) => {
     };
   });
   const dispatch = useDispatch();
-
   const [errMessage, setErrMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [bookSelectorOpen, setBookSelectorOpen] = useState(!editor.bookUUID);
-  const [textareaEl, setTextareaEl] = useState(null);
+  const textareaRef = useRef(null);
+  const [setTriggerFocus, triggerRef] = useFocus();
 
   useCleanupEditor();
-  useFocusTextarea(textareaEl, bookSelectorOpen);
+  useInitFocus({
+    bookLabel: editor.bookLabel,
+    textareaRef,
+    setTriggerFocus
+  });
 
   return (
     <Fragment>
@@ -49,11 +69,7 @@ const New: React.SFC<Props> = ({ history }) => {
           </Flash>
 
           <div className={styles.wrapper}>
-            <div
-              className={classnames(styles.overlay, {
-                [styles.active]: bookSelectorOpen
-              })}
-            />
+            <div className={classnames(styles.overlay, {})} />
             <div className={styles.header}>
               <h2 className={styles.heading}>New note</h2>
             </div>
@@ -61,10 +77,8 @@ const New: React.SFC<Props> = ({ history }) => {
             <Editor
               isNew
               isBusy={submitting}
-              setBookSelectorOpen={setBookSelectorOpen}
-              bookSelectorOpen={bookSelectorOpen}
-              textareaEl={textareaEl}
-              setTextareaEl={setTextareaEl}
+              textareaRef={textareaRef}
+              bookSelectorTriggerRef={triggerRef}
               onSubmit={async ({ draftContent, draftBookUUID }) => {
                 setSubmitting(true);
 

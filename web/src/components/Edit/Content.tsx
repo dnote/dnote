@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { withRouter } from 'react-router-dom';
@@ -26,31 +26,22 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
     };
   });
   const dispatch = useDispatch();
-
   const [submitting, setSubmitting] = useState(false);
-  const [bookSelectorOpen, setBookSelectorOpen] = useState(!editor.bookUUID);
-  const [textareaEl, setTextareaEl] = useState(null);
+  const textareaRef = useRef(null);
 
-  useFocusTextarea(textareaEl);
+  useFocusTextarea(textareaRef.current);
   useCleanupEditor();
 
   return (
     <div className={styles.wrapper}>
-      <div
-        className={classnames(styles.overlay, {
-          [styles.active]: bookSelectorOpen
-        })}
-      />
+      <div className={classnames(styles.overlay, {})} />
       <div className={styles.header}>
         <h2 className={styles.heading}>Edit note</h2>
       </div>
 
       <Editor
         isBusy={submitting}
-        setBookSelectorOpen={setBookSelectorOpen}
-        bookSelectorOpen={bookSelectorOpen}
-        textareaEl={textareaEl}
-        setTextareaEl={setTextareaEl}
+        textareaRef={textareaRef}
         cancelPath={prevLocation}
         onSubmit={async ({ draftContent, draftBookUUID }) => {
           setSubmitting(true);

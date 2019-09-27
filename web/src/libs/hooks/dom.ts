@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import {
   KEYCODE_DOWN,
@@ -158,4 +158,18 @@ export function useSearchMenuKeydown<T = Option>({
       }
     }
   });
+}
+
+export function useFocus() {
+  const elRef = useRef<HTMLElement>();
+
+  const setFocus = () => {
+    const currentEl = elRef.current;
+
+    if (currentEl) {
+      currentEl.focus();
+    }
+  };
+
+  return [setFocus, elRef] as const;
 }

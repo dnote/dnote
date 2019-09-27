@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import classnames from 'classnames';
 
@@ -13,7 +13,7 @@ interface Props {
   onChange: (string) => void;
   doFlushContent: (string) => void;
   onSubmit: () => void;
-  setTextareaEl: React.Dispatch<any>;
+  textareaRef: React.MutableRefObject<any>;
   inputTimerRef: React.MutableRefObject<any>;
   disabled?: boolean;
 }
@@ -23,25 +23,16 @@ const Textarea: React.SFC<Props> = ({
   onChange,
   doFlushContent,
   onSubmit,
-  setTextareaEl,
+  textareaRef,
   inputTimerRef,
   disabled
 }) => {
   const [contentFocused, setContentFocused] = useState(false);
 
-  useEffect(() => {
-    return () => {
-      // eslint-disable-next-line no-param-reassign
-      setTextareaEl(null);
-    };
-  }, [setTextareaEl]);
-
   return (
     <div className={classnames(styles.wrapper, editorStyles.content)}>
       <textarea
-        ref={el => {
-          setTextareaEl(el);
-        }}
+        ref={textareaRef}
         value={content}
         onChange={e => {
           const { value } = e.target;

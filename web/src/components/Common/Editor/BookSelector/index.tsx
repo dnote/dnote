@@ -38,6 +38,7 @@ interface Props {
   onAfterChange: () => void;
   isOpen: boolean;
   setIsOpen: (boolean) => void;
+  triggerRef?: React.MutableRefObject<HTMLElement>;
 }
 
 const BookSelector: React.SFC<Props> = ({
@@ -46,7 +47,8 @@ const BookSelector: React.SFC<Props> = ({
   isReady,
   onAfterChange,
   isOpen,
-  setIsOpen
+  setIsOpen,
+  triggerRef
 }) => {
   const { books, editor } = useSelector(state => {
     return {
@@ -90,7 +92,15 @@ const BookSelector: React.SFC<Props> = ({
         return (
           <button
             id="T-book-selector-trigger"
-            ref={triggerProps.triggerRef}
+            ref={el => {
+              if (triggerRef) {
+                // eslint-disable-next-line no-param-reassign
+                triggerRef.current = el;
+              }
+
+              // eslint-disable-next-line no-param-reassign
+              triggerProps.triggerRef.current = el;
+            }}
             type="button"
             className={classnames(
               styles.trigger,
