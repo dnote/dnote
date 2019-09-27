@@ -25,7 +25,7 @@ set +a
   cd "$appPath" &&
 
   BUNDLE_BASE_URL=http://localhost:8080 \
-  ASSET_BASE_URL=http://localhost:3000/dist \
+  ASSET_BASE_URL=http://localhost:3000/static \
   ROOT_URL=http://localhost:$serverPort \
   COMPILED_PATH="$appPath"/compiled \
   PUBLIC_PATH="$appPath"/public \

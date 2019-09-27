@@ -11,6 +11,7 @@ echo "here is $rootUrl"
   cd "$appPath" &&
   PUBLIC_PATH=$PUBLIC_PATH \
   COMPILED_PATH=$COMPILED_PATH \
+  ASSET_BASE_URL=$ASSET_BASE_URL \
     "$appPath"/scripts/setup.sh &&
 
   BUNDLE_BASE_URL=$BUNDLE_BASE_URL

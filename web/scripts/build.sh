@@ -10,7 +10,7 @@ assetBaseUrl=$ASSET_BASE_URL
 
 set -u
 rm -rf "$basePath/web/public"
-mkdir -p "$basePath/web/public/dist"
+mkdir -p "$basePath/web/public/static"
 
 pushd "$basePath/web"
   PUBLIC_PATH="$PUBLIC_PATH" \
@@ -32,7 +32,7 @@ pushd "$basePath/web"
   COMPILED_PATH=$COMPILED_PATH \
     node "$basePath"/web/scripts/placeholder.js
 
-  cp "$COMPILED_PATH"/*.js "$COMPILED_PATH"/*.css "$PUBLIC_PATH"/dist
+  cp "$COMPILED_PATH"/*.js "$COMPILED_PATH"/*.css "$PUBLIC_PATH"/static
 
   # clean up compiled
   rm -rf "$basePath"/web/compiled/*

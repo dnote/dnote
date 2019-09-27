@@ -24,7 +24,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/api/handlers"
@@ -40,27 +39,51 @@ import (
 var versionTag = "master"
 var port = flag.String("port", "3000", "port to connect to")
 
+var rootBox *packr.Box
+
 func init() {
+	rootBox = packr.New("root", "../../web/public")
 }
 
-func getAppHandler() http.HandlerFunc {
-	box := packr.New("web", "../../web/public")
-
-	fs := http.FileServer(box)
-	appShell, err := box.Find("index.html")
+func mustFind(box *packr.Box, path string) []byte {
+	b, err := rootBox.Find(path)
 	if err != nil {
-		panic(errors.Wrap(err, "getting index.html content"))
+		panic(errors.Wrapf(err, "getting file content for %s", path))
 	}
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) >= 2 && parts[1] == "dist" {
-			fs.ServeHTTP(w, r)
-			return
-		}
+	return b
+}
 
-		// All other requests should serve the index.html file
-		w.Write(appShell)
+func getStaticHandler() http.Handler {
+	box := packr.New("static", "../../web/public/static")
+
+	return http.StripPrefix("/static/", http.FileServer(box))
+}
+
+func getRootHandler() http.HandlerFunc {
+	b := mustFind(rootBox, "index.html")
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Write(b)
+	}
+}
+
+func getRobotsHandler() http.HandlerFunc {
+	b := mustFind(rootBox, "robots.txt")
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Write(b)
+	}
+}
+
+func getSWHandler() http.HandlerFunc {
+	b := mustFind(rootBox, "service-worker.js")
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Write(b)
 	}
 }
 
@@ -73,7 +96,10 @@ func initServer() *mux.Router {
 	})
 
 	srv.PathPrefix("/api").Handler(http.StripPrefix("/api", apiRouter))
-	srv.PathPrefix("/").HandlerFunc(getAppHandler())
+	srv.PathPrefix("/static").Handler(getStaticHandler())
+	srv.Handle("/service-worker.js", getSWHandler())
+	srv.Handle("/robots.txt", getRobotsHandler())
+	srv.Handle("/", getRootHandler())
 
 	return srv
 }

@@ -33,16 +33,16 @@ const assetBaseURL = process.env.ASSET_BASE_URL;
 const publicPath = process.env.PUBLIC_PATH;
 const compiledPath = process.env.COMPILED_PATH;
 
-if (!bundleBaseURL) {
+if (bundleBaseURL === undefined) {
   throw new Error('No BUNDLE_BASE_URL environment variable found');
 }
-if (!assetBaseURL) {
+if (assetBaseURL === undefined) {
   throw new Error('No ASSET_BASE_URL environment variable found');
 }
-if (!publicPath) {
+if (publicPath === undefined) {
   throw new Error('No PUBLIC_PATH environment variable found');
 }
-if (!compiledPath) {
+if (compiledPath === undefined) {
   throw new Error('No COMPILED_PATH environment variable found');
 }
 
