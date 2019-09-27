@@ -16,34 +16,11 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import { Switch, Route } from 'react-router';
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/variables';
+@import '../App/rem';
 
-import MainSidebar from './MainSidebar';
-import { mainSidebarPaths } from 'web/libs/paths';
-
-export default ({ isEditor, demo }) => {
-  return (
-    <Switch>
-      <Route
-        exact
-        path={['/notes/:noteUUID', '/demo/notes/:noteUUID']}
-        render={() => {
-          if (isEditor) {
-            return <MainSidebar demo={demo} />;
-          }
-
-          return null;
-        }}
-      />
-
-      <Route
-        exact
-        path={mainSidebarPaths}
-        render={() => {
-          return <MainSidebar demo={demo} />;
-        }}
-      />
-    </Switch>
-  );
-};
+.wrapper {
+  margin-top: rem(20px);
+}

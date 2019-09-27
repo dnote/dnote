@@ -96,6 +96,7 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
         onDismiss={() => {
           setSuccessMsg('');
         }}
+        noMargin
       >
         {successMsg}
       </Flash>
@@ -106,6 +107,7 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
         onDismiss={() => {
           setFailureMsg('');
         }}
+        noMargin
       >
         {failureMsg}
       </Flash>

@@ -21,11 +21,11 @@ import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
+import { getSubscriptionCheckoutPath } from 'web/libs/paths';
 import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
 import { useSelector } from '../../store';
-import { getSubscriptionCheckoutPath } from 'web/libs/paths';
 
 import styles from './Subscription.scss';
 

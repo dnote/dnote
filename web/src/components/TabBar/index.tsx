@@ -88,7 +88,12 @@ const TabBar: React.SFC<Props> = ({
               [styles.active]: isNewActive
             })}
           >
-            <NoteIcon width={16} height={16} fill={getFill(isNewActive)} />
+            <NoteIcon
+              id="tabbar-note-icon"
+              width={16}
+              height={16}
+              fill={getFill(isNewActive)}
+            />
             <span className={styles.label}>New</span>
           </Link>
         </Item>

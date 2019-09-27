@@ -21,15 +21,15 @@ import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { Location } from 'history';
 
+import { getHomePath, checkCurrentPath, homePathDef } from 'web/libs/paths';
+import { toSearchObj } from 'jslib/helpers/filters';
 import LogoWithText from '../Icons/LogoWithText';
 import Logo from '../Icons/Logo';
-import { getHomePath, checkCurrentPath, homePathDef } from 'web/libs/paths';
 import AccountMenu from './AccountMenu';
 import Nav from './Nav';
 import SearchBar from './SearchBar';
 import { useFilters } from '../../store';
 import { FiltersState } from '../../store/filters';
-import { toSearchObj } from 'jslib/helpers/filters';
 import styles from './Normal.scss';
 
 interface Props extends RouteComponentProps {}
@@ -60,7 +60,12 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
               to={getHomeDest(location, searchObj)}
               className={styles.brand}
             >
-              <LogoWithText width={75} fill="white" className={styles.logo} />
+              <LogoWithText
+                id="main-logo-text"
+                width={75}
+                fill="white"
+                className={styles.logo}
+              />
               <Logo width={24} fill="white" className={styles.logosm} />
             </Link>
 

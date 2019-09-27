@@ -61,6 +61,7 @@ const FrequencyModal: React.SFC<Props> = ({
         onDismiss={() => {
           setSuccessMsg('');
         }}
+        noMargin
       >
         {successMsg}
       </Flash>
@@ -71,6 +72,7 @@ const FrequencyModal: React.SFC<Props> = ({
         onDismiss={() => {
           setFailureMsg('');
         }}
+        noMargin
       >
         {failureMsg}
       </Flash>

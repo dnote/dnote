@@ -21,9 +21,4 @@
 @import '../App/theme';
 
 .wrapper {
-  margin-top: rem(-10px);
-
-  @include breakpoint(lg) {
-    margin-top: 0;
-  }
 }

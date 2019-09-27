@@ -60,6 +60,10 @@ const SearchInput: React.SFC<Props> = ({
 
   return (
     <div className={classnames(styles.wrapper, wrapperClassName)}>
+      <label htmlFor={inputId} className="sr-only">
+        {placeholder}
+      </label>
+
       <input
         id={inputId}
         ref={inputRef}

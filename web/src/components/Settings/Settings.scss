@@ -35,11 +35,10 @@
 
 .section-heading {
   @include font-size('regular');
-  font-weight: 400;
+  font-weight: 600;
   padding-bottom: rem(4px);
   background: $light;
   padding: rem(16px) rem(20px);
-  text-transform: uppercase;
 }
 .section-content {
   margin-top: rem(20px);

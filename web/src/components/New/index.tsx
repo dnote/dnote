@@ -62,7 +62,10 @@ const New: React.SFC<Props> = ({ history }) => {
 
       <PayWall>
         <div
-          className={classnames(styles.container, 'container mobile-nopadding')}
+          className={classnames(
+            styles.container,
+            'container mobile-nopadding page page-mobile-full'
+          )}
         >
           <Flash kind="danger" when={Boolean(errMessage)}>
             Error: {errMessage}

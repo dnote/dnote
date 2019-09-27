@@ -20,9 +20,9 @@ import React, { Fragment } from 'react';
 import Helmet from 'react-helmet';
 import { RouteComponentProps } from 'react-router-dom';
 
+import { SettingSections } from 'web/libs/paths';
 import Account from './Account';
 import Sidebar from './Sidebar';
-import { SettingSections } from 'web/libs/paths';
 import Notification from './Notification';
 import Billing from './Billing';
 
@@ -56,7 +56,7 @@ const Settings: React.SFC<Props> = ({ match }) => {
         <meta name="description" content="Dnote settings" />
       </Helmet>
 
-      <div className="container">
+      <div className="container page">
         <div className="row">
           <div className="col-12 col-md-12 col-lg-3">
             <Sidebar />

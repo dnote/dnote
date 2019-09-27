@@ -17,7 +17,6 @@
  */
 
 import React, { useEffect, useState, Fragment } from 'react';
-import classnames from 'classnames';
 
 import { getBooks } from '../../store/books';
 import { useDispatch } from '../../store';
@@ -25,7 +24,6 @@ import PayWall from '../Common/PayWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
 import HeadData from './HeadData';
-import styles from './Books.scss';
 
 const Books: React.SFC = () => {
   const [successMessage, setSuccessMessage] = useState('');
@@ -42,9 +40,7 @@ const Books: React.SFC = () => {
       <PayWall>
         <h1 className="sr-only">Books</h1>
 
-        <div
-          className={classnames('container mobile-nopadding', styles.wrapper)}
-        >
+        <div className="container mobile-nopadding page page-mobile-full">
           <Flash
             kind="success"
             when={Boolean(successMessage)}
@@ -54,12 +50,7 @@ const Books: React.SFC = () => {
           >
             {successMessage}
           </Flash>
-
-          <div className="row">
-            <div className="col-12">
-              <Content setSuccessMessage={setSuccessMessage} />;
-            </div>
-          </div>
+          <Content setSuccessMessage={setSuccessMessage} />;
         </div>
       </PayWall>
     </Fragment>

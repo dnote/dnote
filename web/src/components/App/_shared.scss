@@ -151,4 +151,14 @@ html body {
 .page {
   padding-top: rem(20px);
   padding-bottom: rem(20px);
+
+  &.page-mobile-full {
+    padding-top: 0;
+    padding-bottom: 0;
+
+    @include breakpoint(md) {
+      padding-top: rem(20px);
+      padding-bottom: rem(20px);
+    }
+  }
 }

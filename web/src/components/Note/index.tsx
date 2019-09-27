@@ -19,6 +19,8 @@
 import React, { useEffect, useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import { notePathDef } from 'web/libs/paths';
+import { parseSearchString } from 'jslib/helpers/url';
 import HeaderData from './HeaderData';
 import NoteContent from './NoteContent';
 import Flash from '../Common/Flash';
@@ -26,8 +28,6 @@ import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import { unsetMessage } from '../../store/ui';
-import { notePathDef } from 'web/libs/paths';
-import { parseSearchString } from 'jslib/helpers/url';
 import DeleteNoteModal from './DeleteNoteModal';
 import styles from './index.scss';
 
@@ -84,7 +84,7 @@ const Note: React.SFC<Props> = ({ match, location }) => {
     <div id="T-note-page" className={styles.wrapper}>
       <HeaderData note={note} />
 
-      <div className="container mobile-nopadding page">
+      <div className="container mobile-nopadding page page-mobile-full">
         {note.isFetched ? (
           <NoteContent
             onDeleteModalOpen={() => {

@@ -105,7 +105,7 @@ const DeleteBookModal: React.SFC<Props> = ({
         {errMessage}
       </Flash>
 
-      <Flash kind="warning" id={descId}>
+      <Flash kind="warning" id={descId} noMargin>
         <span>
           This action will permanently remove the following book including its
           notes:

@@ -146,7 +146,7 @@ const App: React.SFC<Props> = ({ location }) => {
       </Switch>
 
       <main
-        className={classnames('page', styles.wrapper, {
+        className={classnames(styles.wrapper, {
           [styles.noheader]: noHeader,
           [styles.nofooter]: noFooter
         })}

@@ -68,7 +68,7 @@ const PasswordModal: React.SFC<Props> = ({ isOpen, onDismiss }) => {
       setOldPassword('');
       setNewPassword('');
       setNewPasswordConfirmation('');
-      setInProgress(true);
+      setInProgress(false);
     } catch (err) {
       setFailureMsg(`Failed to update. ${err.message}`);
       setInProgress(false);
@@ -96,16 +96,18 @@ const PasswordModal: React.SFC<Props> = ({ isOpen, onDismiss }) => {
         onDismiss={() => {
           setSuccessMsg('');
         }}
+        noMargin
       >
         {successMsg}
       </Flash>
       <Flash
-        when={successMsg !== ''}
+        when={failureMsg !== ''}
         kind="danger"
         wrapperClassName={settingsStyles.flash}
         onDismiss={() => {
           setFailureMsg('');
         }}
+        noMargin
       >
         {failureMsg}
       </Flash>

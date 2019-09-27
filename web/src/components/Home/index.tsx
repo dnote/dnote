@@ -17,7 +17,6 @@
  */
 
 import React, { useEffect } from 'react';
-import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { usePrevious } from 'web/libs/hooks';
@@ -34,7 +33,6 @@ import { getNotes } from '../../store/notes';
 import TopActions from './Actions/Top';
 import Flash from '../Common/Flash';
 import PayWall from '../Common/PayWall';
-import styles from './Home.scss';
 
 interface Props extends RouteComponentProps {}
 
@@ -78,7 +76,7 @@ const Home: React.SFC<Props> = ({ location }) => {
   return (
     <div
       id="T-home-page"
-      className={classnames('container mobile-nopadding', styles.wrapper)}
+      className="container mobile-nopadding page page-mobile-full"
     >
       <HeadData filters={filters} />
 

@@ -51,7 +51,12 @@ const Edit: React.SFC<Props> = ({ match }) => {
   }, [dispatch, noteUUID]);
 
   return (
-    <div className={classnames(styles.container, 'container mobile-nopadding')}>
+    <div
+      className={classnames(
+        styles.container,
+        'container mobile-nopadding page'
+      )}
+    >
       <Helmet>
         <title>Edit Note</title>
       </Helmet>

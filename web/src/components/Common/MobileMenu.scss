@@ -36,18 +36,17 @@
 }
 
 .close-wrapper {
-  padding: rem(20px) rem(20px) 0;
+  padding: rem(16px) rem(12px) 0;
   text-align: right;
 }
 
 .section {
-  padding: rem(24px) rem(32px);
+  padding: rem(8px) rem(32px);
 }
 
 .subheading {
   color: #a6a6a6;
   text-transform: uppercase;
-  @include font-size('medium');
 }
 
 .list {
@@ -61,7 +60,7 @@
 .link {
   display: block;
   color: $white;
-  padding: rem(12px) rem(16px);
+  padding: rem(12px) 0;
 }
 
 .item {

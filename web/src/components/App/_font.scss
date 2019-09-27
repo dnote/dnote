@@ -30,7 +30,7 @@ $highDecay: 0.2;
   $lgSizeValue: 16;
 
   @if $size == 'x-small' {
-    $baseSize: 10;
+    $baseSize: 13;
 
     $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;

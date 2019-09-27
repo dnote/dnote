@@ -20,13 +20,18 @@ import React from 'react';
 
 import { IconProps } from './types';
 
-const Icon = ({ fill, width, height }: IconProps) => {
+interface Props extends IconProps {
+  id: string;
+}
+
+const Icon = ({ fill, width, height, id }: Props) => {
   const h = `${height}px`;
   const w = `${width}px`;
+  const clipPathId = `${id}-clip0`;
 
   return (
     <svg width={w} height={h} viewBox="0 0 32 32" fill="none">
-      <g clipPath="url(#clip0)">
+      <g clipPath={`url(#${clipPathId})`}>
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -35,7 +40,7 @@ const Icon = ({ fill, width, height }: IconProps) => {
         />
       </g>
       <defs>
-        <clipPath id="clip0">
+        <clipPath id={clipPathId}>
           <rect width="32" height="32" fill="white" />
         </clipPath>
       </defs>

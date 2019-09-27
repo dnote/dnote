@@ -35,6 +35,7 @@
   display: block;
   padding: rem(12px) rem(16px);
   border-left: 4px solid transparent;
+  @include font-size('regular');
 
   &:hover {
     text-decoration: none;

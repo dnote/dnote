@@ -19,9 +19,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import { getHomePath } from 'web/libs/paths';
 import { useSelector } from '../../store';
 import Logo from '../Icons/LogoWithText';
-import { getHomePath } from 'web/libs/paths';
 import styles from './SubscriptionHeader.scss';
 
 interface Props {}
@@ -37,7 +37,12 @@ const SubscriptionsHeader: React.SFC<Props> = () => {
     <header className={styles.wrapper}>
       <div className={styles.content}>
         <Link to={getHomePath({})} className={styles.brand}>
-          <Logo width={88} fill="black" className={styles.logo} />
+          <Logo
+            id="subscription-header-logo"
+            width={88}
+            fill="black"
+            className={styles.logo}
+          />
         </Link>
 
         <div className={styles.email}>{user.email}</div>
