@@ -1,8 +1,8 @@
 Source code in this repository is variously licensed under the GNU Affero General Public
 License v3.0 (GNU AGPLv3), and GNU General Public License v3.0 (GNU GPLv3). A copy of each
 license can be found in the licenses directory. The Source code for the cli is licensed under
-GNU GPLv3. The source code for the server and the web is licensed under GNU AGPLv3. In all
-other cases, source code in a given file is licensed under the GNU AGPLv3.
+GNU GPLv3. The source code for the server and the web is licensed under GNU AGPLv3. Unless
+otherwise noted, source code in a given file is licensed under the GNU AGPLv3.
 
 Unless otherwise noted at the beginning of the file, the copyright belongs to
 Monomax Software Pty Ltd.
