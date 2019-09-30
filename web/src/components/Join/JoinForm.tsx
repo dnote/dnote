@@ -19,6 +19,8 @@
 import React, { useState } from 'react';
 
 import Button from '../Common/Button';
+import { useDispatch } from '../../store';
+import { updateAuthEmail } from '../../store/form';
 import authStyles from '../Common/Auth.scss';
 
 interface Props {
@@ -28,7 +30,6 @@ interface Props {
     passwordConfirmation: string
   ) => void;
   submitting: boolean;
-  onUpdateEmail?: (string) => void;
   email?: string;
   cta?: string;
 }
@@ -37,11 +38,11 @@ const JoinForm: React.SFC<Props> = ({
   onJoin,
   submitting,
   email,
-  onUpdateEmail,
   cta = 'Join'
 }) => {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const dispatch = useDispatch();
 
   return (
     <form
@@ -67,7 +68,7 @@ const JoinForm: React.SFC<Props> = ({
               onChange={e => {
                 const val = e.target.value;
 
-                onUpdateEmail(val);
+                dispatch(updateAuthEmail(val));
               }}
             />
           </label>

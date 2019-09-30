@@ -19,7 +19,6 @@
 import React, { useState } from 'react';
 import Helmet from 'react-helmet';
 import { Link, RouteComponentProps } from 'react-router-dom';
-import { connect } from 'react-redux';
 
 import services from 'web/libs/services';
 import { getReferrer } from 'jslib/helpers/url';
@@ -27,25 +26,22 @@ import { getRootUrl } from 'web/libs/paths';
 import JoinForm from './JoinForm';
 import Logo from '../Icons/Logo';
 import Flash from '../Common/Flash';
-import { FormState, updateAuthEmail } from '../../store/form';
-import { AppState } from '../../store';
+import { updateAuthEmail } from '../../store/form';
 import { getCurrentUser } from '../../store/auth';
 import authStyles from '../Common/Auth.scss';
+import { useSelector, useDispatch } from '../../store';
 
-interface Props extends RouteComponentProps<any> {
-  doGetCurrentUser: () => Promise<any>;
-  doUpdateAuthEmail: (string) => null;
-  formData: FormState;
-}
+interface Props extends RouteComponentProps<any> {}
 
-const Join: React.SFC<Props> = ({
-  doGetCurrentUser,
-  formData,
-  doUpdateAuthEmail,
-  location
-}) => {
+const Join: React.SFC<Props> = ({ location }) => {
   const [errMsg, setErrMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { formData } = useSelector(state => {
+    return {
+      formData: state.form
+    };
+  });
+  const dispatch = useDispatch();
 
   const referrer = getReferrer(location);
 
@@ -70,8 +66,8 @@ const Join: React.SFC<Props> = ({
       await services.users.register({ email, password });
 
       // guestOnly HOC will redirect the user accordingly after the current user is fetched
-      await doGetCurrentUser();
-      doUpdateAuthEmail('');
+      await dispatch(getCurrentUser());
+      dispatch(updateAuthEmail(''));
     } catch (err) {
       console.log(err);
       setErrMsg(err.message);
@@ -108,7 +104,6 @@ const Join: React.SFC<Props> = ({
               onJoin={handleJoin}
               submitting={submitting}
               email={formData.auth.email}
-              onUpdateEmail={doUpdateAuthEmail}
             />
           </div>
 
@@ -124,18 +119,4 @@ const Join: React.SFC<Props> = ({
   );
 };
 
-function mapStateToProps(state: AppState) {
-  return {
-    formData: state.form
-  };
-}
-
-const mapDispatchToProps = {
-  doGetCurrentUser: getCurrentUser,
-  doUpdateAuthEmail: updateAuthEmail
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Join);
+export default Join;

@@ -17,13 +17,13 @@
  */
 
 import React from 'react';
-import { connect } from 'react-redux';
 import { Redirect, RouteComponentProps } from 'react-router-dom';
 import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { getReferrer } from 'jslib//helpers/url';
-import { AppState, RemoteData } from '../store';
+import { RemoteData } from '../store';
 import { UserData } from '../store/auth';
+import { useSelector } from '../store';
 
 function renderFallback(referrer?: string) {
   let destination;
@@ -44,7 +44,13 @@ export default function(Component: React.ComponentType): React.ComponentType {
   }
 
   const HOC: React.SFC<Props> = props => {
-    const { userData, location } = props;
+    const { location } = props;
+
+    const { userData } = useSelector(state => {
+      return {
+        userData: state.auth.user
+      };
+    });
 
     const loggedIn = userData.isFetched && Boolean(userData.data.uuid);
 
@@ -59,11 +65,5 @@ export default function(Component: React.ComponentType): React.ComponentType {
   // Copy over static methods
   hoistNonReactStatics(HOC, Component);
 
-  function mapStateToProps(state: AppState) {
-    return {
-      userData: state.auth.user
-    };
-  }
-
-  return connect(mapStateToProps)(HOC);
+  return HOC;
 }

@@ -19,7 +19,7 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = ({ production = false } = {}) => {
-  const createScssLoaders = (sourceMap = true, modules = false) => {
+  const createScssLoaders = (sourceMap = true, useModules = false) => {
     let localIdentName;
     if (production) {
       localIdentName = '[local]_[hash:base64:5]';
@@ -27,11 +27,19 @@ module.exports = ({ production = false } = {}) => {
       localIdentName = '[name]__[local]___[hash:base64:5]';
     }
 
+    let modules;
+    if (useModules) {
+      modules = {
+        localIdentName
+      };
+    } else {
+      modules = false;
+    }
+
     return [
       {
         loader: 'css-loader',
         options: {
-          localIdentName,
           sourceMap,
           modules,
           importLoaders: 2
