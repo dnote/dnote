@@ -11,7 +11,7 @@
     "test:watch": "karma start ./karma.conf.js --watch"
   },
   "author": "Monomax Software Pty Ltd",
-  "license": "GPL-3.0-or-later",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@types/history": "^4.7.3",
     "history": "^4.10.1",
