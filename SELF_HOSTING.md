@@ -2,8 +2,6 @@
 
 This guide documents the steps for installing the Dnote server on your own machine.
 
-**Please note that self hosted version of Dnote server is currently in beta.**
-
 ## Installation
 
 1. Install Postgres 10+.
