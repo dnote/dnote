@@ -1,0 +1,8 @@
+@import '../../App/font';
+@import '../../App/theme';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+.wrapper {
+  min-height: rem(500px);
+}

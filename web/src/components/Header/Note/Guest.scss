@@ -1,0 +1,56 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/responsive';
+@import '../../App/theme';
+@import '../../App/rem';
+@import '../../App/font';
+@import '../../App/variables';
+
+.wrapper {
+  background: $light-gray;
+  padding: rem(12px) rem(20px);
+  height: $header-height;
+  z-index: 2;
+  position: relative;
+  display: flex;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.brand-name {
+  @include font-size('regular');
+  color: #909090;
+  letter-spacing: 1px;
+  margin-left: rem(12px);
+  vertical-align: middle;
+}

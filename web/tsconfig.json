@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "outDir": "./public/",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es6",
+        "jsx": "react",
+        "esModuleInterop": true,
+        "allowJs": true,
+        "baseUrl": ".",
+        "paths": {
+            "jslib/*": [
+                "../jslib/src/*"
+            ],
+            "web/*": [
+                "./src/*"
+            ]
+         }
+    },
+     "exclude": [
+        "node_modules",
+        "compiled",
+        "jslib/node_modules",
+        "jslib/dist",
+        "browser"
+      ]
+}

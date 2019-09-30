@@ -21,13 +21,13 @@ import Helmet from 'react-helmet';
 import { Link, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 
+import { getReferrer } from 'jslib/helpers/url';
 import OauthLoginButton from './OauthLoginButton';
 import LoginForm from './LoginForm';
 import LegacyFooter from '../Common/LegacyFooter';
 
-import { getReferrer } from '../../libs/url';
 import Logo from '../Icons/Logo';
-import { legacySignin } from '../../services/users';
+import { legacySignin } from 'jslib/services/users';
 import { receiveUser } from '../../actions/auth';
 import { updateAuthEmail } from '../../actions/form';
 

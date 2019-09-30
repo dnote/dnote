@@ -4,8 +4,9 @@
     "node": true,
     "mocha": true
   },
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "rules": {
+    "camelcase": 0,
     "strict": 0,
     "react/no-multi-comp": 0,
     "import/default": 0,
@@ -24,6 +25,7 @@
     "react/jsx-filename-extension": 0,
     "react/prefer-stateless-function": 0,
     "jsx-a11y/anchor-is-valid": 0,
+    "jsx-a11y/tabindex-no-positive": 0,
     "no-mixed-operators": 0,
     "no-plusplus": 0,
     "no-underscore-dangle": 0,
@@ -34,10 +36,13 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/jsx-wrap-multilines": ["error", {"declaration": false, "assignment": false}],
-    "react/jsx-one-expression-per-line": 0
+    "react/jsx-one-expression-per-line": 0,
+    "@typescript-eslint/no-unused-vars": 1,
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*_test.ts"]}],
+    "lines-between-class-members": 0
   },
   "plugins": [
-    "react", "react-hooks", "import", "prettier"
+    "react", "react-hooks", "import", "prettier", "@typescript-eslint"
   ],
   "settings": {
     "import/parser": "babel-eslint",
@@ -54,6 +59,8 @@
     "__BASE_URL__": true,
     "__BASE_NAME__": true,
     "__STRIPE_PUBLIC_KEY__": true,
+    "__ROOT_URL__": true,
+    "__CDN_URL__": true,
     "socket": true,
     "webpackIsomorphicTools": true,
     "StripeCheckout": true

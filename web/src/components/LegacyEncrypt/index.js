@@ -21,19 +21,17 @@ import Helmet from 'react-helmet';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 
-import Logo from '../Icons/Logo';
-
-import { receiveUser, legacyGetCurrentUser } from '../../actions/auth';
-import { legacyMigrate } from '../../services/users';
-
+import { legacyMigrate } from 'jslib/services/users';
+import { b64ToBuf, utf8ToBuf, bufToB64 } from 'web/libs/encoding';
+import * as booksService from 'jslib/services/books';
+import * as notesService from 'jslib/services/notes';
+import { legacyFetchNotes } from 'jslib/services/notes';
 import { updateAuthEmail } from '../../actions/form';
+import { receiveUser, legacyGetCurrentUser } from '../../actions/auth';
+import Logo from '../Icons/Logo';
 import { updateMessage } from '../../actions/ui';
 import LegacyFooter from '../Common/LegacyFooter';
-import * as booksService from '../../services/books';
-import * as notesService from '../../services/notes';
-import { legacyFetchNotes } from '../../services/notes';
 import { aes256GcmEncrypt } from '../../crypto';
-import { b64ToBuf, utf8ToBuf, bufToB64 } from '../../libs/encoding';
 
 class LegacyEncrypt extends React.Component {
   constructor(props) {

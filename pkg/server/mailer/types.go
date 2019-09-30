@@ -18,11 +18,40 @@
 
 package mailer
 
+import (
+	"time"
+
+	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/justincampbell/timeago"
+)
+
+// DigestNoteInfo contains note information for digest emails
+type DigestNoteInfo struct {
+	UUID      string
+	Content   string
+	BookLabel string
+	TimeAgo   string
+	Stage     int
+}
+
 // DigestTmplData is a template data for digest emails
 type DigestTmplData struct {
 	Subject           string
-	DigestUUID        string
+	NoteInfo          []DigestNoteInfo
 	ActiveBookCount   int
 	ActiveNoteCount   int
 	EmailSessionToken string
+}
+
+// NewNoteInfo returns a new NoteInfo
+func NewNoteInfo(note database.Note, stage int) DigestNoteInfo {
+	tm := time.Unix(0, int64(note.AddedOn))
+
+	return DigestNoteInfo{
+		UUID:      note.UUID,
+		Content:   note.Body,
+		BookLabel: note.Book.Label,
+		TimeAgo:   timeago.FromTime(tm),
+		Stage:     stage,
+	}
 }

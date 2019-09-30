@@ -120,28 +120,28 @@ func TestRun_nonfresh(t *testing.T) {
 				"CREATE TABLE migrate_run_test ( name string )")
 
 			sequence := []migration{
-				migration{
+				{
 					name: "v1",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v2",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v3",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v4",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v4 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v4")
@@ -200,21 +200,21 @@ func TestRun_fresh(t *testing.T) {
 				"CREATE TABLE migrate_run_test ( name string )")
 
 			sequence := []migration{
-				migration{
+				{
 					name: "v1",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v2",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v3",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
@@ -276,21 +276,21 @@ func TestRun_up_to_date(t *testing.T) {
 			database.MustExec(t, "inserting a schema", db, "INSERT INTO system (key, value) VALUES (?, ?)", tc.schemaKey, 3)
 
 			sequence := []migration{
-				migration{
+				{
 					name: "v1",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v1 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v1")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v2",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v2 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v2")
 						return nil
 					},
 				},
-				migration{
+				{
 					name: "v3",
 					run: func(ctx context.DnoteCtx, db *database.DB) error {
 						database.MustExec(t, "marking v3 completed", db, "INSERT INTO migrate_run_test (name) VALUES (?)", "v3")
@@ -1112,7 +1112,7 @@ func TestRemoteMigration1(t *testing.T) {
 	newCSSBookUUID := "new-css-book-uuid"
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.String() == "/v1/books" {
+		if r.URL.String() == "/v3/books" {
 			res := []struct {
 				UUID  string `json:"uuid"`
 				Label string `json:"label"`

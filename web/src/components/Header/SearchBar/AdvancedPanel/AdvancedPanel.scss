@@ -1,0 +1,102 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../../App/responsive';
+@import '../../../App/theme';
+@import '../../../App/rem';
+@import '../../../App/font';
+@import '../../../App/variables';
+
+.wrapper {
+  background-color: $white;
+  border: 1px solid $border-color;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+  border-radius: 0 0 4px 4px;
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+
+.section {
+  & ~ & {
+    margin-top: rem(12px);
+  }
+}
+
+.label {
+  width: 100%;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.input {
+  margin-top: rem(4px);
+}
+
+.submit {
+  margin-top: rem(20px);
+}
+
+.form {
+  padding: rem(12px);
+}
+
+// book search
+.book-search--wrapper {
+  position: relative;
+}
+
+.book-suggestion-wrapper {
+  width: 100%;
+  z-index: 1;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+  border: 1px solid $border-color;
+  border-radius: rem(4px);
+  display: none;
+
+  @include breakpoint(md) {
+    width: 50%;
+  }
+
+  &.book-suggestions-wrapper-shown {
+    display: block;
+  }
+}
+
+.book-suggestion {
+  background: white;
+  overflow-y: auto;
+  max-height: rem(220px);
+
+  @include landscape() {
+    max-height: rem(140px);
+  }
+}
+
+.book-item {
+}
+
+.book-item-button {
+  padding: rem(8px) rem(12px);
+  width: 100%;
+
+  &.book-item-focused,
+  &:hover {
+    background: $light-blue;
+  }
+}

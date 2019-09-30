@@ -1,0 +1,109 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
+
+.frame {
+  // margin: 0 rem(12px);
+  @include breakpoint(sm) {
+    // margin: 0 rem(20px);
+  }
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: rem(12px) rem(16px);
+  border-bottom: 1px solid $border-color;
+}
+
+.book-icon {
+  vertical-align: middle;
+}
+
+.book-label {
+  @include font-size('medium');
+  font-weight: 600;
+  display: inline-block;
+  margin-left: rem(12px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  max-width: rem(200px);
+  @include breakpoint(sm) {
+    max-width: rem(200px);
+  }
+  @include breakpoint(md) {
+    max-width: rem(420px);
+  }
+  @include breakpoint(lg) {
+    max-width: rem(600px);
+  }
+
+  .book-label-link {
+    color: inherit;
+  }
+}
+
+.content {
+  word-wrap: break-word;
+  padding: rem(12px) rem(16px);
+  word-break: break-all;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  @include font-size('small');
+  padding: rem(12px) rem(16px);
+}
+
+$footer-text-color: #8c8c8c;
+
+.ts {
+  color: $footer-text-color;
+}
+
+.actions {
+  display: flex;
+}
+
+.action {
+  color: $footer-text-color;
+
+  &:hover {
+    color: $link-hover;
+    text-decoration: underline;
+  }
+
+  & ~ & {
+    margin-left: rem(12px);
+  }
+}
+
+.match {
+  display: inline-block;
+  background: #f7f77d;
+}

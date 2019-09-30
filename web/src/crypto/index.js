@@ -20,7 +20,6 @@
 
 import { utf8ToBuf, bufToB64, b64ToBuf } from '../libs/encoding';
 import { PBKDF2, HKDF, SHA256, AES_GCM, AES_GCM_NONCE_SIZE } from './consts';
-import { demoCipherKey } from '../libs/demo';
 
 function mergeBuffers(buf1, buf2) {
   const buf = new ArrayBuffer(buf1.byteLength + buf2.byteLength);
@@ -175,7 +174,7 @@ export async function loginHelper({ email, password, iteration }) {
 // getCipherKey returns cipher key in ArrayBuffer
 export function getCipherKey(demo = false) {
   if (demo) {
-    return b64ToBuf(demoCipherKey);
+    return b64ToBuf('demo');
   }
 
   const cipherKey = localStorage.getItem('cipherKey');

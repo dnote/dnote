@@ -33,16 +33,22 @@ module.exports = config => {
     },
     files: [
       'node_modules/regenerator-runtime/runtime.js',
-      './src/**/*_test.js'
+      './src/**/*_test.ts'
     ],
     preprocessors: {
-      './src/**/*.js': ['webpack']
+      './src/**/*.ts': ['webpack']
     },
     webpack: {
       mode: 'none',
+      resolve: {
+        extensions: ['.js', '.ts']
+      },
       module: {
-        rules: [webpackConf({ produciton: false, browser: true })]
+        rules: [...webpackConf({ produciton: false, browser: true })]
       }
+    },
+    mochaReporter: {
+      showDiff: true
     }
   });
 };

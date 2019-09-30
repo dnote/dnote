@@ -33,7 +33,6 @@ type DnoteCtx struct {
 	DB               *database.DB
 	SessionKey       string
 	SessionKeyExpiry int64
-	CipherKey        []byte
 	Editor           string
 	Clock            clock.Clock
 }
@@ -48,14 +47,6 @@ func Redact(ctx DnoteCtx) DnoteCtx {
 		sessionKey = "0"
 	}
 	ctx.SessionKey = sessionKey
-
-	var cipherKey []byte
-	if ctx.CipherKey != nil {
-		cipherKey = []byte{1}
-	} else {
-		cipherKey = []byte{0}
-	}
-	ctx.CipherKey = cipherKey
 
 	return ctx
 }

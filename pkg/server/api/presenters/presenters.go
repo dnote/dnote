@@ -24,9 +24,9 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 )
 
-// formatTs rounds up the given timestamp to the microsecond
+// FormatTS rounds up the given timestamp to the microsecond
 // so as to make the times in the responses consistent
-func formatTs(ts time.Time) time.Time {
+func FormatTS(ts time.Time) time.Time {
 	return ts.UTC().Round(time.Microsecond)
 }
 
@@ -44,8 +44,8 @@ func PresentBook(book database.Book) Book {
 	return Book{
 		UUID:      book.UUID,
 		USN:       book.USN,
-		CreatedAt: formatTs(book.CreatedAt),
-		UpdatedAt: formatTs(book.UpdatedAt),
+		CreatedAt: FormatTS(book.CreatedAt),
+		UpdatedAt: FormatTS(book.UpdatedAt),
 		Label:     book.Label,
 	}
 }
@@ -84,14 +84,15 @@ type NoteBook struct {
 // NoteUser is a nested book for PresentNotesResult
 type NoteUser struct {
 	Name string `json:"name"`
+	UUID string `json:"uuid"`
 }
 
 // PresentNote presents note
 func PresentNote(note database.Note) Note {
 	ret := Note{
 		UUID:      note.UUID,
-		CreatedAt: formatTs(note.CreatedAt),
-		UpdatedAt: formatTs(note.UpdatedAt),
+		CreatedAt: FormatTS(note.CreatedAt),
+		UpdatedAt: FormatTS(note.UpdatedAt),
 		Body:      note.Body,
 		AddedOn:   note.AddedOn,
 		Public:    note.Public,
@@ -102,6 +103,7 @@ func PresentNote(note database.Note) Note {
 		},
 		User: NoteUser{
 			Name: note.User.Name,
+			UUID: note.User.UUID,
 		},
 	}
 
@@ -150,6 +152,24 @@ func PresentDigest(digest database.Digest) Digest {
 	ret := Digest{
 		UUID:  digest.UUID,
 		Notes: PresentNotes(digest.Notes),
+	}
+
+	return ret
+}
+
+// EmailPreference is a presented email digest
+type EmailPreference struct {
+	DigestWeekly bool      `json:"digest_weekly"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// PresentEmailPreference presents a digest
+func PresentEmailPreference(p database.EmailPreference) EmailPreference {
+	ret := EmailPreference{
+		DigestWeekly: p.DigestWeekly,
+		CreatedAt:    FormatTS(p.CreatedAt),
+		UpdatedAt:    FormatTS(p.UpdatedAt),
 	}
 
 	return ret

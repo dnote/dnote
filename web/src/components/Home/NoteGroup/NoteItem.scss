@@ -1,0 +1,89 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/font';
+@import '../../App/responsive';
+@import '../../App/rem';
+@import '../../App/theme';
+
+.wrapper {
+  background: white;
+  position: relative;
+
+  border-bottom: 1px solid $border-color;
+}
+
+.link {
+  color: $black;
+  display: block;
+  padding: rem(12px) rem(16px);
+  border: 2px solid transparent;
+
+  &:hover {
+    text-decoration: none;
+    background: $light-blue;
+    color: inherit;
+  }
+}
+
+.meta {
+  line-height: rem(16px);
+}
+
+.ts {
+  color: $gray;
+  @include font-size('small');
+}
+
+.body {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.content {
+  margin-top: rem(12px);
+  line-height: 1.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: $gray;
+}
+
+.book-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  @include font-size('small');
+
+  width: 212px;
+
+  @include breakpoint('md') {
+    width: 320px;
+  }
+}
+
+.match {
+  display: inline-block;
+  background: #f7f77d;
+  padding: rem(4px) rem(4px);
+}

@@ -18,21 +18,17 @@
 
 const PATHS = require('../paths');
 
-const createPlugins = production => {
+const createPlugins = () => {
   const ret = [
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-transform-react-constant-elements',
     'react-hot-loader/babel'
   ];
 
-  if (production) {
-    ret.push('transform-react-remove-prop-types');
-  }
-
   return ret;
 };
 
-module.exports = ({ production = false } = {}) => {
+module.exports = () => {
   const presets = [
     [
       '@babel/preset-env',
@@ -44,15 +40,32 @@ module.exports = ({ production = false } = {}) => {
     ],
     '@babel/preset-react'
   ];
-  const plugins = createPlugins(production);
+  const plugins = createPlugins();
 
-  return {
-    test: /\.js$|\.jsx$/,
-    loader: 'babel-loader',
-    options: {
-      presets,
-      plugins
+  return [
+    {
+      test: /\.js$|\.jsx$/,
+      loader: 'babel-loader',
+      options: {
+        presets,
+        plugins
+      },
+      exclude: PATHS.modules
     },
-    exclude: PATHS.modules
-  };
+    {
+      test: /\.ts(x?)$/,
+      exclude: /node_modules|_test\.ts(x)$/,
+      use: [
+        {
+          loader: 'ts-loader'
+        }
+      ]
+    },
+    // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+    {
+      enforce: 'pre',
+      test: /\.js$/,
+      loader: 'source-map-loader'
+    }
+  ];
 };

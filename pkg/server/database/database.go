@@ -101,6 +101,8 @@ var (
 )
 
 const (
+	// TokenTypeResetPassword is a type of a token for reseting password
+	TokenTypeResetPassword = "reset_password"
 	// TokenTypeEmailVerification is a type of a token for verifying email
 	TokenTypeEmailVerification = "email_verification"
 	// TokenTypeEmailPreference is a type of a token for updating email preference

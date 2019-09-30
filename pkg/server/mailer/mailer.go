@@ -43,6 +43,8 @@ type Email struct {
 var (
 	// T is a map of templates
 	T = map[string]*template.Template{}
+	// EmailTypeResetPassword represents a reset password email
+	EmailTypeResetPassword = "reset_password"
 	// EmailTypeWeeklyDigest represents a weekly digest email
 	EmailTypeWeeklyDigest = "weekly_digest"
 	// EmailTypeEmailVerification represents an email verification email
@@ -97,15 +99,20 @@ func InitTemplates(srcDir *string) {
 
 	weeklyDigestTmpl, err := initTemplate(box, EmailTypeWeeklyDigest)
 	if err != nil {
-		panic(errors.Wrap(err, "initializing template"))
+		panic(errors.Wrap(err, "initializing weekly digest template"))
 	}
 	emailVerificationTmpl, err := initTemplate(box, EmailTypeEmailVerification)
 	if err != nil {
-		panic(errors.Wrap(err, "initializing template"))
+		panic(errors.Wrap(err, "initializing email verification template"))
+	}
+	passwowrdResetTmpl, err := initTemplate(box, EmailTypeResetPassword)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
 	}
 
 	T[EmailTypeWeeklyDigest] = weeklyDigestTmpl
 	T[EmailTypeEmailVerification] = emailVerificationTmpl
+	T[EmailTypeResetPassword] = passwowrdResetTmpl
 }
 
 // NewEmail returns a pointer to an Email struct with the given data

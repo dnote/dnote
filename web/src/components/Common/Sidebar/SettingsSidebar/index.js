@@ -21,12 +21,12 @@ import classnames from 'classnames';
 import { withRouter, Link, NavLink } from 'react-router-dom';
 import { connect } from 'react-redux';
 
-import { getHomePath, getSettingsPath } from '../../../../libs/paths';
+import { getHomePath, getSettingsPath } from 'web/libs/paths';
 import {
   getWindowWidth,
   noteSidebarThreshold,
   sidebarOverlayThreshold
-} from '../../../../libs/ui';
+} from 'jslib/helpers/ui';
 import { closeSidebar, closeNoteSidebar } from '../../../../actions/ui';
 import ArrowIcon from '../../../Icons/Arrow';
 import CloseIcon from '../../../Icons/Close';

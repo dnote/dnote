@@ -1,0 +1,76 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/responsive';
+@import '../../App/font';
+@import '../../App/theme';
+@import '../../App/rem';
+
+.note-wrapper {
+  background: white;
+  height: rem(96px);
+  position: relative;
+  border-bottom: 1px solid #cecece;
+
+  .book {
+    position: absolute;
+    top: 19px;
+    left: 20px;
+    height: 14px;
+    width: 120px;
+  }
+
+  .ts {
+    position: absolute;
+    top: 36px;
+    left: 20px;
+    height: 14px;
+    width: 100px;
+  }
+
+  .content {
+    position: absolute;
+    top: 58px;
+    left: 20px;
+    height: 15px;
+    width: 50%;
+
+    @include breakpoint(lg) {
+      width: 200px;
+      right: auto;
+    }
+  }
+}
+
+.header-wrapper {
+  background: $light;
+  height: rem(46px);
+  position: relative;
+  border-bottom: 1px solid $border-color;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  .heading {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 20px;
+    height: 15px;
+    width: 100px;
+  }
+}

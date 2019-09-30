@@ -8,10 +8,11 @@ compiledPath="$basePath/web/compiled"
 
 baseUrl=""
 assetBaseUrl=""
+rootUrl=""
 
-STANDALONE=true \
-BASE_URL=$baseUrl \
+BUNDLE_BASE_URL=$baseUrl \
 ASSET_BASE_URL=$assetBaseUrl \
+ROOT_URL=$rootUrl \
 PUBLIC_PATH=$publicPath \
 COMPILED_PATH=$compiledPath \
 "$basePath"/web/scripts/build.sh

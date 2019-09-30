@@ -1,17 +1,17 @@
 ![Dnote](assets/logo.png)
 =========================
 
-Dnote is a simple notebook for developers.
+Dnote is a simple personal knowledge base.
 
 [![Build Status](https://travis-ci.org/dnote/dnote.svg?branch=master)](https://travis-ci.org/dnote/dnote)
 
 ## What is Dnote?
 
-Dnote is a lightweight notebook for writing technical notes and neatly organizing them into books. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
+Dnote is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
 
-It also offers **end-to-end encrypted** backup with AES-256, a seamless **multi device sync**, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
+It also offers a seamless **multi device sync**, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
 
-For more details, see the [download page](https://dnote.io/download) and [features](https://dnote.io/pricing).
+For more details, see the [download page](https://www.getdnote.com/download) and [features](https://www.getdnote.com/pricing).
 
 ![A demo of Dnote CLI](assets/cli.gif)
 
@@ -56,10 +56,10 @@ Dnote is great for building a personal knowledge base because:
 
 You can read more in the following user stories:
 
-- [How I Built a Personal Knowledge Base for Myself](https://dnote.io/blog/how-i-built-personal-knowledge-base-for-myself/)
-- [I Wrote Down Everything I Learned While Programming for a Month](https://dnote.io/blog/writing-everything-i-learn-coding-for-a-month/)
+- [How I Built a Personal Knowledge Base for Myself](https://www.getdnote.com/blog/how-i-built-personal-knowledge-base-for-myself/)
+- [I Wrote Down Everything I Learned While Programming for a Month](https://www.getdnote.com/blog/writing-everything-i-learn-coding-for-a-month/)
 
 ## See Also
 
-- [Homepage](https://dnote.io)
-- [Forum](https://forum.dnote.io)
+- [Homepage](https://www.getdnote.com)
+- [Forum](https://forum.getdnote.com)

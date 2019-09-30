@@ -27,6 +27,6 @@ const CURRENT_WORKING_DIR = process.cwd();
 
 module.exports = {
   output: process.env.OUTPUT_PATH,
-  public: '/dist/', // use absolute path for css-loader?
+  public: '/', // use absolute path for css-loader?
   modules: path.resolve(CURRENT_WORKING_DIR, 'node_modules')
 };

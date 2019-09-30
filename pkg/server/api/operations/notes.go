@@ -61,7 +61,7 @@ func CreateNote(user database.User, clock clock.Clock, bookUUID, content string,
 		USN:       nextUSN,
 		Body:      content,
 		Public:    public,
-		Encrypted: true,
+		Encrypted: false,
 	}
 	if err := tx.Create(&note).Error; err != nil {
 		tx.Rollback()
@@ -91,7 +91,7 @@ func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note databas
 	note.EditedOn = clock.Now().UnixNano()
 	note.Deleted = false
 	// TODO: remove after all users are migrated
-	note.Encrypted = true
+	note.Encrypted = false
 
 	if err := tx.Save(&note).Error; err != nil {
 		return note, errors.Wrap(err, "editing note")

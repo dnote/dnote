@@ -1,0 +1,120 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../App/font';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/responsive';
+
+.wrapper {
+  position: relative;
+  display: none;
+  margin-left: rem(20px);
+  align-self: stretch;
+
+  @include breakpoint(lg) {
+    display: flex;
+  }
+}
+
+.trigger {
+  align-self: stretch;
+}
+
+.account-circle {
+  border-radius: 100%;
+  //  background: white;
+  background: $third;
+  width: rem(8px);
+  height: rem(8px);
+  display: inline-block;
+  //border: 1px solid gray;
+}
+
+.account-label {
+  margin-left: rem(8px);
+  font-weight: 600;
+}
+
+.content {
+  width: rem(200px);
+
+  @include breakpoint(md) {
+    width: rem(240px);
+  }
+}
+
+.header {
+  padding: rem(8px) rem(12px);
+  display: block;
+  margin-bottom: 0;
+  font-size: 1.4rem;
+  color: #868e96;
+  white-space: nowrap;
+  @include font-size('small');
+
+  svg {
+    fill: #868e96;
+  }
+}
+
+.divider {
+  height: 0;
+  overflow: hidden;
+  border-top: 1px solid #e9ecef;
+}
+
+.link {
+  @include font-size('small');
+  white-space: pre;
+  padding: rem(8px) rem(14px);
+  width: 100%;
+  display: block;
+  color: black;
+
+  &:hover {
+    background: $light-gray;
+    text-decoration: none;
+    color: #0056b3;
+  }
+
+  &.disabled {
+    color: #d4d4d4;
+    cursor: not-allowed;
+  }
+
+  &:not(.disabled):focus {
+    background: $light-gray;
+    color: #0056b3;
+    outline: 1px dotted gray;
+  }
+}
+
+.email {
+  font-weight: 600;
+  white-space: normal;
+}
+
+.session-notice-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.session-notice {
+  margin-left: rem(4px);
+}

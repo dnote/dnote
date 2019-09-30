@@ -1,0 +1,74 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/responsive';
+@import '../../App/font';
+@import '../../App/theme';
+@import '../../App/rem';
+
+.wrapper {
+  position: relative;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+
+  &:not(.first) {
+    margin-top: rem(20px);
+
+    @include breakpoint(md) {
+      margin-top: rem(24px);
+    }
+  }
+}
+
+.mask {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 1;
+  opacity: 0.8;
+}
+
+.header {
+  @include font-size('small');
+  display: flex;
+  justify-content: space-between;
+  color: white;
+  padding: rem(12px) rem(16px);
+  background: $light;
+  color: $black;
+  border-bottom: 1px solid $border-color;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.header-date {
+  font-weight: 600;
+  @include font-size('regular');
+}
+.header-count {
+  font-weight: 300;
+}
+
+.list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}

@@ -32,7 +32,6 @@ html {
 }
 
 html body {
-  font-family: 'Lato';
   margin: 0;
   font-size: 1.6rem;
 }
@@ -133,4 +132,11 @@ img {
   width: 50px;
   height: 50px;
   overflow: scroll;
+}
+
+.input {
+  border-radius: rem(4px);
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }

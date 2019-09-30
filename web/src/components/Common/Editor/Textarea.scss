@@ -1,0 +1,43 @@
+@import '../../App/font';
+@import '../../App/theme';
+@import '../../App/responsive';
+@import '../../App/rem';
+
+$border-radius: rem(4px);
+
+.wrapper {
+  flex-grow: 1;
+}
+
+textarea.textarea {
+  width: 100%;
+  padding: rem(12px) rem(12px) rem(24px) rem(12px);
+  background: #fafbfd;
+  min-height: 100%;
+
+  @include breakpoint(lg) {
+    height: auto;
+    min-height: rem(500px);
+  }
+
+  @include landscape {
+    height: auto;
+    min-height: rem(500px);
+  }
+}
+
+.tip {
+  position: absolute;
+  bottom: 20px;
+  right: 32px;
+  color: $gray;
+  font-style: italic;
+  @include font-size('small');
+  display: none;
+
+  @include breakpoint(md) {
+    &.shown {
+      display: block;
+    }
+  }
+}

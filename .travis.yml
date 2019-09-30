@@ -27,3 +27,4 @@ script:
   - make test-cli
   - make test-api
   - make test-web
+  - make test-jslib

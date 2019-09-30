@@ -23,38 +23,53 @@
 const fs = require('fs');
 const path = require('path');
 
-const baseURL = process.env.BASE_URL;
+// bundleBaseURL is the base URL from which the application javascript bundle
+// In production, it should be the same as assetBaseURL. It is used for development
+// environment, in which it is configured to be the webpack development server.
+const bundleBaseURL = process.env.BUNDLE_BASE_URL;
+// assetBaseURL is the base URL from which all assets excluding the application
+// bundle is served.
 const assetBaseURL = process.env.ASSET_BASE_URL;
 const publicPath = process.env.PUBLIC_PATH;
 const compiledPath = process.env.COMPILED_PATH;
-if (!publicPath) {
+
+if (bundleBaseURL === undefined) {
+  throw new Error('No BUNDLE_BASE_URL environment variable found');
+}
+if (assetBaseURL === undefined) {
+  throw new Error('No ASSET_BASE_URL environment variable found');
+}
+if (publicPath === undefined) {
   throw new Error('No PUBLIC_PATH environment variable found');
 }
-if (!compiledPath) {
+if (compiledPath === undefined) {
   throw new Error('No COMPILED_PATH environment variable found');
 }
 
+const isProduction = process.env.NODE_ENV === 'PRODUCTION';
 const indexHtmlPath = `${publicPath}/index.html`;
-
 const assetManifestPath = path.resolve(compiledPath, 'webpack-manifest.json');
-let manifest;
 
+let manifest;
 try {
   // eslint-disable-next-line import/no-dynamic-require,global-require
   manifest = require(assetManifestPath);
   // eslint-disable-next-line no-empty
-} catch (e) {}
-
-const isProduction = process.env.NODE_ENV === 'PRODUCTION';
+} catch (e) {
+  if (isProduction) {
+    throw new Error('asset manifest not found');
+  }
+}
 
 function getJSBundleTag() {
-  let jsBundleUrl;
+  let jsFilename;
   if (isProduction) {
-    jsBundleUrl = `${baseURL}${manifest['app.js']}`;
+    jsFilename = manifest['app.js'];
   } else {
-    jsBundleUrl = `${baseURL}/dist/app.js`;
+    jsFilename = '/app.js';
   }
 
+  const jsBundleUrl = `${bundleBaseURL}${jsFilename}`;
   return `<script src="${jsBundleUrl}"></script>`;
 }
 
@@ -71,7 +86,7 @@ fs.readFile(indexHtmlPath, 'utf8', (err, data) => {
   result = result.replace(/<!--ASSET_BASE_PLACEHOLDER-->/g, assetBaseURL);
 
   if (isProduction) {
-    const cssBundleUrl = `${baseURL}${manifest['app.css']}`;
+    const cssBundleUrl = `${assetBaseURL}${manifest['app.css']}`;
     const cssBundleTag = `<link rel="stylesheet" href="${cssBundleUrl}" />`;
 
     result = result.replace(/<!--CSS_BUNDLE_PLACEHOLDER-->/g, cssBundleTag);

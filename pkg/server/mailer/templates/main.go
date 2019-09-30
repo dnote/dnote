@@ -40,7 +40,7 @@ func weeklyDigestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, err := job.MakeDigest(user, "sung@dnote.io")
+	email, err := job.MakeDigest(user, "sung@getdnote.com")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -58,7 +58,7 @@ func emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 		"Verify your email",
 		"testToken",
 	}
-	email := mailer.NewEmail("noreply@dnote.io", []string{"sung@dnote.io"}, "Reset your password")
+	email := mailer.NewEmail("noreply@getdnote.com", []string{"sung@getdnote.com"}, "Reset your password")
 	err := email.ParseTemplate(mailer.EmailTypeEmailVerification, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
