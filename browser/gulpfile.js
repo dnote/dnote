@@ -62,7 +62,10 @@ gulp.task('images', () => {
     .pipe(gulp.dest(`dist/${target}/images`));
 });
 
-gulp.task('clean', del.bind(null, ['.tmp', `dist/${target}`]));
+gulp.task(
+  'clean',
+  del.bind(null, ['.tmp', `dist/${target}`, `package/${target}`])
+);
 
 gulp.task(
   'watch',
