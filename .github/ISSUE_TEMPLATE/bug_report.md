@@ -7,10 +7,15 @@ assignees: ''
 
 ---
 
-* project/version (e.g. CLI v0.8.0): 
+## Environment
+
+* project (cli, server, browser-extension): 
+* version: 
 * operating system: 
 
+
 ## Description
+
 
 ## Steps to reproduce
 
