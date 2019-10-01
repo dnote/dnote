@@ -22,6 +22,7 @@ import classnames from 'classnames';
 import Helmet from 'react-helmet';
 import { withRouter } from 'react-router-dom';
 
+import { focusTextarea } from 'web/libs/dom';
 import operations from 'web/libs/operations';
 import { getNotePath, notePathDef } from 'web/libs/paths';
 import { useCleanupEditor } from 'web/libs/hooks/editor';
@@ -47,7 +48,7 @@ function useInitFocus({ bookLabel, textareaRef, setTriggerFocus }) {
       const textareaEl = textareaRef.current;
 
       if (textareaEl) {
-        textareaEl.focus();
+        focusTextarea(textareaEl);
       }
     }
   }, [setTriggerFocus, bookLabel, textareaRef]);
