@@ -163,9 +163,7 @@ const Composer: React.FunctionComponent<Props> = () => {
     return () => {
       window.removeEventListener('keydown', handleSubmitShortcut);
     };
-  }, []);
-
-  useEffect(() => {}, []);
+  }, [composer]);
 
   let submitBtnText: string;
   if (submitting) {
