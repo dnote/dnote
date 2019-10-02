@@ -10,9 +10,9 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documentes the history of the server project.
 
-## [Unreleased]
+### [Unreleased]
 
-### Changed
+#### Changed
 
 - Treat a linebreak as a new line in the preview (#261)
 - Allow to have multiple editor states for adding and editing notes (#260)
@@ -59,6 +59,12 @@ The following log documentes the history of the CLI project
 ## Browser Extensions
 
 The following log documentes the history of the browser extensions project
+
+### [Unreleased]
+
+#### Fixed
+
+- Fix failing requests (#260)
 
 ### 1.1.0 - 2019-09-30
 
