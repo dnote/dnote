@@ -96,7 +96,6 @@ const BookSelector: React.SFC<Props> = ({
       contentClassName={classnames(styles.content)}
       wrapperClassName={classnames(styles['popover-wrapper'], wrapperClassName)}
       renderTrigger={triggerProps => {
-        console.log('okay');
         return (
           <button
             id="T-book-selector-trigger"
