@@ -12,7 +12,7 @@
   },
   "author": "Monomax Software Pty Ltd",
   "license": "GPL-3.0-or-later",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "dependencies": {
     "classnames": "^2.2.5",
     "lodash": "^4.17.15",
