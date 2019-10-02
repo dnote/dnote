@@ -22,6 +22,7 @@ import hljs from 'highlight.js';
 const md = markdown({
   html: true,
   linkify: true,
+  breaks: true,
   highlight: (str, lang) => {
     if (lang && hljs.getLanguage(lang)) {
       return hljs.highlight(lang, str).value;
