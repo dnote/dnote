@@ -25,13 +25,30 @@ import { focusTextarea } from 'web/libs/dom';
 import { getHomePath } from 'web/libs/paths';
 import BooksSelector from './BookSelector';
 import { useDispatch, useSelector } from '../../../store';
-import { flushContent, markDirty } from '../../../store/editor';
+import {
+  flushContent,
+  resetEditor,
+  EditorSession
+} from '../../../store/editor';
 import Textarea from './Textarea';
 import Preview from './Preview';
 import Button from '../Button';
 import styles from './Editor.scss';
 
+function getContentCacheKey(editorSessionKey: string) {
+  return `editor.${editorSessionKey}.content`;
+}
+
+function useEditorContent(
+  editor: EditorSession,
+  cacheKey: string
+): [string, React.Dispatch<any>] {
+  const cached = localStorage.getItem(cacheKey);
+  return useState(cached || editor.content);
+}
+
 interface Props {
+  editor: EditorSession;
   onSubmit: (param: { draftContent: string; draftBookUUID: string }) => void;
   isBusy: boolean;
   cancelPath?: Location<any>;
@@ -47,6 +64,7 @@ enum Mode {
 }
 
 const Editor: React.SFC<Props> = ({
+  editor,
   onSubmit,
   isBusy,
   disabled,
@@ -55,16 +73,16 @@ const Editor: React.SFC<Props> = ({
   bookSelectorTriggerRef,
   cancelPath = getHomePath()
 }) => {
-  const { editor, books } = useSelector(state => {
+  const { books } = useSelector(state => {
     return {
-      editor: state.editor,
       books: state.books
     };
   });
   const dispatch = useDispatch();
   const [bookSelectorOpen, setBookSelectorOpen] = useState(false);
 
-  const [content, setContent] = useState(editor.content);
+  const contentCacheKey = getContentCacheKey(editor.sessionKey);
+  const [content, setContent] = useEditorContent(editor, contentCacheKey);
   const [mode, setMode] = useState(Mode.write);
   const inputTimerRef = useRef(null);
 
@@ -78,10 +96,11 @@ const Editor: React.SFC<Props> = ({
 
       // eslint-disable-next-line no-param-reassign
       inputTimerRef.current = null;
-      dispatch(flushContent(content));
+      dispatch(flushContent(editor.sessionKey, content));
     }
 
     onSubmit({ draftContent: content, draftBookUUID: editor.bookUUID });
+    localStorage.removeItem(contentCacheKey);
   }
 
   if (disabled) {
@@ -100,13 +119,12 @@ const Editor: React.SFC<Props> = ({
       <div className={classnames(styles.row, styles['editor-header'])}>
         <div>
           <BooksSelector
+            editor={editor}
             isReady={books.isFetched}
             isOpen={bookSelectorOpen}
             setIsOpen={setBookSelectorOpen}
             triggerRef={bookSelectorTriggerRef}
             onAfterChange={() => {
-              dispatch(markDirty());
-
               if (textareaRef.current) {
                 focusTextarea(textareaRef.current);
               }
@@ -148,10 +166,14 @@ const Editor: React.SFC<Props> = ({
       <div className={styles['content-wrapper']}>
         {mode === Mode.write ? (
           <Textarea
+            sessionKey={editor.sessionKey}
             textareaRef={textareaRef}
             inputTimerRef={inputTimerRef}
             content={content}
-            onChange={setContent}
+            onChange={c => {
+              localStorage.setItem(contentCacheKey, c);
+              setContent(c);
+            }}
             onSubmit={handleSubmit}
           />
         ) : (
@@ -170,7 +192,20 @@ const Editor: React.SFC<Props> = ({
           {isNew ? 'Save' : 'Update'}
         </Button>
 
-        <Link to={cancelPath} className="button button-second button-normal">
+        <Link
+          to={cancelPath}
+          onClick={e => {
+            const ok = window.confirm('Are you sure?');
+            if (!ok) {
+              e.preventDefault();
+              return;
+            }
+
+            localStorage.removeItem(contentCacheKey);
+            dispatch(resetEditor(editor.sessionKey));
+          }}
+          className="button button-second button-normal"
+        >
           Cancel
         </Link>
       </div>

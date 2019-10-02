@@ -31,14 +31,3 @@ export function useFocusTextarea(textareaEl: HTMLTextAreaElement) {
     }
   }, [textareaEl]);
 }
-
-// useCleanupEditor is a hook that cleans up the editor state
-export function useCleanupEditor() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    return () => {
-      dispatch(resetEditor());
-    };
-  }, [dispatch]);
-}

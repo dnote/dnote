@@ -16,22 +16,32 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { removeKey } from 'jslib/helpers/obj';
+import { getEditorSessionkey } from 'web/libs/editor';
 import {
   EditorState,
+  EditorSession,
   EditorActionType,
   FLUSH_CONTENT,
   UPDATE_BOOK,
   RESET,
-  STAGE_NOTE,
-  MARK_DIRTY
+  CREATE_SESSION,
+  MARK_PERSISTED
 } from './type';
 
+function makeSession(key: string): EditorSession {
+  return {
+    sessionKey: key,
+    noteUUID: null,
+    bookUUID: null,
+    bookLabel: null,
+    content: ''
+  };
+}
+
 const initialState: EditorState = {
-  noteUUID: null,
-  bookUUID: null,
-  bookLabel: null,
-  content: '',
-  dirty: false
+  persisted: false,
+  sessions: {}
 };
 
 export default function(
@@ -39,38 +49,71 @@ export default function(
   action: EditorActionType
 ): EditorState {
   switch (action.type) {
-    case STAGE_NOTE: {
+    case CREATE_SESSION: {
+      const { data } = action;
+
+      const sessionKey = getEditorSessionkey(data.noteUUID);
+
       return {
         ...state,
-        noteUUID: action.data.noteUUID,
-        bookUUID: action.data.bookUUID,
-        bookLabel: action.data.bookLabel,
-        content: action.data.content,
-        dirty: false
+        persisted: false,
+        sessions: {
+          ...state.sessions,
+          [sessionKey]: {
+            sessionKey,
+            noteUUID: data.noteUUID,
+            bookUUID: data.bookUUID,
+            bookLabel: data.bookLabel,
+            content: data.content
+          }
+        }
       };
     }
     case FLUSH_CONTENT: {
+      const { data } = action;
+
       return {
         ...state,
-        content: action.data.content,
-        dirty: true
+        persisted: false,
+        sessions: {
+          ...state.sessions,
+          [data.sessionKey]: {
+            ...state.sessions[data.sessionKey],
+            content: data.content
+          }
+        }
       };
     }
     case UPDATE_BOOK: {
+      const { data } = action;
+
       return {
         ...state,
-        bookUUID: action.data.uuid,
-        bookLabel: action.data.label
+        persisted: false,
+        sessions: {
+          ...state.sessions,
+          [data.sessionKey]: {
+            ...state.sessions[data.sessionKey],
+            bookUUID: action.data.uuid,
+            bookLabel: action.data.label
+          }
+        }
       };
     }
-    case MARK_DIRTY: {
+    case MARK_PERSISTED: {
       return {
         ...state,
-        dirty: true
+        persisted: true
       };
     }
     case RESET: {
-      return initialState;
+      const { data } = action;
+
+      return {
+        ...state,
+        persisted: false,
+        sessions: removeKey(state.sessions, data.sessionKey)
+      };
     }
     default:
       return state;

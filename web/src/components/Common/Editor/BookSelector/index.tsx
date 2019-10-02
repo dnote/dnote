@@ -26,11 +26,12 @@ import BookIcon from '../../../Icons/Book';
 import CaretIcon from '../../../Icons/Caret';
 import SearchInput from '../../SearchInput';
 import { useDispatch, useSelector } from '../../../../store';
-import { updateBook } from '../../../../store/editor';
+import { updateBook, EditorSession } from '../../../../store/editor';
 import OptionItem from './OptionItem';
 import styles from './index.scss';
 
 interface Props {
+  editor: EditorSession;
   wrapperClassName?: string;
   triggerClassName?: string;
   isReady: boolean;
@@ -42,6 +43,7 @@ interface Props {
 }
 
 const BookSelector: React.SFC<Props> = ({
+  editor,
   wrapperClassName,
   triggerClassName,
   isReady,
@@ -50,10 +52,9 @@ const BookSelector: React.SFC<Props> = ({
   setIsOpen,
   triggerRef
 }) => {
-  const { books, editor } = useSelector(state => {
+  const { books } = useSelector(state => {
     return {
-      books: state.books,
-      editor: state.editor
+      books: state.books
     };
   });
   const dispatch = useDispatch();
@@ -76,7 +77,13 @@ const BookSelector: React.SFC<Props> = ({
   }
 
   function handleSelect(option) {
-    dispatch(updateBook({ label: option.label, uuid: option.value }));
+    dispatch(
+      updateBook({
+        sessionKey: editor.sessionKey,
+        label: option.label,
+        uuid: option.value
+      })
+    );
     onAfterChange();
   }
 

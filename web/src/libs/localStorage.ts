@@ -16,11 +16,15 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const stateKey = 'state';
+import { AppState } from '../store';
+
+// stateKey is the key under which the application state is persisted. It is
+// versioned to accommodate any backward incomptaible changes to the store.
+const stateKey = 'state-v0';
 
 // loadState parses the serialized state tree stored in the localStorage
 // and returns it
-export function loadState(): JSON {
+export function loadState(): Partial<AppState> {
   try {
     const serialized = localStorage.getItem(stateKey);
 
@@ -36,7 +40,7 @@ export function loadState(): JSON {
 }
 
 // saveState writes the given state to localStorage
-export function saveState(state: object) {
+export function saveState(state: Partial<AppState>) {
   try {
     const serialized = JSON.stringify(state);
 
