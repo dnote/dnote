@@ -96,6 +96,7 @@ const BookSelector: React.SFC<Props> = ({
       contentClassName={classnames(styles.content)}
       wrapperClassName={classnames(styles['popover-wrapper'], wrapperClassName)}
       renderTrigger={triggerProps => {
+        console.log('okay');
         return (
           <button
             id="T-book-selector-trigger"
@@ -112,10 +113,7 @@ const BookSelector: React.SFC<Props> = ({
             className={classnames(
               styles.trigger,
               triggerClassName,
-              triggerProps.triggerClassName,
-              {
-                [styles['trigger-hidden']]: !isReady
-              }
+              triggerProps.triggerClassName
             )}
             onClick={() => {
               setIsOpen(!isOpen);
@@ -123,17 +121,18 @@ const BookSelector: React.SFC<Props> = ({
             aria-haspopup="menu"
             aria-expanded={ariaExpanded}
             aria-controls="book-filter"
-            disabled={books.isFetching}
+            disabled={!isReady}
           >
             <span className={styles['book-selector-trigger']}>
               <span className={styles['book-selector-trigger-left']}>
                 <BookIcon width={12} height={12} />
                 <span
+                  id="T-book-selector-current-label"
                   className={classnames(styles['book-label'], {
                     [styles['book-label-visible']]: Boolean(currentLabel)
                   })}
                 >
-                  {currentLabel || 'Choose a book'}
+                  {isReady ? currentLabel || 'Choose a book' : 'Loading...'}
                 </span>
               </span>
               <CaretIcon

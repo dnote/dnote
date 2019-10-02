@@ -72,6 +72,7 @@ const Edit: React.SFC<Props> = ({ match }) => {
 
   return (
     <div
+      id="T-edit-page"
       className={classnames(
         styles.container,
         'container mobile-nopadding page page-mobile-full'
