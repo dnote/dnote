@@ -24,3 +24,8 @@ export const KEYCODE_TAB = 9;
 
 // alphabet
 export const KEYCODE_LOWERCASE_B = 66;
+
+// isPrintableKey returns if the key represented in the given event is printable.
+export function isPrintableKey(e: KeyboardEvent) {
+  return e.key.length === 1;
+}

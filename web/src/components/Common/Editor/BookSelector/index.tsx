@@ -20,6 +20,7 @@ import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 
 import { booksToOptions } from 'jslib/helpers/select';
+import { isPrintableKey } from 'jslib/helpers/keyboard';
 import Popover from '../../Popover';
 import SearchableMenu from '../../SearchableMenu';
 import BookIcon from '../../../Icons/Book';
@@ -116,6 +117,14 @@ const BookSelector: React.SFC<Props> = ({
             )}
             onClick={() => {
               setIsOpen(!isOpen);
+            }}
+            onKeyDown={e => {
+              if (isPrintableKey(e.nativeEvent)) {
+                e.preventDefault();
+
+                setTextboxValue(e.key);
+                setIsOpen(true);
+              }
             }}
             aria-haspopup="menu"
             aria-expanded={ariaExpanded}
