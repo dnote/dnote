@@ -14,7 +14,7 @@ The following log documentes the history of the server project.
 
 ### Changed
 
-- Treat a linebreak as a new line in the preview
+- Treat a linebreak as a new line in the preview (#261)
 - Allow to have multiple editor states for adding and editing notes (#260)
 
 ### 0.1.1 - 2019-09-30
