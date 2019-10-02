@@ -64,7 +64,7 @@ The following log documentes the history of the browser extensions project
 
 #### Fixed
 
-- Fix failing requests (#260)
+- Fix failing requests (#263)
 
 ### 1.1.0 - 2019-09-30
 
