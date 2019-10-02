@@ -26,11 +26,12 @@ import BookIcon from '../../../Icons/Book';
 import CaretIcon from '../../../Icons/Caret';
 import SearchInput from '../../SearchInput';
 import { useDispatch, useSelector } from '../../../../store';
-import { updateBook } from '../../../../store/editor';
+import { updateBook, EditorSession } from '../../../../store/editor';
 import OptionItem from './OptionItem';
 import styles from './index.scss';
 
 interface Props {
+  editor: EditorSession;
   wrapperClassName?: string;
   triggerClassName?: string;
   isReady: boolean;
@@ -42,6 +43,7 @@ interface Props {
 }
 
 const BookSelector: React.SFC<Props> = ({
+  editor,
   wrapperClassName,
   triggerClassName,
   isReady,
@@ -50,10 +52,9 @@ const BookSelector: React.SFC<Props> = ({
   setIsOpen,
   triggerRef
 }) => {
-  const { books, editor } = useSelector(state => {
+  const { books } = useSelector(state => {
     return {
-      books: state.books,
-      editor: state.editor
+      books: state.books
     };
   });
   const dispatch = useDispatch();
@@ -76,7 +77,13 @@ const BookSelector: React.SFC<Props> = ({
   }
 
   function handleSelect(option) {
-    dispatch(updateBook({ label: option.label, uuid: option.value }));
+    dispatch(
+      updateBook({
+        sessionKey: editor.sessionKey,
+        label: option.label,
+        uuid: option.value
+      })
+    );
     onAfterChange();
   }
 
@@ -105,10 +112,7 @@ const BookSelector: React.SFC<Props> = ({
             className={classnames(
               styles.trigger,
               triggerClassName,
-              triggerProps.triggerClassName,
-              {
-                [styles['trigger-hidden']]: !isReady
-              }
+              triggerProps.triggerClassName
             )}
             onClick={() => {
               setIsOpen(!isOpen);
@@ -116,17 +120,18 @@ const BookSelector: React.SFC<Props> = ({
             aria-haspopup="menu"
             aria-expanded={ariaExpanded}
             aria-controls="book-filter"
-            disabled={books.isFetching}
+            disabled={!isReady}
           >
             <span className={styles['book-selector-trigger']}>
               <span className={styles['book-selector-trigger-left']}>
                 <BookIcon width={12} height={12} />
                 <span
+                  id="T-book-selector-current-label"
                   className={classnames(styles['book-label'], {
                     [styles['book-label-visible']]: Boolean(currentLabel)
                   })}
                 >
-                  {currentLabel || 'Choose a book'}
+                  {isReady ? currentLabel || 'Choose a book' : 'Loading...'}
                 </span>
               </span>
               <CaretIcon

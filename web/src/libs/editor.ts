@@ -16,22 +16,16 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// SafeLink is a link that pushes a new location to the history stack
-// only if the current editor is not dirty.
-import React from 'react';
-import { Link } from 'react-router-dom';
+// sessionKeyNew is the editor session key for a new note
+const sessionKeyNew = 'new';
 
-import { decorate } from './internal';
+// getEditorSessionkey returns a unique editor session key for the given noteUUID.
+// If the noteUUID is null, it returns a session key for the new note.
+// Editor session holds an editor state for a particular note.
+export function getEditorSessionkey(noteUUID: string | null): string {
+  if (noteUUID === null) {
+    return sessionKeyNew;
+  }
 
-function SafeLink({ to, onClick, className, children }) {
-  const Decorated = decorate(Link, {
-    to,
-    onClick,
-    className,
-    children
-  });
-
-  return <Decorated />;
+  return noteUUID;
 }
-
-export default SafeLink;

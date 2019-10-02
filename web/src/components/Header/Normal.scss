@@ -27,7 +27,7 @@
   z-index: 2;
   position: relative;
   display: flex;
-  border-bottom: 1px solid $border-color-light;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
   background: $first;
   align-items: stretch;
   justify-content: space-between;

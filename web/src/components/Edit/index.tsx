@@ -22,10 +22,11 @@ import { Prompt, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 import { withRouter } from 'react-router-dom';
 
+import { getEditorSessionkey } from 'web/libs/editor';
 import operations from 'web/libs/operations';
 import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
-import { stageNote } from '../../store/editor';
+import { createSession } from '../../store/editor';
 import Content from './Content';
 import styles from '../New/New.scss';
 
@@ -36,40 +37,42 @@ interface Match {
 interface Props extends RouteComponentProps<Match> {}
 
 const Edit: React.SFC<Props> = ({ match }) => {
+  const { noteUUID } = match.params;
+
+  const sessionKey = getEditorSessionkey(noteUUID);
   const { editor } = useSelector(state => {
     return {
       editor: state.editor
     };
   });
+  const session = editor.sessions[sessionKey];
+
   const dispatch = useDispatch();
-
   const [errMessage, setErrMessage] = useState('');
-  const [isReady, setIsReady] = useState(false);
-
-  const { noteUUID } = match.params;
 
   useEffect(() => {
-    operations.notes
-      .fetchOne(noteUUID)
-      .then(note => {
-        dispatch(
-          stageNote({
-            noteUUID: note.uuid,
-            bookUUID: note.book.uuid,
-            bookLabel: note.book.label,
-            content: note.content
-          })
-        );
-
-        setIsReady(true);
-      })
-      .catch((err: Error) => {
-        setErrMessage(err.message);
-      });
-  }, [dispatch, noteUUID]);
+    if (session === undefined) {
+      operations.notes
+        .fetchOne(noteUUID)
+        .then(note => {
+          dispatch(
+            createSession({
+              noteUUID: note.uuid,
+              bookUUID: note.book.uuid,
+              bookLabel: note.book.label,
+              content: note.content
+            })
+          );
+        })
+        .catch((err: Error) => {
+          setErrMessage(err.message);
+        });
+    }
+  }, [dispatch, noteUUID, session]);
 
   return (
     <div
+      id="T-edit-page"
       className={classnames(
         styles.container,
         'container mobile-nopadding page page-mobile-full'
@@ -83,12 +86,14 @@ const Edit: React.SFC<Props> = ({ match }) => {
         Error: {errMessage}
       </Flash>
 
-      {isReady && <Content noteUUID={noteUUID} setErrMessage={setErrMessage} />}
-
-      <Prompt
-        message="You have unsaved changes. Continue?"
-        when={editor.dirty}
-      />
+      {session !== undefined && (
+        <Content
+          noteUUID={noteUUID}
+          editor={session}
+          persisted={editor.persisted}
+          setErrMessage={setErrMessage}
+        />
+      )}
     </div>
   );
 };

@@ -18,7 +18,7 @@
 
 import React from 'react';
 
-const Icon = ({ className, ...props }) => {
+const Icon = ({ className }) => {
   return (
     <svg
       version="1.1"
@@ -26,7 +26,6 @@ const Icon = ({ className, ...props }) => {
       y="0px"
       viewBox="0 0 80.13 80.13"
       className={className}
-      {...props}
     >
       <g>
         <path

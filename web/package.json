@@ -5,9 +5,9 @@
   "repository": "https://github.com/dnote/dnote",
   "main": "index",
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start ./karma.conf.js --single-run",
-    "test:watch": "./node_modules/karma/bin/karma start ./karma.conf.js --watch",
-    "lint": "./node_modules/.bin/eslint ./src"
+    "test": "karma start ./karma.conf.js --single-run",
+    "test:watch": "karma start ./karma.conf.js --watch",
+    "lint": "eslint ./src/**/*.ts ./src/**/*.tsx"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "AGPL-3.0-or-later",

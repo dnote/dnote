@@ -17,29 +17,37 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import { Prompt, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { withRouter } from 'react-router-dom';
 
 import operations from 'web/libs/operations';
+import { getEditorSessionkey } from 'web/libs/editor';
 import { getNotePath, notePathDef } from 'web/libs/paths';
-import { useCleanupEditor, useFocusTextarea } from 'web/libs/hooks/editor';
+import { useFocusTextarea } from 'web/libs/hooks/editor';
 import Editor from '../Common/Editor';
 import { useDispatch, useSelector } from '../../store';
-import { resetEditor } from '../../store/editor';
+import { resetEditor, EditorSession } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
 import styles from '../New/New.scss';
 
 interface Props extends RouteComponentProps {
   noteUUID: string;
+  persisted: boolean;
+  editor: EditorSession;
   setErrMessage: React.Dispatch<string>;
 }
 
-const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
-  const { editor, prevLocation } = useSelector(state => {
+const Edit: React.SFC<Props> = ({
+  noteUUID,
+  persisted,
+  editor,
+  history,
+  setErrMessage
+}) => {
+  const { prevLocation } = useSelector(state => {
     return {
-      editor: state.editor,
       prevLocation: state.route.prevLocation
     };
   });
@@ -48,7 +56,6 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
   const textareaRef = useRef(null);
 
   useFocusTextarea(textareaRef.current);
-  useCleanupEditor();
 
   return (
     <div className={styles.wrapper}>
@@ -58,6 +65,7 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
       </div>
 
       <Editor
+        editor={editor}
         isBusy={submitting}
         textareaRef={textareaRef}
         cancelPath={prevLocation}
@@ -79,7 +87,7 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
               content: draftContent
             });
 
-            dispatch(resetEditor());
+            dispatch(resetEditor(editor.sessionKey));
 
             const dest = getNotePath(note.uuid);
             history.push(dest);
@@ -97,6 +105,8 @@ const Edit: React.SFC<Props> = ({ noteUUID, history, setErrMessage }) => {
           }
         }}
       />
+
+      <Prompt message="You have unsaved changes. Continue?" when={!persisted} />
     </div>
   );
 };

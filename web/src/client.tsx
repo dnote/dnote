@@ -27,6 +27,7 @@ import { Provider } from 'react-redux';
 import { debounce } from 'jslib/helpers/perf';
 import App from './components/App';
 import configureStore from './store';
+import { markPersisted } from './store/editor';
 import { loadState, saveState } from './libs/localStorage';
 import './libs/restoreScroll';
 
@@ -40,7 +41,11 @@ store.subscribe(
     saveState({
       editor: state.editor
     });
-  }, 1000)
+
+    if (!state.editor.persisted) {
+      store.dispatch(markPersisted());
+    }
+  }, 50)
 );
 
 function renderApp() {

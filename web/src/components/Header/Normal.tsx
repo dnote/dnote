@@ -57,6 +57,7 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
         <div className={classnames(styles.content)}>
           <div className={classnames(styles.left)}>
             <Link
+              id="T-home-link"
               to={getHomeDest(location, searchObj)}
               className={styles.brand}
             >

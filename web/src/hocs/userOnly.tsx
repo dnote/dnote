@@ -20,23 +20,27 @@ import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
-import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { getPathFromLocation } from 'jslib//helpers/url';
 import { AppState, RemoteData } from '../store';
 import { UserData } from '../store/auth';
+import { useSelector } from '../store';
 
 // userOnly returns a HOC that redirects to Login page if user is not logged in
 export default function(
   Component: React.ComponentType,
   guestPath: string = '/login'
 ) {
-  interface Props extends RouteComponentProps {
-    userData: RemoteData<UserData>;
-  }
+  interface Props extends RouteComponentProps {}
 
   const HOC: React.SFC<Props> = props => {
-    const { userData, location } = props;
+    const { location } = props;
+
+    const { userData } = useSelector(state => {
+      return {
+        userData: state.auth.user
+      };
+    });
 
     const isGuest = userData.isFetched && !userData.data.uuid;
     if (isGuest) {
@@ -50,14 +54,5 @@ export default function(
     return <Component {...props} />;
   };
 
-  // Copy over static methods
-  hoistNonReactStatics(HOC, Component);
-
-  function mapStateToProps(state: AppState) {
-    return {
-      userData: state.auth.user
-    };
-  }
-
-  return withRouter(connect(mapStateToProps)(HOC));
+  return withRouter(HOC);
 }

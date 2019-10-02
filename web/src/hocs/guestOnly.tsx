@@ -18,7 +18,6 @@
 
 import React from 'react';
 import { Redirect, RouteComponentProps } from 'react-router-dom';
-import hoistNonReactStatics from 'hoist-non-react-statics';
 
 import { getReferrer } from 'jslib//helpers/url';
 import { RemoteData } from '../store';
@@ -39,9 +38,7 @@ function renderFallback(referrer?: string) {
 // guestOnly returns a HOC that renders the given component only if user is not
 // logged in
 export default function(Component: React.ComponentType): React.ComponentType {
-  interface Props extends RouteComponentProps {
-    userData: RemoteData<UserData>;
-  }
+  interface Props extends RouteComponentProps {}
 
   const HOC: React.SFC<Props> = props => {
     const { location } = props;
@@ -61,9 +58,6 @@ export default function(Component: React.ComponentType): React.ComponentType {
 
     return <Component {...props} />;
   };
-
-  // Copy over static methods
-  hoistNonReactStatics(HOC, Component);
 
   return HOC;
 }

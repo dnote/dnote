@@ -17,19 +17,18 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
 import classnames from 'classnames';
 
 import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
 import { flushContent } from '../../../store/editor';
-import { AppState } from '../../../store';
+import { AppState, useDispatch } from '../../../store';
 import styles from './Textarea.scss';
 import editorStyles from './Editor.scss';
 
 interface Props {
+  sessionKey: string;
   content: string;
   onChange: (string) => void;
-  doFlushContent: (string) => void;
   onSubmit: () => void;
   textareaRef: React.MutableRefObject<any>;
   inputTimerRef: React.MutableRefObject<any>;
@@ -37,15 +36,16 @@ interface Props {
 }
 
 const Textarea: React.SFC<Props> = ({
+  sessionKey,
   content,
   onChange,
-  doFlushContent,
   onSubmit,
   textareaRef,
   inputTimerRef,
   disabled
 }) => {
   const [contentFocused, setContentFocused] = useState(false);
+  const dispatch = useDispatch();
 
   return (
     <div className={classnames(styles.wrapper, editorStyles.content)}>
@@ -65,7 +65,7 @@ const Textarea: React.SFC<Props> = ({
             // eslint-disable-next-line no-param-reassign
             inputTimerRef.current = null;
 
-            doFlushContent(value);
+            dispatch(flushContent(sessionKey, value));
           }, 1000);
         }}
         onFocus={() => {
@@ -93,17 +93,4 @@ const Textarea: React.SFC<Props> = ({
   );
 };
 
-function mapStateToProps(state: AppState) {
-  return {
-    editor: state.editor
-  };
-}
-
-const mapDispatchToProps = {
-  doFlushContent: flushContent
-};
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Textarea);
+export default Textarea;

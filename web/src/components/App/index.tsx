@@ -56,15 +56,21 @@ interface Props extends RouteComponentProps<any> {}
 function useFetchData() {
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    dispatch(getCurrentUser()).then(u => {
-      if (!u) {
-        return null;
-      }
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user
+    };
+  });
 
-      return dispatch(getBooks());
-    });
+  useEffect(() => {
+    dispatch(getCurrentUser());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user.isFetched) {
+      dispatch(getBooks());
+    }
+  }, [dispatch, user.isFetched]);
 }
 
 function hasLocationChanged(loc1: Location<any>, loc2: Location<any>) {

@@ -23,60 +23,69 @@ import {
   FLUSH_CONTENT,
   UPDATE_BOOK,
   RESET,
-  STAGE_NOTE,
-  MARK_DIRTY,
-  MarkDirtyAction,
-  StageNoteAction,
+  CREATE_SESSION,
+  MARK_PERSISTED,
+  MarkPersistedAction,
+  CreateSessionAction,
   FlushContentAction,
   UpdateBookAction,
   ResetAction
 } from './type';
 
-export function stageNote({
+export function createSession({
   noteUUID,
   bookUUID,
   bookLabel,
   content
-}): StageNoteAction {
+}): CreateSessionAction {
   return {
-    type: STAGE_NOTE,
+    type: CREATE_SESSION,
     data: { noteUUID, bookUUID, bookLabel, content }
   };
 }
 
-export function flushContent(content): FlushContentAction {
+export function flushContent(
+  sessionKey: string,
+  content: string
+): FlushContentAction {
   return {
     type: FLUSH_CONTENT,
-    data: { content }
+    data: { sessionKey, content }
   };
 }
 
 export interface UpdateBookActionParam {
+  sessionKey: string;
   uuid: string;
   label: string;
 }
 
 export function updateBook({
+  sessionKey,
   uuid,
   label
 }: UpdateBookActionParam): UpdateBookAction {
   return {
     type: UPDATE_BOOK,
     data: {
+      sessionKey,
       uuid,
       label
     }
   };
 }
 
-export function resetEditor(): ResetAction {
+export function resetEditor(sessionKey: string): ResetAction {
   return {
-    type: RESET
+    type: RESET,
+    data: {
+      sessionKey
+    }
   };
 }
 
-export function markDirty(): MarkDirtyAction {
+export function markPersisted(): MarkPersistedAction {
   return {
-    type: MARK_DIRTY
+    type: MARK_PERSISTED
   };
 }
