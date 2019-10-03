@@ -49,10 +49,7 @@ const NormalHeader: React.SFC<Props> = ({ location }) => {
   return (
     <header id="T-main-header" className={styles.wrapper}>
       <div
-        className={classnames(
-          styles['content-wrapper'],
-          'container mobile-nopadding'
-        )}
+        className={classnames(styles['content-wrapper'], 'container mobile-fw')}
       >
         <div className={classnames(styles.content)}>
           <div className={classnames(styles.left)}>

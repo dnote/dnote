@@ -20,42 +20,40 @@
 @import '../App/responsive';
 @import '../App/theme';
 
-.actions {
+.header {
   display: flex;
-  padding: rem(12px) rem(20px);
   flex-direction: column;
-  border-radius: rem(4px);
-  background: $light;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
 
   @include breakpoint(md) {
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
-    //    margin-top: rem(12px);
+    justify-content: space-between;
+  }
+}
+
+.header-left {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-input-wrapper {
+  width: 100%;
+  margin-top: rem(12px);
+
+  @include breakpoint(md) {
+    width: auto;
+    margin-top: 0;
   }
 }
 
 .search-input {
   width: 100%;
 
-  @include breakpoint(lg) {
-    width: rem(400px);
-    margin-top: 0;
-  }
-}
-
-button.create-book-button {
-  margin-top: rem(12px);
-
   @include breakpoint(md) {
     margin-top: 0;
-    margin-left: rem(12px);
+    width: auto;
+    margin-left: rem(24px);
   }
-
-  // display: none;
-
-  // @include breakpoint(md) {
-  //   display: inline-block;
-  // }
 }

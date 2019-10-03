@@ -24,44 +24,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 )
 
-// FormatTS rounds up the given timestamp to the microsecond
-// so as to make the times in the responses consistent
-func FormatTS(ts time.Time) time.Time {
-	return ts.UTC().Round(time.Microsecond)
-}
-
-// Book is a result of PresentBooks
-type Book struct {
-	UUID      string    `json:"uuid"`
-	USN       int       `json:"usn"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Label     string    `json:"label"`
-}
-
-// PresentBook presents a book
-func PresentBook(book database.Book) Book {
-	return Book{
-		UUID:      book.UUID,
-		USN:       book.USN,
-		CreatedAt: FormatTS(book.CreatedAt),
-		UpdatedAt: FormatTS(book.UpdatedAt),
-		Label:     book.Label,
-	}
-}
-
-// PresentBooks presents books
-func PresentBooks(books []database.Book) []Book {
-	ret := []Book{}
-
-	for _, book := range books {
-		p := PresentBook(book)
-		ret = append(ret, p)
-	}
-
-	return ret
-}
-
 // Note is a result of PresentNote
 type Note struct {
 	UUID      string    `json:"uuid"`
@@ -117,59 +79,6 @@ func PresentNotes(notes []database.Note) []Note {
 	for _, note := range notes {
 		p := PresentNote(note)
 		ret = append(ret, p)
-	}
-
-	return ret
-}
-
-// Digest is a presented digest
-type Digest struct {
-	UUID      string    `json:"uuid"`
-	Notes     []Note    `json:"notes"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-// PresentDigests presetns digests
-func PresentDigests(digests []database.Digest) []Digest {
-	ret := []Digest{}
-
-	for _, digest := range digests {
-		p := Digest{
-			UUID:      digest.UUID,
-			CreatedAt: digest.CreatedAt,
-			UpdatedAt: digest.UpdatedAt,
-		}
-
-		ret = append(ret, p)
-	}
-
-	return ret
-}
-
-// PresentDigest presents a digest
-func PresentDigest(digest database.Digest) Digest {
-	ret := Digest{
-		UUID:  digest.UUID,
-		Notes: PresentNotes(digest.Notes),
-	}
-
-	return ret
-}
-
-// EmailPreference is a presented email digest
-type EmailPreference struct {
-	DigestWeekly bool      `json:"digest_weekly"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-// PresentEmailPreference presents a digest
-func PresentEmailPreference(p database.EmailPreference) EmailPreference {
-	ret := EmailPreference{
-		DigestWeekly: p.DigestWeekly,
-		CreatedAt:    FormatTS(p.CreatedAt),
-		UpdatedAt:    FormatTS(p.UpdatedAt),
 	}
 
 	return ret

@@ -16,40 +16,42 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// .form-container {
-//   .actions {
-//     margin-top: 12px;
-//   }
-// }
-//
-// .input-help {
-//   font-size: 1.3rem;
-//   color: gray;
-//   margin-top: 5px;
-// }
-//
-// .input-group {
-//   .copy-button {
-//     border-width: 1px;
-//     background: transparent;
-//     border-color: #ced4da;
-//     color: #333744;
-//     width: 85px;
-//
-//     &:hover {
-//       box-shadow: 0px 0px 4px 2px #eaeaea;
-//       background: #fbfbfb;
-//     }
-//
-//     &.copied {
-//     }
-//   }
-// }
-//
-// .danger-zone {
-//   margin-top: 26px;
-//
-//   .danger-zone-heading {
-//     margin-bottom: 18px;
-//   }
-// }
+@import '../App/rem';
+@import '../App/font';
+@import '../App/theme';
+
+.wrapper {
+  background: #fff;
+  position: relative;
+  display: flex;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #d8d8d8;
+  }
+}
+
+.left {
+  padding: rem(20px) rem(12px);
+}
+.item {
+  background: #fff;
+  position: relative;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.title {
+  @include font-size('medium');
+}
+
+.status {
+  @include font-size('x-small');
+  border: 1px solid $green;
+  border-radius: rem(4px);
+  display: inline-block;
+  padding: rem(2px) rem(4px);
+  font-weight: 600;
+
+  &.active {
+    color: $green;
+  }
+}

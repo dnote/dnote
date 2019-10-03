@@ -23,7 +23,7 @@ import { Link } from 'react-router-dom';
 import { getHomePath } from 'web/libs/paths';
 import Actions from './Actions';
 import MobileActions from './MobileActions';
-import { BookData } from 'jslib/operations/books';
+import { BookData } from 'jslib/operations/types';
 
 import styles from './BookItem.scss';
 

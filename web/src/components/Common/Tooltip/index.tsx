@@ -20,10 +20,21 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 
 import Popover from '../Popover';
+import { Alignment, Direction } from '../Popover/types';
+import styles from './Tooltip.scss';
 
-import styles from './Tooltip.module.scss';
+interface Props {
+  id: string;
+  alignment: Alignment;
+  direction: Direction;
+  overlay: React.ReactElement;
+  children: React.ReactChild;
+  contentClassName?: string;
+  wrapperClassName?: string;
+  triggerClassName?: string;
+}
 
-function Tooltip({
+const Tooltip: React.FunctionComponent<Props> = ({
   id,
   alignment,
   direction,
@@ -32,8 +43,8 @@ function Tooltip({
   triggerClassName,
   overlay,
   children
-}) {
-  const [isOpen, setIsOpen] = useState(false);
+}) => {
+  const [isOpen, setIsOpen] = useState(true);
 
   function show() {
     setIsOpen(true);
@@ -53,7 +64,7 @@ function Tooltip({
               triggerProps.triggerClassName
             )}
             aria-describedby={id}
-            tabIndex="-1"
+            tabIndex={-1}
             onFocus={show}
             onMouseEnter={show}
             onMouseLeave={hide}
@@ -88,6 +99,6 @@ function Tooltip({
       }}
     />
   );
-}
+};
 
 export default Tooltip;

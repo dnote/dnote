@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
 
@@ -94,6 +95,7 @@ func DeepEqual(t *testing.T, a, b interface{}, message string) {
 	}
 
 	errorMessage := getErrorMessage(message, a, b)
+	errorMessage = fmt.Sprintf("%v\n%v", errorMessage, cmp.Diff(a, b))
 	t.Error(errorMessage)
 }
 

@@ -38,18 +38,18 @@ const Books: React.SFC = () => {
       <HeadData />
 
       <PayWall>
-        <h1 className="sr-only">Books</h1>
-
-        <div className="container mobile-nopadding page page-mobile-full">
-          <Flash
-            kind="success"
-            when={Boolean(successMessage)}
-            onDismiss={() => {
-              setSuccessMessage('');
-            }}
-          >
-            {successMessage}
-          </Flash>
+        <div className="page page-mobile-full">
+          <div className="container mobile-nopadding">
+            <Flash
+              kind="success"
+              when={Boolean(successMessage)}
+              onDismiss={() => {
+                setSuccessMessage('');
+              }}
+            >
+              {successMessage}
+            </Flash>
+          </div>
           <Content setSuccessMessage={setSuccessMessage} />;
         </div>
       </PayWall>

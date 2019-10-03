@@ -80,11 +80,12 @@ const Modal: React.SFC<Props> = ({
   useEventListener(document, 'mousedown', handleMousedown);
   useEventListener(contentEl, 'keydown', e => {
     switch (e.keyCode) {
-      case KEYCODE_ESC:
+      case KEYCODE_ESC: {
         e.stopPropagation();
 
         onDismiss();
         break;
+      }
       case KEYCODE_TAB: {
         if (!contentEl) {
           return;
@@ -97,6 +98,18 @@ const Modal: React.SFC<Props> = ({
       // noop
     }
   });
+
+  // catch blur event of modal children and focus on the modal root
+  // instead of focusing <body> so that keydown evenets added to the modal
+  // root can be used.
+  // useEventListener(document, 'focusout', e => {
+  //   if (isOpen && contentEl) {
+  //     if (contentEl.contains(e.target)) {
+  //       e.preventDefault();
+  //       contentEl.focus();
+  //     }
+  //   }
+  // });
 
   useEffect(() => {
     const pageEl = document.body;

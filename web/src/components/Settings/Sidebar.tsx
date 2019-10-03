@@ -42,15 +42,6 @@ const Sidebar: React.SFC<Props> = () => {
           <NavLink
             className={styles.item}
             activeClassName={styles.active}
-            to={getSettingsPath(SettingSections.notification)}
-          >
-            Notification
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            className={styles.item}
-            activeClassName={styles.active}
             to={getSettingsPath(SettingSections.billing)}
           >
             Billing

@@ -24,7 +24,7 @@ import (
 
 // Model is the base model definition
 type Model struct {
-	ID        int       `gorm:"primary_key" json:"id"`
+	ID        int       `gorm:"primary_key" json:"-"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:now()"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -132,4 +132,20 @@ type Digest struct {
 	Notes     []Note    `gorm:"many2many:digest_notes;association_foreignKey:uuid;association_jointable_foreignkey:note_uuid;jointable_foreignkey:digest_uuid;"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// RepetitionRule is the rules for sending digest emails
+type RepetitionRule struct {
+	Model
+	UUID       string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	UserID     int    `json:"user_id" gorm:"index"`
+	Title      string `json:"title"`
+	Enabled    bool   `json:"enabled"`
+	Hour       int    `json:"hour" gorm:"index"`
+	Minute     int    `json:"minute" gorm:"index"`
+	Frequency  int    `json:"frequency"`
+	LastActive int    `json:"-"`
+	BookDomain string `json:"book_domain"`
+	Books      []Book `gorm:"many2many:repetition_rule_books;"`
+	NoteCount  int    `json:"note_count"`
 }

@@ -48,8 +48,8 @@ const fullMonthNames = [
   'Dececember'
 ];
 
-/** ***** durations in milliseconds */
-const DAY = 86400000;
+/******* durations in milliseconds */
+export const DAY = 86400000;
 
 // nanosecToSec converts a given nanoseconds to seconds by dropping surplus digits
 export function nanosecToSec(t: number): number {
@@ -103,4 +103,34 @@ export function presentNoteTS(t: number): string {
   }
 
   return `${past.format('MMM D')} (${past.fromNow()})`;
+}
+
+// getUTCOffset returns the UTC offset string for the client. The returned
+// value is in the format of '+08:00'
+export function getUTCOffset(): string {
+  function pad(value: number): string {
+    return value < 10 ? `0${value}` : `${value}`;
+  }
+
+  const date = new Date();
+
+  let sign;
+  if (date.getTimezoneOffset() > 0) {
+    sign = '+';
+  } else {
+    sign = '-';
+  }
+
+  const offset = Math.abs(date.getTimezoneOffset());
+  const hours = pad(Math.floor(offset / 60));
+  const minutes = pad(offset % 60);
+
+  return sign + hours + ':' + minutes;
+}
+
+// daysToSec translates the given number of days to seconds
+export function daysToSec(numDays: number) {
+  const dayInSeconds = DAY / 1000;
+
+  return dayInSeconds * numDays;
 }

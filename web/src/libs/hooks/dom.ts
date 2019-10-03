@@ -152,6 +152,7 @@ export function useSearchMenuKeydown<T = Option>({
       }
     } else if (keyCode === KEYCODE_ESC) {
       e.preventDefault();
+      e.stopPropagation();
 
       if (setIsOpen) {
         setIsOpen(false);

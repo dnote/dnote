@@ -87,3 +87,16 @@
   border-bottom-right-radius: 3px;
   border-bottom-left-radius: 3px;
 }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: rem(16px);
+}
+
+.input-row {
+  & ~ .input-row,
+  .input-row {
+    margin-top: rem(12px);
+  }
+}

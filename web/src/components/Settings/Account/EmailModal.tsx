@@ -25,7 +25,7 @@ import { useDispatch } from '../../../store';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
-
+import modalStyles from '../../Common/Modal/Modal.scss';
 import settingsStyles from '../Settings.scss';
 
 interface Props {
@@ -92,7 +92,6 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
         when={successMsg !== ''}
         id="T-change-email-modal-success"
         kind="success"
-        wrapperClassName={settingsStyles.flash}
         onDismiss={() => {
           setSuccessMsg('');
         }}
@@ -103,7 +102,6 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
       <Flash
         when={failureMsg !== ''}
         kind="danger"
-        wrapperClassName={settingsStyles.flash}
         onDismiss={() => {
           setFailureMsg('');
         }}
@@ -117,49 +115,45 @@ const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
           {/* prevent browsers from automatically filling the input fields */}
           <input type="password" style={{ display: 'none' }} readOnly />
 
-          <div className={settingsStyles['input-row']}>
-            <label
-              className={settingsStyles['input-label']}
-              htmlFor="email-form-email-input"
-            >
+          <div className={modalStyles['input-row']}>
+            <label className="input-label" htmlFor="email-form-email-input">
               New email
-              <input
-                id="email-form-email-input"
-                type="email"
-                placeholder="your@email.com"
-                value={emailVal}
-                onChange={e => {
-                  const val = e.target.value;
-                  setEmailVal(val);
-                }}
-                className="form-control"
-                autoComplete="new-password"
-              />
             </label>
+
+            <input
+              id="email-form-email-input"
+              type="email"
+              placeholder="your@email.com"
+              value={emailVal}
+              onChange={e => {
+                const val = e.target.value;
+                setEmailVal(val);
+              }}
+              className="form-control"
+              autoComplete="new-password"
+            />
           </div>
 
-          <div className={settingsStyles['input-row']}>
-            <label
-              className={settingsStyles['input-label']}
-              htmlFor="email-form-password-input"
-            >
+          <div className={modalStyles['input-row']}>
+            <label className="input-label" htmlFor="email-form-password-input">
               Current password
-              <input
-                id="email-form-password-input"
-                type="password"
-                placeholder="********"
-                value={passwordVal}
-                onChange={e => {
-                  const val = e.target.value;
-                  setPasswordVal(val);
-                }}
-                className="form-control"
-                autoComplete="off"
-              />
             </label>
+
+            <input
+              id="email-form-password-input"
+              type="password"
+              placeholder="********"
+              value={passwordVal}
+              onChange={e => {
+                const val = e.target.value;
+                setPasswordVal(val);
+              }}
+              className="form-control"
+              autoComplete="off"
+            />
           </div>
 
-          <div className={settingsStyles.actions}>
+          <div className={modalStyles.actions}>
             <Button
               type="submit"
               kind="first"

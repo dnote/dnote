@@ -21,6 +21,7 @@ export const KEYCODE_UP = 38;
 export const KEYCODE_ENTER = 13;
 export const KEYCODE_ESC = 27;
 export const KEYCODE_TAB = 9;
+export const KEYCODE_BACKSPACE = 8;
 
 // alphabet
 export const KEYCODE_LOWERCASE_B = 66;

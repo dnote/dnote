@@ -109,6 +109,15 @@ const (
 	TokenTypeEmailPreference = "email_preference"
 )
 
+const (
+	// BookDomainAll incidates that all books are eligible to be the source books
+	BookDomainAll = "all"
+	// BookDomainIncluding incidates that some specified books are eligible to be the source books
+	BookDomainIncluding = "including"
+	// BookDomainExluding incidates that all books except for some specified books are eligible to be the source books
+	BookDomainExluding = "excluding"
+)
+
 // Open opens the connection with the database
 func Open(c Config) {
 	connStr, err := getPGConnectionString(c)
@@ -143,6 +152,7 @@ func InitSchema() {
 		EmailPreference{},
 		Session{},
 		Digest{},
+		RepetitionRule{},
 	).Error; err != nil {
 		panic(err)
 	}

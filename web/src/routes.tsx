@@ -37,6 +37,8 @@ import Books from './components/Books';
 import Subscription from './components/Subscription';
 import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
+import Repetition from './components/Repetition';
+import NewRepetition from './components/Repetition/New';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import {
@@ -55,7 +57,9 @@ import {
   getJoinPath,
   emailPrefPathDef,
   verifyEmailPathDef,
-  classicMigrationPathDef
+  classicMigrationPathDef,
+  repetitionsPathDef,
+  newRepetitionRulePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -75,6 +79,8 @@ const AuthenticatedSubscriptionCheckout = userOnly(
   Checkout,
   getJoinPath().pathname
 );
+const AuthenticatedRepetition = userOnly(Repetition);
+const AuthenticatedNewRepetition = userOnly(NewRepetition);
 
 const routes = [
   {
@@ -151,6 +157,16 @@ const routes = [
     path: passwordResetConfirmPathDef,
     exact: true,
     component: GuestPasswordResetConfirm
+  },
+  {
+    path: repetitionsPathDef,
+    exact: true,
+    component: AuthenticatedRepetition
+  },
+  {
+    path: newRepetitionRulePathDef,
+    exact: true,
+    component: AuthenticatedNewRepetition
   },
   {
     component: NotFound

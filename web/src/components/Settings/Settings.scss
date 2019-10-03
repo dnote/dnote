@@ -25,6 +25,12 @@
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
 }
 
+.header {
+  @include breakpoint(lg) {
+    display: none;
+  }
+}
+
 .section {
   margin-top: rem(24px);
 
@@ -45,18 +51,8 @@
 }
 
 .actions {
-  margin-top: rem(12px);
+  margin-top: rem(18px);
   text-align: right;
-}
-
-.input-row {
-  &:not(:first-child) {
-    margin-top: rem(8px);
-  }
-}
-
-.flash {
-  margin-bottom: rem(12px);
 }
 
 button.edit {
@@ -69,10 +65,6 @@ button.edit {
   @include breakpoint(md) {
     margin-left: rem(16px);
   }
-}
-
-.input-label {
-  width: 100%;
 }
 
 .verification-banner {

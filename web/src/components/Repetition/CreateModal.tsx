@@ -16,48 +16,53 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
+import classnames from 'classnames';
 
-import Modal, { Header, Body } from '../../Common/Modal';
-import Flash from '../../Common/Flash';
-import EmailPreferenceForm from '../../Common/EmailPreferenceForm';
-
-import settingsStyles from '../Settings.scss';
+import Modal, { Header, Body } from '../Common/Modal';
+import Flash from '../Common/Flash';
+import { daysToSec } from '../../helpers/time';
+import Button from '../Common/Button';
+import GlobeIcon from '../Icons/Globe';
+import styles from './CreateModal.scss';
+import Form, { FormState } from './Form';
+import modalStyles from '../Common/Modal/Modal.scss';
 
 interface Props {
-  emailPreference: any;
   isOpen: boolean;
   onDismiss: () => void;
 }
 
-const FrequencyModal: React.SFC<Props> = ({
-  emailPreference,
+const CreateRuleModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss
 }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
+  const [inProgress, setInProgress] = useState(false);
 
-  const labelId = 'frequency-modal';
+  const labelId = 'create-repetition-modal';
+
+  function handleSubmit(state: FormState) {}
 
   return (
     <Modal
-      modalId="T-frequency-modal"
+      modalId="T-create-rule-modal"
+      modalClassName={styles.content}
       isOpen={isOpen}
       onDismiss={onDismiss}
       ariaLabelledBy={labelId}
     >
       <Header
         labelId={labelId}
-        heading="Change diegst frequency"
+        heading="Create a spaced repetition"
         onDismiss={onDismiss}
       />
 
       <Flash
         when={successMsg !== ''}
-        id="T-frequency-modal-success"
+        id="T-create-rule-modal-success"
         kind="success"
-        wrapperClassName={settingsStyles.flash}
         onDismiss={() => {
           setSuccessMsg('');
         }}
@@ -68,7 +73,6 @@ const FrequencyModal: React.SFC<Props> = ({
       <Flash
         when={failureMsg !== ''}
         kind="danger"
-        wrapperClassName={settingsStyles.flash}
         onDismiss={() => {
           setFailureMsg('');
         }}
@@ -77,20 +81,9 @@ const FrequencyModal: React.SFC<Props> = ({
         {failureMsg}
       </Flash>
 
-      <Body>
-        {emailPreference.isFetched ? (
-          <EmailPreferenceForm
-            emailPreference={emailPreference.data}
-            actionsClassName={settingsStyles.actions}
-            setSuccessMsg={setSuccessMsg}
-            setFailureMsg={setFailureMsg}
-          />
-        ) : (
-          <div>Fetching email preference...</div>
-        )}
-      </Body>
+      <Body></Body>
     </Modal>
   );
 };
 
-export default FrequencyModal;
+export default CreateRuleModal;

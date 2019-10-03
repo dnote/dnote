@@ -21,7 +21,7 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 import { History } from 'history';
 
-import { BookData } from 'jslib/operations/books';
+import { BookData } from 'jslib/operations/types';
 import { escapesRegExp } from 'web/libs/string';
 import { getHomePath } from 'web/libs/paths';
 import {
@@ -36,6 +36,9 @@ import EmptyList from './EmptyList';
 import SearchInput from '../Common/SearchInput';
 import Button from '../Common/Button';
 import DeleteBookModal from './DeleteBookModal';
+import { usePrevious } from '../../libs/hooks';
+import BookPlusIcon from '../Icons/BookPlus';
+import CreateBookButton from './CreateBookButton';
 import styles from './Content.scss';
 
 function filterBooks(books: BookData[], searchInput: string): BookData[] {
@@ -61,19 +64,6 @@ function handleMenuKeydownSelect(history: History): KeydownSelectFn<BookData> {
   };
 }
 
-function useFocusInput(
-  isFetching: boolean,
-  inputRef: React.MutableRefObject<any>
-) {
-  useEffect(() => {
-    if (!isFetching) {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }
-  }, [isFetching, inputRef]);
-}
-
 function useSetFocusedOptionOnInputFocus({
   searchValue,
   searchFocus,
@@ -93,8 +83,10 @@ function useFocusInputOnReset(
   searchValue: string,
   inputRef: React.MutableRefObject<any>
 ) {
+  const prevSearchValue = usePrevious(searchValue);
+
   useEffect(() => {
-    if (searchValue === '') {
+    if (prevSearchValue !== null && searchValue === '') {
       if (inputRef.current !== null) {
         inputRef.current.focus();
       }
@@ -124,7 +116,6 @@ const Content: React.SFC<Props> = ({ history, setSuccessMessage }) => {
   const filteredBooks = filterBooks(books.data, searchValue);
   const containerEl = document.body;
 
-  useFocusInput(books.isFetching, inputRef);
   useSetFocusedOptionOnInputFocus({
     searchValue,
     searchFocus,
@@ -149,60 +140,62 @@ const Content: React.SFC<Props> = ({ history, setSuccessMessage }) => {
 
   return (
     <Fragment>
-      <div className={styles.actions}>
-        <SearchInput
-          placeholder="Find a book"
-          value={searchValue}
-          onChange={e => {
-            const val = e.target.value;
-            setSearchValue(val);
-          }}
-          inputClassName={classnames(
-            'text-input-small',
-            styles['search-input']
-          )}
-          disabled={books.isFetching}
-          inputRef={inputRef}
-          onFocus={() => {
-            setSearchFocus(true);
-          }}
-          onBlur={() => {
-            setSearchFocus(false);
-          }}
-          onReset={() => {
-            setSearchValue('');
-          }}
-        />
+      <div className="container mobile-fw">
+        <div className={classnames(styles.header, 'page-header')}>
+          <div className={styles['header-left']}>
+            <h1 className="page-heading">Books</h1>
+            <CreateBookButton
+              id="T-create-book-btn"
+              disabled={books.isFetching}
+              openModal={() => {
+                setIsCreateBookModalOpen(true);
+              }}
+            />
+          </div>
 
-        <Button
-          id="T-create-book-btn"
-          type="button"
-          kind="third"
-          size="normal"
-          className={styles['create-book-button']}
-          disabled={books.isFetching}
-          onClick={() => {
-            setIsCreateBookModalOpen(true);
-          }}
-        >
-          Create book
-        </Button>
+          <SearchInput
+            placeholder="Filter books"
+            value={searchValue}
+            onChange={e => {
+              const val = e.target.value;
+              setSearchValue(val);
+            }}
+            wrapperClassName={styles['search-input-wrapper']}
+            inputClassName={classnames(
+              'text-input-small',
+              styles['search-input']
+            )}
+            disabled={books.isFetching}
+            inputRef={inputRef}
+            onFocus={() => {
+              setSearchFocus(true);
+            }}
+            onBlur={() => {
+              setSearchFocus(false);
+            }}
+            onReset={() => {
+              setSearchValue('');
+            }}
+          />
+        </div>
       </div>
 
-      {hasNoBooks ? (
-        <EmptyList />
-      ) : (
-        <BookList
-          isFetching={books.isFetching}
-          isFetched={books.isFetched}
-          books={filteredBooks}
-          focusedIdx={focusedIdx}
-          setFocusedOptEl={setFocusedOptEl}
-          onDeleteBook={bookUUID => {
-            setBookUUIDToDelete(bookUUID);
-          }}
-        />
-      )}
+      <div className="container mobile-nopadding">
+        {hasNoBooks ? (
+          <EmptyList />
+        ) : (
+          <BookList
+            isFetching={books.isFetching}
+            isFetched={books.isFetched}
+            books={filteredBooks}
+            focusedIdx={focusedIdx}
+            setFocusedOptEl={setFocusedOptEl}
+            onDeleteBook={bookUUID => {
+              setBookUUIDToDelete(bookUUID);
+            }}
+          />
+        )}
+      </div>
 
       <DeleteBookModal
         isOpen={Boolean(bookUUIDToDelete)}

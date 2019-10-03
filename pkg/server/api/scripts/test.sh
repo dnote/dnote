@@ -4,5 +4,13 @@
 set -eux
 
 pushd "$GOPATH"/src/github.com/dnote/dnote/pkg/server/api
-go test ./... -cover -p 1
+
+if [ "${WATCH-false}" == true ]; then
+  set +e
+  while inotifywait --exclude .swp -e modify -r .; do go test ./... -cover -p 1; done;
+  set -e
+else
+  go test ./... -cover -p 1
+fi
+
 popd

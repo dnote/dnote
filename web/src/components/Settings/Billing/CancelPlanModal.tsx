@@ -22,7 +22,7 @@ import services from 'web/libs/services';
 import { useDispatch } from '../../../store';
 import Button from '../../Common/Button';
 import Modal, { Header, Body } from '../../Common/Modal';
-import styles from '../Settings.scss';
+import modalStyles from '../../Common/Modal/Modal.scss';
 import { getSubscription } from '../../../store/auth';
 
 interface Props {
@@ -79,7 +79,7 @@ const CancelPlanModal: React.SFC<Props> = ({
         <form onSubmit={handleSubmit} autoComplete="off">
           <div>Sorry to see you go. Hope Dnote was helpful to you.</div>
 
-          <div className={styles.actions}>
+          <div className={modalStyles.actions}>
             <Button
               type="button"
               kind="first"
