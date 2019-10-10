@@ -16,35 +16,31 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../../App/responsive';
-@import '../../App/rem';
+import { expect } from 'chai';
 
-.actions-wrapper {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  transform: none;
-  height: 100%;
-  z-index: 1;
+import { daysToSec } from './index';
 
-  @include breakpoint(lg) {
-    &.shown {
-      display: block;
+describe('time.ts', () => {
+  describe('daysToSec', () => {
+    const testCases = [
+      {
+        input: 1,
+        expected: 86400
+      },
+
+      {
+        input: 14,
+        expected: 1209600
+      }
+    ];
+
+    for (let i = 0; i < testCases.length; i++) {
+      const tc = testCases[i];
+
+      it(`converts the input ${tc.input}`, () => {
+        const result = daysToSec(tc.input);
+        expect(result).to.equal(tc.expected);
+      });
     }
-  }
-}
-
-.action-tooltip-trigger {
-  height: 100%;
-  display: inline-block;
-}
-.action-tooltip-wrapper {
-  height: 100%;
-}
-
-.action {
-  padding: 0 rem(12px);
-  height: 100%;
-}
+  });
+});

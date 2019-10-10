@@ -22,7 +22,6 @@ import { Link } from 'react-router-dom';
 
 import { getHomePath } from 'web/libs/paths';
 import Actions from './Actions';
-import MobileActions from './MobileActions';
 import { BookData } from 'jslib/operations/types';
 
 import styles from './BookItem.scss';
@@ -69,12 +68,10 @@ const BookItem: React.SFC<Props> = ({
         <h2 className={styles.label}>{book.label}</h2>
       </Link>
 
-      <MobileActions bookUUID={book.uuid} onDeleteBook={onDeleteBook} />
-
       <Actions
         bookUUID={book.uuid}
         onDeleteBook={onDeleteBook}
-        shown={isActive}
+        isActive={isActive}
       />
     </li>
   );

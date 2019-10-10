@@ -101,7 +101,7 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Result: presenters.PresentNote(note),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 type deleteNoteResp struct {
@@ -143,7 +143,7 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusNoContent,
 		Result: presenters.PresentNote(n),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 type createNotePayload struct {
@@ -207,7 +207,7 @@ func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 	resp := CreateNoteResp{
 		Result: presenters.PresentNote(note),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusCreated, resp)
 }
 
 // NotesOptions is a handler for OPTIONS endpoint for notes

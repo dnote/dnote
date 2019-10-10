@@ -16,31 +16,31 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
+@import '../App/rem';
+@import '../App/font';
+@import '../App/theme';
 
-import { daysToSec } from './time';
+.wrapper {
+  position: relative;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+}
 
-describe('time.ts', () => {
-  describe('daysToSec', () => {
-    const testCases = [
-      {
-        input: 1,
-        expected: 86400
-      },
+.title {
+  @include font-size('medium');
+}
 
-      {
-        input: 14,
-        expected: 1209600
-      }
-    ];
-
-    for (let i = 0; i < testCases.length; i++) {
-      const tc = testCases[i];
-
-      it(`converts the input ${tc.input}`, () => {
-        const result = daysToSec(tc.input);
-        expect(result).to.equal(tc.expected);
-      });
-    }
-  });
-});
+.label {
+  width: 100%;
+}
+.input {
+  width: 100%;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: rem(8px);
+}
+.rule-label {
+  font-weight: 600;
+}

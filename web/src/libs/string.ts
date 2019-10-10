@@ -37,3 +37,31 @@ export function excerpt(s: string, maxLength: number) {
 export function escapesRegExp(s: string) {
   return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
+
+// pluralize pluralizes the given singular noun depending on the given count
+// by naively concatenating a suffix 's'.
+export function pluralize(singular: string, count: number): string {
+  if (count === 1) {
+    return singular;
+  }
+
+  return `${singular}s`;
+}
+
+// addOrdinalSuffix append appropriate suffix to the given number to
+// represent it as an ordinal number
+export function addOrdinalSuffix(i: number): string {
+  const j = i % 10;
+  const k = i % 100;
+
+  if (j == 1 && k != 11) {
+    return i + 'st';
+  }
+  if (j == 2 && k != 12) {
+    return i + 'nd';
+  }
+  if (j == 3 && k != 13) {
+    return i + 'rd';
+  }
+  return i + 'th';
+}

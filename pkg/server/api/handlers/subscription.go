@@ -331,7 +331,7 @@ func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
 		resp.Items = append(resp.Items, i)
 	}
 
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 // GetStripeSourceResponse is a response for getStripeToken
@@ -345,7 +345,7 @@ type GetStripeSourceResponse struct {
 func respondWithEmptyStripeToken(w http.ResponseWriter) {
 	var resp GetStripeSourceResponse
 
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 // getStripeCard retrieves card information from stripe and returns a stripe.Card
@@ -506,7 +506,7 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 		ExpYear:  cd.ExpYear,
 	}
 
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {

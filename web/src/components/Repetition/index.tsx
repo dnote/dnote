@@ -8,6 +8,8 @@ import { getRepetitionRules } from '../../store/repetitionRules';
 import PayWall from '../Common/PayWall';
 import { useDispatch, useSelector } from '../../store';
 import RepetitionList from './RepetitionList';
+import DeleteRepetitionRuleModal from './DeleteRepetitionRuleModal';
+import Flash from '../Common/Flash';
 import styles from './Repetition.scss';
 
 const Repetition: React.FunctionComponent = () => {
@@ -21,6 +23,9 @@ const Repetition: React.FunctionComponent = () => {
       repetitionRules: state.repetitionRules
     };
   });
+
+  const [ruleUUIDToDelete, setRuleUUIDToDelete] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   return (
     <div className="page page-mobile-full">
@@ -42,13 +47,33 @@ const Repetition: React.FunctionComponent = () => {
           </div>
         </div>
 
-        <div className="container">
+        <div className="container mobile-nopadding">
+          <Flash
+            when={successMessage !== ''}
+            kind="success"
+            onDismiss={() => {
+              setSuccessMessage('');
+            }}
+          >
+            {successMessage}
+          </Flash>
+
           <RepetitionList
             isFetching={repetitionRules.isFetching}
             isFetched={repetitionRules.isFetched}
             items={repetitionRules.data}
+            setRuleUUIDToDelete={setRuleUUIDToDelete}
           />
         </div>
+
+        <DeleteRepetitionRuleModal
+          repetitionRuleUUID={ruleUUIDToDelete}
+          isOpen={ruleUUIDToDelete !== ''}
+          onDismiss={() => {
+            setRuleUUIDToDelete('');
+          }}
+          setSuccessMessage={setSuccessMessage}
+        />
       </PayWall>
     </div>
   );

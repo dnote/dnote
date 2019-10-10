@@ -39,6 +39,7 @@ import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
 import Repetition from './components/Repetition';
 import NewRepetition from './components/Repetition/New';
+import EditRepetition from './components/Repetition/Edit';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import {
@@ -59,7 +60,8 @@ import {
   verifyEmailPathDef,
   classicMigrationPathDef,
   repetitionsPathDef,
-  newRepetitionRulePathDef
+  newRepetitionRulePathDef,
+  editRepetitionRulePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -81,6 +83,7 @@ const AuthenticatedSubscriptionCheckout = userOnly(
 );
 const AuthenticatedRepetition = userOnly(Repetition);
 const AuthenticatedNewRepetition = userOnly(NewRepetition);
+const AuthenticatedEditRepetition = userOnly(EditRepetition);
 
 const routes = [
   {
@@ -167,6 +170,11 @@ const routes = [
     path: newRepetitionRulePathDef,
     exact: true,
     component: AuthenticatedNewRepetition
+  },
+  {
+    path: editRepetitionRulePathDef,
+    exact: true,
+    component: AuthenticatedEditRepetition
   },
   {
     component: NotFound

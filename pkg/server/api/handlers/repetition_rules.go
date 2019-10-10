@@ -19,6 +19,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 
@@ -28,6 +29,24 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
+
+func (a *App) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		return
+	}
+
+	db := database.DBConn
+	var repetitionRule database.RepetitionRule
+	if err := db.Where("user_id = ?", user.ID).Preload("Books").Find(&repetitionRule).Error; err != nil {
+		handleError(w, "getting repetition rules", err, http.StatusInternalServerError)
+		return
+	}
+
+	resp := presenters.PresentRepetitionRule(repetitionRule)
+	respondJSON(w, http.StatusOK, resp)
+}
 
 func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
@@ -44,7 +63,7 @@ func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := presenters.PresentRepetitionRules(repetitionRules)
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 type createRepetitionRuleParams struct {
@@ -77,6 +96,10 @@ func parseCreateRepetitionRuleParams(r *http.Request) (createRepetitionRuleParam
 	}
 	if ret.Frequency == 0 {
 		return ret, errors.New("frequency is required")
+	}
+
+	if len(ret.Title) > 50 {
+		return ret, errors.New("Title is too long")
 	}
 
 	if err := validateBookDomain(ret.BookDomain); err != nil {
@@ -130,8 +153,7 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 
 	resp := presenters.PresentRepetitionRule(record)
 
-	w.WriteHeader(http.StatusCreated)
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusCreated, resp)
 }
 
 type updateRepetitionRuleParams struct {
@@ -153,6 +175,34 @@ func parseUpdateDigestParams(r *http.Request) (updateRepetitionRuleParams, error
 	}
 
 	return ret, nil
+}
+
+func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
+	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	if !ok {
+		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+	repetitionRuleUUID := vars["repetitionRuleUUID"]
+
+	db := database.DBConn
+
+	var rule database.RepetitionRule
+	err := db.Where("uuid = ? AND user_id = ?", repetitionRuleUUID, user.ID).First(&rule).Error
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Not found", http.StatusNotFound)
+	} else if err != nil {
+		handleError(w, "finding the repetition rule", err, http.StatusInternalServerError)
+	}
+
+	if err := db.Exec("DELETE from repetition_rules WHERE uuid = ?", rule.UUID).Error; err != nil {
+		handleError(w, "deleting the repetition rule", err, http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
@@ -211,8 +261,6 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-
 	resp := presenters.PresentRepetitionRule(repetitionRule)
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }

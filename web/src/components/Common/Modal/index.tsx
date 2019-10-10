@@ -99,18 +99,6 @@ const Modal: React.SFC<Props> = ({
     }
   });
 
-  // catch blur event of modal children and focus on the modal root
-  // instead of focusing <body> so that keydown evenets added to the modal
-  // root can be used.
-  // useEventListener(document, 'focusout', e => {
-  //   if (isOpen && contentEl) {
-  //     if (contentEl.contains(e.target)) {
-  //       e.preventDefault();
-  //       contentEl.focus();
-  //     }
-  //   }
-  // });
-
   useEffect(() => {
     const pageEl = document.body;
 
@@ -131,7 +119,7 @@ const Modal: React.SFC<Props> = ({
     return null;
   }
 
-  const modalRoot = document.getElementById('modal-root');
+  const modalRoot = document.getElementById('overlay-root');
 
   return ReactDOM.createPortal(
     <div className={classnames(styles.overlay, overlayClassName)}>

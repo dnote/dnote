@@ -60,6 +60,7 @@ const NewRepetition: React.FunctionComponent<Props> = ({ history }) => {
         })
       );
     } catch (e) {
+      console.log(e);
       setErrMsg(e.message);
     }
   }

@@ -32,13 +32,6 @@ import MultiSelect from '../../Common/MultiSelect';
 import styles from './Form.scss';
 import modalStyles from '../../Common/Modal/Modal.scss';
 
-interface Props {
-  onSubmit: (formState) => void;
-  setErrMsg: (string) => void;
-  cancelPath?: string;
-  initialState?: FormState;
-}
-
 export interface FormState {
   title: string;
   enabled: boolean;
@@ -48,6 +41,13 @@ export interface FormState {
   noteCount: number;
   bookDomain: BookDomain;
   books: Option[];
+}
+
+interface Props {
+  onSubmit: (formState) => void;
+  setErrMsg: (string) => void;
+  cancelPath?: string;
+  initialState?: FormState;
 }
 
 enum Action {

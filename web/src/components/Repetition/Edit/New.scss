@@ -16,38 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../../App/responsive';
-@import '../../App/theme';
 @import '../../App/rem';
+@import '../../App/font';
+@import '../../App/theme';
 
-.wrapper {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  height: 100%;
-
-  @include breakpoint(lg) {
-    display: none;
-  }
-}
-
-.trigger {
-  padding: 0 rem(12px);
-  height: 100%;
-}
-
-.content {
-  background: $white;
-  z-index: 99;
-  width: rem(120px);
-}
-
-button.action {
-  text-align: center;
-  padding: rem(4px) 0;
-}
-
-.danger {
-  color: $danger-text;
+.header {
 }

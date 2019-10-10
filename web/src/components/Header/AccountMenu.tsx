@@ -22,7 +22,7 @@ import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
 import services from 'web/libs/services';
-import { SettingSections, getSettingsPath } from 'web/libs/paths';
+import { SettingSections, getSettingsPath, getHomePath } from 'web/libs/paths';
 import Lock from '../Icons/Lock';
 import Menu from '../Common/Menu';
 import UserIcon from '../Icons/User';
@@ -43,10 +43,10 @@ const AccountMenu: React.SFC<Props> = ({ user }) => {
     {
       name: 'home',
       value: (
-        <a
+        <Link
           role="menuitem"
           className={styles.link}
-          href="/"
+          to={getHomePath()}
           onClick={() => {
             setIsOpen(false);
           }}
@@ -54,7 +54,7 @@ const AccountMenu: React.SFC<Props> = ({ user }) => {
           tabIndex={-1}
         >
           Home
-        </a>
+        </Link>
       )
     },
     {

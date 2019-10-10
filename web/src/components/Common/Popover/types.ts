@@ -16,5 +16,5 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export type Alignment = 'left' | 'right' | 'top' | 'bottom';
+export type Alignment = 'left' | 'right' | 'top' | 'bottom' | 'center';
 export type Direction = 'left' | 'right' | 'top' | 'bottom';

@@ -144,7 +144,7 @@ type RepetitionRule struct {
 	Hour       int    `json:"hour" gorm:"index"`
 	Minute     int    `json:"minute" gorm:"index"`
 	Frequency  int    `json:"frequency"`
-	LastActive int    `json:"-"`
+	LastActive int    `json:"last_active"`
 	BookDomain string `json:"book_domain"`
 	Books      []Book `gorm:"many2many:repetition_rule_books;"`
 	NoteCount  int    `json:"note_count"`

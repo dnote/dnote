@@ -126,8 +126,10 @@ func handleError(w http.ResponseWriter, msg string, err error, statusCode int) {
 }
 
 // respondJSON encodes the given payload into a JSON format and writes it to the given response writer
-func respondJSON(w http.ResponseWriter, payload interface{}) {
+func respondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		handleError(w, "encoding response", err, http.StatusInternalServerError)
 	}

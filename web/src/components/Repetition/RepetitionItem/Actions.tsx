@@ -18,53 +18,71 @@
 
 import React, { useState, useRef } from 'react';
 import classnames from 'classnames';
+import { Link } from 'react-router-dom';
 
-import Menu from '../../Common/Menu';
+import ItemActions from '../../Common/ItemActions';
 import DotsIcon from '../../Icons/Dots';
-import styles from './MobileActions.module.scss';
+import ItemActionsStyles from '../../Common/ItemActions/ItemActions.scss';
+import { getEditRepetitionPath } from '../../../libs/paths';
 
-function MobileActions({ bookUUID, onDeleteBook }) {
+interface Props {
+  isActive: boolean;
+  onDelete: () => void;
+}
+
+const Actions: React.FunctionComponent<Props> = ({ isActive, onDelete }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const optRefs = [useRef(null)];
+  const optRefs = [useRef(null), useRef(null)];
   const options = [
     {
-      name: 'home',
+      name: 'edit',
       value: (
-        <button
+        <Link
           ref={optRefs[0]}
           type="button"
           className={classnames(
             'button-no-ui button-stretch',
-            styles.action,
-            styles.danger
+            ItemActionsStyles.action
+          )}
+          to={getEditRepetitionPath()}
+        >
+          Edit
+        </Link>
+      )
+    },
+    {
+      name: 'remove',
+      value: (
+        <button
+          ref={optRefs[1]}
+          type="button"
+          className={classnames(
+            'button-no-ui button-stretch',
+            ItemActionsStyles.action
           )}
           onClick={() => {
+            onDelete();
             setIsOpen(false);
-            onDeleteBook(bookUUID);
           }}
         >
-          Remove
+          Remove&hellip;
         </button>
       )
     }
   ];
 
   return (
-    <Menu
-      options={options}
+    <ItemActions
+      id="mobile-book-actions"
+      triggerId="mobile-book-actions-trigger"
       isOpen={isOpen}
       setIsOpen={setIsOpen}
+      isActive={isActive}
+      options={options}
       optRefs={optRefs}
-      menuId="mobile-book-actions"
-      triggerContent={<DotsIcon width="12" height="12" />}
-      wrapperClassName={styles.wrapper}
-      triggerClassName={styles.trigger}
-      contentClassName={styles.content}
-      alignment="top"
-      direction="left"
     />
   );
-}
+};
 
-export default MobileActions;
+export default Actions;

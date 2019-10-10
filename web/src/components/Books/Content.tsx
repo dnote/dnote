@@ -55,7 +55,7 @@ function filterBooks(books: BookData[], searchInput: string): BookData[] {
 }
 
 function handleMenuKeydownSelect(history: History): KeydownSelectFn<BookData> {
-  return option => {
+  return (option: BookData) => {
     const destination = getHomePath({
       book: option.label
     });
@@ -127,6 +127,7 @@ const Content: React.SFC<Props> = ({ history, setSuccessMessage }) => {
     containerEl,
     focusedIdx,
     setFocusedIdx,
+    disabled: !searchFocus,
     onKeydownSelect: handleMenuKeydownSelect(history)
   });
   useScrollToFocused({

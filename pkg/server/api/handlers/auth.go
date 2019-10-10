@@ -84,7 +84,7 @@ func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit()
 
-	respondJSON(w, response)
+	respondJSON(w, http.StatusOK, response)
 }
 
 type createResetTokenPayload struct {

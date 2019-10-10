@@ -139,6 +139,22 @@ export function getNewRepetitionPath(searchObj = {}): Location {
   return getLocation({ pathname: newRepetitionRulePathDef, searchObj });
 }
 
+function populateParams(pathDef: string, params: any) {
+  const parts = pathDef.split('/');
+
+  const p = [];
+  for (let i = 0; i < parts.length; ++i) {
+    const part = parts[i];
+    if (part[0] === ':') {
+      // TODO
+    }
+  }
+}
+
+export function getEditRepetitionPath(uuid: string, searchObj = {}): Location {
+  return getLocation({ pathname: editRepetitionRulePathDef, searchObj });
+}
+
 export function getNotePath(noteUUID: string, searchObj = {}): Location {
   const path = `/notes/${noteUUID}`;
 

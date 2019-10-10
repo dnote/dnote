@@ -1,0 +1,110 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/rem';
+@import '../../App/font';
+@import '../../App/theme';
+
+.wrapper {
+  background: #fff;
+  position: relative;
+  display: flex;
+  padding: rem(16px) rem(24px);
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #d8d8d8;
+  }
+}
+
+.content {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+}
+
+.left {
+}
+
+.right {
+  display: flex;
+  flex-grow: 1;
+  padding-right: rem(24px);
+
+  @include breakpoint(md) {
+    justify-content: flex-end;
+  }
+}
+
+.meta {
+  @include font-size('small');
+  margin-top: rem(4px);
+
+  @include breakpoint(md) {
+    color: $dark-gray;
+  }
+}
+
+.sep {
+  margin: 0 rem(4px);
+}
+
+.item {
+  background: #fff;
+  position: relative;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.title {
+  @include font-size('regular');
+}
+
+.status {
+  @include font-size('x-small');
+  border: 1px solid $green;
+  border-radius: rem(4px);
+  display: inline-block;
+  padding: rem(2px) rem(4px);
+  font-weight: 600;
+
+  &.active {
+    color: $green;
+  }
+}
+
+.detail-list {
+  @include font-size('small');
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @include breakpoint(md) {
+    min-width: rem(180px);
+  }
+}
+
+.book-meta {
+  display: none;
+
+  @include breakpoint(md) {
+    display: block;
+  }
+}

@@ -26,25 +26,17 @@ import { getNoteEditPath, getHomePath } from 'web/libs/paths';
 import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import BookIcon from '../Icons/Book';
 import { parseMarkdown } from '../../helpers/markdown';
-import { nanosecToMillisec, getShortMonthName } from '../../helpers/time';
+import { nanosecToMillisec, getMonthName } from '../../helpers/time';
+import formatTime from '../../helpers/time/format';
 import { useSelector } from '../../store';
+import Time from '../Common/Time';
 import styles from './NoteContent.scss';
 
 function formatAddedOn(ts: number): string {
   const ms = nanosecToMillisec(ts);
   const d = new Date(ms);
 
-  const month = getShortMonthName(d);
-  const date = d.getDate();
-  const year = d.getFullYear();
-
-  return `${month} ${date}, ${year}`;
-}
-
-function getDatetimeISOString(ts: number): string {
-  const ms = nanosecToMillisec(ts);
-
-  return new Date(ms).toISOString();
+  return formatTime(d, '%MMMM %DD, %YYYY');
 }
 
 function formatFTSSelection(content: string): string {
@@ -123,12 +115,14 @@ const Content: React.SFC<Props> = ({ onDeleteModalOpen }) => {
       />
 
       <footer className={styles.footer}>
-        <time
-          className={styles.ts}
-          dateTime={getDatetimeISOString(note.added_on)}
-        >
-          {formatAddedOn(note.added_on)}
-        </time>
+        <Time
+          id="note-ts"
+          text={formatAddedOn(note.added_on)}
+          ms={nanosecToMillisec(note.added_on)}
+          wrapperClassName={styles.ts}
+          tooltipAlignment="left"
+          tooltipDirection="bottom"
+        />
 
         {note.user.uuid === user.uuid && (
           <div className={styles.actions}>

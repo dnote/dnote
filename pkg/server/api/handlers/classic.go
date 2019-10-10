@@ -215,7 +215,7 @@ func (a *App) classicGetMe(w http.ResponseWriter, r *http.Request) {
 		User: session,
 	}
 
-	respondJSON(w, response)
+	respondJSON(w, http.StatusOK, response)
 }
 
 type classicSetPasswordPayload struct {
@@ -272,5 +272,5 @@ func (a *App) classicGetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	presented := presenters.PresentNotes(notes)
-	respondJSON(w, presented)
+	respondJSON(w, http.StatusOK, presented)
 }

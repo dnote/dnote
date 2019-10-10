@@ -365,8 +365,10 @@ func NewRouter(app *App) *mux.Router {
 		{"GET", "/notes/{noteUUID}", auth(app.getNote, &proOnly), true},
 		{"GET", "/calendar", auth(app.getCalendar, &proOnly), true},
 		{"GET", "/repetition_rules", auth(app.getRepetitionRules, &proOnly), true},
+		{"GET", "/repetition_rules/{repetitionRuleUUID}", auth(app.getRepetitionRule, &proOnly), true},
 		{"POST", "/repetition_rules", auth(app.createRepetitionRule, &proOnly), true},
 		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", auth(app.updateRepetitionRule, &proOnly), true},
+		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", auth(app.deleteRepetitionRule, &proOnly), true},
 
 		// migration of classic users
 		{"GET", "/classic/presignin", cors(app.classicPresignin), true},
