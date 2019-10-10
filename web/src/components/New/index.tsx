@@ -26,7 +26,6 @@ import { focusTextarea } from 'web/libs/dom';
 import { getEditorSessionkey } from 'web/libs/editor';
 import operations from 'web/libs/operations';
 import { getNotePath, notePathDef } from 'web/libs/paths';
-import { useFocus } from 'web/libs/hooks/dom';
 import Editor from '../Common/Editor';
 import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
@@ -38,22 +37,6 @@ import Content from './Content';
 import styles from './New.scss';
 
 interface Props extends RouteComponentProps {}
-
-// useInitFocus initializes the focus on HTML elements depending on the current
-// state of the editor.
-function useInitFocus({ bookLabel, content, textareaRef, setTriggerFocus }) {
-  useEffect(() => {
-    if (!bookLabel && !content) {
-      setTriggerFocus();
-    } else {
-      const textareaEl = textareaRef.current;
-
-      if (textareaEl) {
-        focusTextarea(textareaEl);
-      }
-    }
-  }, [setTriggerFocus, bookLabel, textareaRef]);
-}
 
 const New: React.SFC<Props> = ({ history }) => {
   const sessionKey = getEditorSessionkey(null);
