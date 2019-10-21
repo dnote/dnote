@@ -78,7 +78,7 @@ func getPGConnectionString(c Config) (string, error) {
 	}
 
 	var sslmode string
-	if os.Getenv("GO_ENV") == "PRODUCTION" {
+	if os.Getenv("GO_ENV") == "PRODUCTION" && os.Getenv("DB_NOSSL") == "" {
 		sslmode = "require"
 	} else {
 		sslmode = "disable"
