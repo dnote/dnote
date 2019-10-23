@@ -135,7 +135,10 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 	var bookUUID string
 	err = tx.QueryRow("SELECT uuid FROM books WHERE label = ?", bookLabel).Scan(&bookUUID)
 	if err == sql.ErrNoRows {
-		bookUUID = utils.GenerateUUID()
+		bookUUID, err = utils.GenerateUUID()
+		if err != nil {
+			return 0, errors.Wrap(err, "generating uuid")
+		}
 
 		b := database.NewBook(bookUUID, bookLabel, 0, false, true)
 		err = b.Insert(tx)
@@ -147,7 +150,11 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 		return 0, errors.Wrap(err, "finding the book")
 	}
 
-	noteUUID := utils.GenerateUUID()
+	noteUUID, err := utils.GenerateUUID()
+	if err != nil {
+		return 0, errors.Wrap(err, "generating uuid")
+	}
+
 	n := database.NewNote(noteUUID, bookUUID, content, ts, 0, 0, false, false, true)
 
 	err = n.Insert(tx)

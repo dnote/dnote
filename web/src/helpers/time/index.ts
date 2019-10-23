@@ -141,29 +141,19 @@ export function getUTCOffset(): string {
   return `${sign}${hours}:${minutes}`;
 }
 
-// daysToSec translates the given number of days to seconds
-export function daysToSec(numDays: number) {
-  const dayInSeconds = DAY / 1000;
+// daysToMs translates the given number of days to seconds
+export function daysToMs(numDays: number) {
+  const dayInSeconds = DAY;
 
   return dayInSeconds * numDays;
 }
 
-function parseSeconds(s: number) {
-  const weekInSeconds = WEEK / 1000;
-  const dayInSeconds = DAY / 1000;
-  const hourInSeconds = HOUR / 1000;
-  const minuteInSeconds = MINUTE / 1000;
-
-  const weeks = Math.floor(s / weekInSeconds);
-  const days = Math.floor((s % weekInSeconds) / dayInSeconds);
-  const hours = Math.floor(
-    ((s % weekInSeconds) % dayInSeconds) / hourInSeconds
-  );
-  const minutes = Math.floor(
-    (((s % weekInSeconds) % dayInSeconds) % hourInSeconds) / minuteInSeconds
-  );
-  const seconds =
-    (((s % weekInSeconds) % dayInSeconds) % hourInSeconds) % minuteInSeconds;
+function parseMs(ms: number) {
+  const weeks = Math.floor(ms / WEEK);
+  const days = Math.floor((ms % WEEK) / DAY);
+  const hours = Math.floor(((ms % WEEK) % DAY) / HOUR);
+  const minutes = Math.floor((((ms % WEEK) % DAY) % HOUR) / MINUTE);
+  const seconds = (((ms % WEEK) % DAY) % HOUR) % MINUTE;
 
   return {
     weeks,
@@ -174,10 +164,10 @@ function parseSeconds(s: number) {
   };
 }
 
-// secondsToHTMLTimeDuration converts the given number of seconds into a valid
+// msToHTMLTimeDuration converts the given number of seconds into a valid
 // time duration string as defined by the W3C HTML5 recommendation
-export function secondsToHTMLTimeDuration(s: number): string {
-  const { weeks, days, hours, minutes, seconds } = parseSeconds(s);
+export function msToHTMLTimeDuration(ms: number): string {
+  const { weeks, days, hours, minutes, seconds } = parseMs(ms);
 
   let ret = 'P';
 
@@ -199,9 +189,9 @@ export function secondsToHTMLTimeDuration(s: number): string {
   return ret;
 }
 
-// secondsToDuration translates the given time in seconds into a human-readable duration
-export function secondsToDuration(s: number): string {
-  const { weeks, days, hours, minutes, seconds } = parseSeconds(s);
+// msToDuration translates the given time in seconds into a human-readable duration
+export function msToDuration(ms: number): string {
+  const { weeks, days, hours, minutes, seconds } = parseMs(ms);
 
   let ret = '';
 

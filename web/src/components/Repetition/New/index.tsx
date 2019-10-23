@@ -10,7 +10,7 @@ import {
   createRepetitionRule
 } from '../../../store/repetitionRules';
 import { useDispatch } from '../../../store';
-import Form, { FormState } from '../Form';
+import Form, { FormState, serializeFormState } from '../Form';
 import Flash from '../../Common/Flash';
 import { setMessage } from '../../../store/ui';
 import repetitionStyles from '../Repetition.scss';
@@ -26,28 +26,10 @@ const NewRepetition: React.FunctionComponent<Props> = ({ history }) => {
   }, [dispatch]);
 
   async function handleSubmit(state: FormState) {
-    let bookUUIDs = [];
-    if (state.bookDomain === BookDomain.All) {
-      bookUUIDs = [];
-    } else {
-      bookUUIDs = state.books.map(b => {
-        return b.value;
-      });
-    }
+    const payload = serializeFormState(state);
 
     try {
-      await dispatch(
-        createRepetitionRule({
-          title: state.title,
-          hour: state.hour,
-          minute: state.minute,
-          frequency: state.frequency,
-          book_domain: state.bookDomain,
-          book_uuids: bookUUIDs,
-          note_count: state.noteCount,
-          enabled: state.enabled
-        })
-      );
+      await dispatch(createRepetitionRule(payload));
 
       const dest = getRepetitionsPath();
       history.push(dest);
@@ -66,7 +48,7 @@ const NewRepetition: React.FunctionComponent<Props> = ({ history }) => {
   }
 
   return (
-    <div className="page page-mobile-full">
+    <div id="page-new-repetition" className="page page-mobile-full">
       <Helmet>
         <title>New Repetition</title>
       </Helmet>

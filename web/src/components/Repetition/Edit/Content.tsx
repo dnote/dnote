@@ -5,7 +5,7 @@ import services from 'web/libs/services';
 import { BookDomain, RepetitionRuleData } from 'jslib/operations/types';
 import { booksToOptions } from 'jslib/helpers/select';
 import { getRepetitionsPath, repetitionsPathDef } from 'web/libs/paths';
-import Form, { FormState } from '../Form';
+import Form, { FormState, serializeFormState } from '../Form';
 import { useDispatch } from '../../../store';
 import { setMessage } from '../../../store/ui';
 
@@ -22,17 +22,10 @@ const RepetitionEditContent: React.SFC<Props> = ({
   const dispatch = useDispatch();
 
   async function handleSubmit(state: FormState) {
-    let bookUUIDs = [];
-    if (state.bookDomain === BookDomain.All) {
-      bookUUIDs = [];
-    } else {
-      bookUUIDs = state.books.map(b => {
-        return b.value;
-      });
-    }
+    const payload = serializeFormState(state);
 
     try {
-      await services.repetitionRules.update(data.uuid, {});
+      await services.repetitionRules.update(data.uuid, payload);
 
       const dest = getRepetitionsPath();
       history.push(dest);
@@ -63,6 +56,7 @@ const RepetitionEditContent: React.SFC<Props> = ({
 
   return (
     <Form
+      isEditing
       onSubmit={handleSubmit}
       setErrMsg={setErrMsg}
       initialState={initialFormState}

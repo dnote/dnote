@@ -139,20 +139,31 @@ export function getNewRepetitionPath(searchObj = {}): Location {
   return getLocation({ pathname: newRepetitionRulePathDef, searchObj });
 }
 
-function populateParams(pathDef: string, params: any) {
+export function populateParams(pathDef: string, params: any) {
   const parts = pathDef.split('/');
 
-  const p = [];
+  const builder = [];
   for (let i = 0; i < parts.length; ++i) {
-    const part = parts[i];
-    if (part[0] === ':') {
-      // TODO
+    const p = parts[i];
+    if (p[0] === ':') {
+      // drop the first ':'
+      const key = p.substring(1);
+      const val = params[key];
+
+      builder.push(val);
+    } else {
+      builder.push(p);
     }
   }
+
+  return builder.join('/');
 }
 
 export function getEditRepetitionPath(uuid: string, searchObj = {}): Location {
-  return getLocation({ pathname: editRepetitionRulePathDef, searchObj });
+  const pathname = populateParams(editRepetitionRulePathDef, {
+    repetitionUUID: uuid
+  });
+  return getLocation({ pathname, searchObj });
 }
 
 export function getNotePath(noteUUID: string, searchObj = {}): Location {

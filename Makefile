@@ -61,7 +61,7 @@ test-cli:
 
 test-api:
 	@echo "==> running API test"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/server/api/scripts/test-local.sh
+	@${GOPATH}/src/github.com/dnote/dnote/pkg/server/scripts/test-local.sh
 .PHONY: test-api
 
 test-web:

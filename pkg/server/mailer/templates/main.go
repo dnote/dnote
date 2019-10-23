@@ -22,9 +22,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/job"
+	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -34,13 +35,33 @@ import (
 func weeklyDigestHandler(w http.ResponseWriter, r *http.Request) {
 	db := database.DBConn
 
+	q := r.URL.Query()
+	digestUUID := q.Get("digest_uuid")
+	if digestUUID == "" {
+		http.Error(w, errors.New("Please provide digest_uuid query param").Error(), http.StatusBadRequest)
+		return
+	}
+
 	var user database.User
 	if err := db.First(&user).Error; err != nil {
 		http.Error(w, errors.Wrap(err, "Failed to find user").Error(), http.StatusInternalServerError)
 		return
 	}
 
-	email, err := job.MakeDigest(user, "sung@getdnote.com")
+	var digest database.Digest
+	if err := db.Where("uuid = ?", digestUUID).First(&digest).Error; err != nil {
+		http.Error(w, errors.Wrap(err, "finding digest").Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var rule database.RepetitionRule
+	if err := db.Where("id = ?", digest.RuleID).First(&rule).Error; err != nil {
+		http.Error(w, errors.Wrap(err, "finding digest").Error(), http.StatusInternalServerError)
+		return
+	}
+
+	now := time.Now()
+	email, err := repetition.BuildEmail(now, user, "sung@getdnote.com", digest, rule)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -89,7 +110,7 @@ func main() {
 
 	mailer.InitTemplates(nil)
 
-	log.Println("Email template debug server running on http://127.0.0.1:2300")
+	log.Println("Email template development server running on http://127.0.0.1:2300")
 
 	http.HandleFunc("/weekly-digest", weeklyDigestHandler)
 	http.HandleFunc("/email-verification", emailVerificationHandler)

@@ -23,7 +23,12 @@ const ReptitionList: React.SFC<Props> = ({
   }
 
   return (
-    <ul className={classnames('list-unstyled', styles.wrapper)}>
+    <ul
+      id="T-repetition-rules-list"
+      className={classnames('list-unstyled', styles.wrapper, {
+        loaded: isFetched
+      })}
+    >
       {items.map(i => {
         return (
           <RepetitionItem

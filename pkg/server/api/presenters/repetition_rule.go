@@ -31,9 +31,9 @@ type RepetitionRule struct {
 	Enabled    bool      `json:"enabled"`
 	Hour       int       `json:"hour" gorm:"index"`
 	Minute     int       `json:"minute" gorm:"index"`
-	Frequency  int       `json:"frequency"`
+	Frequency  int64     `json:"frequency"`
 	BookDomain string    `json:"book_domain"`
-	LastActive int       `json:"last_active"`
+	LastActive int64     `json:"last_active"`
 	Books      []Book    `json:"books"`
 	NoteCount  int       `json:"note_count"`
 	CreatedAt  time.Time `json:"created_at"`

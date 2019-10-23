@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"runtime/debug"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -41,7 +42,9 @@ Actual:
 Expected:
 ========================
 %+v
-========================`, m, a, b)
+========================
+
+%s`, m, a, b, string(debug.Stack()))
 }
 
 func checkEqual(a, b interface{}, message string) (bool, string) {

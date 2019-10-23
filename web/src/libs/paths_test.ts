@@ -18,27 +18,42 @@
 
 import { expect } from 'chai';
 
-import { daysToMs } from './index';
+import { populateParams } from './paths';
 
-describe('time.ts', () => {
-  describe('daysToMs', () => {
+describe('paths.ts', () => {
+  describe('populateParams', () => {
     const testCases = [
       {
-        input: 1,
-        expected: 86400000
+        pathDef: '/foo/:bar',
+        params: {
+          bar: '123'
+        },
+        expected: '/foo/123'
       },
-
       {
-        input: 14,
-        expected: 1209600000
+        pathDef: '/foo/:bar/baz',
+        params: {
+          bar: '123'
+        },
+        expected: '/foo/123/baz'
+      },
+      {
+        pathDef: '/foo/:bar/:baz/:quz/qux',
+        params: {
+          bar: '123',
+          baz: '456',
+          quz: 'abcd'
+        },
+        expected: '/foo/123/456/abcd/qux'
       }
     ];
 
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`converts the input ${tc.input}`, () => {
-        const result = daysToMs(tc.input);
+      const stringifiedParams = JSON.stringify(tc.params);
+      it(`populates ${tc.pathDef} with params ${stringifiedParams}`, () => {
+        const result = populateParams(tc.pathDef, tc.params);
         expect(result).to.equal(tc.expected);
       });
     }

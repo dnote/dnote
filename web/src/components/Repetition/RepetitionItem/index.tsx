@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 
 import { RepetitionRuleData } from 'jslib/operations/types';
-import {
-  secondsToDuration,
-  secondsToHTMLTimeDuration,
-  timeAgo
-} from 'web/helpers/time';
+import { msToDuration, msToHTMLTimeDuration, timeAgo } from 'web/helpers/time';
 import formatTime from 'web/helpers/time/format';
 import Actions from './Actions';
 import BookMeta from './BookMeta';
@@ -30,7 +26,11 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
 
   return (
     <li
-      className={styles.wrapper}
+      className={classnames(
+        styles.wrapper,
+        'T-repetition-item',
+        `T-repetition-item-${item.uuid}`
+      )}
       onMouseEnter={() => {
         setIsHovered(true);
       }}
@@ -40,14 +40,16 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
     >
       <div className={styles.content}>
         <div className={styles.left}>
-          <h2 className={styles.title}>{item.title}</h2>
+          <h2 className={classnames(styles.title, 'T-repetition-rule-title')}>
+            {item.title}
+          </h2>
 
           <div className={styles.meta}>
             <div>
               <span className={styles.frequency}>
                 Every{' '}
-                <time dateTime={secondsToHTMLTimeDuration(item.frequency)}>
-                  {secondsToDuration(item.frequency)}
+                <time dateTime={msToHTMLTimeDuration(item.frequency)}>
+                  {msToDuration(item.frequency)}
                 </time>
               </span>
               <span className={styles.sep}>&middot;</span>
@@ -96,6 +98,7 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
         onDelete={() => {
           setRuleUUIDToDelete(item.uuid);
         }}
+        repetitionUUID={item.uuid}
       />
     </li>
   );

@@ -60,7 +60,7 @@ func TestCreateNote(t *testing.T) {
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
-	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 	var noteRecord database.Note
 	var bookRecord database.Book

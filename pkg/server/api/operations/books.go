@@ -37,8 +37,13 @@ func CreateBook(user database.User, clock clock.Clock, name string) (database.Bo
 		return database.Book{}, errors.Wrap(err, "incrementing user max_usn")
 	}
 
+	uuid, err := helpers.GenUUID()
+	if err != nil {
+		return database.Book{}, err
+	}
+
 	book := database.Book{
-		UUID:      helpers.GenUUID(),
+		UUID:      uuid,
 		UserID:    user.ID,
 		Label:     name,
 		AddedOn:   clock.Now().UnixNano(),

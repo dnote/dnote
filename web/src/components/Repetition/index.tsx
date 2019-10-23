@@ -39,6 +39,7 @@ const Repetition: React.FunctionComponent = () => {
             <h1 className="page-heading">Repetition</h1>
 
             <Link
+              id="T-new-rule-btn"
               className="button button-first button-normal"
               to={getNewRepetitionPath()}
             >

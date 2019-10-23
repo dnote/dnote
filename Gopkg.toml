@@ -58,10 +58,6 @@
   version = "1.1.1"
 
 [[constraint]]
-  name = "github.com/markbates/goth"
-  version = "1.54.1"
-
-[[constraint]]
   name = "github.com/mattn/go-sqlite3"
   version = "1.10.0"
 
@@ -71,10 +67,6 @@
 
 [[constraint]]
   name = "github.com/robfig/cron"
-  version = "1.2.0"
-
-[[constraint]]
-  name = "github.com/satori/go.uuid"
   version = "1.2.0"
 
 [[constraint]]

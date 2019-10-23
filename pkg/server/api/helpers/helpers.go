@@ -20,8 +20,8 @@ package helpers
 
 import (
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 )
 
 const (
@@ -42,7 +42,19 @@ func GetDemoUserID() (int, error) {
 	return result.UserID, nil
 }
 
-// GenUUID generates a new uuid
-func GenUUID() string {
-	return uuid.NewV4().String()
+// GenUUID generates a new uuid v4
+func GenUUID() (string, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return "", errors.Wrap(err, "generating uuid")
+	}
+
+	return id.String(), nil
+}
+
+// ValidateUUID validates the given uuid
+func ValidateUUID(u string) bool {
+	_, err := uuid.Parse(u)
+
+	return err == nil
 }

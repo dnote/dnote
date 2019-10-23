@@ -33,7 +33,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/testutils"
-	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 )
 
@@ -235,7 +234,7 @@ func TestSyncDeleteNote(t *testing.T) {
 	})
 
 	t.Run("local copy is dirty", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
@@ -305,7 +304,7 @@ func TestSyncDeleteNote(t *testing.T) {
 	})
 
 	t.Run("local copy is not dirty", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
@@ -406,7 +405,7 @@ func TestSyncDeleteBook(t *testing.T) {
 	})
 
 	t.Run("local copy is dirty", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
@@ -471,8 +470,8 @@ func TestSyncDeleteBook(t *testing.T) {
 	})
 
 	t.Run("local copy is not dirty", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
-		b2UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
+		b2UUID := testutils.MustGenerateUUID(t)
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
@@ -538,7 +537,7 @@ func TestSyncDeleteBook(t *testing.T) {
 	})
 
 	t.Run("local copy has at least one note that is dirty", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
@@ -596,7 +595,7 @@ func TestFullSyncNote(t *testing.T) {
 		db := database.InitTestDB(t, dbPath, nil)
 		defer database.CloseTestDB(t, db)
 
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 
 		// execute
@@ -646,9 +645,9 @@ func TestFullSyncNote(t *testing.T) {
 	})
 
 	t.Run("exists on server and client", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
-		b2UUID := utils.GenerateUUID()
-		conflictBookUUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
+		b2UUID := testutils.MustGenerateUUID(t)
+		conflictBookUUID := testutils.MustGenerateUUID(t)
 
 		testCases := []struct {
 			addedOn          int64
@@ -831,7 +830,7 @@ n1 body edited
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
 				database.MustExec(t, fmt.Sprintf("inserting conflitcs book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", conflictBookUUID, "conflicts")
-				n1UUID := utils.GenerateUUID()
+				n1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 				// execute
@@ -890,7 +889,7 @@ func TestFullSyncBook(t *testing.T) {
 		db := database.InitTestDB(t, dbPath, nil)
 		defer database.CloseTestDB(t, db)
 
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
 
 		// execute
@@ -899,7 +898,7 @@ func TestFullSyncBook(t *testing.T) {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
-		b2UUID := utils.GenerateUUID()
+		b2UUID := testutils.MustGenerateUUID(t)
 		b := client.SyncFragBook{
 			UUID:    b2UUID,
 			USN:     1,
@@ -1029,7 +1028,7 @@ func TestFullSyncBook(t *testing.T) {
 				db := database.InitTestDB(t, dbPath, nil)
 				defer database.CloseTestDB(t, db)
 
-				b1UUID := utils.GenerateUUID()
+				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
 
 				// execute
@@ -1082,7 +1081,7 @@ func TestStepSyncNote(t *testing.T) {
 		db := database.InitTestDB(t, dbPath, nil)
 		defer database.CloseTestDB(t, db)
 
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 
 		// execute
@@ -1132,9 +1131,9 @@ func TestStepSyncNote(t *testing.T) {
 	})
 
 	t.Run("exists on server and client", func(t *testing.T) {
-		b1UUID := utils.GenerateUUID()
-		b2UUID := utils.GenerateUUID()
-		conflictBookUUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
+		b2UUID := testutils.MustGenerateUUID(t)
+		conflictBookUUID := testutils.MustGenerateUUID(t)
 
 		testCases := []struct {
 			addedOn          int64
@@ -1243,7 +1242,7 @@ n1 body edited
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
 				database.MustExec(t, fmt.Sprintf("inserting conflitcs book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", conflictBookUUID, "conflicts")
-				n1UUID := utils.GenerateUUID()
+				n1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 				// execute
@@ -1302,7 +1301,7 @@ func TestStepSyncBook(t *testing.T) {
 		db := database.InitTestDB(t, dbPath, nil)
 		defer database.CloseTestDB(t, db)
 
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
 
 		// execute
@@ -1311,7 +1310,7 @@ func TestStepSyncBook(t *testing.T) {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
-		b2UUID := utils.GenerateUUID()
+		b2UUID := testutils.MustGenerateUUID(t)
 		b := client.SyncFragBook{
 			UUID:    b2UUID,
 			USN:     1,
@@ -1425,9 +1424,9 @@ func TestStepSyncBook(t *testing.T) {
 				db := database.InitTestDB(t, dbPath, nil)
 				defer database.CloseTestDB(t, db)
 
-				b1UUID := utils.GenerateUUID()
+				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
-				b2UUID := utils.GenerateUUID()
+				b2UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b2UUID, 2, tc.anotherBookLabel, false, false)
 
 				// execute
@@ -1660,7 +1659,7 @@ func TestMergeBook(t *testing.T) {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
-		b1UUID := utils.GenerateUUID()
+		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 1, "b1-label", false, false)
 
 		b1 := client.SyncFragBook{
@@ -2401,7 +2400,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			resp := client.CreateNoteResp{
 				Result: client.RespNote{
-					UUID: utils.GenerateUUID(),
+					UUID: testutils.MustGenerateUUID(t),
 				},
 			}
 
@@ -2649,7 +2648,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 func TestMergeNote(t *testing.T) {
 	b1UUID := "b1-uuid"
 	b2UUID := "b2-uuid"
-	conflictBookUUID := utils.GenerateUUID()
+	conflictBookUUID := testutils.MustGenerateUUID(t)
 
 	testCases := []struct {
 		addedOn          int64
@@ -2786,7 +2785,7 @@ n1 body edited
 			database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 5, false)
 			database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b2UUID, "b2-label", 6, false)
 			database.MustExec(t, fmt.Sprintf("inserting conflitcs book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", conflictBookUUID, "conflicts")
-			n1UUID := utils.GenerateUUID()
+			n1UUID := testutils.MustGenerateUUID(t)
 			database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?,  ?, ?, ?, ?, ?)", n1UUID, b1UUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 			// execute

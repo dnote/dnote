@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {
-  secondsToHTMLTimeDuration,
+  msToHTMLTimeDuration,
   getMonthName,
   getUTCOffset
 } from '../../helpers/time';
@@ -43,8 +43,7 @@ interface Props {
 
 function getDatetimeAttr(ms: number, isDuration: boolean = false): string {
   if (isDuration) {
-    const s = ms / 1000;
-    return secondsToHTMLTimeDuration(s);
+    return msToHTMLTimeDuration(ms);
   }
 
   const d = new Date(ms);

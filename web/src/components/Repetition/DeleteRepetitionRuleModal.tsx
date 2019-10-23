@@ -88,7 +88,7 @@ const DeleteRepetitionModal: React.FunctionComponent<Props> = ({
 
   return (
     <Modal
-      modalId="T-delete-rule-modal"
+      modalId="T-delete-repetition-rule-modal"
       isOpen={isOpen}
       onDismiss={onDismiss}
       ariaLabelledBy={labelId}

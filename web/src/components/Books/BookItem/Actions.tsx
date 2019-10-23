@@ -46,7 +46,7 @@ const Actions: React.FunctionComponent<Props> = ({
           ref={optRefs[0]}
           type="button"
           className={classnames(
-            'button-no-ui button-stretch',
+            'button-no-ui button-stretch T-delete-book-btn',
             ItemActionsStyles.action
           )}
           onClick={() => {
@@ -62,8 +62,8 @@ const Actions: React.FunctionComponent<Props> = ({
 
   return (
     <ItemActions
-      id="mobile-book-actions"
-      triggerId="mobile-book-actions-trigger"
+      id={`book-actions-${bookUUID}`}
+      triggerId={`book-actions-trigger-${bookUUID}`}
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       isActive={isActive}

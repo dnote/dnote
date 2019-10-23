@@ -9,4 +9,4 @@ set -a
 source "$basePath/.env.test"
 set +a
 
-"$basePath/api/scripts/test.sh"
+"$basePath/scripts/test.sh"

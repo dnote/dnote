@@ -33,16 +33,7 @@ export interface CreateParams {
   enabled: boolean;
 }
 
-export interface UpdateParams {
-  title?: string;
-  hour?: number;
-  minute?: number;
-  frequency?: number;
-  book_domain?: BookDomain;
-  note_count?: number;
-  book_uuids?: string[];
-  enabled?: boolean;
-}
+export type UpdateParams = Partial<CreateParams>;
 
 export interface RepetitionRuleRespData {
   uuid: string;

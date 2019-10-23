@@ -128,6 +128,7 @@ type Session struct {
 // Digest is a digest of notes
 type Digest struct {
 	UUID      string    `json:"uuid" gorm:"primary_key:true;type:uuid;index;default:uuid_generate_v4()"`
+	RuleID    int       `gorm:"index"`
 	UserID    int       `gorm:"index"`
 	Notes     []Note    `gorm:"many2many:digest_notes;association_foreignKey:uuid;association_jointable_foreignkey:note_uuid;jointable_foreignkey:digest_uuid;"`
 	CreatedAt time.Time `json:"created_at"`
@@ -137,14 +138,16 @@ type Digest struct {
 // RepetitionRule is the rules for sending digest emails
 type RepetitionRule struct {
 	Model
-	UUID       string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
-	UserID     int    `json:"user_id" gorm:"index"`
-	Title      string `json:"title"`
-	Enabled    bool   `json:"enabled"`
-	Hour       int    `json:"hour" gorm:"index"`
-	Minute     int    `json:"minute" gorm:"index"`
-	Frequency  int    `json:"frequency"`
-	LastActive int    `json:"last_active"`
+	UUID    string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	UserID  int    `json:"user_id" gorm:"index"`
+	Title   string `json:"title"`
+	Enabled bool   `json:"enabled"`
+	Hour    int    `json:"hour" gorm:"index"`
+	Minute  int    `json:"minute" gorm:"index"`
+	// in milliseconds
+	Frequency int64 `json:"frequency"`
+	// in milliseconds
+	LastActive int64  `json:"last_active"`
 	BookDomain string `json:"book_domain"`
 	Books      []Book `gorm:"many2many:repetition_rule_books;"`
 	NoteCount  int    `json:"note_count"`

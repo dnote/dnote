@@ -91,6 +91,20 @@
   version = "v2.5.2"
 
 [[projects]]
+  digest = "1:1d1cbf539d9ac35eb3148129f96be5537f1a1330cadcc7e3a83b4e72a59672a3"
+  name = "github.com/google/go-cmp"
+  packages = [
+    "cmp",
+    "cmp/internal/diff",
+    "cmp/internal/flags",
+    "cmp/internal/function",
+    "cmp/internal/value",
+  ]
+  pruneopts = "UT"
+  revision = "2d0692c2e9617365a95b295612ac0d4415ba4627"
+  version = "v0.3.1"
+
+[[projects]]
   digest = "1:bfb6d8aee23cd9b2db8fa3760ca11d7a934d9a05993d5233406f1e6042e4c110"
   name = "github.com/google/go-github"
   packages = ["github"]
@@ -105,6 +119,14 @@
   pruneopts = "UT"
   revision = "44c6ddd0a2342c386950e880b658017258da92fc"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:fc51ecee8f31d03436c1a0167eb1e383ad0a241d02272541853f3995374a08f1"
@@ -153,6 +175,14 @@
   pruneopts = "UT"
   revision = "23d116af351c84513e1946b527c88823e476be13"
   version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:77fa3714d5009a706a77970c39b690c951473ab05560baab801f14055218c9ed"
+  name = "github.com/justincampbell/timeago"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "027f40306f1dbe89d24087611680ef95543bf876"
 
 [[projects]]
   digest = "1:77857b3205f936bdc6928ef347b682ab549cf99454d6c0ca04a49f8df9e418f3"
@@ -243,14 +273,6 @@
   ]
   pruneopts = "UT"
   revision = "f4d34eae5a5cf210693e81c604e6bac5f6727927"
-
-[[projects]]
-  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
 
 [[projects]]
   digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
@@ -392,16 +414,18 @@
     "github.com/dnote/actions",
     "github.com/dnote/color",
     "github.com/gobuffalo/packr/v2",
+    "github.com/google/go-cmp/cmp",
     "github.com/google/go-github/github",
+    "github.com/google/uuid",
     "github.com/gorilla/mux",
     "github.com/jinzhu/gorm",
     "github.com/joho/godotenv",
+    "github.com/justincampbell/timeago",
     "github.com/lib/pq",
     "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
     "github.com/robfig/cron",
     "github.com/rubenv/sql-migrate",
-    "github.com/satori/go.uuid",
     "github.com/sergi/go-diff/diffmatchpatch",
     "github.com/spf13/cobra",
     "github.com/stripe/stripe-go",
