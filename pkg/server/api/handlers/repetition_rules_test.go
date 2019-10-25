@@ -135,7 +135,7 @@ func TestGetRepetitionRules(t *testing.T) {
 		Frequency:  (time.Hour * 24 * 7).Milliseconds(),
 		Hour:       21,
 		Minute:     0,
-		LastActive: 0,
+		LastActive: 1257714000000,
 		UserID:     user.ID,
 		BookDomain: database.BookDomainExluding,
 		Books:      []database.Book{b1},
@@ -586,6 +586,47 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			var ruleCount int
 			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 			assert.Equalf(t, ruleCount, 1, "reperition rule count mismatch")
+		})
+	}
+}
+
+func TestCreateRepetitionRules_BadRequest(t *testing.T) {
+	testCases := []string{
+		// no enabeld field
+		`{
+			"title": "Rule #1",
+			"hour": 8,
+			"minute": 30,
+			"frequency": 6048000000,
+			"book_domain": "all",
+			"book_uuids": [],
+			"note_count": 20
+		}`,
+	}
+
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
+			defer testutils.ClearData()
+			db := database.DBConn
+
+			// Setup
+			server := httptest.NewServer(NewRouter(&App{
+				Clock: clock.NewMock(),
+			}))
+			defer server.Close()
+
+			user := testutils.SetupUserData()
+
+			// Execute
+			req := testutils.MakeReq(server, "POST", "/repetition_rules", tc)
+			res := testutils.HTTPAuthDo(t, req, user)
+
+			// Test
+			assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
+
+			var ruleCount int
+			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+			assert.Equalf(t, ruleCount, 0, "reperition rule count mismatch")
 		})
 	}
 }

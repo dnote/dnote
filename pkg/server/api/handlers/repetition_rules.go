@@ -64,7 +64,7 @@ func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 
 	db := database.DBConn
 	var repetitionRules []database.RepetitionRule
-	if err := db.Where("user_id = ?", user.ID).Preload("Books").Find(&repetitionRules).Error; err != nil {
+	if err := db.Where("user_id = ?", user.ID).Preload("Books").Order("last_active DESC").Find(&repetitionRules).Error; err != nil {
 		handleError(w, "getting repetition rules", err, http.StatusInternalServerError)
 		return
 	}

@@ -118,13 +118,6 @@ img {
   background: #ececec;
 }
 
-// override react-tooltip
-.__react_component_tooltip {
-  &.dnote-tooltip {
-    opacity: 1;
-  }
-}
-
 // Measure scrollbar width for padding body during modal show/hide
 .modal-scrollbar-measure {
   position: absolute;

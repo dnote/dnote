@@ -113,7 +113,7 @@ type Notification struct {
 type EmailPreference struct {
 	Model
 	UserID       int  `gorm:"index" json:"-"`
-	DigestWeekly bool `json:"digest_weekly"`
+	DigestWeekly bool `json:"digest_weekly"` // Deprecated: email digests now sends based on the repetition rule
 }
 
 // Session represents a user session

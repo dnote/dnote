@@ -224,7 +224,7 @@ func TestAuthMiddleware(t *testing.T) {
 				expectedStatus: http.StatusUnauthorized,
 			},
 			{
-				header:         fmt.Sprintf("Bearer neBchYaAYxJv4U22cx9Udxacp0HjvUIS4UEAqMIU1q0="),
+				header:         fmt.Sprintf("Bearer someInvalidSessionKey="),
 				expectedStatus: http.StatusUnauthorized,
 			},
 		}
@@ -267,7 +267,7 @@ func TestAuthMiddleware(t *testing.T) {
 			{
 				cookie: &http.Cookie{
 					Name:     "id",
-					Value:    "neBchYaAYxJv4U22cx9Udxacp0HjvUIS4UEAqMIU1q0=",
+					Value:    "someInvalidSessionKey=",
 					HttpOnly: true,
 				},
 				expectedStatus: http.StatusUnauthorized,
@@ -299,6 +299,96 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 }
 
+func TestAuthMiddleware_ProOnly(t *testing.T) {
+	defer testutils.ClearData()
+
+	// set up
+	db := database.DBConn
+
+	user := testutils.SetupUserData()
+	testutils.MustExec(t, db.Model(&user).Update("cloud", false), "preparing session")
+	session := database.Session{
+		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	testutils.MustExec(t, db.Save(&session), "preparing session")
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+	server := httptest.NewServer(auth(handler, &authMiddlewareParams{
+		ProOnly: true,
+	}))
+	defer server.Close()
+
+	t.Run("with header", func(t *testing.T) {
+		testCases := []struct {
+			header         string
+			expectedStatus int
+		}{
+			{
+				header:         fmt.Sprintf("Bearer %s", session.Key),
+				expectedStatus: http.StatusForbidden,
+			},
+			{
+				header:         fmt.Sprintf("Bearer someInvalidSessionKey="),
+				expectedStatus: http.StatusUnauthorized,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.header, func(t *testing.T) {
+				req := testutils.MakeReq(server, "GET", "/", "")
+				req.Header.Set("Authorization", tc.header)
+
+				// execute
+				res := testutils.HTTPDo(t, req)
+
+				// test
+				assert.Equal(t, res.StatusCode, tc.expectedStatus, "status code mismatch")
+			})
+		}
+	})
+
+	t.Run("with cookie", func(t *testing.T) {
+		testCases := []struct {
+			cookie         *http.Cookie
+			expectedStatus int
+		}{
+			{
+				cookie: &http.Cookie{
+					Name:     "id",
+					Value:    session.Key,
+					HttpOnly: true,
+				},
+				expectedStatus: http.StatusForbidden,
+			},
+			{
+				cookie: &http.Cookie{
+					Name:     "id",
+					Value:    "someInvalidSessionKey=",
+					HttpOnly: true,
+				},
+				expectedStatus: http.StatusUnauthorized,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.cookie.Value, func(t *testing.T) {
+				req := testutils.MakeReq(server, "GET", "/", "")
+				req.AddCookie(tc.cookie)
+
+				// execute
+				res := testutils.HTTPDo(t, req)
+
+				// test
+				assert.Equal(t, res.StatusCode, tc.expectedStatus, "status code mismatch")
+			})
+		}
+	})
+}
+
 func TestTokenAuthMiddleWare(t *testing.T) {
 	defer testutils.ClearData()
 
@@ -322,7 +412,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	server := httptest.NewServer(tokenAuth(handler, database.TokenTypeEmailPreference))
+	server := httptest.NewServer(tokenAuth(handler, database.TokenTypeEmailPreference, nil))
 	defer server.Close()
 
 	t.Run("with token", func(t *testing.T) {
@@ -335,7 +425,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 				expectedStatus: http.StatusOK,
 			},
 			{
-				token:          "UlcKclI67wHfpbc1AX6skw==",
+				token:          "someRandomToken==",
 				expectedStatus: http.StatusUnauthorized,
 			},
 		}
@@ -363,7 +453,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 				expectedStatus: http.StatusOK,
 			},
 			{
-				header:         fmt.Sprintf("Bearer neBchYaAYxJv4U22cx9Udxacp0HjvUIS4UEAqMIU1q0="),
+				header:         fmt.Sprintf("Bearer someInvalidSessionKey="),
 				expectedStatus: http.StatusUnauthorized,
 			},
 		}
@@ -398,7 +488,141 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 			{
 				cookie: &http.Cookie{
 					Name:     "id",
-					Value:    "neBchYaAYxJv4U22cx9Udxacp0HjvUIS4UEAqMIU1q0=",
+					Value:    "someInvalidSessionKey=",
+					HttpOnly: true,
+				},
+				expectedStatus: http.StatusUnauthorized,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.cookie.Value, func(t *testing.T) {
+				req := testutils.MakeReq(server, "GET", "/", "")
+				req.AddCookie(tc.cookie)
+
+				// execute
+				res := testutils.HTTPDo(t, req)
+
+				// test
+				assert.Equal(t, res.StatusCode, tc.expectedStatus, "status code mismatch")
+			})
+		}
+	})
+
+	t.Run("without anything", func(t *testing.T) {
+		req := testutils.MakeReq(server, "GET", "/", "")
+
+		// execute
+		res := testutils.HTTPDo(t, req)
+
+		// test
+		assert.Equal(t, res.StatusCode, http.StatusUnauthorized, "status code mismatch")
+	})
+}
+
+func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
+	defer testutils.ClearData()
+
+	// set up
+	db := database.DBConn
+
+	user := testutils.SetupUserData()
+	testutils.MustExec(t, db.Model(&user).Update("cloud", false), "preparing session")
+	tok := database.Token{
+		UserID: user.ID,
+		Type:   database.TokenTypeEmailPreference,
+		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
+	}
+	testutils.MustExec(t, db.Save(&tok), "preparing token")
+	session := database.Session{
+		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	testutils.MustExec(t, db.Save(&session), "preparing session")
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+	server := httptest.NewServer(tokenAuth(handler, database.TokenTypeEmailPreference, &authMiddlewareParams{
+		ProOnly: true,
+	}))
+	defer server.Close()
+
+	t.Run("with token", func(t *testing.T) {
+		testCases := []struct {
+			token          string
+			expectedStatus int
+		}{
+			{
+				token:          "xpwFnc0MdllFUePDq9DLeQ==",
+				expectedStatus: http.StatusForbidden,
+			},
+			{
+				token:          "someRandomToken==",
+				expectedStatus: http.StatusUnauthorized,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.token, func(t *testing.T) {
+				req := testutils.MakeReq(server, "GET", fmt.Sprintf("/?token=%s", tc.token), "")
+
+				// execute
+				res := testutils.HTTPDo(t, req)
+
+				// test
+				assert.Equal(t, res.StatusCode, tc.expectedStatus, "status code mismatch")
+			})
+		}
+	})
+
+	t.Run("with session header", func(t *testing.T) {
+		testCases := []struct {
+			header         string
+			expectedStatus int
+		}{
+			{
+				header:         fmt.Sprintf("Bearer %s", session.Key),
+				expectedStatus: http.StatusForbidden,
+			},
+			{
+				header:         fmt.Sprintf("Bearer someInvalidSessionKey="),
+				expectedStatus: http.StatusUnauthorized,
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.header, func(t *testing.T) {
+				req := testutils.MakeReq(server, "GET", "/", "")
+				req.Header.Set("Authorization", tc.header)
+
+				// execute
+				res := testutils.HTTPDo(t, req)
+
+				// test
+				assert.Equal(t, res.StatusCode, tc.expectedStatus, "status code mismatch")
+			})
+		}
+	})
+
+	t.Run("with session cookie", func(t *testing.T) {
+		testCases := []struct {
+			cookie         *http.Cookie
+			expectedStatus int
+		}{
+			{
+				cookie: &http.Cookie{
+					Name:     "id",
+					Value:    session.Key,
+					HttpOnly: true,
+				},
+				expectedStatus: http.StatusForbidden,
+			},
+			{
+				cookie: &http.Cookie{
+					Name:     "id",
+					Value:    "someInvalidSessionKey=",
 					HttpOnly: true,
 				},
 				expectedStatus: http.StatusUnauthorized,

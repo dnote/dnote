@@ -38,6 +38,9 @@ import (
 // ErrInvalidAuthHeader is an error for invalid format of Authorization HTTP header
 var ErrInvalidAuthHeader = errors.New("Invalid authorization header")
 
+// ErrForbidden is an error for forbidden requests
+var ErrForbidden = errors.New("forbidden")
+
 // Route represents a single route
 type Route struct {
 	Method      string
@@ -64,6 +67,10 @@ func parseAuthHeader(h string) (authHeader, error) {
 	}
 
 	return parsed, nil
+}
+
+func respondForbidden(w http.ResponseWriter) {
+	http.Error(w, "forbidden", http.StatusForbidden)
 }
 
 func respondUnauthorized(w http.ResponseWriter) {
@@ -146,7 +153,7 @@ func getCredential(r *http.Request) (string, error) {
 	return ret, nil
 }
 
-func authWithSession(r *http.Request) (database.User, bool, error) {
+func authWithSession(r *http.Request, p *authMiddlewareParams) (database.User, bool, error) {
 	db := database.DBConn
 	var user database.User
 
@@ -180,10 +187,16 @@ func authWithSession(r *http.Request) (database.User, bool, error) {
 		return user, false, errors.Wrap(err, "finding user from token")
 	}
 
+	if p != nil && p.ProOnly {
+		if !user.Cloud {
+			return user, false, ErrForbidden
+		}
+	}
+
 	return user, true, nil
 }
 
-func authWithToken(r *http.Request, tokenType string) (database.User, database.Token, bool, error) {
+func authWithToken(r *http.Request, tokenType string, p *authMiddlewareParams) (database.User, database.Token, bool, error) {
 	db := database.DBConn
 	var user database.User
 	var token database.Token
@@ -209,6 +222,12 @@ func authWithToken(r *http.Request, tokenType string) (database.User, database.T
 		return user, token, false, errors.Wrap(err, "finding user")
 	}
 
+	if p != nil && p.ProOnly {
+		if !user.Cloud {
+			return user, token, false, ErrForbidden
+		}
+	}
+
 	return user, token, true, nil
 }
 
@@ -218,17 +237,14 @@ type authMiddlewareParams struct {
 
 func auth(next http.HandlerFunc, p *authMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok, err := authWithSession(r)
+		user, ok, err := authWithSession(r, p)
 		if !ok || err != nil {
-			respondUnauthorized(w)
-			return
-		}
-
-		if p != nil && p.ProOnly {
-			if !user.Cloud {
+			if err == ErrForbidden {
 				http.Error(w, "forbidden", http.StatusForbidden)
-				return
+			} else {
+				respondUnauthorized(w)
 			}
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), helpers.KeyUser, user)
@@ -236,10 +252,15 @@ func auth(next http.HandlerFunc, p *authMiddlewareParams) http.HandlerFunc {
 	})
 }
 
-func tokenAuth(next http.HandlerFunc, tokenType string) http.HandlerFunc {
+func tokenAuth(next http.HandlerFunc, tokenType string, p *authMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, token, ok, err := authWithToken(r, tokenType)
+		user, token, ok, err := authWithToken(r, tokenType, p)
 		if err != nil {
+			if err == ErrForbidden {
+				respondForbidden(w)
+				return
+			}
+
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with token")
 		}
@@ -250,14 +271,18 @@ func tokenAuth(next http.HandlerFunc, tokenType string) http.HandlerFunc {
 			ctx = context.WithValue(ctx, helpers.KeyToken, token)
 		} else {
 			// If token-based auth fails, fall back to session-based auth
-			user, ok, err = authWithSession(r)
+			user, ok, err = authWithSession(r, p)
 			if err != nil {
 				// log the error and continue
 				log.ErrorWrap(err, "authenticating with session")
 			}
 
 			if !ok {
-				respondUnauthorized(w)
+				if err == ErrForbidden {
+					respondForbidden(w)
+				} else {
+					respondUnauthorized(w)
+				}
 				return
 			}
 		}
@@ -353,8 +378,8 @@ func NewRouter(app *App) *mux.Router {
 		{"PATCH", "/reset-password", app.resetPassword, true},
 		{"PATCH", "/account/profile", auth(app.updateProfile, nil), true},
 		{"PATCH", "/account/password", auth(app.updatePassword, nil), true},
-		{"GET", "/account/email-preference", tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference), true},
-		{"PATCH", "/account/email-preference", tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference), true},
+		{"GET", "/account/email-preference", tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference, nil), true},
+		{"PATCH", "/account/email-preference", tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference, nil), true},
 		{"POST", "/subscriptions", auth(app.createSub, nil), true},
 		{"PATCH", "/subscriptions", auth(app.updateSub, nil), true},
 		{"POST", "/webhooks/stripe", app.stripeWebhook, true},
