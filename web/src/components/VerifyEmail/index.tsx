@@ -19,7 +19,7 @@
 import React, { useEffect } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 
-import { getHomePath, homePathDef, emailPrefPathDef } from 'web/libs/paths';
+import { getHomePath, homePathDef, verifyEmailPathDef } from 'web/libs/paths';
 import services from 'web/libs/services';
 import { receiveUser } from '../../store/auth';
 import { setMessage } from '../../store/ui';
@@ -56,7 +56,7 @@ const VerifyEmail: React.SFC<Props> = ({ match, history }) => {
           setMessage({
             message: err.message,
             kind: 'error',
-            path: emailPrefPathDef
+            path: verifyEmailPathDef
           })
         );
       });

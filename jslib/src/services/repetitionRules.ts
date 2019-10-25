@@ -71,8 +71,9 @@ export default function init(config: HttpClientConfig) {
   const client = getHttpClient(config);
 
   return {
-    fetch: (uuid: string): Promise<RepetitionRuleData> => {
-      const endpoint = `/repetition_rules/${uuid}`;
+    fetch: (uuid: string, queries = {}): Promise<RepetitionRuleData> => {
+      const path = `/repetition_rules/${uuid}`;
+      const endpoint = getPath(path, queries);
 
       return client.get<RepetitionRuleRespData>(endpoint).then(resp => {
         return mapData(resp);
@@ -94,8 +95,9 @@ export default function init(config: HttpClientConfig) {
           return mapData(resp);
         });
     },
-    update: (uuid: string, params: UpdateParams) => {
-      const endpoint = `/repetition_rules/${uuid}`;
+    update: (uuid: string, params: UpdateParams, queries = {}) => {
+      const path = `/repetition_rules/${uuid}`;
+      const endpoint = getPath(path, queries);
 
       return client
         .patch<RepetitionRuleRespData>(endpoint, params)

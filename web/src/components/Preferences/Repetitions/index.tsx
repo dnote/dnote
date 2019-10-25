@@ -21,59 +21,75 @@ import classnames from 'classnames';
 import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 
-import EmailPreferenceForm from '../Common/EmailPreferenceForm';
-import Logo from '../Icons/Logo';
-import Flash from '../Common/Flash';
+import services from 'web/libs/services';
+import Logo from '../../Icons/Logo';
+import Flash from '../../Common/Flash';
 import { parseSearchString } from 'jslib/helpers/url';
-import { getEmailPreference } from '../../store/auth';
+import { getEmailPreference } from '../../../store/auth';
 import { getLoginPath } from 'web/libs/paths';
-import { useSelector, useDispatch } from '../../store';
-import styles from './EmailPreference.scss';
+import { useSelector, useDispatch } from '../../../store';
+import Content from './Content';
+import styles from './EmailPreferenceRepetition.scss';
 
-interface Props extends RouteComponentProps {}
+interface Match {
+  repetitionUUID: string;
+}
+interface Props extends RouteComponentProps<Match> {}
 
-const EmailPreference: React.SFC<Props> = ({ location }) => {
-  const { emailPreference } = useSelector(state => {
-    return {
-      emailPreference: state.auth.emailPreference
-    };
-  });
-  const dispatch = useDispatch();
-
-  const emailPreferenceData = emailPreference.data;
-  const { isFetched, isFetching, errorMessage } = emailPreference;
-  const { token } = parseSearchString(location.search);
-
+const EmailPreferenceRepetition: React.SFC<Props> = ({ location, match }) => {
+  const [data, setData] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [failureMsg, setFailureMsg] = useState('');
 
+  const { token } = parseSearchString(location.search);
+  const { repetitionUUID } = match.params;
+
   useEffect(() => {
-    if (isFetched || isFetching) {
+    if (data !== null) {
       return;
     }
 
-    dispatch(getEmailPreference(token));
-  }, [dispatch, isFetched, isFetching, token]);
+    setIsFetching(true);
+
+    services.repetitionRules
+      .fetch(repetitionUUID, { token })
+      .then(repetition => {
+        setData(repetition);
+        setIsFetching(false);
+      })
+      .catch(err => {
+        if (err.response.status === 401) {
+          setFailureMsg('Your email token has expired or is not valid.');
+        } else {
+          setFailureMsg(err.message);
+        }
+
+        setIsFetching(false);
+      });
+  }, [data, setData, setFailureMsg, setIsFetching]);
+
+  const isFetched = data !== null;
 
   return (
     <div className={styles.wrapper}>
       <Helmet>
-        <title>Email Preference</title>
+        <title>Toggle repetition</title>
       </Helmet>
 
       <Link to="/">
         <Logo fill="#252833" width={60} height={60} />
       </Link>
-      <h1 className={styles.heading}>Dnote email settings</h1>
+      <h1 className={styles.heading}>Toggle repetition</h1>
 
       <div className="container">
         <div className={styles.body}>
           <Flash
-            when={errorMessage !== ''}
+            when={failureMsg !== ''}
             kind="danger"
             wrapperClassName={styles.flash}
           >
-            Error fetching email preference: {errorMessage}.{' '}
+            {failureMsg}{' '}
             <span>
               Please <Link to={getLoginPath()}>login</Link> and try again.
             </span>
@@ -86,18 +102,13 @@ const EmailPreference: React.SFC<Props> = ({ location }) => {
           >
             {successMsg}
           </Flash>
-          <Flash
-            when={failureMsg !== ''}
-            kind="danger"
-            wrapperClassName={styles.flash}
-          >
-            {failureMsg}
-          </Flash>
+
+          {isFetching && <div>Loading</div>}
 
           {isFetched && (
-            <EmailPreferenceForm
+            <Content
               token={token}
-              emailPreference={emailPreferenceData}
+              data={data}
               setSuccessMsg={setSuccessMsg}
               setFailureMsg={setFailureMsg}
             />
@@ -111,4 +122,4 @@ const EmailPreference: React.SFC<Props> = ({ location }) => {
   );
 };
 
-export default withRouter(EmailPreference);
+export default withRouter(EmailPreferenceRepetition);

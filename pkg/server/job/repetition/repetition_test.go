@@ -44,6 +44,7 @@ func TestDo(t *testing.T) {
 			Frequency:  (time.Hour * 24 * 3).Milliseconds(), // three days
 			Hour:       12,
 			Minute:     2,
+			Enabled:    true,
 			LastActive: 0,
 			UserID:     user.ID,
 			BookDomain: database.BookDomainAll,
@@ -120,6 +121,42 @@ func TestDo(t *testing.T) {
 	})
 }
 
+func TestDo_Disabled(t *testing.T) {
+	t.Run("processes the rule on time", func(t *testing.T) {
+		defer testutils.ClearData()
+
+		// Set up
+		user := testutils.SetupUserData()
+		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
+		r1 := database.RepetitionRule{
+			Title:      "Rule 1",
+			Frequency:  (time.Hour * 24 * 3).Milliseconds(), // three days
+			Hour:       12,
+			Minute:     2,
+			LastActive: 0,
+			UserID:     user.ID,
+			Enabled:    false,
+			BookDomain: database.BookDomainAll,
+			Model: database.Model{
+				CreatedAt: t0,
+				UpdatedAt: t0,
+			},
+		}
+
+		db := database.DBConn
+		testutils.MustExec(t, db.Save(&r1), "preparing rule1")
+
+		// Execute
+		c := clock.NewMock()
+		c.SetNow(time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC))
+		Do(c)
+
+		// Test
+		assertLastActive(t, r1.UUID, int64(0))
+		assertRepetitionCount(t, r1, 0)
+	})
+}
+
 func TestDo_RandomStrategy(t *testing.T) {
 	type testData struct {
 		User  database.User
@@ -192,6 +229,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 			Hour:       21,
 			Minute:     0,
 			LastActive: 0,
+			Enabled:    true,
 			UserID:     dat.User.ID,
 			BookDomain: database.BookDomainAll,
 			NoteCount:  5,
@@ -242,6 +280,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 7).Milliseconds(),
 			Hour:       21,
+			Enabled:    true,
 			Minute:     0,
 			LastActive: 0,
 			UserID:     dat.User.ID,
@@ -294,6 +333,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 7).Milliseconds(),
 			Hour:       21,
+			Enabled:    true,
 			Minute:     0,
 			LastActive: 0,
 			UserID:     dat.User.ID,

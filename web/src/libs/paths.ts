@@ -31,7 +31,8 @@ export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
 export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
-export const emailPrefPathDef = '/email-preference';
+export const prefEditRepetitionPathDef =
+  '/preferences/repetitions/:repetitionUUID';
 export const verifyEmailPathDef = '/verify-email/:token';
 export const classicMigrationPathDef = '/classic/:step?';
 export const passwordResetRequestPathDef = '/password-reset';
@@ -45,7 +46,7 @@ export const editRepetitionRulePathDef = '/repetition/:repetitionUUID/edit';
 export const noHeaderPaths = [
   loginPathDef,
   joinPathDef,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
@@ -56,7 +57,7 @@ export const noFooterPaths = [
   joinPathDef,
   subscriptionsPathDef,
   subscriptionsCheckoutPathDef,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,

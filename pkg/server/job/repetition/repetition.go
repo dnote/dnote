@@ -34,7 +34,7 @@ import (
 func BuildEmail(now time.Time, user database.User, emailAddr string, digest database.Digest, rule database.RepetitionRule) (*mailer.Email, error) {
 	date := now.Format("Jan 02 2006")
 	subject := fmt.Sprintf("%s %s", rule.Title, date)
-	tok, err := mailer.GetEmailPreferenceToken(user)
+	tok, err := mailer.GetToken(user, database.TokenTypeRepetition)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting email frequency token")
 	}
@@ -73,6 +73,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		ActiveBookCount:   bookCount,
 		ActiveNoteCount:   len(digest.Notes),
 		EmailSessionToken: tok.Value,
+		DigestUUID:        digest.UUID,
 	}
 
 	email := mailer.NewEmail("noreply@getdnote.com", []string{emailAddr}, subject)
@@ -89,7 +90,7 @@ func getEligibleRules(now time.Time) ([]database.RepetitionRule, error) {
 
 	var ret []database.RepetitionRule
 	db := database.DBConn
-	if err := db.Where("hour = ? AND minute = ?", hour, minute).Find(&ret).Error; err != nil {
+	if err := db.Where("hour = ? AND minute = ? AND enabled", hour, minute).Find(&ret).Error; err != nil {
 		return nil, errors.Wrap(err, "querying db")
 	}
 

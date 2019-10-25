@@ -37,14 +37,14 @@ func generateRandomToken(bits int) (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-// GetEmailPreferenceToken returns an unused email frequency token for the user
-// by first looking up any existing record and creating one if none exists.
-func GetEmailPreferenceToken(user database.User) (database.Token, error) {
+// GetToken returns an token of the given kind for the user
+// by first looking up any unused record and creating one if none exists.
+func GetToken(user database.User, kind string) (database.Token, error) {
 	db := database.DBConn
 
 	var tok database.Token
 	conn := db.
-		Where("user_id = ? AND type =? AND used_at IS NULL", user.ID, database.TokenTypeEmailPreference).
+		Where("user_id = ? AND type =? AND used_at IS NULL", user.ID, kind).
 		First(&tok)
 
 	tokenVal, err := generateRandomToken(16)
@@ -55,7 +55,7 @@ func GetEmailPreferenceToken(user database.User) (database.Token, error) {
 	if conn.RecordNotFound() {
 		tok = database.Token{
 			UserID: user.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   kind,
 			Value:  tokenVal,
 		}
 		if err := db.Save(&tok).Error; err != nil {

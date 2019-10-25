@@ -16,10 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../App/responsive';
-@import '../App/theme';
-@import '../App/rem';
-@import '../App/font';
+@import '../../App/responsive';
+@import '../../App/theme';
+@import '../../App/rem';
+@import '../../App/font';
 
 .wrapper {
   text-align: center;
@@ -55,6 +55,14 @@
   }
 }
 
-.flash {
-  margin-bottom: rem(8px);
+.radio {
+  display: inline-block;
+
+  & ~ .radio {
+    margin-left: 26px;
+  }
+
+  label {
+    padding-left: 3px;
+  }
 }

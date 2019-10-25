@@ -29,7 +29,7 @@ import Join from './components/Join';
 import Settings from './components/Settings';
 import NotFound from './components/Common/NotFound';
 import VerifyEmail from './components/VerifyEmail';
-import EmailPreference from './components/EmailPreference';
+import PreferenceEditRepetition from './components/Preferences/Repetitions';
 import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
@@ -56,7 +56,7 @@ import {
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   getJoinPath,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   repetitionsPathDef,
@@ -137,9 +137,9 @@ const routes = [
     component: VerifyEmail
   },
   {
-    path: emailPrefPathDef,
+    path: prefEditRepetitionPathDef,
     exact: true,
-    component: EmailPreference
+    component: PreferenceEditRepetition
   },
   {
     path: noteNewPathDef,
