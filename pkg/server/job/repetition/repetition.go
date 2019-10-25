@@ -154,6 +154,25 @@ func notify(now time.Time, user database.User, digest database.Digest, rule data
 func checkCooldown(now time.Time, rule database.RepetitionRule) bool {
 	present := now.UnixNano() / int64(time.Millisecond)
 
+	// If it's the first time being active, wait for the frequency from the created date time
+	if rule.LastActive == 0 {
+		createdAt := rule.CreatedAt
+
+		startAt := time.Date(
+			createdAt.Year(),
+			createdAt.Month(),
+			createdAt.Day(),
+			createdAt.Hour(),
+			createdAt.Minute(),
+			0,
+			0,
+			createdAt.Location(),
+		)
+		startAt = startAt.Add((time.Duration(rule.Frequency * int64(time.Millisecond))))
+
+		return present >= startAt.UnixNano()/int64(time.Millisecond)
+	}
+
 	return present >= int64(rule.LastActive+rule.Frequency)
 }
 
