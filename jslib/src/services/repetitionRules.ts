@@ -46,6 +46,7 @@ export interface RepetitionRuleRespData {
   books: BookData[];
   note_count: number;
   last_active: number;
+  next_active: number;
   created_at: string;
   updated_at: string;
 }
@@ -62,6 +63,7 @@ function mapData(d: RepetitionRuleRespData): RepetitionRuleData {
     books: d.books,
     noteCount: d.note_count,
     lastActive: d.last_active,
+    nextActive: d.next_active,
     createdAt: d.created_at,
     updatedAt: d.updated_at
   };

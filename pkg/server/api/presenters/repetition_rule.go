@@ -34,6 +34,7 @@ type RepetitionRule struct {
 	Frequency  int64     `json:"frequency"`
 	BookDomain string    `json:"book_domain"`
 	LastActive int64     `json:"last_active"`
+	NextActive int64     `json:"next_active"`
 	Books      []Book    `json:"books"`
 	NoteCount  int       `json:"note_count"`
 	CreatedAt  time.Time `json:"created_at"`
@@ -52,6 +53,7 @@ func PresentRepetitionRule(d database.RepetitionRule) RepetitionRule {
 		BookDomain: d.BookDomain,
 		NoteCount:  d.NoteCount,
 		LastActive: d.LastActive,
+		NextActive: d.NextActive,
 		Books:      PresentBooks(d.Books),
 		CreatedAt:  FormatTS(d.CreatedAt),
 		UpdatedAt:  FormatTS(d.UpdatedAt),

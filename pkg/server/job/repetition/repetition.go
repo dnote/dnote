@@ -155,31 +155,14 @@ func notify(now time.Time, user database.User, digest database.Digest, rule data
 func checkCooldown(now time.Time, rule database.RepetitionRule) bool {
 	present := now.UnixNano() / int64(time.Millisecond)
 
-	// If it's the first time being active, wait for the frequency from the created date time
-	if rule.LastActive == 0 {
-		createdAt := rule.CreatedAt
-
-		startAt := time.Date(
-			createdAt.Year(),
-			createdAt.Month(),
-			createdAt.Day(),
-			createdAt.Hour(),
-			createdAt.Minute(),
-			0,
-			0,
-			createdAt.Location(),
-		)
-		startAt = startAt.Add((time.Duration(rule.Frequency * int64(time.Millisecond))))
-
-		return present >= startAt.UnixNano()/int64(time.Millisecond)
-	}
-
-	return present >= int64(rule.LastActive+rule.Frequency)
+	return present >= rule.NextActive
 }
 
-func touchLastActive(tx *gorm.DB, rule database.RepetitionRule, now time.Time) error {
-	lastActive := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
-	rule.LastActive = lastActive.UnixNano() / int64(time.Millisecond)
+func touchTimestamp(tx *gorm.DB, rule database.RepetitionRule, now time.Time) error {
+	lastActive := rule.NextActive
+
+	rule.LastActive = lastActive
+	rule.NextActive = lastActive + rule.Frequency
 
 	if err := tx.Save(&rule).Error; err != nil {
 		return errors.Wrap(err, "updating repetition rule")
@@ -217,7 +200,7 @@ func process(now time.Time, rule database.RepetitionRule) error {
 		return errors.Wrap(err, "building repetition")
 	}
 
-	if err := touchLastActive(tx, rule, now); err != nil {
+	if err := touchTimestamp(tx, rule, now); err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "touching last_active")
 	}

@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 
 import { RepetitionRuleData } from 'jslib/operations/types';
-import { msToDuration, msToHTMLTimeDuration, timeAgo } from 'web/helpers/time';
+import {
+  msToDuration,
+  msToHTMLTimeDuration,
+  timeAgo,
+  relativeTimeDiff
+} from 'web/helpers/time';
 import formatTime from 'web/helpers/time/format';
 import Actions from './Actions';
 import BookMeta from './BookMeta';
@@ -16,6 +21,13 @@ interface Props {
 
 function formatLastActive(ms: number): string {
   return timeAgo(ms);
+}
+
+function formatNextActive(ms: number): string {
+  const now = new Date().getTime();
+  const diff = relativeTimeDiff(now, ms);
+
+  return diff.text;
 }
 
 const RepetitionItem: React.FunctionComponent<Props> = ({
@@ -66,6 +78,22 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
         <div className={styles.right}>
           <ul className={classnames('list-unstyled', styles['detail-list'])}>
             <li>
+              {item.enabled ? (
+                <span>
+                  Scheduled in{' '}
+                  <Time
+                    id={`${item.uuid}-lastactive-ts`}
+                    text={formatNextActive(item.nextActive)}
+                    ms={item.nextActive}
+                    tooltipAlignment="center"
+                    tooltipDirection="bottom"
+                  />
+                </span>
+              ) : (
+                <span>Not scheduled</span>
+              )}
+            </li>
+            <li>
               Last active:{' '}
               {item.lastActive === 0 ? (
                 <span>Never</span>
@@ -79,6 +107,7 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
                 />
               )}
             </li>
+            {/*
             <li>
               Created:{' '}
               <Time
@@ -89,6 +118,7 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
                 tooltipDirection="bottom"
               />
             </li>
+              */}
           </ul>
         </div>
       </div>

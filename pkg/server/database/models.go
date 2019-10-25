@@ -147,7 +147,9 @@ type RepetitionRule struct {
 	// in milliseconds
 	Frequency int64 `json:"frequency"`
 	// in milliseconds
-	LastActive int64  `json:"last_active"`
+	LastActive int64 `json:"last_active"`
+	// in milliseconds
+	NextActive int64  `json:"next_active"`
 	BookDomain string `json:"book_domain"`
 	Books      []Book `gorm:"many2many:repetition_rule_books;"`
 	NoteCount  int    `json:"note_count"`

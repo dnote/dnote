@@ -5,6 +5,7 @@ import {
   getMonthName,
   getUTCOffset
 } from '../../helpers/time';
+import formatTime from '../../helpers/time/format';
 import Tooltip from './Tooltip';
 import { Alignment, Direction } from '../Common/Popover/types';
 import styles from './Time.scss';
@@ -53,29 +54,7 @@ function getDatetimeAttr(ms: number, isDuration: boolean = false): string {
 function formatOverlayTimeStr(ms: number): string {
   const date = new Date(ms);
 
-  const y = date.getFullYear();
-  const m = getMonthName(date, true);
-  const d = date.getDate();
-  const h = date.getHours();
-  const min = date.getMinutes();
-  const offset = getUTCOffset();
-
-  let period;
-  let hour;
-  if (h >= 12) {
-    period = 'PM';
-
-    if (h === 12) {
-      hour = h;
-    } else {
-      hour = h - 12;
-    }
-  } else {
-    period = 'AM';
-    hour = h;
-  }
-
-  return ` ${m} ${d}, ${y}, ${hour}:${min} ${period} GMT${offset}`;
+  return formatTime(date, '%MMM %DD, %YYYY, %hh:%mm %A GMT%Z');
 }
 
 const Time: React.FunctionComponent<Props> = ({

@@ -38,7 +38,8 @@ func TestDo(t *testing.T) {
 
 		// Set up
 		user := testutils.SetupUserData()
-		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
+		t0 := time.Date(2009, time.November, 1, 0, 0, 0, 0, time.UTC)
+		t1 := time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC)
 		r1 := database.RepetitionRule{
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 3).Milliseconds(), // three days
@@ -46,6 +47,7 @@ func TestDo(t *testing.T) {
 			Minute:     2,
 			Enabled:    true,
 			LastActive: 0,
+			NextActive: t1.UnixNano() / int64(time.Millisecond),
 			UserID:     user.ID,
 			BookDomain: database.BookDomainAll,
 			Model: database.Model{
@@ -61,60 +63,60 @@ func TestDo(t *testing.T) {
 
 		// Test
 		// 1 day later
-		c.SetNow(time.Date(2009, time.November, 2, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 2, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(0))
 		assertRepetitionCount(t, r1, 0)
 
 		// 2 days later
-		c.SetNow(time.Date(2009, time.November, 3, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 3, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(0))
 		assertRepetitionCount(t, r1, 0)
 
 		// 3 days later - should be processed
-		c.SetNow(time.Date(2009, time.November, 4, 12, 1, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 4, 12, 1, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(0))
 		assertRepetitionCount(t, r1, 0)
 
-		c.SetNow(time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 4, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertRepetitionCount(t, r1, 1)
 
-		c.SetNow(time.Date(2009, time.November, 4, 12, 3, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 4, 12, 3, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertRepetitionCount(t, r1, 1)
 
 		// 4 day later
-		c.SetNow(time.Date(2009, time.November, 5, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 5, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertRepetitionCount(t, r1, 1)
 		// 5 days later
-		c.SetNow(time.Date(2009, time.November, 6, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 6, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertRepetitionCount(t, r1, 1)
 		// 6 days later - should be processed
-		c.SetNow(time.Date(2009, time.November, 7, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 7, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertRepetitionCount(t, r1, 2)
 		// 7 days later
-		c.SetNow(time.Date(2009, time.November, 8, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 8, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertRepetitionCount(t, r1, 2)
 		// 8 days later
-		c.SetNow(time.Date(2009, time.November, 9, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 9, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertRepetitionCount(t, r1, 2)
 		// 9 days later - should be processed
-		c.SetNow(time.Date(2009, time.November, 10, 12, 2, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 10, 12, 2, 1, 0, time.UTC))
 		Do(c)
 		assertLastActive(t, r1.UUID, int64(1257854520000))
 		assertRepetitionCount(t, r1, 3)
@@ -122,39 +124,39 @@ func TestDo(t *testing.T) {
 }
 
 func TestDo_Disabled(t *testing.T) {
-	t.Run("processes the rule on time", func(t *testing.T) {
-		defer testutils.ClearData()
+	defer testutils.ClearData()
 
-		// Set up
-		user := testutils.SetupUserData()
-		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
-		r1 := database.RepetitionRule{
-			Title:      "Rule 1",
-			Frequency:  (time.Hour * 24 * 3).Milliseconds(), // three days
-			Hour:       12,
-			Minute:     2,
-			LastActive: 0,
-			UserID:     user.ID,
-			Enabled:    false,
-			BookDomain: database.BookDomainAll,
-			Model: database.Model{
-				CreatedAt: t0,
-				UpdatedAt: t0,
-			},
-		}
+	// Set up
+	user := testutils.SetupUserData()
+	t0 := time.Date(2009, time.November, 1, 0, 0, 0, 0, time.UTC)
+	t1 := time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC)
+	r1 := database.RepetitionRule{
+		Title:      "Rule 1",
+		Frequency:  (time.Hour * 24 * 3).Milliseconds(), // three days
+		Hour:       12,
+		Minute:     2,
+		LastActive: 0,
+		NextActive: t1.UnixNano() / int64(time.Millisecond),
+		UserID:     user.ID,
+		Enabled:    false,
+		BookDomain: database.BookDomainAll,
+		Model: database.Model{
+			CreatedAt: t0,
+			UpdatedAt: t0,
+		},
+	}
 
-		db := database.DBConn
-		testutils.MustExec(t, db.Save(&r1), "preparing rule1")
+	db := database.DBConn
+	testutils.MustExec(t, db.Save(&r1), "preparing rule1")
 
-		// Execute
-		c := clock.NewMock()
-		c.SetNow(time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC))
-		Do(c)
+	// Execute
+	c := clock.NewMock()
+	c.SetNow(time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC))
+	Do(c)
 
-		// Test
-		assertLastActive(t, r1.UUID, int64(0))
-		assertRepetitionCount(t, r1, 0)
-	})
+	// Test
+	assertLastActive(t, r1.UUID, int64(0))
+	assertRepetitionCount(t, r1, 0)
 }
 
 func TestDo_RandomStrategy(t *testing.T) {
@@ -222,13 +224,15 @@ func TestDo_RandomStrategy(t *testing.T) {
 		dat := setup()
 
 		db := database.DBConn
-		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
+		t0 := time.Date(2009, time.November, 1, 12, 0, 0, 0, time.UTC)
+		t1 := time.Date(2009, time.November, 8, 12, 0, 0, 0, time.UTC)
 		r1 := database.RepetitionRule{
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 7).Milliseconds(),
 			Hour:       21,
 			Minute:     0,
 			LastActive: 0,
+			NextActive: t1.UnixNano() / int64(time.Millisecond),
 			Enabled:    true,
 			UserID:     dat.User.ID,
 			BookDomain: database.BookDomainAll,
@@ -247,7 +251,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 		Do(c)
 
 		// Test
-		assertLastActive(t, r1.UUID, int64(1257714000000))
+		assertLastActive(t, r1.UUID, int64(1257681600000))
 		assertRepetitionCount(t, r1, 1)
 
 		var repetition database.Digest
@@ -275,7 +279,8 @@ func TestDo_RandomStrategy(t *testing.T) {
 		dat := setup()
 
 		db := database.DBConn
-		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
+		t0 := time.Date(2009, time.November, 1, 12, 0, 0, 0, time.UTC)
+		t1 := time.Date(2009, time.November, 8, 12, 0, 0, 0, time.UTC)
 		r1 := database.RepetitionRule{
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 7).Milliseconds(),
@@ -283,6 +288,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 			Enabled:    true,
 			Minute:     0,
 			LastActive: 0,
+			NextActive: t1.UnixNano() / int64(time.Millisecond),
 			UserID:     dat.User.ID,
 			BookDomain: database.BookDomainExluding,
 			Books:      []database.Book{dat.Book1},
@@ -297,11 +303,11 @@ func TestDo_RandomStrategy(t *testing.T) {
 		// Execute
 		c := clock.NewMock()
 
-		c.SetNow(time.Date(2009, time.November, 8, 21, 0, 0, 0, time.UTC))
+		c.SetNow(time.Date(2009, time.November, 8, 21, 0, 1, 0, time.UTC))
 		Do(c)
 
 		// Test
-		assertLastActive(t, r1.UUID, int64(1257714000000))
+		assertLastActive(t, r1.UUID, int64(1257681600000))
 		assertRepetitionCount(t, r1, 1)
 
 		var repetition database.Digest
@@ -328,7 +334,8 @@ func TestDo_RandomStrategy(t *testing.T) {
 		dat := setup()
 
 		db := database.DBConn
-		t0 := time.Date(2009, time.November, 1, 12, 1, 0, 0, time.UTC)
+		t0 := time.Date(2009, time.November, 1, 12, 0, 0, 0, time.UTC)
+		t1 := time.Date(2009, time.November, 8, 12, 0, 0, 0, time.UTC)
 		r1 := database.RepetitionRule{
 			Title:      "Rule 1",
 			Frequency:  (time.Hour * 24 * 7).Milliseconds(),
@@ -336,6 +343,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 			Enabled:    true,
 			Minute:     0,
 			LastActive: 0,
+			NextActive: t1.UnixNano() / int64(time.Millisecond),
 			UserID:     dat.User.ID,
 			BookDomain: database.BookDomainIncluding,
 			Books:      []database.Book{dat.Book1, dat.Book2},
@@ -354,7 +362,7 @@ func TestDo_RandomStrategy(t *testing.T) {
 		Do(c)
 
 		// Test
-		assertLastActive(t, r1.UUID, int64(1257714000000))
+		assertLastActive(t, r1.UUID, int64(1257681600000))
 		assertRepetitionCount(t, r1, 1)
 
 		var repetition database.Digest

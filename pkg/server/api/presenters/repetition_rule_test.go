@@ -35,7 +35,8 @@ func TestPresentRepetitionRule(t *testing.T) {
 		Enabled:    true,
 		Hour:       1,
 		Minute:     2,
-		LastActive: 1571293907,
+		LastActive: 1571293000,
+		NextActive: 1571394000,
 		NoteCount:  10,
 		BookDomain: database.BookDomainAll,
 		Books:      []database.Book{b1, b2},
@@ -56,6 +57,7 @@ func TestPresentRepetitionRule(t *testing.T) {
 				BookDomain: d1.BookDomain,
 				NoteCount:  d1.NoteCount,
 				LastActive: d1.LastActive,
+				NextActive: d1.NextActive,
 				Books: []Book{
 					{
 						UUID:      b1.UUID,

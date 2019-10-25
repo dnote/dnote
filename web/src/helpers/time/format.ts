@@ -132,7 +132,7 @@ export default function formatTime(date: Date, format: string): string {
   if (ret.indexOf(Z) > -1) {
     const offset = getUTCOffset();
 
-    ret = ret.replace(new RegExp(a, 'g'), offset);
+    ret = ret.replace(new RegExp(Z, 'g'), offset);
   }
 
   return ret;

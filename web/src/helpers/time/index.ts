@@ -211,56 +211,101 @@ export function msToDuration(ms: number): string {
   return ret.trim();
 }
 
-export function timeAgo(ms: number, simple: boolean = false): string {
-  const shortNounMap = {
-    year: 'y',
-    week: 'w',
-    month: 'm',
-    day: 'd',
-    hour: 'h',
-    minute: 'min'
-  };
+type TimeDiffTense = 'past' | 'future';
 
+interface TimeDiff {
+  text: string;
+  tense?: TimeDiffTense;
+}
+
+export function relativeTimeDiff(t1: number, t2: number): TimeDiff {
   function getStr(interval: number, noun: string): string {
-    // if (simple) {
-    //   const n = shortNounMap[noun];
-    //   return `${interval}${n}`;
-    // }
-
-    return `${interval} ${pluralize(noun, interval)} ago`;
+    return `${interval} ${pluralize(noun, interval)}`;
   }
 
-  const ts = Math.floor(new Date().getTime() - ms);
+  const diff = t1 - t2;
+  const ts = Math.floor(Math.abs(diff));
 
+  let tense;
+  if (diff > 0) {
+    tense = 'past';
+  } else {
+    tense = 'future';
+  }
+
+  let text = '';
   let interval = Math.floor(ts / (52 * WEEK));
   if (interval > 1) {
-    return getStr(interval, 'year');
+    return {
+      text: getStr(interval, 'year'),
+      tense
+    };
   }
 
   interval = Math.floor(ts / (4 * WEEK));
   if (interval >= 1) {
-    return getStr(interval, 'month');
+    return {
+      text: getStr(interval, 'month'),
+      tense
+    };
   }
 
   interval = Math.floor(ts / WEEK);
   if (interval >= 1) {
-    return getStr(interval, 'week');
+    return {
+      text: getStr(interval, 'week'),
+      tense
+    };
   }
 
   interval = Math.floor(ts / DAY);
   if (interval >= 1) {
-    return getStr(interval, 'day');
+    return {
+      text: getStr(interval, 'day'),
+      tense
+    };
   }
 
   interval = Math.floor(ts / HOUR);
   if (interval >= 1) {
-    return getStr(interval, 'hour');
+    return {
+      text: getStr(interval, 'hour'),
+      tense
+    };
   }
 
   interval = Math.floor(ts / MINUTE);
   if (interval >= 1) {
-    return getStr(interval, 'minute');
+    return {
+      text: getStr(interval, 'minute'),
+      tense
+    };
   }
 
-  return 'Just now';
+  return {
+    text: 'Just now'
+  };
+}
+
+export function timeAgo(ms: number, simple: boolean = false): string {
+  function getStr(interval: number, noun: string, isPast: boolean): string {
+    let measure = `${interval} ${pluralize(noun, interval)}`;
+
+    if (isPast) {
+      return `${measure} ago`;
+    }
+  }
+
+  const now = new Date().getTime();
+  const diff = relativeTimeDiff(now, ms);
+
+  if (diff.tense === 'past') {
+    return `${diff.text} ago`;
+  }
+
+  if (diff.tense === 'future') {
+    return `in ${diff.text}`;
+  }
+
+  return diff.text;
 }

@@ -77,6 +77,7 @@ export interface RepetitionRuleData {
   frequency: number;
   books: BookData[];
   lastActive: number;
+  nextActive: number;
   noteCount: number;
   createdAt: string;
   updatedAt: string;

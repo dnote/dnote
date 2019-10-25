@@ -21,7 +21,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/api/helpers"
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
@@ -260,6 +262,22 @@ func parseCreateRepetitionRuleParams(r *http.Request) (repetitionRuleParams, err
 	return ret, nil
 }
 
+// calcNextActive calculates the NextActive value for a repetition rule
+// based on the given LastActive and Frequency values.
+func calcNextActive(c clock.Clock, lastActive, frequency int64) int64 {
+	var base int64
+	if lastActive == 0 {
+		now := c.Now()
+		now = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
+
+		base = now.UnixNano() / int64(time.Millisecond)
+	} else {
+		base = lastActive
+	}
+
+	return base + frequency
+}
+
 func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
@@ -287,6 +305,7 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		Minute:     params.GetMinute(),
 		Frequency:  params.GetFrequency(),
 		BookDomain: params.GetBookDomain(),
+		NextActive: calcNextActive(a.Clock, 0, params.GetFrequency()),
 		Books:      books,
 		NoteCount:  params.GetNoteCount(),
 		Enabled:    params.GetEnabled(),
@@ -370,25 +389,35 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if params.Title != nil {
-		repetitionRule.Title = *params.Title
+		repetitionRule.Title = params.GetTitle()
 	}
 	if params.Enabled != nil {
-		repetitionRule.Enabled = *params.Enabled
+		enabled := params.GetEnabled()
+		repetitionRule.Enabled = enabled
+
+		if enabled && !repetitionRule.Enabled {
+			repetitionRule.NextActive = calcNextActive(a.Clock, repetitionRule.LastActive, repetitionRule.Frequency)
+		} else if !enabled && repetitionRule.Enabled {
+			repetitionRule.NextActive = 0
+		}
 	}
 	if params.Hour != nil {
-		repetitionRule.Hour = *params.Hour
+		repetitionRule.Hour = params.GetHour()
 	}
 	if params.Minute != nil {
-		repetitionRule.Minute = *params.Minute
+		repetitionRule.Minute = params.GetMinute()
 	}
 	if params.Frequency != nil {
-		repetitionRule.Frequency = int64(*params.Frequency)
+		frequency := params.GetFrequency()
+
+		repetitionRule.Frequency = frequency
+		repetitionRule.NextActive = calcNextActive(a.Clock, repetitionRule.LastActive, frequency)
 	}
 	if params.NoteCount != nil {
-		repetitionRule.NoteCount = *params.NoteCount
+		repetitionRule.NoteCount = params.GetNoteCount()
 	}
 	if params.BookDomain != nil {
-		repetitionRule.BookDomain = *params.BookDomain
+		repetitionRule.BookDomain = params.GetBookDomain()
 	}
 	if params.BookUUIDs != nil {
 		var books []database.Book
