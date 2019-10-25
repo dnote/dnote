@@ -32,7 +32,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func weeklyDigestHandler(w http.ResponseWriter, r *http.Request) {
+func digestHandler(w http.ResponseWriter, r *http.Request) {
 	db := database.DBConn
 
 	q := r.URL.Query()
@@ -90,6 +90,10 @@ func emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Email development server is running."))
+}
+
 func init() {
 	err := godotenv.Load(".env.dev")
 	if err != nil {
@@ -112,7 +116,8 @@ func main() {
 
 	log.Println("Email template development server running on http://127.0.0.1:2300")
 
-	http.HandleFunc("/weekly-digest", weeklyDigestHandler)
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/digest", digestHandler)
 	http.HandleFunc("/email-verification", emailVerificationHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }

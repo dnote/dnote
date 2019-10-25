@@ -100,24 +100,6 @@ var (
 	DBConn *gorm.DB
 )
 
-const (
-	// TokenTypeResetPassword is a type of a token for reseting password
-	TokenTypeResetPassword = "reset_password"
-	// TokenTypeEmailVerification is a type of a token for verifying email
-	TokenTypeEmailVerification = "email_verification"
-	// TokenTypeEmailPreference is a type of a token for updating email preference
-	TokenTypeEmailPreference = "email_preference"
-)
-
-const (
-	// BookDomainAll incidates that all books are eligible to be the source books
-	BookDomainAll = "all"
-	// BookDomainIncluding incidates that some specified books are eligible to be the source books
-	BookDomainIncluding = "including"
-	// BookDomainExluding incidates that all books except for some specified books are eligible to be the source books
-	BookDomainExluding = "excluding"
-)
-
 // Open opens the connection with the database
 func Open(c Config) {
 	connStr, err := getPGConnectionString(c)
