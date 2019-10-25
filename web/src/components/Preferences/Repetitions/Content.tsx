@@ -62,7 +62,7 @@ const Content: React.SFC<Props> = ({
     <div>
       <p>Toggle the repetition for "{data.title}"</p>
 
-      <form id="T-repetition-email-pref-form" onSubmit={handleSubmit}>
+      <form id="T-pref-repetition-form" onSubmit={handleSubmit}>
         <div>
           <div className={styles.radio}>
             <label htmlFor="repetition-off">

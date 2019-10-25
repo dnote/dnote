@@ -3,9 +3,6 @@ set -eux
 
 basePath="$GOPATH/src/github.com/dnote/dnote"
 appPath="$basePath"/web
-rootUrl=$ROOT_URL
-
-echo "here is $rootUrl"
 
 (
   cd "$appPath" &&
