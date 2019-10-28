@@ -340,16 +340,18 @@
         .notes-container {
           padding: 12px 0;
         }
+
+        .rule-title {
+          font-weight: 600;
+        }
     </style>
   </head>
   <body class="">
     <table border="0" cellpadding="0" cellspacing="0" class="body">
-
-
       <tr>
         <td class="container">
           <div class="content">
-            <span class="preheader">Here is your weekly Dnote digest.</span>
+            <span class="preheader">Here is your automated spaced repetition.</span>
 
             {{ template "header" }}
 
@@ -361,7 +363,15 @@
                   <table border="0" cellpadding="0" cellspacing="0">
                     <tr>
                       <td class="content-block">
-                        This is your weekly Dnote digest, featuring {{ .ActiveNoteCount }} notes from {{ .ActiveBookCount }} books.
+                        This is your Dnote spaced repetition.
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td class="content-block">
+                        <span class="rule-title">
+                         {{ .RuleTitle }}
+                        </span>
                       </td>
                     </tr>
 

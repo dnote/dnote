@@ -49,7 +49,7 @@ func digestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var digest database.Digest
-	if err := db.Where("uuid = ?", digestUUID).First(&digest).Error; err != nil {
+	if err := db.Where("uuid = ?", digestUUID).Preload("Notes").First(&digest).Error; err != nil {
 		http.Error(w, errors.Wrap(err, "finding digest").Error(), http.StatusInternalServerError)
 		return
 	}

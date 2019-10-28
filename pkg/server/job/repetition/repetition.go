@@ -40,8 +40,8 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 	}
 
 	threshold1 := now.AddDate(0, 0, -1).UnixNano()
-	threshold2 := now.AddDate(0, 0, -3).UnixNano()
-	threshold3 := now.AddDate(0, 0, -7).UnixNano()
+	threshold2 := now.AddDate(0, 0, -7).UnixNano()
+	threshold3 := now.AddDate(0, 0, -14).UnixNano()
 
 	noteInfos := []mailer.DigestNoteInfo{}
 	for _, note := range digest.Notes {
@@ -50,7 +50,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 			stage = 1
 		} else if note.AddedOn > threshold3 && note.AddedOn < threshold2 {
 			stage = 2
-		} else if note.AddedOn > threshold3 {
+		} else if note.AddedOn < threshold3 {
 			stage = 3
 		}
 
@@ -74,6 +74,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		ActiveNoteCount:   len(digest.Notes),
 		EmailSessionToken: tok.Value,
 		DigestUUID:        digest.UUID,
+		RuleTitle:         rule.Title,
 	}
 
 	email := mailer.NewEmail("noreply@getdnote.com", []string{emailAddr}, subject)
