@@ -238,7 +238,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 	"enabled": true,
 	"hour": 8,
 	"minute": 30,
-	"frequency": 6048000000,
+	"frequency": 604800000,
 	"book_domain": "all",
 	"book_uuids": [],
 	"note_count": 20
@@ -261,9 +261,9 @@ func TestCreateRepetitionRules(t *testing.T) {
 		assert.Equal(t, rule.Enabled, true, "rule Enabled mismatch")
 		assert.Equal(t, rule.Hour, 8, "rule HourTitle mismatch")
 		assert.Equal(t, rule.Minute, 30, "rule Minute mismatch")
-		assert.Equal(t, rule.Frequency, int64(6048000000), "rule Frequency mismatch")
+		assert.Equal(t, rule.Frequency, int64(604800000), "rule Frequency mismatch")
 		assert.Equal(t, rule.LastActive, int64(0), "rule LastActive mismatch")
-		assert.Equal(t, rule.NextActive, int64(1257040980000+6048000000), "rule LastActive mismatch")
+		assert.Equal(t, rule.NextActive, int64(1257064200000+604800000), "rule NextActive mismatch")
 		assert.Equal(t, rule.BookDomain, "all", "rule BookDomain mismatch")
 		assert.DeepEqual(t, rule.Books, []database.Book{}, "rule Books mismatch")
 		assert.Equal(t, rule.NoteCount, 20, "rule NoteCount mismatch")
@@ -301,7 +301,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 	"enabled": true,
 	"hour": 8,
 	"minute": 30,
-	"frequency": 6048000000,
+	"frequency": 604800000,
 	"book_domain": "%s",
 	"book_uuids": ["%s"],
 	"note_count": 20
@@ -328,8 +328,8 @@ func TestCreateRepetitionRules(t *testing.T) {
 			assert.Equal(t, rule.Hour, 8, "rule HourTitle mismatch")
 			assert.Equal(t, rule.Minute, 30, "rule Minute mismatch")
 			assert.Equal(t, rule.LastActive, int64(0), "rule LastActive mismatch")
-			assert.Equal(t, rule.NextActive, int64(1257040980000+6048000000), "rule NextActive mismatch")
-			assert.Equal(t, rule.Frequency, int64(6048000000), "rule Frequency mismatch")
+			assert.Equal(t, rule.NextActive, int64(1257064200000+604800000), "rule NextActive mismatch")
+			assert.Equal(t, rule.Frequency, int64(604800000), "rule Frequency mismatch")
 			assert.Equal(t, rule.BookDomain, tc, "rule BookDomain mismatch")
 			assert.DeepEqual(t, rule.Books, []database.Book{b1Record}, "rule Books mismatch")
 			assert.Equal(t, rule.NoteCount, 20, "rule NoteCount mismatch")
@@ -342,8 +342,11 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
+	c := clock.NewMock()
+	t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
+	c.SetNow(t0)
 	server := httptest.NewServer(NewRouter(&App{
-		Clock: clock.NewMock(),
+		Clock: c,
 	}))
 	defer server.Close()
 
@@ -356,8 +359,8 @@ func TestUpdateRepetitionRules(t *testing.T) {
 		Enabled:    false,
 		Hour:       8,
 		Minute:     30,
-		Frequency:  6048000000,
-		LastActive: 1257040980000,
+		Frequency:  604800000,
+		LastActive: 1257064200000,
 		NextActive: 1263088980000,
 		BookDomain: "all",
 		Books:      []database.Book{},
@@ -404,8 +407,8 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	assert.Equal(t, rule.Hour, 18, "rule HourTitle mismatch")
 	assert.Equal(t, rule.Minute, 40, "rule Minute mismatch")
 	assert.Equal(t, rule.Frequency, int64(259200000), "rule Frequency mismatch")
-	assert.Equal(t, rule.LastActive, int64(1257040980000), "rule LastActive mismatch")
-	assert.Equal(t, rule.NextActive, int64(1257300180000), "rule NextActive mismatch")
+	assert.Equal(t, rule.LastActive, int64(1257064200000), "rule LastActive mismatch")
+	assert.Equal(t, rule.NextActive, int64(1257100800000+259200000), "rule NextActive mismatch")
 	assert.Equal(t, rule.BookDomain, "including", "rule BookDomain mismatch")
 	assert.DeepEqual(t, rule.Books, []database.Book{b1Record}, "rule Books mismatch")
 	assert.Equal(t, rule.NoteCount, 30, "rule NoteCount mismatch")
@@ -430,7 +433,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 		Enabled:    true,
 		Hour:       8,
 		Minute:     30,
-		Frequency:  6048000000,
+		Frequency:  604800000,
 		BookDomain: "all",
 		Books:      []database.Book{},
 		NoteCount:  20,
@@ -443,7 +446,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 		Enabled:    true,
 		Hour:       8,
 		Minute:     30,
-		Frequency:  6048000000,
+		Frequency:  604800000,
 		BookDomain: "all",
 		Books:      []database.Book{},
 		NoteCount:  20,
@@ -474,7 +477,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			"enabled": true,
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "all",
 			"book_uuids": [],
 			"note_count": 20
@@ -496,7 +499,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			"enabled": true,
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "all",
 			"book_uuids": [],
 			"note_count": 0
@@ -507,7 +510,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			"enabled": true,
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "some_invalid_book_domain",
 			"book_uuids": [],
 			"note_count": 20
@@ -518,7 +521,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			"enabled": true,
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "excluding",
 			"book_uuids": [],
 			"note_count": 20
@@ -528,7 +531,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			"enabled": true,
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "including",
 			"book_uuids": [],
 			"note_count": 20
@@ -572,7 +575,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 				Enabled:    false,
 				Hour:       8,
 				Minute:     30,
-				Frequency:  6048000000,
+				Frequency:  604800000,
 				BookDomain: "all",
 				Books:      []database.Book{},
 				NoteCount:  20,
@@ -611,7 +614,7 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 			"title": "Rule #1",
 			"hour": 8,
 			"minute": 30,
-			"frequency": 6048000000,
+			"frequency": 604800000,
 			"book_domain": "all",
 			"book_uuids": [],
 			"note_count": 20

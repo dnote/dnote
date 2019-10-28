@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/api/helpers"
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
@@ -262,20 +261,18 @@ func parseCreateRepetitionRuleParams(r *http.Request) (repetitionRuleParams, err
 	return ret, nil
 }
 
-// calcNextActive calculates the NextActive value for a repetition rule
-// based on the given LastActive and Frequency values.
-func calcNextActive(c clock.Clock, lastActive, frequency int64) int64 {
-	var base int64
-	if lastActive == 0 {
-		now := c.Now()
-		now = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
+type calcNextActiveParams struct {
+	Hour      int
+	Minute    int
+	Frequency int64
+}
 
-		base = now.UnixNano() / int64(time.Millisecond)
-	} else {
-		base = lastActive
-	}
+// calcNextActive calculates the NextActive value for a repetition rule by adding the given
+// frequency to the given present date time at the given hour and minute.
+func calcNextActive(now time.Time, p calcNextActiveParams) int64 {
+	t0 := time.Date(now.Year(), now.Month(), now.Day(), p.Hour, p.Minute, 0, 0, now.Location()).UnixNano() / int64(time.Millisecond)
 
-	return base + frequency
+	return t0 + p.Frequency
 }
 
 func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
@@ -298,6 +295,12 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	nextActive := calcNextActive(a.Clock.Now(), calcNextActiveParams{
+		Hour:      params.GetHour(),
+		Minute:    params.GetMinute(),
+		Frequency: params.GetFrequency(),
+	})
+
 	record := database.RepetitionRule{
 		UserID:     user.ID,
 		Title:      params.GetTitle(),
@@ -305,7 +308,7 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		Minute:     params.GetMinute(),
 		Frequency:  params.GetFrequency(),
 		BookDomain: params.GetBookDomain(),
-		NextActive: calcNextActive(a.Clock, 0, params.GetFrequency()),
+		NextActive: nextActive,
 		Books:      books,
 		NoteCount:  params.GetNoteCount(),
 		Enabled:    params.GetEnabled(),
@@ -396,7 +399,11 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		repetitionRule.Enabled = enabled
 
 		if enabled && !repetitionRule.Enabled {
-			repetitionRule.NextActive = calcNextActive(a.Clock, repetitionRule.LastActive, repetitionRule.Frequency)
+			repetitionRule.NextActive = calcNextActive(a.Clock.Now(), calcNextActiveParams{
+				Hour:      repetitionRule.Hour,
+				Minute:    repetitionRule.Minute,
+				Frequency: repetitionRule.Frequency,
+			})
 		} else if !enabled && repetitionRule.Enabled {
 			repetitionRule.NextActive = 0
 		}
@@ -411,7 +418,11 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		frequency := params.GetFrequency()
 
 		repetitionRule.Frequency = frequency
-		repetitionRule.NextActive = calcNextActive(a.Clock, repetitionRule.LastActive, frequency)
+		repetitionRule.NextActive = calcNextActive(a.Clock.Now(), calcNextActiveParams{
+			Hour:      repetitionRule.Hour,
+			Minute:    repetitionRule.Minute,
+			Frequency: frequency,
+		})
 	}
 	if params.NoteCount != nil {
 		repetitionRule.NoteCount = params.GetNoteCount()
