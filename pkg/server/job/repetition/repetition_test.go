@@ -159,7 +159,7 @@ func TestDo_Disabled(t *testing.T) {
 	assertRepetitionCount(t, r1, 0)
 }
 
-func TestDo_RandomStrategy(t *testing.T) {
+func TestDo_BalancedStrategy(t *testing.T) {
 	type testData struct {
 		User  database.User
 		Book1 database.Book

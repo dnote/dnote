@@ -19,6 +19,9 @@
 package repetition
 
 import (
+	"sort"
+	"time"
+
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -55,21 +58,84 @@ func applyBookDomain(noteQuery *gorm.DB, rule database.RepetitionRule) (*gorm.DB
 	return ret, nil
 }
 
-// getRandomNotes returns a random set of notes
-func getRandomNotes(db *gorm.DB, rule database.RepetitionRule) ([]database.Note, error) {
-	conn := db.Table("notes").Where("notes.user_id = ?", rule.UserID)
-	conn, err := applyBookDomain(conn, rule)
+func getNotes(conn *gorm.DB, rule database.RepetitionRule, dst *[]database.Note) error {
+	c, err := applyBookDomain(conn, rule)
 	if err != nil {
-		return nil, errors.Wrap(err, "applying book domain")
+		return errors.Wrap(err, "building query for book threahold 1")
 	}
 
-	// TODO: Find alternatives because ordering by random() does not scale with the number of rows
-	conn = conn.Order("random()").Limit(rule.NoteCount)
-
-	var notes []database.Note
-	if err := conn.Preload("Book").Find(&notes).Error; err != nil {
-		return notes, errors.Wrap(err, "getting notes")
+	// TODO: ordering by random() does not scale if table grows large
+	if err := c.Where("notes.user_id = ?", rule.UserID).Order("random()").Limit(rule.NoteCount).Preload("Book").Find(&dst).Error; err != nil {
+		return errors.Wrap(err, "getting notes")
 	}
+
+	return nil
+}
+
+// getBalancedNotes returns a set of notes with a 'balanced' ratio of added_on dates
+func getBalancedNotes(db *gorm.DB, rule database.RepetitionRule) ([]database.Note, error) {
+	now := time.Now()
+	t1 := now.AddDate(0, 0, -3).UnixNano()
+	t2 := now.AddDate(0, 0, -7).UnixNano()
+
+	// Get notes into three buckets with different threshold values
+	var stage1 []database.Note
+	var stage2 []database.Note
+	var stage3 []database.Note
+	if err := getNotes(db.Where("notes.added_on > ?", t1), rule, &stage1); err != nil {
+		return nil, errors.Wrap(err, "Failed to get notes with threshold 1")
+	}
+	if err := getNotes(db.Where("notes.added_on > ? AND notes.added_on < ?", t2, t1), rule, &stage2); err != nil {
+		return nil, errors.Wrap(err, "Failed to get notes with threshold 2")
+	}
+	if err := getNotes(db.Where("notes.added_on < ?", t2), rule, &stage3); err != nil {
+		return nil, errors.Wrap(err, "Failed to get notes with threshold 3")
+	}
+
+	notes := []database.Note{}
+
+	// pick one from each bucket at a time until the result is filled
+	i1 := 0
+	i2 := 0
+	i3 := 0
+	k := 0
+	for {
+		if i1+i2+i3 >= rule.NoteCount {
+			break
+		}
+
+		// if there are not enough notes to fill the result, break
+		if len(stage1) == i1 && len(stage2) == i2 && len(stage3) == i3 {
+			break
+		}
+
+		if k%3 == 0 {
+			if len(stage1) > i1 {
+				i1++
+			}
+		} else if k%3 == 1 {
+			if len(stage2) > i2 {
+				i2++
+			}
+		} else if k%3 == 2 {
+			if len(stage3) > i3 {
+				i3++
+			}
+		}
+
+		k++
+	}
+
+	notes = append(notes, stage1[:i1]...)
+	notes = append(notes, stage2[:i2]...)
+	notes = append(notes, stage3[:i3]...)
+
+	sort.SliceStable(notes, func(i, j int) bool {
+		n1 := notes[i]
+		n2 := notes[j]
+
+		return n1.AddedOn > n2.AddedOn
+	})
 
 	return notes, nil
 }

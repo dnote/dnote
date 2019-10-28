@@ -39,18 +39,17 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		return nil, errors.Wrap(err, "getting email frequency token")
 	}
 
-	threshold1 := now.AddDate(0, 0, -1).UnixNano()
-	threshold2 := now.AddDate(0, 0, -7).UnixNano()
-	threshold3 := now.AddDate(0, 0, -14).UnixNano()
+	t1 := now.AddDate(0, 0, -3).UnixNano()
+	t2 := now.AddDate(0, 0, -7).UnixNano()
 
 	noteInfos := []mailer.DigestNoteInfo{}
 	for _, note := range digest.Notes {
 		var stage int
-		if note.AddedOn > threshold2 && note.AddedOn < threshold1 {
+		if note.AddedOn > t1 {
 			stage = 1
-		} else if note.AddedOn > threshold3 && note.AddedOn < threshold2 {
+		} else if note.AddedOn > t2 && note.AddedOn < t1 {
 			stage = 2
-		} else if note.AddedOn < threshold3 {
+		} else if note.AddedOn < t2 {
 			stage = 3
 		}
 
@@ -102,7 +101,7 @@ func getEligibleRules(now time.Time) ([]database.RepetitionRule, error) {
 }
 
 func build(tx *gorm.DB, rule database.RepetitionRule) (database.Digest, error) {
-	notes, err := getRandomNotes(tx, rule)
+	notes, err := getBalancedNotes(tx, rule)
 	if err != nil {
 		return database.Digest{}, errors.Wrap(err, "getting notes")
 	}
