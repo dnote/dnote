@@ -12,10 +12,19 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
+- N/A
+
+### 0.2.0 - 2019-10-28
+
+#### Added
+
+- Specify spaced repetition rule (#280)
+
 #### Changed
 
 - Treat a linebreak as a new line in the preview (#261)
 - Allow to have multiple editor states for adding and editing notes (#260)
+- Fix jumping focus on editor (#265)
 
 ### 0.1.1 - 2019-09-30
 
