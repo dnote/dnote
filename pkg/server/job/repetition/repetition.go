@@ -91,7 +91,10 @@ func getEligibleRules(now time.Time) ([]database.RepetitionRule, error) {
 
 	var ret []database.RepetitionRule
 	db := database.DBConn
-	if err := db.Where("hour = ? AND minute = ? AND enabled", hour, minute).Find(&ret).Error; err != nil {
+	if err := db.
+		Where("users.cloud AND repetition_rules.hour = ? AND repetition_rules.minute = ? AND repetition_rules.enabled", hour, minute).
+		Joins("INNER JOIN users ON users.id = repetition_rules.user_id").
+		Find(&ret).Error; err != nil {
 		return nil, errors.Wrap(err, "querying db")
 	}
 

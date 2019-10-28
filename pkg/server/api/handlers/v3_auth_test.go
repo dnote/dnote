@@ -118,6 +118,10 @@ func TestRegister(t *testing.T) {
 			assert.Equal(t, user.StripeCustomerID, "", "StripeCustomerID mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
+			var repetitionRuleCount int
+			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Where("user_id = ?", account.UserID).Count(&repetitionRuleCount), "counting repetition rules")
+			assert.Equal(t, repetitionRuleCount, 1, "repetitionRuleCount mismatch")
+
 			// after register, should sign in user
 			assertSessionResp(t, res)
 		})
