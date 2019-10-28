@@ -3,4 +3,11 @@
 Email templates
 
 * `/src` contains templates.
-* Run the server to develop templates locally.
+
+## Development
+
+Run the server to develop templates locally.
+
+```
+./dev.sh
+```

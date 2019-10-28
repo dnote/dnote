@@ -29,7 +29,7 @@ import Join from './components/Join';
 import Settings from './components/Settings';
 import NotFound from './components/Common/NotFound';
 import VerifyEmail from './components/VerifyEmail';
-import EmailPreference from './components/EmailPreference';
+import PreferenceEditRepetition from './components/Preferences/Repetitions';
 import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
@@ -37,6 +37,9 @@ import Books from './components/Books';
 import Subscription from './components/Subscription';
 import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
+import Repetition from './components/Repetition';
+import NewRepetition from './components/Repetition/New';
+import EditRepetition from './components/Repetition/Edit';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import {
@@ -53,9 +56,12 @@ import {
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   getJoinPath,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
-  classicMigrationPathDef
+  classicMigrationPathDef,
+  repetitionsPathDef,
+  newRepetitionRulePathDef,
+  editRepetitionRulePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -75,6 +81,9 @@ const AuthenticatedSubscriptionCheckout = userOnly(
   Checkout,
   getJoinPath().pathname
 );
+const AuthenticatedRepetition = userOnly(Repetition);
+const AuthenticatedNewRepetition = userOnly(NewRepetition);
+const AuthenticatedEditRepetition = userOnly(EditRepetition);
 
 const routes = [
   {
@@ -128,9 +137,9 @@ const routes = [
     component: VerifyEmail
   },
   {
-    path: emailPrefPathDef,
+    path: prefEditRepetitionPathDef,
     exact: true,
-    component: EmailPreference
+    component: PreferenceEditRepetition
   },
   {
     path: noteNewPathDef,
@@ -151,6 +160,21 @@ const routes = [
     path: passwordResetConfirmPathDef,
     exact: true,
     component: GuestPasswordResetConfirm
+  },
+  {
+    path: repetitionsPathDef,
+    exact: true,
+    component: AuthenticatedRepetition
+  },
+  {
+    path: newRepetitionRulePathDef,
+    exact: true,
+    component: AuthenticatedNewRepetition
+  },
+  {
+    path: editRepetitionRulePathDef,
+    exact: true,
+    component: AuthenticatedEditRepetition
   },
   {
     component: NotFound

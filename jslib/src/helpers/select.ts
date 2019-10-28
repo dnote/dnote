@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { BookData } from '../operations/books';
+import { BookData } from '../operations/types';
 
 // Option represents an option in a selection list
 export interface Option {

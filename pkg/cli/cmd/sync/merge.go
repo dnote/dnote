@@ -137,7 +137,11 @@ func getConflictsBookUUID(tx *database.DB) (string, error) {
 	err := tx.QueryRow("SELECT uuid FROM books WHERE label = ?", "conflicts").Scan(&ret)
 	if err == sql.ErrNoRows {
 		// Create a conflicts book
-		ret = utils.GenerateUUID()
+		ret, err = utils.GenerateUUID()
+		if err != nil {
+			return "", err
+		}
+
 		b := database.NewBook(ret, "conflicts", 0, false, true)
 		err = b.Insert(tx)
 		if err != nil {

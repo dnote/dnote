@@ -91,7 +91,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 	resp := CreateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusCreated, resp)
 }
 
 // BooksOptions is a handler for OPTIONS endpoint for notes
@@ -129,7 +129,7 @@ func respondWithBooks(userID int, query url.Values, w http.ResponseWriter) {
 	}
 
 	presentedBooks := presenters.PresentBooks(books)
-	respondJSON(w, presentedBooks)
+	respondJSON(w, http.StatusOK, presentedBooks)
 }
 
 // GetDemoBooks returns books for demo
@@ -182,7 +182,7 @@ func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := presenters.PresentBook(book)
-	respondJSON(w, p)
+	respondJSON(w, http.StatusOK, p)
 }
 
 type updateBookPayload struct {
@@ -231,7 +231,7 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	resp := UpdateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }
 
 // DeleteBookResp is the response from create book api
@@ -283,5 +283,5 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Book:   presenters.PresentBook(b),
 	}
-	respondJSON(w, resp)
+	respondJSON(w, http.StatusOK, resp)
 }

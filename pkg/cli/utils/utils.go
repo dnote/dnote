@@ -21,12 +21,18 @@ package utils
 import (
 	"regexp"
 
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
-// GenerateUUID returns a uid
-func GenerateUUID() string {
-	return uuid.NewV4().String()
+// GenerateUUID returns a uuid v4 in string
+func GenerateUUID() (string, error) {
+	u, err := uuid.NewRandom()
+	if err != nil {
+		return "", errors.Wrap(err, "generating uuid")
+	}
+
+	return u.String(), nil
 }
 
 // regexNumber is a regex that matches a string that looks like an integer

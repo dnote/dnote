@@ -32,7 +32,6 @@ import { useDispatch, useSelector } from '../../store';
 import { resetEditor, createSession } from '../../store/editor';
 import { createBook } from '../../store/books';
 import { setMessage } from '../../store/ui';
-import PayWall from '../Common/PayWall';
 import Content from './Content';
 import styles from './New.scss';
 
@@ -65,10 +64,6 @@ const New: React.SFC<Props> = ({ history }) => {
 
   return (
     <Fragment>
-      <Helmet>
-        <title>New</title>
-      </Helmet>
-
       {session !== undefined && (
         <Content editor={session} persisted={editor.persisted} />
       )}

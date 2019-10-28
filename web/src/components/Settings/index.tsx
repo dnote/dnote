@@ -16,22 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { Fragment } from 'react';
+import React from 'react';
 import Helmet from 'react-helmet';
 import { RouteComponentProps } from 'react-router-dom';
+import classnames from 'classnames';
 
 import { SettingSections } from 'web/libs/paths';
 import Account from './Account';
 import Sidebar from './Sidebar';
-import Notification from './Notification';
 import Billing from './Billing';
+import styles from './Settings.scss';
 
 function renderContent(section: string): React.ReactNode {
   if (section === SettingSections.account) {
     return <Account />;
-  }
-  if (section === SettingSections.notification) {
-    return <Notification />;
   }
   if (section === SettingSections.billing) {
     return <Billing />;
@@ -51,12 +49,16 @@ const Settings: React.SFC<Props> = ({ match }) => {
   const { section } = params;
 
   return (
-    <Fragment>
+    <div className="page page-mobile-full">
       <Helmet>
         <meta name="description" content="Dnote settings" />
       </Helmet>
 
-      <div className="container page">
+      <div className="container mobile-fw">
+        <div className={classnames('page-header', styles.header)}>
+          <h1 className="page-heading">Settings</h1>
+        </div>
+
         <div className="row">
           <div className="col-12 col-md-12 col-lg-3">
             <Sidebar />
@@ -67,7 +69,7 @@ const Settings: React.SFC<Props> = ({ match }) => {
           </div>
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 };
 

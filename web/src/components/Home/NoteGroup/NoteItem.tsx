@@ -17,7 +17,6 @@
  */
 
 import React from 'react';
-import moment from 'moment';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
@@ -26,7 +25,8 @@ import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import { NoteData } from 'jslib/operations/types';
 import { excerpt } from 'web/libs/string';
 import { Filters } from 'jslib/helpers/filters';
-import { nanosecToSec } from '../../../helpers/time';
+import { nanosecToMillisec, timeAgo } from '../../../helpers/time';
+import Time from '../../Common/Time';
 import styles from './NoteItem.scss';
 
 function formatFTSSnippet(content: string): React.ReactNode[] {
@@ -83,9 +83,14 @@ const NoteItem: React.SFC<Props> = ({ note, filters }) => {
         <div className={styles.body}>
           <div className={styles.header}>
             <h3 className={styles['book-label']}>{note.book.label}</h3>
-            <div className={styles.ts}>
-              {moment.unix(nanosecToSec(note.added_on)).fromNow()}
-            </div>
+
+            <Time
+              id={`${note.uuid}-ts`}
+              text={timeAgo(nanosecToMillisec(note.added_on))}
+              mobileText={timeAgo(nanosecToMillisec(note.added_on), true)}
+              ms={nanosecToMillisec(note.added_on)}
+              wrapperClassName={styles.ts}
+            />
           </div>
           <div className={styles.content}>{renderContent(note.content)}</div>
         </div>

@@ -20,7 +20,11 @@ import React from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import { SettingSections, getSettingsPath } from 'web/libs/paths';
+import {
+  SettingSections,
+  getSettingsPath,
+  getRepetitionsPath
+} from 'web/libs/paths';
 import services from 'web/libs/services';
 import styles from './MobileMenu.scss';
 import CloseIcon from '../Icons/Close';
@@ -62,6 +66,11 @@ const MobileMenu: React.SFC<Props> = ({ onDismiss, isOpen }) => {
               to={getSettingsPath(SettingSections.account)}
             >
               Settings
+            </Link>
+          </li>
+          <li className={styles.item}>
+            <Link className={styles.link} to={getRepetitionsPath()}>
+              Repetition
             </Link>
           </li>
           <li className={styles.item}>

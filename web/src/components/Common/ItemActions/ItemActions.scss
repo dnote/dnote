@@ -1,0 +1,72 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../../App/responsive';
+@import '../../App/theme';
+@import '../../App/rem';
+@import '../../App/font';
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.active {
+  button.trigger {
+    border-color: $border-color;
+  }
+}
+
+.is-open {
+  z-index: 1;
+}
+
+button.trigger {
+  padding: rem(12px) rem(12px);
+  transition: none;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+
+  @include breakpoint(mddown) {
+    border-color: $border-color;
+  }
+}
+
+.content {
+  background: $white;
+  z-index: 99;
+  width: rem(120px);
+}
+
+a.action,
+button.action {
+  display: block;
+  text-align: center;
+  padding: rem(4px) 0;
+  color: inherit;
+  @include font-size('small');
+}
+
+a.action {
+  &:hover {
+    color: inherit;
+  }
+}

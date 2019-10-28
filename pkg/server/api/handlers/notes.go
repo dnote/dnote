@@ -76,7 +76,7 @@ ts_headline('english_nostop', notes.body, plainto_tsquery('english_nostop', ?), 
 func respondWithNote(w http.ResponseWriter, note database.Note) {
 	presentedNote := presenters.PresentNote(note)
 
-	respondJSON(w, presentedNote)
+	respondJSON(w, http.StatusOK, presentedNote)
 }
 
 func parseSearchQuery(q url.Values) string {
@@ -182,7 +182,7 @@ func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
 		Notes: presenters.PresentNotes(notes),
 		Total: total,
 	}
-	respondJSON(w, response)
+	respondJSON(w, http.StatusOK, response)
 }
 
 type getNotesQuery struct {
@@ -331,5 +331,5 @@ func (a *App) legacyGetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	presented := presenters.PresentNotes(notes)
-	respondJSON(w, presented)
+	respondJSON(w, http.StatusOK, presented)
 }

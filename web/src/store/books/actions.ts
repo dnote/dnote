@@ -17,7 +17,7 @@
  */
 
 import operations from 'web/libs/operations';
-import { BookData } from 'jslib/operations/books';
+import { BookData } from 'jslib/operations/types';
 import { RECEIVE, ADD, REMOVE, START_FETCHING, FINISH_FETCHING } from './type';
 import { ThunkAction } from '../types';
 

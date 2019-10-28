@@ -26,8 +26,7 @@ import (
 //TODO: use mutex to avoid race
 
 // Clock is an interface to the standard library time.
-// It is used to implement a real or a mock clock. The latter is
-// used in tests.
+// It is used to implement a real or a mock clock. The latter is used in tests.
 type Clock interface {
 	Now() time.Time
 }

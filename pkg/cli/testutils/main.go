@@ -224,3 +224,13 @@ func MustUnmarshalJSON(t *testing.T, data []byte, v interface{}) {
 		t.Fatalf("%s: unmarshalling data", t.Name())
 	}
 }
+
+// MustGenerateUUID generates the uuid. If error occurs, it fails the test.
+func MustGenerateUUID(t *testing.T) string {
+	ret, err := utils.GenerateUUID()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "generating uuid").Error())
+	}
+
+	return ret
+}

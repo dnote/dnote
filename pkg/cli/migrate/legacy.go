@@ -30,8 +30,8 @@ import (
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 )
 
@@ -79,6 +79,16 @@ func makeSchema(complete bool) schema {
 	s.CurrentVersion = CurrentVersion
 
 	return s
+}
+
+func genUUID() (string, error) {
+	res, err := uuid.NewRandom()
+	if err != nil {
+		return "", errors.Wrap(err, "generating a random uuid")
+	}
+
+	return res.String(), nil
+
 }
 
 // Legacy performs migration on JSON-based dnote if necessary
@@ -510,8 +520,13 @@ func migrateToV2(ctx context.DnoteCtx) error {
 	for bookName, book := range preDnote {
 		var notes = make([]migrateToV2PostNote, 0, len(book))
 		for _, note := range book {
+			noteUUID, err := genUUID()
+			if err != nil {
+				return errors.Wrap(err, "generating uuid")
+			}
+
 			newNote := migrateToV2PostNote{
-				UUID:     uuid.NewV4().String(),
+				UUID:     noteUUID,
 				Content:  note.Content,
 				AddedOn:  note.AddedOn,
 				EditedOn: 0,
@@ -703,8 +718,13 @@ func migrateToV5(ctx context.DnoteCtx) error {
 			data = action.Data
 		}
 
+		actionUUID, err := genUUID()
+		if err != nil {
+			return errors.Wrap(err, "generating UUID")
+		}
+
 		migrated := migrateToV5PostAction{
-			UUID:      uuid.NewV4().String(),
+			UUID:      actionUUID,
 			Schema:    1,
 			Type:      action.Type,
 			Data:      data,
@@ -866,7 +886,13 @@ func migrateToV8(ctx context.DnoteCtx) error {
 	}
 
 	for bookName, book := range dnote {
-		bookUUID := uuid.NewV4().String()
+		bookUUIDResult, err := uuid.NewRandom()
+		if err != nil {
+			return errors.Wrap(err, "generating uuid")
+		}
+
+		bookUUID := bookUUIDResult.String()
+
 		_, err = tx.Exec(`INSERT INTO books (uuid, label) VALUES (?, ?)`, bookUUID, bookName)
 		if err != nil {
 			tx.Rollback()

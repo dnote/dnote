@@ -16,8 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { NoteData } from 'jslib/operations/types';
-import { BookData } from 'jslib/operations/books';
+import { NoteData, BookData } from 'jslib/operations/types';
 import { RemoteData } from '../types';
 
 export interface NotesState extends RemoteData<NoteData[]> {

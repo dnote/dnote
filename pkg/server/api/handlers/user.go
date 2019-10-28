@@ -122,7 +122,7 @@ func respondWithCalendar(w http.ResponseWriter, userID int) {
 		payload[d.Format("2006-1-2")] = count
 	}
 
-	respondJSON(w, payload)
+	respondJSON(w, http.StatusOK, payload)
 }
 
 func (a *App) getCalendar(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +272,7 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := makeSession(user, account)
-	respondJSON(w, session)
+	respondJSON(w, http.StatusOK, session)
 }
 
 type updateEmailPreferencePayload struct {
@@ -321,7 +321,7 @@ func (a *App) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	respondJSON(w, frequency)
+	respondJSON(w, http.StatusOK, frequency)
 }
 
 func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
@@ -340,7 +340,7 @@ func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
 	}
 
 	presented := presenters.PresentEmailPreference(pref)
-	respondJSON(w, presented)
+	respondJSON(w, http.StatusOK, presented)
 }
 
 type updatePasswordPayload struct {

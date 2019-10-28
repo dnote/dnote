@@ -115,8 +115,11 @@ export function getHttpClient(c: HttpClientConfig) {
     get: <T = any>(path: string, options = {}) => {
       return get<T>(transformPath(path), options);
     },
-    post: <T>(path: string, data = {}, options = {}) => {
-      return post<T>(transformPath(path), data, options);
+    post: <T = any>(path: string, data = {}, options = {}) => {
+      return post<T>(transformPath(path), data, options).then(resp => {
+        console.log('check', resp);
+        return resp;
+      });
     },
     patch: <T = any>(path: string, data, options = {}) => {
       return patch<T>(transformPath(path), data, options);

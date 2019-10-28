@@ -20,13 +20,13 @@ import React from 'react';
 import Helmet from 'react-helmet';
 
 import { NoteState } from '../../store/note';
-import { nanosecToMillisec, getShortMonthName } from '../../helpers/time';
+import { nanosecToMillisec, getMonthName } from '../../helpers/time';
 
 function formatAddedOn(ts: number): string {
   const ms = nanosecToMillisec(ts);
   const d = new Date(ms);
 
-  const month = getShortMonthName(d);
+  const month = getMonthName(d, true);
   const date = d.getDate();
   const year = d.getFullYear();
 

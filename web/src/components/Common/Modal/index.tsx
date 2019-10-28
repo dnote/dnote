@@ -80,11 +80,12 @@ const Modal: React.SFC<Props> = ({
   useEventListener(document, 'mousedown', handleMousedown);
   useEventListener(contentEl, 'keydown', e => {
     switch (e.keyCode) {
-      case KEYCODE_ESC:
+      case KEYCODE_ESC: {
         e.stopPropagation();
 
         onDismiss();
         break;
+      }
       case KEYCODE_TAB: {
         if (!contentEl) {
           return;
@@ -118,7 +119,7 @@ const Modal: React.SFC<Props> = ({
     return null;
   }
 
-  const modalRoot = document.getElementById('modal-root');
+  const modalRoot = document.getElementById('overlay-root');
 
   return ReactDOM.createPortal(
     <div className={classnames(styles.overlay, overlayClassName)}>

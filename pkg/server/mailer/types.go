@@ -41,6 +41,8 @@ type DigestTmplData struct {
 	ActiveBookCount   int
 	ActiveNoteCount   int
 	EmailSessionToken string
+	RuleUUID          string
+	RuleTitle         string
 }
 
 // NewNoteInfo returns a new NoteInfo

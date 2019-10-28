@@ -181,6 +181,9 @@ func ClearData() {
 	if err := db.Delete(&database.Digest{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear digests"))
 	}
+	if err := db.Delete(&database.RepetitionRule{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear digests"))
+	}
 }
 
 // HTTPDo makes an HTTP request and returns a response

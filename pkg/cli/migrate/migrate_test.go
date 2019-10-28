@@ -34,7 +34,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/testutils"
-	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 )
 
@@ -325,17 +324,17 @@ func TestLocalMigration1(t *testing.T) {
 
 	db := ctx.DB
 	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
-	a1UUID := utils.GenerateUUID()
+	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 1, "add_book", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.EditNoteDataV1{NoteUUID: "note-1-uuid", FromBook: "js", ToBook: "", Content: "note 1"})
-	a2UUID := utils.GenerateUUID()
+	a2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a2UUID, 1, "edit_note", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.EditNoteDataV1{NoteUUID: "note-2-uuid", FromBook: "js", ToBook: "", Content: "note 2"})
-	a3UUID := utils.GenerateUUID()
+	a3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 1, "edit_note", string(data), 1537829463)
 
@@ -405,21 +404,21 @@ func TestLocalMigration2(t *testing.T) {
 	c2 := "note 1 - v2"
 	css := "css"
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
 
 	data := testutils.MustMarshalJSON(t, actions.AddNoteDataV2{NoteUUID: "note-1-uuid", BookName: "js", Content: "note 1", Public: false})
-	a1UUID := utils.GenerateUUID()
+	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 2, "add_note", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.EditNoteDataV2{NoteUUID: "note-1-uuid", FromBook: "js", ToBook: nil, Content: &c1, Public: nil})
-	a2UUID := utils.GenerateUUID()
+	a2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a2UUID, 2, "edit_note", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.EditNoteDataV2{NoteUUID: "note-1-uuid", FromBook: "js", ToBook: &css, Content: &c2, Public: nil})
-	a3UUID := utils.GenerateUUID()
+	a3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 2, "edit_note", string(data), 1537829463)
 
@@ -488,17 +487,17 @@ func TestLocalMigration3(t *testing.T) {
 
 	db := ctx.DB
 	data := testutils.MustMarshalJSON(t, actions.AddNoteDataV2{NoteUUID: "note-1-uuid", BookName: "js", Content: "note 1", Public: false})
-	a1UUID := utils.GenerateUUID()
+	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 2, "add_note", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.RemoveNoteDataV1{NoteUUID: "note-1-uuid", BookName: "js"})
-	a2UUID := utils.GenerateUUID()
+	a2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a2UUID, 1, "remove_note", string(data), 1537829463)
 
 	data = testutils.MustMarshalJSON(t, actions.RemoveNoteDataV1{NoteUUID: "note-2-uuid", BookName: "js"})
-	a3UUID := utils.GenerateUUID()
+	a3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 1, "remove_note", string(data), 1537829463)
 
@@ -562,9 +561,9 @@ func TestLocalMigration4(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
-	n1UUID := utils.GenerateUUID()
+	n1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n1UUID, b1UUID, "n1 content", time.Now().UnixNano())
 
 	// Execute
@@ -606,16 +605,16 @@ func TestLocalMigration5(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
-	b2UUID := utils.GenerateUUID()
+	b2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting js book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "js")
 
-	n1UUID := utils.GenerateUUID()
+	n1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n1UUID, b1UUID, "n1 content", time.Now().UnixNano())
-	n2UUID := utils.GenerateUUID()
+	n2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n2UUID, b1UUID, "n2 content", time.Now().UnixNano())
-	n3UUID := utils.GenerateUUID()
+	n3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n3UUID, b1UUID, "n3 content", time.Now().UnixNano())
 
 	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
@@ -669,7 +668,7 @@ func TestLocalMigration6(t *testing.T) {
 	db := ctx.DB
 
 	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
-	a1UUID := utils.GenerateUUID()
+	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 1, "add_book", string(data), 1537829463)
 
@@ -701,7 +700,7 @@ func TestLocalMigration7_trash(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting trash book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "trash")
 
 	// Execute
@@ -734,7 +733,7 @@ func TestLocalMigration7_conflicts(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
 
 	// Execute
@@ -767,9 +766,9 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
-	b2UUID := utils.GenerateUUID()
+	b2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "conflicts (2)")
 
 	// Execute
@@ -805,14 +804,14 @@ func TestLocalMigration8(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
 
-	n1UUID := utils.GenerateUUID()
+	n1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting n1", db, `INSERT INTO notes
 		(id, uuid, book_uuid, content, added_on, edited_on, public, dirty, usn, deleted) VALUES
 		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 1, n1UUID, b1UUID, "n1 Body", 1, 2, true, true, 20, false)
-	n2UUID := utils.GenerateUUID()
+	n2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting n2", db, `INSERT INTO notes
 		(id, uuid, book_uuid, content, added_on, edited_on, public, dirty, usn, deleted) VALUES
 		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 2, n2UUID, b1UUID, "", 3, 4, false, true, 21, true)
@@ -871,14 +870,14 @@ func TestLocalMigration9(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
 
-	n1UUID := utils.GenerateUUID()
+	n1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting n1", db, `INSERT INTO notes
 		(uuid, book_uuid, body, added_on, edited_on, public, dirty, usn, deleted) VALUES
 		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n1UUID, b1UUID, "n1 Body", 1, 2, true, true, 20, false)
-	n2UUID := utils.GenerateUUID()
+	n2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting n2", db, `INSERT INTO notes
 		(uuid, book_uuid, body, added_on, edited_on, public, dirty, usn, deleted) VALUES
 		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n2UUID, b1UUID, "n2 Body", 3, 4, false, true, 21, false)
@@ -917,21 +916,21 @@ func TestLocalMigration10(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
-	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "123")
-	b2UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
+	database.MustExec(t, "inserting book ", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "123")
+	b2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 2", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "123 javascript")
-	b3UUID := utils.GenerateUUID()
+	b3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 3", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b3UUID, "foo")
-	b4UUID := utils.GenerateUUID()
+	b4UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 4", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b4UUID, "+123")
-	b5UUID := utils.GenerateUUID()
+	b5UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 5", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b5UUID, "0123")
-	b6UUID := utils.GenerateUUID()
+	b6UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 6", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b6UUID, "javascript 123")
-	b7UUID := utils.GenerateUUID()
+	b7UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 7", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b7UUID, "123 (1)")
-	b8UUID := utils.GenerateUUID()
+	b8UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 8", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b8UUID, "5")
 
 	// Execute
@@ -989,23 +988,23 @@ func TestLocalMigration11(t *testing.T) {
 
 	db := ctx.DB
 
-	b1UUID := utils.GenerateUUID()
+	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "foo")
-	b2UUID := utils.GenerateUUID()
+	b2UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 2", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "bar baz")
-	b3UUID := utils.GenerateUUID()
+	b3UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 3", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b3UUID, "quz qux")
-	b4UUID := utils.GenerateUUID()
+	b4UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 4", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b4UUID, "quz_qux")
-	b5UUID := utils.GenerateUUID()
+	b5UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 5", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b5UUID, "foo bar baz quz 123")
-	b6UUID := utils.GenerateUUID()
+	b6UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 6", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b6UUID, "foo_bar baz")
-	b7UUID := utils.GenerateUUID()
+	b7UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 7", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b7UUID, "cool ideas")
-	b8UUID := utils.GenerateUUID()
+	b8UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 8", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b8UUID, "cool_ideas")
-	b9UUID := utils.GenerateUUID()
+	b9UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 9", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b9UUID, "cool_ideas_2")
 
 	// Execute

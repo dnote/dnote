@@ -18,11 +18,12 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import moment from 'moment';
 import classnames from 'classnames';
 
 import { getPlanLabel } from 'web/libs/subscription';
 import LogoIcon from '../../Icons/Logo';
+import { nanosecToMillisec } from 'web/helpers/time';
+import formatDate from 'web/helpers/time/format';
 import styles from './PlanRow.scss';
 import settingRowStyles from '../SettingRow.scss';
 
@@ -33,16 +34,21 @@ function getPlanPeriodMessage(subscription: any): string {
 
   const label = getPlanLabel(subscription);
 
-  const endDate = moment.unix(subscription.current_period_end);
+  const endDate = new Date(nanosecToMillisec(subscription.current_period_end));
 
   if (subscription.cancel_at_period_end) {
-    return `Your ${label} plan will end on ${endDate.format(
+    return `Your ${label} plan will end on ${formatDate(
+      endDate,
       'YYYY MMM Do'
     )} and will not renew.`;
   }
 
-  const renewDate = endDate.add(1, 'day');
-  return `Your ${label} plan will renew on ${renewDate.format('YYYY MMM Do')}.`;
+  const renewDate = new Date(endDate);
+  renewDate.setDate(endDate.getDate() + 1);
+  return `Your ${label} plan will renew on ${formatDate(
+    renewDate,
+    'YYYY MMM Do'
+  )}.`;
 }
 
 interface Props {

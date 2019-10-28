@@ -31,17 +31,22 @@ export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
 export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
-export const emailPrefPathDef = '/email-preference';
+export const prefEditRepetitionPathDef =
+  '/preferences/repetitions/:repetitionUUID';
 export const verifyEmailPathDef = '/verify-email/:token';
 export const classicMigrationPathDef = '/classic/:step?';
 export const passwordResetRequestPathDef = '/password-reset';
 export const passwordResetConfirmPathDef = '/password-reset/:token';
+export const repetitionsPathDef = '/repetition';
+export const repetitionPathDef = '/repetition/:repetitionUUID';
+export const newRepetitionRulePathDef = '/repetition/new';
+export const editRepetitionRulePathDef = '/repetition/:repetitionUUID/edit';
 
 // layout definitions
 export const noHeaderPaths = [
   loginPathDef,
   joinPathDef,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
@@ -52,7 +57,7 @@ export const noFooterPaths = [
   joinPathDef,
   subscriptionsPathDef,
   subscriptionsCheckoutPathDef,
-  emailPrefPathDef,
+  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
@@ -112,7 +117,7 @@ function getLocation({
 }
 
 export function getNewPath(searchObj = {}): Location {
-  return getLocation({ pathname: '/new', searchObj });
+  return getLocation({ pathname: noteNewPathDef, searchObj });
 }
 
 export function getRandomPath(searchObj = {}): Location {
@@ -124,9 +129,42 @@ export function getHomePath(searchObj = {}): Location {
 }
 
 export function getBooksPath(searchObj = {}): Location {
-  const basePath = '/books';
+  return getLocation({ pathname: booksPathDef, searchObj });
+}
 
-  return getLocation({ pathname: basePath, searchObj });
+export function getRepetitionsPath(searchObj = {}): Location {
+  return getLocation({ pathname: repetitionsPathDef, searchObj });
+}
+
+export function getNewRepetitionPath(searchObj = {}): Location {
+  return getLocation({ pathname: newRepetitionRulePathDef, searchObj });
+}
+
+export function populateParams(pathDef: string, params: any) {
+  const parts = pathDef.split('/');
+
+  const builder = [];
+  for (let i = 0; i < parts.length; ++i) {
+    const p = parts[i];
+    if (p[0] === ':') {
+      // drop the first ':'
+      const key = p.substring(1);
+      const val = params[key];
+
+      builder.push(val);
+    } else {
+      builder.push(p);
+    }
+  }
+
+  return builder.join('/');
+}
+
+export function getEditRepetitionPath(uuid: string, searchObj = {}): Location {
+  const pathname = populateParams(editRepetitionRulePathDef, {
+    repetitionUUID: uuid
+  });
+  return getLocation({ pathname, searchObj });
 }
 
 export function getNotePath(noteUUID: string, searchObj = {}): Location {
@@ -172,7 +210,7 @@ export function getPasswordResetConfirmPath(searchObj = {}): Location {
 
 export enum SettingSections {
   account = 'account',
-  notification = 'notification',
+  spacedRepeition = 'spaced-repetition',
   billing = 'billing'
 }
 

@@ -74,12 +74,30 @@ func createEmailVerificaitonToken(user database.User, tx *gorm.DB) error {
 }
 
 func createEmailPreference(user database.User, tx *gorm.DB) error {
-	EmailPreference := database.EmailPreference{
-		UserID:       user.ID,
-		DigestWeekly: true,
+	p := database.EmailPreference{
+		UserID: user.ID,
 	}
-	if err := tx.Save(&EmailPreference).Error; err != nil {
+	if err := tx.Save(&p).Error; err != nil {
 		return errors.Wrap(err, "inserting email preference")
+	}
+
+	return nil
+}
+
+func createDefaultRepetitionRule(user database.User, tx *gorm.DB) error {
+	r := database.RepetitionRule{
+		Title:      "Default repetition - all bookx",
+		UserID:     user.ID,
+		Enabled:    true,
+		Hour:       20,
+		Minute:     30,
+		Frequency:  604800000,
+		BookDomain: database.BookDomainAll,
+		Books:      []database.Book{},
+		NoteCount:  20,
+	}
+	if err := tx.Save(&r).Error; err != nil {
+		return errors.Wrap(err, "inserting repetition rule")
 	}
 
 	return nil
@@ -118,6 +136,10 @@ func CreateUser(email, password string) (database.User, error) {
 	if err := createEmailPreference(user, tx); err != nil {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating email preference")
+	}
+	if err := createDefaultRepetitionRule(user, tx); err != nil {
+		tx.Rollback()
+		return database.User{}, errors.Wrap(err, "creating default repetition rule")
 	}
 	if err := TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()

@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { BookData } from '../operations/books';
+import { BookData } from '../operations/types';
 
 // errBookNameNumeric is an error for book names that only contain numbers
 export const errBookNameNumeric = new Error(

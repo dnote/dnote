@@ -20,7 +20,6 @@ import React from 'react';
 import classnames from 'classnames';
 
 import { countries } from 'web/libs/countries';
-import CaretIcon from '../../Icons/Caret';
 
 import styles from './CountrySelect.module.scss';
 
@@ -41,7 +40,7 @@ const CountrySelect: React.SFC<Props> = ({
     <div className={styles.wrapper}>
       <select
         id={id}
-        className={classnames(className, styles.select)}
+        className={classnames(className, styles.select, 'form-select')}
         value={value}
         onChange={onChange}
       >
@@ -55,8 +54,6 @@ const CountrySelect: React.SFC<Props> = ({
           );
         })}
       </select>
-
-      <CaretIcon width={12} height={12} className={styles.caret} />
     </div>
   );
 };

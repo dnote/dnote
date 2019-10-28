@@ -16,6 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { mdBreakpoint } from '../components/App/_variables.scss';
+
 // catchBlur focuses rootEl if the next focused element is outside the rootEl
 export function catchBlur(event, rootEl) {
   if (!rootEl) {
@@ -68,4 +70,35 @@ export function checkVerticalScoll() {
       document.documentElement.offsetHeight ||
     document.body.scrollHeight > document.body.offsetHeight
   );
+}
+
+// getViewportDimensions returns the dimension of the viewport
+export function getViewportDimensions() {
+  const width = Math.max(
+    document.documentElement.clientWidth,
+    window.innerWidth || 0
+  );
+  const height = Math.max(
+    document.documentElement.clientHeight,
+    window.innerHeight || 0
+  );
+
+  return {
+    width,
+    height
+  };
+}
+
+function pxToNumber(px: string): number {
+  const str = px.substring(0, px.length - 2);
+
+  return Number.parseFloat(str);
+}
+
+export function isMobileWidth() {
+  const { width } = getViewportDimensions();
+
+  const mdThreshold = pxToNumber(mdBreakpoint);
+
+  return width < mdThreshold;
 }

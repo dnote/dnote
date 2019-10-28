@@ -46,7 +46,7 @@ var (
 	// EmailTypeResetPassword represents a reset password email
 	EmailTypeResetPassword = "reset_password"
 	// EmailTypeWeeklyDigest represents a weekly digest email
-	EmailTypeWeeklyDigest = "weekly_digest"
+	EmailTypeWeeklyDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
 	EmailTypeEmailVerification = "email_verification"
 )
@@ -122,12 +122,6 @@ func NewEmail(from string, to []string, subject string) *Email {
 		to:      to,
 		subject: subject,
 	}
-}
-
-// isWhitelisted checks if the email is safe to send in non production env
-func isWhitelisted(emails []string) bool {
-	return false
-	// return len(emails) == 1 && emails[0] == "mikeswcho@gmail.com"
 }
 
 // Send sends the email

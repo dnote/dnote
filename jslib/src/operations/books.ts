@@ -18,14 +18,7 @@
 
 import initBooksService from '../services/books';
 import { HttpClientConfig } from '../helpers/http';
-
-export type BookData = {
-  uuid: string;
-  usn: number;
-  created_at: string;
-  updated_at: string;
-  label: string;
-};
+import { BookData } from './types';
 
 export interface CreateParams {
   name: string;

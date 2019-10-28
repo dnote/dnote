@@ -25,8 +25,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"runtime/debug"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 )
 
@@ -40,7 +42,9 @@ Actual:
 Expected:
 ========================
 %+v
-========================`, m, a, b)
+========================
+
+%s`, m, a, b, string(debug.Stack()))
 }
 
 func checkEqual(a, b interface{}, message string) (bool, string) {
@@ -94,6 +98,7 @@ func DeepEqual(t *testing.T, a, b interface{}, message string) {
 	}
 
 	errorMessage := getErrorMessage(message, a, b)
+	errorMessage = fmt.Sprintf("%v\n%v", errorMessage, cmp.Diff(a, b))
 	t.Error(errorMessage)
 }
 

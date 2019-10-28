@@ -24,7 +24,7 @@ import (
 
 // Model is the base model definition
 type Model struct {
-	ID        int       `gorm:"primary_key" json:"id"`
+	ID        int       `gorm:"primary_key" json:"-"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:now()"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -113,7 +113,7 @@ type Notification struct {
 type EmailPreference struct {
 	Model
 	UserID       int  `gorm:"index" json:"-"`
-	DigestWeekly bool `json:"digest_weekly"`
+	DigestWeekly bool `json:"digest_weekly"` // Deprecated: email digests now sends based on the repetition rule
 }
 
 // Session represents a user session
@@ -128,8 +128,29 @@ type Session struct {
 // Digest is a digest of notes
 type Digest struct {
 	UUID      string    `json:"uuid" gorm:"primary_key:true;type:uuid;index;default:uuid_generate_v4()"`
+	RuleID    int       `gorm:"index"`
 	UserID    int       `gorm:"index"`
 	Notes     []Note    `gorm:"many2many:digest_notes;association_foreignKey:uuid;association_jointable_foreignkey:note_uuid;jointable_foreignkey:digest_uuid;"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// RepetitionRule is the rules for sending digest emails
+type RepetitionRule struct {
+	Model
+	UUID    string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	UserID  int    `json:"user_id" gorm:"index"`
+	Title   string `json:"title"`
+	Enabled bool   `json:"enabled"`
+	Hour    int    `json:"hour" gorm:"index"`
+	Minute  int    `json:"minute" gorm:"index"`
+	// in milliseconds
+	Frequency int64 `json:"frequency"`
+	// in milliseconds
+	LastActive int64 `json:"last_active"`
+	// in milliseconds
+	NextActive int64  `json:"next_active"`
+	BookDomain string `json:"book_domain"`
+	Books      []Book `gorm:"many2many:repetition_rule_books;"`
+	NoteCount  int    `json:"note_count"`
 }

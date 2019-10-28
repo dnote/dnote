@@ -21,6 +21,8 @@ package job
 import (
 	"log"
 
+	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 )
@@ -38,9 +40,11 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 func Run() {
 	log.Println("Started background tasks")
 
+	cl := clock.New()
+
 	// Schedule jobs
 	c := cron.New()
-	scheduleJob(c, "0 20 * * 5", func() { sendDigest() })
+	scheduleJob(c, "* * * * *", func() { repetition.Do(cl) })
 	c.Start()
 
 	// Block forever

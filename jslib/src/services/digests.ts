@@ -23,24 +23,14 @@ export default function init(config: HttpClientConfig) {
   const client = getHttpClient(config);
 
   return {
-    fetch: (digestUUID, { demo }) => {
-      let endpoint;
-      if (demo) {
-        endpoint = `/demo/digests/${digestUUID}`;
-      } else {
-        endpoint = `/digests/${digestUUID}`;
-      }
+    fetch: digestUUID => {
+      const endpoint = `/digests/${digestUUID}`;
 
       return client.get(endpoint);
     },
 
-    fetchAll: ({ page, demo }) => {
-      let path;
-      if (demo) {
-        path = `/demo/digests`;
-      } else {
-        path = '/digests';
-      }
+    fetchAll: ({ page }) => {
+      const path = '/digests';
 
       const endpoint = getPath(path, { page });
 

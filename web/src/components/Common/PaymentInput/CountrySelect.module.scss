@@ -25,7 +25,7 @@
   position: relative;
 }
 
-.select {
+select.select {
   // match the height of the stripe element with other inputs
   padding: rem(7px) rem(12px);
 
@@ -33,12 +33,11 @@
   background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  appearance: none;
-  outline: none;
-  background: transparent;
+  background-position: right 16px center;
 
   &:focus {
     border: 2px solid $third;
+    box-shadow: none;
   }
 }
 

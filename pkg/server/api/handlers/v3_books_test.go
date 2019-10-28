@@ -373,7 +373,7 @@ func TestCreateBook(t *testing.T) {
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
-	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 	var bookRecord database.Book
 	var userRecord database.User

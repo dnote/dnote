@@ -10,7 +10,7 @@ This repository contains the server side and the client side code for Dnote.
 
 1. Install the following prerequisites if necessary:
 
-* [Go programming language](https://golang.org/dl/) 1.12+
+* [Go programming language](https://golang.org/dl/) 1.13+
 * [Node.js](https://nodejs.org/) 10.16+
 * Postgres 10.9+
 

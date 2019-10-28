@@ -52,8 +52,13 @@ func CreateNote(user database.User, clock clock.Clock, bookUUID, content string,
 		noteEditedOn = *editedOn
 	}
 
+	uuid, err := helpers.GenUUID()
+	if err != nil {
+		return database.Note{}, err
+	}
+
 	note := database.Note{
-		UUID:      helpers.GenUUID(),
+		UUID:      uuid,
 		BookUUID:  bookUUID,
 		UserID:    user.ID,
 		AddedOn:   noteAddedOn,
