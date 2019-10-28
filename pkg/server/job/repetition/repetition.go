@@ -73,7 +73,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		ActiveBookCount:   bookCount,
 		ActiveNoteCount:   len(digest.Notes),
 		EmailSessionToken: tok.Value,
-		DigestUUID:        digest.UUID,
+		RuleUUID:          rule.UUID,
 		RuleTitle:         rule.Title,
 	}
 

@@ -41,7 +41,7 @@ type DigestTmplData struct {
 	ActiveBookCount   int
 	ActiveNoteCount   int
 	EmailSessionToken string
-	DigestUUID        string
+	RuleUUID          string
 	RuleTitle         string
 }
 
