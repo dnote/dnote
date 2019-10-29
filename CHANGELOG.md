@@ -12,7 +12,9 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
-- N/A
+#### Fixed
+
+- Allow to customize the app URL in the emails
 
 ### 0.2.0 - 2019-10-28
 
@@ -24,6 +26,9 @@ The following log documentes the history of the server project.
 
 - Treat a linebreak as a new line in the preview (#261)
 - Allow to have multiple editor states for adding and editing notes (#260)
+
+#### Fixed
+
 - Fix jumping focus on editor (#265)
 
 ### 0.1.1 - 2019-09-30

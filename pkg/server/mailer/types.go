@@ -43,6 +43,7 @@ type DigestTmplData struct {
 	EmailSessionToken string
 	RuleUUID          string
 	RuleTitle         string
+	WebURL            string
 }
 
 // NewNoteInfo returns a new NoteInfo

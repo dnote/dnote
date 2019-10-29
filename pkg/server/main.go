@@ -95,6 +95,7 @@ func initServer() *mux.Router {
 	apiRouter := handlers.NewRouter(&handlers.App{
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
+		WebURL:           os.Getenv("WebURL"),
 	})
 
 	srv.PathPrefix("/api").Handler(http.StripPrefix("/api", apiRouter))

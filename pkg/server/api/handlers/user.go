@@ -21,6 +21,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
@@ -191,9 +192,11 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Subject string
 		Token   string
+		WebURL  string
 	}{
 		subject,
 		tokenValue,
+		os.Getenv("WebURL"),
 	}
 	email := mailer.NewEmail("noreply@getdnote.com", []string{account.Email.String}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeEmailVerification, data); err != nil {

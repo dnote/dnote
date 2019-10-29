@@ -20,6 +20,7 @@ package repetition
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/dnote/dnote/pkg/clock"
@@ -74,6 +75,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		EmailSessionToken: tok.Value,
 		RuleUUID:          rule.UUID,
 		RuleTitle:         rule.Title,
+		WebURL:            os.Getenv("WebURL"),
 	}
 
 	email := mailer.NewEmail("noreply@getdnote.com", []string{emailAddr}, subject)

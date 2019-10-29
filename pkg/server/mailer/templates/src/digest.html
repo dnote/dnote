@@ -392,7 +392,7 @@
                                       </tr>
                                       <tr>
                                         <td class="note-meta">
-                                          <a target="_blank" rel="noreferrer noopener" href="https://app.getdnote.com/notes/{{ .UUID }}"><span class="meta-label">Open</span></a>
+                                          <a target="_blank" rel="noreferrer noopener" href="{{ $.WebURL }}/notes/{{ .UUID }}"><span class="meta-label">Open</span></a>
                                         </td>
                                       </tr>
                                       <tr>
@@ -413,9 +413,7 @@
 
                       </td>
                     </tr>
-
                   </table>
-
                 </td>
               </tr>
 
@@ -436,7 +434,7 @@
                 </tr>
                 <tr>
                   <td>
-                    <a href="https://app.getdnote.com/preferences/repetitions/{{ .RuleUUID }}?token={{ .EmailSessionToken }}">Change digest settings</a>
+                    <a href="{{ .WebURL }}/preferences/repetitions/{{ .RuleUUID }}?token={{ .EmailSessionToken }}">Change digest settings</a>
                   </td>
                 </tr>
               </table>
