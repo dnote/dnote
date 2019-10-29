@@ -21,7 +21,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -39,9 +38,9 @@ func TestCreateNote(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -172,9 +171,9 @@ func TestUpdateNote(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()
@@ -265,9 +264,9 @@ func TestDeleteNote(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()

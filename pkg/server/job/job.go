@@ -20,6 +20,7 @@ package job
 
 import (
 	"log"
+	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
@@ -36,10 +37,15 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	c.Schedule(s, cron.FuncJob(cmd))
 }
 
-// Run starts the background tasks and blocks forever.
-func Run() {
-	log.Println("Started background tasks")
+func checkEnvironment() error {
+	if os.Getenv("WebURL") == "" {
+		return errors.New("WebURL is empty")
+	}
 
+	return nil
+}
+
+func schedule(ch chan error) {
 	cl := clock.New()
 
 	// Schedule jobs
@@ -47,6 +53,25 @@ func Run() {
 	scheduleJob(c, "* * * * *", func() { repetition.Do(cl) })
 	c.Start()
 
+	ch <- nil
+
 	// Block forever
 	select {}
+}
+
+// Run starts the background tasks and blocks forever.
+func Run() error {
+	if err := checkEnvironment(); err != nil {
+		return errors.Wrap(err, "checking environment variables")
+	}
+
+	ch := make(chan error)
+	go schedule(ch)
+	if err := <-ch; err != nil {
+		return errors.Wrap(err, "scheduling jobs")
+	}
+
+	log.Println("Started background tasks")
+
+	return nil
 }

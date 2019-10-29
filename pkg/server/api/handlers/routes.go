@@ -354,18 +354,34 @@ type App struct {
 	WebURL           string
 }
 
+func (a *App) validate() error {
+	if a.WebURL == "" {
+		return errors.New("WebURL is empty")
+	}
+
+	return nil
+}
+
 // init sets up the application based on the configuration
-func (a *App) init() {
+func (a *App) init() error {
+	if err := a.validate(); err != nil {
+		return errors.Wrap(err, "validating the app parameters")
+	}
+
 	stripe.Key = os.Getenv("StripeSecretKey")
 
 	if a.StripeAPIBackend != nil {
 		stripe.SetBackend(stripe.APIBackend, a.StripeAPIBackend)
 	}
+
+	return nil
 }
 
 // NewRouter creates and returns a new router
-func NewRouter(app *App) *mux.Router {
-	app.init()
+func NewRouter(app *App) (*mux.Router, error) {
+	if err := app.init(); err != nil {
+		return nil, errors.Wrap(err, "initializing app")
+	}
 
 	proOnly := authMiddlewareParams{ProOnly: true}
 
@@ -437,5 +453,5 @@ func NewRouter(app *App) *mux.Router {
 			Handler(applyMiddleware(handler, route.RateLimit))
 	}
 
-	return router
+	return router, nil
 }

@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -47,9 +46,9 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -75,9 +74,9 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -101,9 +100,9 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -135,9 +134,9 @@ func TestCreateVerificationToken(t *testing.T) {
 		templatePath := fmt.Sprintf("%s/mailer/templates/src", testutils.ServerPath)
 		mailer.InitTemplates(&templatePath)
 
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -168,9 +167,9 @@ func TestCreateVerificationToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -201,9 +200,9 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -242,9 +241,9 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -286,9 +285,9 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -328,9 +327,9 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -373,9 +372,9 @@ func TestUpdateEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -407,9 +406,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -433,9 +432,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -473,9 +472,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -507,9 +506,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -543,9 +542,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -579,9 +578,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -605,9 +604,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -641,9 +640,9 @@ func TestGetEmailPreference(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	u := testutils.SetupUserData()

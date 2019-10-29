@@ -38,7 +38,6 @@ import (
 
 var versionTag = "master"
 var port = flag.String("port", "3000", "port to connect to")
-
 var rootBox *packr.Box
 
 func init() {
@@ -89,14 +88,17 @@ func getSWHandler() http.HandlerFunc {
 	}
 }
 
-func initServer() *mux.Router {
+func initServer() (*mux.Router, error) {
 	srv := mux.NewRouter()
 
-	apiRouter := handlers.NewRouter(&handlers.App{
+	apiRouter, err := handlers.NewRouter(&handlers.App{
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
 		WebURL:           os.Getenv("WebURL"),
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "initializing router")
+	}
 
 	srv.PathPrefix("/api").Handler(http.StripPrefix("/api", apiRouter))
 	srv.PathPrefix("/static").Handler(getStaticHandler())
@@ -106,49 +108,45 @@ func initServer() *mux.Router {
 	// For all other requests, serve the index.html file
 	srv.PathPrefix("/").Handler(getRootHandler())
 
-	return srv
+	return srv, nil
 }
 
 func startCmd() {
-	c := database.Config{
+	mailer.InitTemplates(nil)
+
+	database.Open(database.Config{
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
-	}
-	database.Open(c)
+	})
 	database.InitSchema()
 	defer database.Close()
 
-	mailer.InitTemplates(nil)
-
-	// Perform database migration
 	if err := database.Migrate(); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
+	if err := job.Run(); err != nil {
+		panic(errors.Wrap(err, "running job"))
+	}
 
-	// Run job in the background
-	go job.Run()
-
-	srv := initServer()
+	srv, err := initServer()
+	if err != nil {
+		panic(errors.Wrap(err, "initializing server"))
+	}
 
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
 	addr := fmt.Sprintf(":%s", *port)
-	log.Println(http.ListenAndServe(addr, srv))
+	http.ListenAndServe(addr, srv)
 }
 
 func versionCmd() {
 	fmt.Printf("dnote-server-%s\n", versionTag)
 }
 
-func main() {
-	flag.Parse()
-	cmd := flag.Arg(0)
-
-	switch cmd {
-	case "":
-		fmt.Printf(`Dnote Server - A simple notebook for developers
+func rootCmd() {
+	fmt.Printf(`Dnote Server - A simple notebook for developers
 
 Usage:
   dnote-server [command]
@@ -157,6 +155,15 @@ Available commands:
   start: Start the server
   version: Print the version
 `)
+}
+
+func main() {
+	flag.Parse()
+	cmd := flag.Arg(0)
+
+	switch cmd {
+	case "":
+		rootCmd()
 	case "start":
 		startCmd()
 	case "version":

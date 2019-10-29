@@ -681,9 +681,9 @@ func TestNotSupportedVersions(t *testing.T) {
 	}
 
 	// setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	for _, tc := range testCases {

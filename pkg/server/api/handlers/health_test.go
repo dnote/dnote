@@ -20,7 +20,6 @@ package handlers
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -32,9 +31,9 @@ func TestCheckHealth(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	// Execute

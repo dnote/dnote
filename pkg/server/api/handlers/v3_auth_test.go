@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -91,9 +90,9 @@ func TestRegister(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			dat := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, tc.email, tc.password)
@@ -134,9 +133,9 @@ func TestRegisterMissingParams(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		dat := fmt.Sprintf(`{"password": %s}`, "SLMZFM5RmSjA5vfXnG5lPOnrpZSbtmV76cnAcrlr2yU")
@@ -161,9 +160,9 @@ func TestRegisterMissingParams(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		dat := fmt.Sprintf(`{"email": "%s"}`, "alice@example.com")
@@ -189,9 +188,9 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	u := testutils.SetupUserData()
@@ -226,9 +225,9 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -256,9 +255,9 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -287,9 +286,9 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -318,9 +317,9 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		dat := `{"email": "nonexistent@example.com", "password": "pass1234"}`
@@ -361,9 +360,9 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, db.Save(&session2), "preparing session2")
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		// Execute
@@ -412,9 +411,9 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, db.Save(&session2), "preparing session2")
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		// Execute

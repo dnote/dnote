@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -78,9 +77,9 @@ func TestClassicPresignin(t *testing.T) {
 		t.Run(fmt.Sprintf("presignin %s", tc.email), func(t *testing.T) {
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			endpoint := fmt.Sprintf("/classic/presignin?email=%s", tc.email)
@@ -106,9 +105,9 @@ func TestClassicPresignin_MissingParams(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	req := testutils.MakeReq(server, "GET", "/classic/presignin", "")
@@ -129,9 +128,9 @@ func TestClassicSignin(t *testing.T) {
 	testutils.MustExec(t, db.Save(&alice), "saving alice")
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	dat := fmt.Sprintf(`{"email": "%s", "auth_key": "%s"}`, "alice@example.com", "/XCYisXJ6/o+vf6NUEtmrdYzJYPz+T9oAUCtMpOjhzc=")
@@ -227,9 +226,9 @@ func TestClassicSignin_Failure(t *testing.T) {
 		t.Run(fmt.Sprintf("signin %s %s", tc.email, tc.authKey), func(t *testing.T) {
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			dat := fmt.Sprintf(`{"email": "%s", "auth_key": "%s"}`, tc.email, tc.authKey)

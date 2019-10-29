@@ -20,7 +20,6 @@ package handlers
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -36,9 +35,9 @@ func TestGetMe(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	u := testutils.SetupUserData()
@@ -64,9 +63,9 @@ func TestCreateResetToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -97,9 +96,9 @@ func TestCreateResetToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -126,9 +125,9 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -172,9 +171,9 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -210,9 +209,9 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -247,9 +246,9 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -295,9 +294,9 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := httptest.NewServer(NewRouter(&App{
+		server := mustNewServer(t, &App{
 			Clock: clock.NewMock(),
-		}))
+		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
