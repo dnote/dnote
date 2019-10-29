@@ -71,7 +71,13 @@ The following log documentes the history of the browser extensions project
 
 ### [Unreleased]
 
-#### Fixed
+N/A
+
+### 2.0.0 - 2019-10-29
+
+- Allow to customize API and web URLs (#285)
+
+### 1.1.1 - 2019-10-02
 
 - Fix failing requests (#263)
 
