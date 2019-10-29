@@ -121,7 +121,7 @@ endif
 .PHONY: build-cli
 
 ## release
-release-cli: build-cli
+release-cli: clean build-cli
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 release-cli)
 endif
@@ -145,7 +145,7 @@ endif
 	)
 .PHONY: release-cli
 
-release-server: build-server
+release-server: clean build-server
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 release-server)
 endif
