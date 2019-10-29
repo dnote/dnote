@@ -28,7 +28,7 @@ interface Props {
   id?: string;
 }
 
-const CreateBookButton: React.SFC<Props> = ({
+const CreateBookButton: React.FunctionComponent<Props> = ({
   id,
   disabled,
   openModal,

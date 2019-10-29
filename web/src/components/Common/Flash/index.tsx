@@ -46,7 +46,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-const Flash: React.SFC<Props> = ({
+const Flash: React.FunctionComponent<Props> = ({
   id,
   when,
   kind,

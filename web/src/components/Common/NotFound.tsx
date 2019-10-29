@@ -18,7 +18,7 @@
 
 import React from 'react';
 
-const NotFound: React.SFC = () => (
+const NotFound: React.FunctionComponent = () => (
   <div className="container">
     <h1>Not found</h1>
   </div>

@@ -61,7 +61,7 @@ function useFetchData(
   }, [dispatch, noteUUID, search]);
 }
 
-const Note: React.SFC<Props> = ({ match, location }) => {
+const Note: React.FunctionComponent<Props> = ({ match, location }) => {
   const { params } = match;
   const { noteUUID } = params;
 

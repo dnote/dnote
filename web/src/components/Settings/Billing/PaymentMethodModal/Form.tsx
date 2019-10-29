@@ -42,7 +42,7 @@ interface Props {
   setErrMessage: (string) => void;
 }
 
-const Form: React.SFC<Props> = ({
+const Form: React.FunctionComponent<Props> = ({
   stripe,
   nameOnCard,
   setNameOnCard,

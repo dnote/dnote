@@ -39,7 +39,7 @@ interface Props {
   inputId?: string;
 }
 
-const SearchInput: React.SFC<Props> = ({
+const SearchInput: React.FunctionComponent<Props> = ({
   value,
   onChange,
   inputClassName,

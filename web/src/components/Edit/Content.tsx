@@ -39,7 +39,7 @@ interface Props extends RouteComponentProps {
   setErrMessage: React.Dispatch<string>;
 }
 
-const Edit: React.SFC<Props> = ({
+const Edit: React.FunctionComponent<Props> = ({
   noteUUID,
   persisted,
   editor,

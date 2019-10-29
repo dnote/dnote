@@ -35,7 +35,7 @@ interface Props {
   user: UserData;
 }
 
-const AccountMenu: React.SFC<Props> = ({ user }) => {
+const AccountMenu: React.FunctionComponent<Props> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const optRefs = [useRef(null), useRef(null), useRef(null)];
 

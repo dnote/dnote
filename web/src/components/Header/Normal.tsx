@@ -42,7 +42,7 @@ function getHomeDest(location: Location, filters: FiltersState) {
   return getHomePath(filters);
 }
 
-const NormalHeader: React.SFC<Props> = ({ location }) => {
+const NormalHeader: React.FunctionComponent<Props> = ({ location }) => {
   const filters = useFilters();
   const searchObj = toSearchObj(filters);
 

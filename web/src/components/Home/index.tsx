@@ -60,7 +60,7 @@ function useFetchNotes(filters: Filters) {
   }, [dispatch, filters, prevFilters, user]);
 }
 
-const Home: React.SFC<Props> = ({ location }) => {
+const Home: React.FunctionComponent<Props> = ({ location }) => {
   const { notes, user } = useSelector(state => {
     return {
       user: state.auth.user.data,

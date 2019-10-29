@@ -34,7 +34,7 @@ interface Props {
   cta?: string;
 }
 
-const JoinForm: React.SFC<Props> = ({
+const JoinForm: React.FunctionComponent<Props> = ({
   onJoin,
   submitting,
   email,

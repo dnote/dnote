@@ -36,7 +36,7 @@ interface Props extends RouteComponentProps {
   setSuccessMessage: (string) => void;
 }
 
-const CreateBookModal: React.SFC<Props> = ({
+const CreateBookModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   onSuccess,

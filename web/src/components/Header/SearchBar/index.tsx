@@ -33,7 +33,7 @@ const searchDelay = 930;
 
 interface Props extends RouteComponentProps {}
 
-const SearchBar: React.SFC<Props> = ({ location, history }) => {
+const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
   const searchTimerRef = useRef(null);
   const filters = useFilters();
 

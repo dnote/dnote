@@ -22,7 +22,7 @@ import classnames from 'classnames';
 import settingsStyles from '../Settings.scss';
 import styles from './Placeholder.scss';
 
-const Placeholder: React.SFC = () => {
+const Placeholder: React.FunctionComponent = () => {
   return (
     <div className="container-wide">
       <div className="row">

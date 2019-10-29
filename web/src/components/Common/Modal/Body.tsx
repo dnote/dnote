@@ -22,7 +22,7 @@ import styles from './ModalBody.scss';
 
 interface Props {}
 
-const Body: React.SFC<Props> = ({ children }) => {
+const Body: React.FunctionComponent<Props> = ({ children }) => {
   return <div className={styles.wrapper}>{children}</div>;
 };
 

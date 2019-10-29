@@ -44,7 +44,7 @@ function getFill(active: boolean): string {
   return ret;
 }
 
-const TabBar: React.SFC<Props> = ({
+const TabBar: React.FunctionComponent<Props> = ({
   location,
   isMobileMenuOpen,
   setMobileMenuOpen

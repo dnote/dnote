@@ -30,7 +30,7 @@ interface Props {
   stripe: any;
 }
 
-const PaymentMethodModal: React.SFC<Props> = ({
+const PaymentMethodModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   setSuccessMsg,

@@ -39,7 +39,7 @@ const HeaderHolder = () => {
   );
 };
 
-const Placeholder: React.SFC = () => {
+const Placeholder: React.FunctionComponent = () => {
   return (
     <Fragment>
       <HeaderHolder />

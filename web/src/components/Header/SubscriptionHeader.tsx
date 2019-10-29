@@ -26,7 +26,7 @@ import styles from './SubscriptionHeader.scss';
 
 interface Props {}
 
-const SubscriptionsHeader: React.SFC<Props> = () => {
+const SubscriptionsHeader: React.FunctionComponent<Props> = () => {
   const { user } = useSelector(state => {
     return {
       user: state.auth.user.data

@@ -33,7 +33,7 @@ interface Props {
   onDeleteBook: (bookUUID) => void;
 }
 
-const BookItem: React.SFC<Props> = ({
+const BookItem: React.FunctionComponent<Props> = ({
   book,
   isFocused,
   setFocusedOptEl,

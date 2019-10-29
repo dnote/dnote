@@ -34,7 +34,7 @@ interface Props extends RouteComponentProps {
   noteUUID: string;
 }
 
-const DeleteNoteModal: React.SFC<Props> = ({
+const DeleteNoteModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   noteUUID,

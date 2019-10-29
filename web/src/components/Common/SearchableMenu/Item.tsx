@@ -32,7 +32,7 @@ interface Props {
   isSelected?: boolean;
 }
 
-const Item: React.SFC<Props> = ({
+const Item: React.FunctionComponent<Props> = ({
   children,
   id,
   value,

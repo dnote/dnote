@@ -28,7 +28,7 @@ interface Props {
   position?: Position;
 }
 
-const TopActions: React.SFC<Props> = ({ position }) => {
+const TopActions: React.FunctionComponent<Props> = ({ position }) => {
   return (
     <div
       className={classnames(styles.wrapper, {

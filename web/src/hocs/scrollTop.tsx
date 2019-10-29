@@ -22,7 +22,7 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 interface Props extends RouteComponentProps {}
 
 export default function(WrappedComponent: React.ComponentType) {
-  const ScrollToTop: React.SFC<Props> = ({ location }) => {
+  const ScrollToTop: React.FunctionComponent<Props> = ({ location }) => {
     const { pathname } = location;
     useEffect(() => {
       console.log('scrolling to top');

@@ -28,7 +28,7 @@ interface Props {
   labelClassName?: string;
 }
 
-const NameOnCard: React.SFC<Props> = ({
+const NameOnCard: React.FunctionComponent<Props> = ({
   value,
   onUpdate,
   containerClassName,

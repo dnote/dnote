@@ -25,7 +25,7 @@ import Placeholder from './Placeholder';
 
 interface Props {}
 
-const NoteHeader: React.SFC<Props> = () => {
+const NoteHeader: React.FunctionComponent<Props> = () => {
   const { user } = useSelector(state => {
     return {
       user: state.auth.user

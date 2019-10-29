@@ -104,7 +104,7 @@ function encodeBookStr(s: string): string[] {
   return ret;
 }
 
-const AdvancedPanel: React.SFC<Props> = ({
+const AdvancedPanel: React.FunctionComponent<Props> = ({
   onDismiss,
   history,
   location,

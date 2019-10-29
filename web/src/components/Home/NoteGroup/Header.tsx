@@ -37,7 +37,7 @@ function toDatetime(year: number, month: number) {
   return `${year}-${monthStr}`;
 }
 
-const Header: React.SFC<Props> = ({ year, month }) => {
+const Header: React.FunctionComponent<Props> = ({ year, month }) => {
   const monthName = monthNumToFullName(month);
   const datetime = toDatetime(year, month);
 

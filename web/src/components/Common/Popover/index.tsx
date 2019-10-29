@@ -39,7 +39,7 @@ interface Props {
   closeOnOutsideClick?: boolean;
 }
 
-const Popover: React.SFC<Props> = ({
+const Popover: React.FunctionComponent<Props> = ({
   contentClassName,
   wrapperClassName,
   renderContent,

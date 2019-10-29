@@ -36,7 +36,7 @@ interface Match {
 
 interface Props extends RouteComponentProps<Match> {}
 
-const Edit: React.SFC<Props> = ({ match }) => {
+const Edit: React.FunctionComponent<Props> = ({ match }) => {
   const { noteUUID } = match.params;
 
   const sessionKey = getEditorSessionkey(noteUUID);

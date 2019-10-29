@@ -63,7 +63,7 @@ interface Props {
   filters: Filters;
 }
 
-const NoteGroupList: React.SFC<Props> = ({
+const NoteGroupList: React.FunctionComponent<Props> = ({
   groups,
   pro,
   filters,

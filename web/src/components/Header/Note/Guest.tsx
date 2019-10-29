@@ -23,7 +23,7 @@ import Logo from '../../Icons/Logo';
 import { getHomePath } from 'web/libs/paths';
 import styles from './Guest.scss';
 
-const UserNoteHeader: React.SFC = () => {
+const UserNoteHeader: React.FunctionComponent = () => {
   return (
     <header className={styles.wrapper}>
       <div className={styles.content}>

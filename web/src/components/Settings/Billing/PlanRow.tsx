@@ -55,7 +55,7 @@ interface Props {
   subscription: any;
 }
 
-const PlanRow: React.SFC<Props> = ({ subscription }) => {
+const PlanRow: React.FunctionComponent<Props> = ({ subscription }) => {
   return (
     <div className={classnames(settingRowStyles.row, styles.wrapper)}>
       <div className={styles.content}>

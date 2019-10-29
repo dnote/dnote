@@ -52,7 +52,7 @@ interface Props {
   labelClassName?: string;
 }
 
-const Card: React.SFC<Props> = ({
+const Card: React.FunctionComponent<Props> = ({
   cardElementRef,
   setCardElementLoaded,
   containerClassName,

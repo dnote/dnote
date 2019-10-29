@@ -33,7 +33,7 @@ interface Props {
   setFailureMsg: (string) => void;
 }
 
-const CancelPlanModal: React.SFC<Props> = ({
+const CancelPlanModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   subscriptionId,

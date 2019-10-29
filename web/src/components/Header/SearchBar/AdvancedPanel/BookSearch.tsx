@@ -117,7 +117,7 @@ function useSetSuggestionVisibility(
   }, [setIsOpen, triggerRef, inputValue, prevInputValue]);
 }
 
-const BookSearch: React.SFC<Props> = ({ value, setValue, disabled }) => {
+const BookSearch: React.FunctionComponent<Props> = ({ value, setValue, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIdx, setFocusedIdx] = useState(0);
   const [focusedOptEl, setFocusedOptEl] = useState(null);

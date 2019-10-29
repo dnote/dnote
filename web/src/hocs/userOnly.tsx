@@ -33,7 +33,7 @@ export default function(
 ) {
   interface Props extends RouteComponentProps {}
 
-  const HOC: React.SFC<Props> = props => {
+  const HOC: React.FunctionComponent<Props> = props => {
     const { location } = props;
 
     const { userData } = useSelector(state => {

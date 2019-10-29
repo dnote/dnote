@@ -25,7 +25,7 @@ import Content from './Content';
 import Flash from '../Common/Flash';
 import HeadData from './HeadData';
 
-const Books: React.SFC = () => {
+const Books: React.FunctionComponent = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   const dispatch = useDispatch();

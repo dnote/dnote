@@ -20,7 +20,7 @@ import React from 'react';
 
 import styles from './EmptyList.scss';
 
-const EmptyList: React.SFC = () => {
+const EmptyList: React.FunctionComponent = () => {
   return (
     <div className={styles.wrapper}>
       <p>No book found.</p>

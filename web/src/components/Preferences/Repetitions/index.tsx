@@ -36,7 +36,7 @@ interface Match {
 }
 interface Props extends RouteComponentProps<Match> {}
 
-const EmailPreferenceRepetition: React.SFC<Props> = ({ location, match }) => {
+const EmailPreferenceRepetition: React.FunctionComponent<Props> = ({ location, match }) => {
   const [data, setData] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');

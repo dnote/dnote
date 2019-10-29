@@ -32,7 +32,7 @@ interface Props {
 
 const labelId = 'password-modal';
 
-const PasswordModal: React.SFC<Props> = ({ isOpen, onDismiss }) => {
+const PasswordModal: React.FunctionComponent<Props> = ({ isOpen, onDismiss }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirmation, setNewPasswordConfirmation] = useState('');

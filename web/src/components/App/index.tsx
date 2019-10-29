@@ -120,7 +120,7 @@ function useMobileMenuState(
   return [isMobileMenuOpen, setMobileMenuOpen];
 }
 
-const App: React.SFC<Props> = ({ location }) => {
+const App: React.FunctionComponent<Props> = ({ location }) => {
   useFetchData();
   useSavePrevLocation(location);
   usePersistFilters(location);

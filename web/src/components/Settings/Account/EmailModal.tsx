@@ -34,7 +34,7 @@ interface Props {
   onDismiss: () => void;
 }
 
-const EmailModal: React.SFC<Props> = ({ currentEmail, isOpen, onDismiss }) => {
+const EmailModal: React.FunctionComponent<Props> = ({ currentEmail, isOpen, onDismiss }) => {
   const [passwordVal, setPasswordVal] = useState('');
   const [emailVal, setEmailVal] = useState('');
   const [inProgress, setInProgress] = useState(false);

@@ -30,7 +30,7 @@ interface Props {
   labelClassName?: string;
 }
 
-const Country: React.SFC<Props> = ({
+const Country: React.FunctionComponent<Props> = ({
   value,
   onUpdate,
   containerClassName,

@@ -22,7 +22,7 @@ import styles from './Item.scss';
 
 interface Props {}
 
-const Item: React.SFC<Props> = ({ children }) => {
+const Item: React.FunctionComponent<Props> = ({ children }) => {
   return <li className={styles.wrapper}>{children}</li>;
 };
 

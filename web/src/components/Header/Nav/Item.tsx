@@ -27,7 +27,7 @@ interface Props {
   label: string;
 }
 
-const Item: React.SFC<Props> = ({ to, label }) => {
+const Item: React.FunctionComponent<Props> = ({ to, label }) => {
   return (
     <li className={styles.wrapper}>
       <Link to={to} className={styles.link}>

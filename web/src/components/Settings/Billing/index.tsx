@@ -103,7 +103,7 @@ interface ContentProps {
   stripeLoaded: boolean;
 }
 
-const Content: React.SFC<ContentProps> = ({
+const Content: React.FunctionComponent<ContentProps> = ({
   subscription,
   source,
   setIsPlanModalOpen,
@@ -169,7 +169,7 @@ const Content: React.SFC<ContentProps> = ({
   );
 };
 
-const Billing: React.SFC = () => {
+const Billing: React.FunctionComponent = () => {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isPaymentMethodModalOpen, setIsPaymentMethodModalOpen] = useState(
     false

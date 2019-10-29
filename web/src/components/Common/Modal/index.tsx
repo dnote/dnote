@@ -40,7 +40,7 @@ interface Props extends RouteComponentProps {
   modalClassName?: string;
 }
 
-const Modal: React.SFC<Props> = ({
+const Modal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   overlayClassName,

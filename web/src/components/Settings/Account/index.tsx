@@ -31,7 +31,7 @@ import styles from '../Settings.scss';
 
 interface Props {}
 
-const Account: React.SFC<Props> = () => {
+const Account: React.FunctionComponent<Props> = () => {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');

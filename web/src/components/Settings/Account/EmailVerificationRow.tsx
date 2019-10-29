@@ -29,7 +29,7 @@ interface Props {
   setFailureMsg: (string) => void;
 }
 
-const EmailVerificationRow: React.SFC<Props> = ({
+const EmailVerificationRow: React.FunctionComponent<Props> = ({
   verified,
   setSuccessMsg,
   setFailureMsg

@@ -22,7 +22,7 @@ import { StripeProvider, Elements } from 'react-stripe-elements';
 import { useScript } from 'web/libs/hooks';
 import CheckoutForm from './Form';
 
-const Checkout: React.SFC = () => {
+const Checkout: React.FunctionComponent = () => {
   const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
 
   const key = `${__STRIPE_PUBLIC_KEY__}`;

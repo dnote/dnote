@@ -72,7 +72,7 @@ interface Props {
   filters: Filters;
 }
 
-const NoteItem: React.SFC<Props> = ({ note, filters }) => {
+const NoteItem: React.FunctionComponent<Props> = ({ note, filters }) => {
   return (
     <li className={classnames('T-note-item', styles.wrapper, {})}>
       <Link

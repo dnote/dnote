@@ -41,7 +41,7 @@ function renderBody(isNew: boolean, label: string) {
   return label;
 }
 
-const OptionItem: React.SFC<Props> = ({
+const OptionItem: React.FunctionComponent<Props> = ({
   option,
   isSelected,
   isFocused,

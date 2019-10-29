@@ -44,7 +44,7 @@ interface Match {
 
 interface Props extends RouteComponentProps<Match> {}
 
-const Settings: React.SFC<Props> = ({ match }) => {
+const Settings: React.FunctionComponent<Props> = ({ match }) => {
   const { params } = match;
   const { section } = params;
 

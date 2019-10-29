@@ -90,7 +90,7 @@ function useSetFocus({
   }, [textboxValue, setFocusedIdx, targetIdx]);
 }
 
-const SearchableMenu: React.SFC<Props> = ({
+const SearchableMenu: React.FunctionComponent<Props> = ({
   menuId,
   isOpen,
   setIsOpen,
