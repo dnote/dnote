@@ -22,7 +22,8 @@ import { findDOMNode } from 'react-dom';
 
 import Link from './Link';
 import config from '../utils/config';
-import { updateSettings, login } from '../store/settings/actions';
+import { login } from '../store/auth/actions';
+import { updateSettings } from '../store/settings/actions';
 import { useDispatch } from '../store/hooks';
 import services from '../utils/services';
 import Flash from '../components/Flash';

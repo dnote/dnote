@@ -20,8 +20,8 @@ import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 
 import initServices from '../utils/services';
-import { resetSettings } from '../store/settings/actions';
-import { SettingsState } from '../store/settings/types';
+import { logout } from '../store/auth/actions';
+import { AuthState } from '../store/auth/types';
 import { useSelector, useDispatch } from '../store/hooks';
 import Header from './Header';
 import Home from './Home';
@@ -52,16 +52,16 @@ function renderRoutes(path: string, isLoggedIn: boolean) {
 }
 
 // useCheckSessionValid ensures that the current session is valid
-function useCheckSessionValid(settings: SettingsState) {
+function useCheckSessionValid(auth: AuthState) {
   const dispatch = useDispatch();
 
   useEffect(() => {
     // if session is expired, clear it
     const now = Math.round(new Date().getTime() / 1000);
-    if (settings.sessionKey && settings.sessionKeyExpiry < now) {
-      dispatch(resetSettings());
+    if (auth.sessionKey && auth.sessionKeyExpiry < now) {
+      dispatch(logout());
     }
-  }, [dispatch, settings.sessionKey, settings.sessionKeyExpiry]);
+  }, [dispatch, auth.sessionKey, auth.sessionKeyExpiry]);
 }
 
 const App: React.FunctionComponent<Props> = () => {
@@ -69,16 +69,17 @@ const App: React.FunctionComponent<Props> = () => {
   const [errMsg, setErrMsg] = useState('');
 
   const dispatch = useDispatch();
-  const { path, settings } = useSelector(state => {
+  const { path, auth, settings } = useSelector(state => {
     return {
       path: state.location.path,
+      auth: state.auth,
       settings: state.settings
     };
   });
 
-  useCheckSessionValid(settings);
+  useCheckSessionValid(auth);
 
-  const isLoggedIn = Boolean(settings.sessionKey);
+  const isLoggedIn = Boolean(auth.sessionKey);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -86,7 +87,7 @@ const App: React.FunctionComponent<Props> = () => {
   const handleLogout = async (done?: Function) => {
     try {
       await initServices(settings.apiUrl).users.signout();
-      dispatch(resetSettings());
+      dispatch(logout());
 
       if (done) {
         done();

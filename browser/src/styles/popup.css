@@ -55,7 +55,6 @@ main.blur {
   font-size: 16px;
 }
 .login-input {
-  font-size: 12px;
   margin-top: 4px;
 }
 .message {
@@ -197,8 +196,6 @@ kbd {
 }
 
 /* settings */
-.settings {
-}
 .settings #settings-form {
   margin-top: 12px;
 }
@@ -211,6 +208,13 @@ kbd {
 }
 .settings .actions {
   margin-top: 12px;
+  text-align: center;
+}
+.settings .restore {
+  margin-top: 8px;
+  display: inline-block;
+  color: gray;
+  font-size: 1.3rem;
 }
 
 /* composer */
@@ -418,4 +422,10 @@ kbd {
 .button-stretch {
   width: 100%;
   justify-content: center;
+}
+.button-no-ui {
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
 }

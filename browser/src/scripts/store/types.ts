@@ -19,6 +19,7 @@
 import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
+import { AuthState } from './auth/types';
 import { ComposerState } from './composer/types';
 import { LocationState } from './location/types';
 import { SettingsState } from './settings/types';
@@ -26,6 +27,7 @@ import { BooksState } from './books/types';
 
 // AppState represents the application state
 export interface AppState {
+  auth: AuthState;
   composer: ComposerState;
   location: LocationState;
   settings: SettingsState;

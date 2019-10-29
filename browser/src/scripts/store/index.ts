@@ -24,10 +24,12 @@ import location from './location/reducers';
 import settings from './settings/reducers';
 import books from './books/reducers';
 import composer from './composer/reducers';
+import auth from './auth/reducers';
 import { AppState } from './types';
 import config from '../utils/config';
 
 const rootReducer = combineReducers({
+  auth,
   location,
   settings,
   books,

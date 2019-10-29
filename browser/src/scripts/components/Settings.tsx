@@ -23,18 +23,21 @@ import { findDOMNode } from 'react-dom';
 import Link from './Link';
 import Flash from './Flash';
 import config from '../utils/config';
-import { updateSettings, login } from '../store/settings/actions';
-import { useDispatch, useSelector } from '../store/hooks';
+import { updateSettings, resetSettings } from '../store/settings/actions';
+import { useDispatch, useSelector, useStore } from '../store/hooks';
 import services from '../utils/services';
 
 interface Props {}
 
+// isValidURL checks if the given string is a valid URL
 function isValidURL(url: string): boolean {
   var a = document.createElement('a');
   a.href = url;
   return a.host && a.host != window.location.host;
 }
 
+// validateFormState validates the given form state. If any input is
+// invalid, it throws an error.
 function validateFormState({ apiUrl, webUrl }) {
   if (!isValidURL(apiUrl)) {
     throw new Error('Invalid URL for the API URL');
@@ -51,12 +54,23 @@ const Settings: React.FunctionComponent<Props> = () => {
       settings: state.settings
     };
   });
+  const store = useStore();
 
   const [apiUrl, setAPIUrl] = useState(settings.apiUrl);
   const [webUrl, setWebUrl] = useState(settings.webUrl);
   const [errMsg, setErrMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const dispatch = useDispatch();
+
+  function handleRestore() {
+    dispatch(resetSettings());
+    setSuccessMsg('Restored the default settings');
+
+    const { settings } = store.getState();
+
+    setAPIUrl(settings.apiUrl);
+    setWebUrl(settings.webUrl);
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -87,7 +101,7 @@ const Settings: React.FunctionComponent<Props> = () => {
       <div className="settings page">
         <h1 className="heading">Settings</h1>
 
-        <p className="lead">Customize Dnote browser extension</p>
+        <p className="lead">Customize your Dnote extension</p>
 
         <form id="settings-form" onSubmit={handleSubmit}>
           <div className="input-row">
@@ -130,6 +144,14 @@ const Settings: React.FunctionComponent<Props> = () => {
               className="button button-first button-small button-stretch"
             >
               Save
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="restore button-no-ui"
+            >
+              Restore default
             </button>
           </div>
         </form>
