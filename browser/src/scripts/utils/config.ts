@@ -17,7 +17,7 @@
  */
 
 export default {
-  webUrl: __WEB_URL__,
-  apiEndpoint: __API_ENDPOINT__,
+  defaultWebUrl: __WEB_URL__,
+  defaultApiEndpoint: __API_ENDPOINT__,
   version: __VERSION__
 };

@@ -19,13 +19,15 @@
 import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 
-import services from '../utils/services';
-import { resetSettings } from '../store/settings/actions';
+import initServices from '../utils/services';
+import { logout } from '../store/auth/actions';
+import { AuthState } from '../store/auth/types';
 import { useSelector, useDispatch } from '../store/hooks';
 import Header from './Header';
 import Home from './Home';
 import Menu from './Menu';
 import Success from './Success';
+import Settings from './Settings';
 import Composer from './Composer';
 
 interface Props {}
@@ -34,15 +36,32 @@ function renderRoutes(path: string, isLoggedIn: boolean) {
   switch (path) {
     case '/success':
       return <Success />;
-    case '/':
+    case '/': {
       if (isLoggedIn) {
         return <Composer />;
       }
 
       return <Home />;
+    }
+    case '/settings': {
+      return <Settings />;
+    }
     default:
       return <div>Not found</div>;
   }
+}
+
+// useCheckSessionValid ensures that the current session is valid
+function useCheckSessionValid(auth: AuthState) {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // if session is expired, clear it
+    const now = Math.round(new Date().getTime() / 1000);
+    if (auth.sessionKey && auth.sessionKeyExpiry < now) {
+      dispatch(logout());
+    }
+  }, [dispatch, auth.sessionKey, auth.sessionKeyExpiry]);
 }
 
 const App: React.FunctionComponent<Props> = () => {
@@ -50,29 +69,25 @@ const App: React.FunctionComponent<Props> = () => {
   const [errMsg, setErrMsg] = useState('');
 
   const dispatch = useDispatch();
-  const { path, settings } = useSelector(state => {
+  const { path, auth, settings } = useSelector(state => {
     return {
       path: state.location.path,
+      auth: state.auth,
       settings: state.settings
     };
   });
 
-  useEffect(() => {
-    // if session is expired, clear it
-    const now = Math.round(new Date().getTime() / 1000);
-    if (settings.sessionKey && settings.sessionKeyExpiry < now) {
-      dispatch(resetSettings());
-    }
-  }, [dispatch]);
+  useCheckSessionValid(auth);
 
-  const isLoggedIn = Boolean(settings.sessionKey);
+  const isLoggedIn = Boolean(auth.sessionKey);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
   const handleLogout = async (done?: Function) => {
     try {
-      await services.users.signout();
-      dispatch(resetSettings());
+      await initServices(settings.apiUrl).users.signout();
+      dispatch(logout());
 
       if (done) {
         done();

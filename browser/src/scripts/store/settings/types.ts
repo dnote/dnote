@@ -17,8 +17,8 @@
  */
 
 export interface SettingsState {
-  sessionKey: string;
-  sessionKeyExpiry: number;
+  apiUrl: string;
+  webUrl: string;
 }
 
 export const UPDATE = 'settings/UPDATE';
@@ -27,7 +27,7 @@ export const RESET = 'settings/RESET';
 export interface UpdateAction {
   type: typeof UPDATE;
   data: {
-    settings: any;
+    settings: Partial<SettingsState>;
   };
 }
 

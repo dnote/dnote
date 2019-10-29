@@ -28,6 +28,11 @@ export default ({ toggleMenu, loggedIn, onLogout }) => (
           Home
         </Link>
       </li>
+      <li>
+        <Link to="/settings" onClick={toggleMenu} className="menu-link">
+          Settings
+        </Link>
+      </li>
 
       {loggedIn && (
         <li>

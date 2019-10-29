@@ -16,12 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import initServices from 'jslib/services';
+import init from 'jslib/services';
 import config from './config';
 
-const services = initServices({
-  baseUrl: config.apiEndpoint,
-  pathPrefix: ''
-});
+const initServices = (baseUrl: string) => {
+  return init({
+    baseUrl: baseUrl,
+    pathPrefix: ''
+  });
+};
 
-export default services;
+export default initServices;

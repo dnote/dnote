@@ -20,7 +20,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import classnames from 'classnames';
 
 import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
-import services from '../utils/services';
+import initServices from '../utils/services';
 import BookSelector from './BookSelector';
 import Flash from './Flash';
 import { useSelector, useDispatch } from '../store/hooks';
@@ -88,15 +88,18 @@ const Composer: React.FunctionComponent<Props> = () => {
   const [contentRef, setContentEl] = useState(null);
   const [bookSelectorRef, setBookSelectorEl] = useState(null);
 
-  const { composer, settings } = useSelector(state => {
+  const { composer, settings, auth } = useSelector(state => {
     return {
       composer: state.composer,
-      settings: state.settings
+      settings: state.settings,
+      auth: state.auth
     };
   });
 
   const handleSubmit = async e => {
     e.preventDefault();
+
+    const services = initServices(settings.apiUrl);
 
     setSubmitting(true);
 
@@ -109,7 +112,7 @@ const Composer: React.FunctionComponent<Props> = () => {
           },
           {
             headers: {
-              Authorization: `Bearer ${settings.sessionKey}`
+              Authorization: `Bearer ${auth.sessionKey}`
             }
           }
         );
@@ -126,7 +129,7 @@ const Composer: React.FunctionComponent<Props> = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${settings.sessionKey}`
+            Authorization: `Bearer ${auth.sessionKey}`
           }
         }
       );
@@ -176,7 +179,7 @@ const Composer: React.FunctionComponent<Props> = () => {
 
   return (
     <div className="composer">
-      <Flash when={errMsg !== ''} message={errMsg} />
+      <Flash kind="error" when={errMsg !== ''} message={errMsg} />
 
       <form onSubmit={handleSubmit} className="form">
         <BookSelector

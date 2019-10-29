@@ -24,16 +24,39 @@ import location from './location/reducers';
 import settings from './settings/reducers';
 import books from './books/reducers';
 import composer from './composer/reducers';
+import auth from './auth/reducers';
+import { AppState } from './types';
+import config from '../utils/config';
 
 const rootReducer = combineReducers({
+  auth,
   location,
   settings,
   books,
   composer
 });
 
-// configuruStore returns a new store that contains the appliation state
-export default function configureStore(initialState) {
+// initState returns a new state with any missing values populated
+// if a state is given.
+function initState(s: AppState | undefined): AppState {
+  if (s === undefined) {
+    return undefined;
+  }
+
+  const { settings } = s;
+
+  return {
+    ...s,
+    settings: {
+      ...settings,
+      apiUrl: settings.apiUrl || config.defaultApiEndpoint,
+      webUrl: settings.webUrl || config.defaultWebUrl
+    }
+  };
+}
+
+// configureStore returns a new store that contains the appliation state
+export default function configureStore(state: AppState | undefined) {
   const typedWindow = window as any;
 
   const composeEnhancers =
@@ -41,7 +64,7 @@ export default function configureStore(initialState) {
 
   return createStore(
     rootReducer,
-    initialState,
+    initState(state),
     composeEnhancers(applyMiddleware(createLogger, thunkMiddleware))
   );
 }

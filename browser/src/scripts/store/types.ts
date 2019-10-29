@@ -16,27 +16,28 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UPDATE, RESET, SettingsState, SettingsActionType } from './types';
-import config from '../../utils/config';
+import { Action } from 'redux';
+import { ThunkAction } from 'redux-thunk';
 
-const initialState: SettingsState = {
-  apiUrl: config.defaultApiEndpoint,
-  webUrl: config.defaultWebUrl
-};
+import { AuthState } from './auth/types';
+import { ComposerState } from './composer/types';
+import { LocationState } from './location/types';
+import { SettingsState } from './settings/types';
+import { BooksState } from './books/types';
 
-export default function(
-  state = initialState,
-  action: SettingsActionType
-): SettingsState {
-  switch (action.type) {
-    case UPDATE:
-      return {
-        ...state,
-        ...action.data.settings
-      };
-    case RESET:
-      return initialState;
-    default:
-      return state;
-  }
+// AppState represents the application state
+export interface AppState {
+  auth: AuthState;
+  composer: ComposerState;
+  location: LocationState;
+  settings: SettingsState;
+  books: BooksState;
 }
+
+// ThunkAction is a thunk action type
+export type ThunkAction<T = void> = ThunkAction<
+  Promise<T>,
+  AppState,
+  void,
+  Action
+>;

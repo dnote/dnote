@@ -18,14 +18,17 @@
 
 import React from 'react';
 
+type Kind = 'error' | 'info';
+
 interface Props {
   message: string;
   when: boolean;
+  kind: Kind;
 }
 
-const Flash: React.FunctionComponent<Props> = ({ message, when }) => {
+const Flash: React.FunctionComponent<Props> = ({ message, when, kind }) => {
   if (when) {
-    return <div className="alert error">Error: {message}</div>;
+    return <div className={`alert alert-${kind}`}>{message}</div>;
   }
 
   return null;

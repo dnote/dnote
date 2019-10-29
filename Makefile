@@ -171,3 +171,9 @@ clean:
 	@rm -rf build
 	@rm -rf web/public
 .PHONY: clean
+
+clean-dep:
+	@rm -rf ./web/node_modules
+	@rm -rf ./jslib/node_modules
+	@rm -rf ./browser/node_modules
+.PHONY: clean-dep

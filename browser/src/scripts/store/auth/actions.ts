@@ -16,27 +16,31 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UPDATE, RESET, SettingsState, SettingsActionType } from './types';
-import config from '../../utils/config';
+import { LOGIN, LOGOUT, LogoutAction, LoginAction } from './types';
+import { ThunkAction } from '../types';
+import initServices from '../../utils/services';
 
-const initialState: SettingsState = {
-  apiUrl: config.defaultApiEndpoint,
-  webUrl: config.defaultWebUrl
-};
+export function login({ email, password }): ThunkAction<void> {
+  return (dispatch, getState) => {
+    const { settings } = getState();
+    const { apiUrl } = settings;
 
-export default function(
-  state = initialState,
-  action: SettingsActionType
-): SettingsState {
-  switch (action.type) {
-    case UPDATE:
-      return {
-        ...state,
-        ...action.data.settings
-      };
-    case RESET:
-      return initialState;
-    default:
-      return state;
-  }
+    return initServices(apiUrl)
+      .users.signin({ email, password })
+      .then(resp => {
+        dispatch({
+          type: LOGIN,
+          data: {
+            sessionKey: resp.key,
+            sessionKeyExpiry: resp.expiresAt
+          }
+        });
+      });
+  };
+}
+
+export function logout(): LogoutAction {
+  return {
+    type: LOGOUT
+  };
 }

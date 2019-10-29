@@ -16,25 +16,29 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UPDATE, RESET, SettingsState, SettingsActionType } from './types';
+import { LOGIN, LOGOUT, AuthState, AuthActionType } from './types';
 import config from '../../utils/config';
 
-const initialState: SettingsState = {
-  apiUrl: config.defaultApiEndpoint,
-  webUrl: config.defaultWebUrl
+const initialState: AuthState = {
+  sessionKey: '',
+  sessionKeyExpiry: 0
 };
 
 export default function(
   state = initialState,
-  action: SettingsActionType
-): SettingsState {
+  action: AuthActionType
+): AuthState {
   switch (action.type) {
-    case UPDATE:
+    case LOGIN: {
+      const { sessionKey, sessionKeyExpiry } = action.data;
+
       return {
         ...state,
-        ...action.data.settings
+        sessionKey: sessionKey,
+        sessionKeyExpiry: sessionKeyExpiry
       };
-    case RESET:
+    }
+    case LOGOUT:
       return initialState;
     default:
       return state;

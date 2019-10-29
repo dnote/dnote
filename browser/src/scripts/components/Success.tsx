@@ -34,9 +34,10 @@ const Success: React.FunctionComponent = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const dispatch = useDispatch();
-  const { location } = useSelector(state => {
+  const { location, settings } = useSelector(state => {
     return {
-      location: state.location
+      location: state.location,
+      settings: state.settings
     };
   });
 
@@ -50,7 +51,7 @@ const Success: React.FunctionComponent = () => {
     } else if (e.keyCode === KEYCODE_ESC) {
       window.close();
     } else if (e.keyCode === KEYCODE_LOWERCASE_B) {
-      const url = `${config.webUrl}/notes/${noteUUID}`;
+      const url = `${settings.webUrl}/notes/${noteUUID}`;
 
       ext.tabs
         .create({ url })
@@ -73,7 +74,7 @@ const Success: React.FunctionComponent = () => {
 
   return (
     <Fragment>
-      <Flash when={errorMsg !== ''} message={errorMsg} />
+      <Flash kind="error" when={errorMsg !== ''} message={errorMsg} />
 
       <div className="success-page">
         <div>
