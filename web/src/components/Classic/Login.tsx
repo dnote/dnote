@@ -33,7 +33,7 @@ import LoginForm from '../Login/LoginForm';
 
 interface Props {}
 
-const ClassicLogin: React.SFC<Props> = () => {
+const ClassicLogin: React.FunctionComponent<Props> = () => {
   const [errMsg, setErrMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [emailVal, setEmailVal] = useState('');

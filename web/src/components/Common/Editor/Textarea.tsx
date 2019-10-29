@@ -35,7 +35,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const Textarea: React.SFC<Props> = ({
+const Textarea: React.FunctionComponent<Props> = ({
   sessionKey,
   content,
   onChange,

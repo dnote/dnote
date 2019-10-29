@@ -50,7 +50,7 @@ interface Props {
 
 // TODO: Make a generic Select component that works for both single and multiple selection
 // by passing of a flag
-const MultiSelect: React.SFC<Props> = ({
+const MultiSelect: React.FunctionComponent<Props> = ({
   options,
   currentOptions,
   setCurrentOptions,

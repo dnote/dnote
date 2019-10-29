@@ -34,7 +34,7 @@ interface Props {
   isOpen: boolean;
 }
 
-const MobileMenu: React.SFC<Props> = ({ onDismiss, isOpen }) => {
+const MobileMenu: React.FunctionComponent<Props> = ({ onDismiss, isOpen }) => {
   if (!isOpen) {
     return null;
   }

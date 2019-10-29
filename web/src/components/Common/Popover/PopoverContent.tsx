@@ -37,7 +37,7 @@ interface Props {
   hasBorder?: boolean;
 }
 
-const PopoverContent: React.SFC<Props> = ({
+const PopoverContent: React.FunctionComponent<Props> = ({
   contentId,
   contentClassName,
   onDismiss,

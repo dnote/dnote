@@ -29,7 +29,7 @@ import JoinForm from '../Join/JoinForm';
 
 interface Props extends RouteComponentProps {}
 
-const SetPassword: React.SFC<Props> = ({ history }) => {
+const SetPassword: React.FunctionComponent<Props> = ({ history }) => {
   const [errMsg, setErrMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 

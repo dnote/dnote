@@ -30,7 +30,7 @@ interface Props {
   setExpanded?: (boolean) => void;
 }
 
-const Actions: React.SFC<Props> = ({
+const Actions: React.FunctionComponent<Props> = ({
   onReset,
   resetShown,
   setExpanded,

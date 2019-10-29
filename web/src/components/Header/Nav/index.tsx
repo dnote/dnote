@@ -28,7 +28,7 @@ interface Props {
   filters: Filters;
 }
 
-const Nav: React.SFC<Props> = ({ filters }) => {
+const Nav: React.FunctionComponent<Props> = ({ filters }) => {
   const searchObj = toSearchObj(filters);
 
   return (

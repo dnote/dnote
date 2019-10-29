@@ -40,7 +40,7 @@ interface Props {
   tabIndex?: number;
 }
 
-const Button: React.SFC<Props> = ({
+const Button: React.FunctionComponent<Props> = ({
   id,
   type,
   kind,

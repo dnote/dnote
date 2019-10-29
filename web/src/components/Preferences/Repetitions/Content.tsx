@@ -30,7 +30,7 @@ interface Props {
   token?: string;
 }
 
-const Content: React.SFC<Props> = ({
+const Content: React.FunctionComponent<Props> = ({
   data,
   token,
   setSuccessMsg,

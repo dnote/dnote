@@ -41,7 +41,7 @@ interface Props extends RouteComponentProps {
   history: History;
 }
 
-const Form: React.SFC<Props> = ({ stripe, stripeLoadError, history }) => {
+const Form: React.FunctionComponent<Props> = ({ stripe, stripeLoadError, history }) => {
   const [nameOnCard, setNameOnCard] = useState('');
   const cardElementRef = useRef(null);
   const [cardElementLoaded, setCardElementLoaded] = useState(false);

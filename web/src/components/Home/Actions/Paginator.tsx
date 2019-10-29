@@ -48,7 +48,7 @@ interface PageLinkProps {
   className?: string;
 }
 
-const PageLink: React.SFC<PageLinkProps> = ({
+const PageLink: React.FunctionComponent<PageLinkProps> = ({
   direction,
   disabled,
   className
@@ -93,7 +93,7 @@ const PageLink: React.SFC<PageLinkProps> = ({
 
 interface PaginatorProps {}
 
-const Paginator: React.SFC<PaginatorProps> = () => {
+const Paginator: React.FunctionComponent<PaginatorProps> = () => {
   const filters = useFilters();
   const { notes } = useSelector(state => {
     return {

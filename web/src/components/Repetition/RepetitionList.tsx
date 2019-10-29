@@ -30,7 +30,7 @@ interface Props {
   setRuleUUIDToDelete: React.Dispatch<any>;
 }
 
-const ReptitionList: React.SFC<Props> = ({
+const ReptitionList: React.FunctionComponent<Props> = ({
   isFetching,
   isFetched,
   items,

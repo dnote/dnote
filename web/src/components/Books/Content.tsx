@@ -98,7 +98,7 @@ interface Props extends RouteComponentProps {
   setSuccessMessage: (string) => void;
 }
 
-const Content: React.SFC<Props> = ({ history, setSuccessMessage }) => {
+const Content: React.FunctionComponent<Props> = ({ history, setSuccessMessage }) => {
   const { books } = useSelector(state => {
     return {
       books: state.books

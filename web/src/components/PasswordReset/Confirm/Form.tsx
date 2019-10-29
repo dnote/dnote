@@ -26,7 +26,7 @@ interface Props {
   submitting: boolean;
 }
 
-const PasswordResetConfirmForm: React.SFC<Props> = ({
+const PasswordResetConfirmForm: React.FunctionComponent<Props> = ({
   onResetPassword,
   submitting
 }) => {

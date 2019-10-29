@@ -30,7 +30,7 @@ interface Props {
   value: string;
 }
 
-const CountrySelect: React.SFC<Props> = ({
+const CountrySelect: React.FunctionComponent<Props> = ({
   id,
   className,
   onChange,

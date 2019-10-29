@@ -25,7 +25,7 @@ interface Props {
   content: string;
 }
 
-const Preview: React.SFC<Props> = ({ content }) => {
+const Preview: React.FunctionComponent<Props> = ({ content }) => {
   return (
     <div
       className={styles.wrapper}

@@ -30,7 +30,7 @@ import { setMessage } from '../../store/ui';
 
 interface Props extends RouteComponentProps {}
 
-const ClassicDecrypt: React.SFC<Props> = ({ history }) => {
+const ClassicDecrypt: React.FunctionComponent<Props> = ({ history }) => {
   const [errMsg, setErrMsg] = useState('');
   const [progressMsg, setProgressMsg] = useState('');
   const [busy, setIsBusy] = useState(false);

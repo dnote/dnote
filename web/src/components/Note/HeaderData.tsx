@@ -56,7 +56,7 @@ interface Props {
   note: NoteState;
 }
 
-const HeaderData: React.SFC<Props> = ({ note }) => {
+const HeaderData: React.FunctionComponent<Props> = ({ note }) => {
   const title = getTitle(note);
   const description = getDescription(note);
 

@@ -31,7 +31,7 @@ interface Props {
   setFailureMsg: (string) => void;
 }
 
-const ReactivateRow: React.SFC<Props> = ({
+const ReactivateRow: React.FunctionComponent<Props> = ({
   subscriptionId,
   setSuccessMsg,
   setFailureMsg

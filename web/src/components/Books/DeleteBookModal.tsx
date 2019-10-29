@@ -48,7 +48,7 @@ interface Props extends RouteComponentProps {
   bookUUID: string;
 }
 
-const DeleteBookModal: React.SFC<Props> = ({
+const DeleteBookModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   setSuccessMessage,

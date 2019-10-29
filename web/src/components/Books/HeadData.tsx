@@ -21,7 +21,7 @@ import Helmet from 'react-helmet';
 
 interface Props {}
 
-const HeaderData: React.SFC<Props> = () => {
+const HeaderData: React.FunctionComponent<Props> = () => {
   return (
     <Helmet>
       <title>Books</title>

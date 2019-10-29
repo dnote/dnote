@@ -79,7 +79,7 @@ interface Props {
   onDeleteModalOpen: () => void;
 }
 
-const Content: React.SFC<Props> = ({ onDeleteModalOpen }) => {
+const Content: React.FunctionComponent<Props> = ({ onDeleteModalOpen }) => {
   const { note, user } = useSelector(state => {
     return {
       note: state.note.data,

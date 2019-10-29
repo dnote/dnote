@@ -29,7 +29,7 @@ interface Props {
   value?: string;
 }
 
-const SettingRow: React.SFC<Props> = ({
+const SettingRow: React.FunctionComponent<Props> = ({
   name,
   desc,
   value,

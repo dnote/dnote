@@ -43,7 +43,7 @@ interface Props {
   triggerRef?: React.MutableRefObject<HTMLElement>;
 }
 
-const BookSelector: React.SFC<Props> = ({
+const BookSelector: React.FunctionComponent<Props> = ({
   editor,
   wrapperClassName,
   triggerClassName,

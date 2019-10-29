@@ -36,7 +36,7 @@ interface Props {
   renderCreateOption: (Option, OptionParams) => React.ReactNode;
 }
 
-const Result: React.SFC<Props> = ({
+const Result: React.FunctionComponent<Props> = ({
   options,
   menuId,
   currentValue,

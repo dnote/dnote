@@ -85,7 +85,7 @@ const baseFeatures = [
 
 interface Props {}
 
-const Subscription: React.SFC<Props> = () => {
+const Subscription: React.FunctionComponent<Props> = () => {
   const { user } = useSelector(state => {
     return {
       user: state.auth.user.data

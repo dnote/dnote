@@ -30,7 +30,7 @@ interface Props {
   onUpdateEmail: (string) => void;
 }
 
-const LoginForm: React.SFC<Props> = ({
+const LoginForm: React.FunctionComponent<Props> = ({
   onLogin,
   submitting,
   email,

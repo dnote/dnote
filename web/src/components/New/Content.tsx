@@ -57,7 +57,7 @@ function useInitFocus({ bookLabel, content, textareaRef, setTriggerFocus }) {
   }, [setTriggerFocus, bookLabel, textareaRef]);
 }
 
-const New: React.SFC<Props> = ({ editor, persisted, history }) => {
+const New: React.FunctionComponent<Props> = ({ editor, persisted, history }) => {
   const dispatch = useDispatch();
   const [errMessage, setErrMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);

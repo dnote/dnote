@@ -44,7 +44,7 @@ interface Props {
   actionsClassName?: string;
 }
 
-const EmailPreferenceForm: React.SFC<Props> = ({
+const EmailPreferenceForm: React.FunctionComponent<Props> = ({
   emailPreference,
   token,
   setSuccessMsg,

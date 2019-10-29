@@ -33,7 +33,7 @@ import { useSelector, useDispatch } from '../../store';
 
 interface Props extends RouteComponentProps<any> {}
 
-const Join: React.SFC<Props> = ({ location }) => {
+const Join: React.FunctionComponent<Props> = ({ location }) => {
   const [errMsg, setErrMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { formData } = useSelector(state => {

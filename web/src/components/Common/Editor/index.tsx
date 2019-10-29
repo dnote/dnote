@@ -63,7 +63,7 @@ enum Mode {
   preview
 }
 
-const Editor: React.SFC<Props> = ({
+const Editor: React.FunctionComponent<Props> = ({
   editor,
   onSubmit,
   isBusy,

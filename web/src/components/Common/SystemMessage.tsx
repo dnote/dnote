@@ -48,7 +48,7 @@ function matchMessagePath(location: Location, message: MessageState): string {
   return null;
 }
 
-const SystemMessage: React.SFC<Props> = ({ location }) => {
+const SystemMessage: React.FunctionComponent<Props> = ({ location }) => {
   const { message } = useSelector(state => {
     return {
       message: state.ui.message

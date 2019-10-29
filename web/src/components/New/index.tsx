@@ -37,7 +37,7 @@ import styles from './New.scss';
 
 interface Props extends RouteComponentProps {}
 
-const New: React.SFC<Props> = ({ history }) => {
+const New: React.FunctionComponent<Props> = ({ history }) => {
   const sessionKey = getEditorSessionkey(null);
   const { editor } = useSelector(state => {
     return {

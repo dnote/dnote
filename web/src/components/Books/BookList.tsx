@@ -43,7 +43,7 @@ interface Props {
   onDeleteBook: (string) => void;
 }
 
-const BookList: React.SFC<Props> = ({
+const BookList: React.FunctionComponent<Props> = ({
   isFetching,
   isFetched,
   books,

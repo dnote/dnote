@@ -25,7 +25,7 @@ import styles from './Sidebar.scss';
 
 interface Props {}
 
-const Sidebar: React.SFC<Props> = () => {
+const Sidebar: React.FunctionComponent<Props> = () => {
   return (
     <nav className={styles.wrapper}>
       <ul className={classnames('list-unstyled')}>

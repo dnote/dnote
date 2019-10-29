@@ -32,7 +32,7 @@ interface Props extends RouteComponentProps {
   data: RepetitionRuleData;
 }
 
-const RepetitionEditContent: React.SFC<Props> = ({
+const RepetitionEditContent: React.FunctionComponent<Props> = ({
   history,
   setErrMsg,
   data

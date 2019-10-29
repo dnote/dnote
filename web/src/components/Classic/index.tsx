@@ -34,7 +34,7 @@ import {
 
 interface Props {}
 
-const Classic: React.SFC<Props> = () => {
+const Classic: React.FunctionComponent<Props> = () => {
   const { user } = useSelector(state => {
     return {
       user: state.auth.user

@@ -31,7 +31,7 @@ interface Match {
 
 interface Props extends RouteComponentProps<Match> {}
 
-const VerifyEmail: React.SFC<Props> = ({ match, history }) => {
+const VerifyEmail: React.FunctionComponent<Props> = ({ match, history }) => {
   const dispatch = useDispatch();
   const { token } = match.params;
 

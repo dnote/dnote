@@ -33,7 +33,7 @@ function getTitle(filters: Filters): string {
   return 'Notes';
 }
 
-const HeaderData: React.SFC<Props> = ({ filters }) => {
+const HeaderData: React.FunctionComponent<Props> = ({ filters }) => {
   const title = getTitle(filters);
 
   return (

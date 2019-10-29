@@ -30,7 +30,7 @@ import styles from './Request.scss';
 
 interface Props {}
 
-const PasswordResetRequest: React.SFC<Props> = () => {
+const PasswordResetRequest: React.FunctionComponent<Props> = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [processed, setProcessed] = useState(false);

@@ -40,7 +40,7 @@ function renderFallback(referrer?: string) {
 export default function(Component: React.ComponentType): React.ComponentType {
   interface Props extends RouteComponentProps {}
 
-  const HOC: React.SFC<Props> = props => {
+  const HOC: React.FunctionComponent<Props> = props => {
     const { location } = props;
 
     const { userData } = useSelector(state => {

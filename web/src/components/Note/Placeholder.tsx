@@ -24,7 +24,7 @@ import noteStyles from './NoteContent.scss';
 
 interface Props {}
 
-const Placeholder: React.SFC<Props> = () => {
+const Placeholder: React.FunctionComponent<Props> = () => {
   return (
     <div className={noteStyles.frame}>
       <div className={noteStyles.header}>

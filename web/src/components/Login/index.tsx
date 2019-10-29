@@ -33,7 +33,7 @@ import { useSelector, useDispatch } from '../../store';
 
 interface Props extends RouteComponentProps<any> {}
 
-const Login: React.SFC<Props> = ({ location }) => {
+const Login: React.FunctionComponent<Props> = ({ location }) => {
   const [errMsg, setErrMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const dispatch = useDispatch();
