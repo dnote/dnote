@@ -19,10 +19,21 @@
 export interface SettingsState {
   sessionKey: string;
   sessionKeyExpiry: number;
+  apiUrl: string;
+  webUrl: string;
 }
 
+export const LOGIN = 'settings/LOGIN';
 export const UPDATE = 'settings/UPDATE';
 export const RESET = 'settings/RESET';
+
+export interface LoginAction {
+  type: typeof LOGIN;
+  data: {
+    sessionKey: string;
+    sessionKeyExpiry: number;
+  };
+}
 
 export interface UpdateAction {
   type: typeof UPDATE;
@@ -35,4 +46,4 @@ export interface ResetAction {
   type: typeof RESET;
 }
 
-export type SettingsActionType = UpdateAction | ResetAction;
+export type SettingsActionType = UpdateAction | ResetAction | LoginAction;

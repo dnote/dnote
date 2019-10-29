@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import services from '../../utils/services';
+import initServices from '../../utils/services';
 
 import {
   START_FETCHING,
@@ -56,6 +56,7 @@ export function fetchBooks() {
     dispatch(startFetchingBooks());
 
     const { settings } = getState();
+    const services = initServices(settings.apiUrl);
 
     services.books
       .fetch(

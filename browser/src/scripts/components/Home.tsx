@@ -22,9 +22,10 @@ import { findDOMNode } from 'react-dom';
 
 import Link from './Link';
 import config from '../utils/config';
-import { updateSettings } from '../store/settings/actions';
+import { updateSettings, login } from '../store/settings/actions';
 import { useDispatch } from '../store/hooks';
 import services from '../utils/services';
+import Flash from '../components/Flash';
 
 interface Props {}
 
@@ -42,14 +43,7 @@ const Home: React.FunctionComponent<Props> = () => {
     setLoggingIn(true);
 
     try {
-      const signinResp = await services.users.signin({ email, password });
-
-      dispatch(
-        updateSettings({
-          sessionKey: signinResp.key,
-          sessionKeyExpiry: signinResp.expiresAt
-        })
-      );
+      await dispatch(login({ email, password }));
     } catch (e) {
       console.log('error while logging in', e);
 
@@ -59,12 +53,12 @@ const Home: React.FunctionComponent<Props> = () => {
   };
 
   return (
-    <div className="home">
-      <h1 className="greet">Welcome to Dnote</h1>
+    <div className="home page">
+      <h1 className="heading">Welcome to Dnote</h1>
 
       <p className="lead">A simple personal knowledge base</p>
 
-      {errMsg && <div className="alert error">{errMsg}</div>}
+      <Flash kind="error" when={errMsg !== ''} message={errMsg} />
 
       <form id="login-form" onSubmit={handleLogin}>
         <label htmlFor="email-input">Email</label>
@@ -97,7 +91,7 @@ const Home: React.FunctionComponent<Props> = () => {
           className="button button-first button-small login-btn"
           disabled={loggingIn}
         >
-          {loggingIn ? 'Signing in...' : 'Signin'}
+          {loggingIn ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 

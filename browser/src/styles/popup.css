@@ -18,6 +18,7 @@
 
 /* container width: 345px */
 
+/* global */
 html {
   font-size: 62.5%;
   /* 1.0 rem = 10px */
@@ -51,18 +52,26 @@ main.blur {
   border-radius: .25rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
   box-sizing: border-box;
-  font-size: 12px;
+  font-size: 16px;
 }
 .login-input {
+  font-size: 12px;
   margin-top: 4px;
 }
 .message {
   color: #2cae2c;
   margin-bottom: 6px;
 }
-.alert.error {
+.alert {
   padding: 10px 9px;
   font-size: 1.4rem;
+}
+.alert-info {
+  color: #0c5460;
+  background-color: #bee5eb;
+  border-color: #f5c6cb;
+}
+.alert-error {
   color: #721c24;
   background-color: #f8d7da;
   border-color: #f5c6cb;
@@ -106,6 +115,9 @@ kbd {
   color: inherit;
   text-decoration: none;
   font-size: 16px;
+
+  /* override chrome default */
+  font: inherit !important;
 }
 .menu-link:hover {
   background: #f7f7f7;
@@ -139,16 +151,24 @@ kbd {
 .header .menu-toggle {
   height: 20px;
 }
-.home {
-  text-align: center;
-  padding: 16px 28px;
-}
-.home .greet {
+
+.heading {
   font-size: 2.2rem;
   margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
 }
-.home .lead {
+.lead {
   color: #575757;
+  text-align: center;
+}
+.page {
+  padding: 16px 28px;
+}
+
+/* home */
+.home {
+  text-align: center;
 }
 .home #login-form {
   text-align: left;
@@ -175,22 +195,25 @@ kbd {
 .home .actions .signup:visited {
   color: inherit;
 }
+
+/* settings */
 .settings {
-  padding: 15px 8px;
+}
+.settings #settings-form {
+  margin-top: 12px;
+}
+.settings .input-row ~ .input-row {
+  margin-top: 12px;
 }
 .settings .label {
-  font-size: 1.4rem;
-  margin-bottom: 6px;
   display: inline-block;
+  margin-bottom: 2px;
 }
 .settings .actions {
   margin-top: 12px;
 }
-.settings .hint {
-  font-size: 1.4rem;
-  color: #7e7e7e;
-  margin-top: 4px;
-}
+
+/* composer */
 .composer .form {
   display: flex;
   flex-direction: column;
@@ -271,6 +294,7 @@ kbd {
   padding: 5px 8px;
 }
 
+/* success */
 .success-page {
   text-align: center;
   padding: 21px 0;
@@ -390,4 +414,8 @@ kbd {
 
 .button-small {
   padding: 5px 14px;
+}
+.button-stretch {
+  width: 100%;
+  justify-content: center;
 }

@@ -16,9 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ext from "./ext";
+import ext from './ext';
 
-const stateKey = "state";
+const stateKey = 'state';
 
 // filterState filters the given state to be suitable for reuse upon next app
 // load
@@ -27,13 +27,7 @@ function filterState(state) {
     ...state,
     location: {
       ...state.location,
-      path: "/"
-    },
-    books: {
-      ...state.books,
-      items: state.books.items.filter(item => {
-        return !item.isNew || item.selected;
-      })
+      path: '/'
     }
   };
 }
@@ -52,13 +46,13 @@ export function saveState(state) {
   const serialized = JSON.stringify(filtered);
 
   ext.storage.local.set({ [stateKey]: serialized }, () => {
-    console.log("synced state");
+    console.log('synced state');
   });
 }
 
 // loadState loads and parses serialized state stored in ext.storage
 export function loadState(done) {
-  ext.storage.local.get("state", items => {
+  ext.storage.local.get('state', items => {
     const parsed = {
       ...items,
       state: parseStorageItem(items.state)

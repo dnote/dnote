@@ -20,7 +20,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import classnames from 'classnames';
 
 import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
-import services from '../utils/services';
+import initServices from '../utils/services';
 import BookSelector from './BookSelector';
 import Flash from './Flash';
 import { useSelector, useDispatch } from '../store/hooks';
@@ -97,6 +97,8 @@ const Composer: React.FunctionComponent<Props> = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
+
+    const services = initServices(settings.apiUrl);
 
     setSubmitting(true);
 
@@ -176,7 +178,7 @@ const Composer: React.FunctionComponent<Props> = () => {
 
   return (
     <div className="composer">
-      <Flash when={errMsg !== ''} message={errMsg} />
+      <Flash kind="error" when={errMsg !== ''} message={errMsg} />
 
       <form onSubmit={handleSubmit} className="form">
         <BookSelector

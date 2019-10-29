@@ -16,8 +16,26 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export default {
-  defaultWebUrl: __WEB_URL__,
-  defaultApiEndpoint: __API_ENDPOINT__,
-  version: __VERSION__
-};
+import { Action } from 'redux';
+import { ThunkAction } from 'redux-thunk';
+
+import { ComposerState } from './composer/types';
+import { LocationState } from './location/types';
+import { SettingsState } from './settings/types';
+import { BooksState } from './books/types';
+
+// AppState represents the application state
+export interface AppState {
+  composer: ComposerState;
+  location: LocationState;
+  settings: SettingsState;
+  books: BooksState;
+}
+
+// ThunkAction is a thunk action type
+export type ThunkAction<T = void> = ThunkAction<
+  Promise<T>,
+  AppState,
+  void,
+  Action
+>;
