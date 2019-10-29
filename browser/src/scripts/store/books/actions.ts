@@ -55,7 +55,7 @@ export function fetchBooks() {
   return (dispatch, getState) => {
     dispatch(startFetchingBooks());
 
-    const { settings } = getState();
+    const { settings, auth } = getState();
     const services = initServices(settings.apiUrl);
 
     services.books
@@ -63,7 +63,7 @@ export function fetchBooks() {
         {},
         {
           headers: {
-            Authorization: `Bearer ${settings.sessionKey}`
+            Authorization: `Bearer ${auth.sessionKey}`
           }
         }
       )

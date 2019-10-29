@@ -88,10 +88,11 @@ const Composer: React.FunctionComponent<Props> = () => {
   const [contentRef, setContentEl] = useState(null);
   const [bookSelectorRef, setBookSelectorEl] = useState(null);
 
-  const { composer, settings } = useSelector(state => {
+  const { composer, settings, auth } = useSelector(state => {
     return {
       composer: state.composer,
-      settings: state.settings
+      settings: state.settings,
+      auth: state.auth
     };
   });
 
@@ -111,7 +112,7 @@ const Composer: React.FunctionComponent<Props> = () => {
           },
           {
             headers: {
-              Authorization: `Bearer ${settings.sessionKey}`
+              Authorization: `Bearer ${auth.sessionKey}`
             }
           }
         );
@@ -128,7 +129,7 @@ const Composer: React.FunctionComponent<Props> = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${settings.sessionKey}`
+            Authorization: `Bearer ${auth.sessionKey}`
           }
         }
       );

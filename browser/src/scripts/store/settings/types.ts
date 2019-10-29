@@ -27,7 +27,7 @@ export const RESET = 'settings/RESET';
 export interface UpdateAction {
   type: typeof UPDATE;
   data: {
-    settings: any;
+    settings: Partial<SettingsState>;
   };
 }
 
