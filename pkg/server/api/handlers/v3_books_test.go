@@ -42,7 +42,7 @@ func TestGetBooks(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -121,7 +121,7 @@ func TestGetBooksByName(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -206,7 +206,7 @@ func TestDeleteBook(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -356,7 +356,7 @@ func TestCreateBook(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -417,7 +417,7 @@ func TestCreateBookDuplicate(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -496,7 +496,7 @@ func TestUpdateBook(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()

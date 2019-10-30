@@ -90,7 +90,7 @@ func TestRegister(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -133,7 +133,7 @@ func TestRegisterMissingParams(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -160,7 +160,7 @@ func TestRegisterMissingParams(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -188,7 +188,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -225,7 +225,7 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -255,7 +255,7 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -286,7 +286,7 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -317,7 +317,7 @@ func TestSignIn(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -360,7 +360,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, db.Save(&session2), "preparing session2")
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -411,7 +411,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, db.Save(&session2), "preparing session2")
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()

@@ -681,7 +681,7 @@ func TestNotSupportedVersions(t *testing.T) {
 	}
 
 	// setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()

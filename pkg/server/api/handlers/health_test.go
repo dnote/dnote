@@ -31,7 +31,7 @@ func TestCheckHealth(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()

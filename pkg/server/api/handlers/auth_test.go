@@ -35,7 +35,7 @@ func TestGetMe(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -63,7 +63,7 @@ func TestCreateResetToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -96,7 +96,7 @@ func TestCreateResetToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -125,7 +125,7 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -171,7 +171,7 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -209,7 +209,7 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -246,7 +246,7 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -294,7 +294,7 @@ func TestResetPassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
