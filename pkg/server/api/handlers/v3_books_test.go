@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -43,9 +42,9 @@ func TestGetBooks(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -122,9 +121,9 @@ func TestGetBooksByName(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -207,9 +206,9 @@ func TestDeleteBook(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()
@@ -357,9 +356,9 @@ func TestCreateBook(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -418,9 +417,9 @@ func TestCreateBookDuplicate(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -497,9 +496,9 @@ func TestUpdateBook(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()

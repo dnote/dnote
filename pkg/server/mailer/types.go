@@ -34,17 +34,6 @@ type DigestNoteInfo struct {
 	Stage     int
 }
 
-// DigestTmplData is a template data for digest emails
-type DigestTmplData struct {
-	Subject           string
-	NoteInfo          []DigestNoteInfo
-	ActiveBookCount   int
-	ActiveNoteCount   int
-	EmailSessionToken string
-	RuleUUID          string
-	RuleTitle         string
-}
-
 // NewNoteInfo returns a new NoteInfo
 func NewNoteInfo(note database.Note, stage int) DigestNoteInfo {
 	tm := time.Unix(0, int64(note.AddedOn))
@@ -56,4 +45,30 @@ func NewNoteInfo(note database.Note, stage int) DigestNoteInfo {
 		TimeAgo:   timeago.FromTime(tm),
 		Stage:     stage,
 	}
+}
+
+// DigestTmplData is a template data for digest emails
+type DigestTmplData struct {
+	Subject           string
+	NoteInfo          []DigestNoteInfo
+	ActiveBookCount   int
+	ActiveNoteCount   int
+	EmailSessionToken string
+	RuleUUID          string
+	RuleTitle         string
+	WebURL            string
+}
+
+// EmailVerificationTmplData is a template data for email verification emails
+type EmailVerificationTmplData struct {
+	Subject string
+	Token   string
+	WebURL  string
+}
+
+// EmailResetPasswordTmplData is a template data for reset password emails
+type EmailResetPasswordTmplData struct {
+	Subject string
+	Token   string
+	WebURL  string
 }

@@ -161,12 +161,12 @@ func (e *Email) ParseTemplate(templateName string, data interface{}) error {
 
 	buf := new(bytes.Buffer)
 	if err := t.Execute(buf, data); err != nil {
-		return err
+		return errors.Wrap(err, "executing the template")
 	}
 
 	html, err := inliner.Inline(buf.String())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "inlining the css rules")
 	}
 
 	e.Body = html

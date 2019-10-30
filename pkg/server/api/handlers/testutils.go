@@ -19,27 +19,24 @@
 package handlers
 
 import (
-	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
-	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/pkg/errors"
 )
 
-func TestCheckHealth(t *testing.T) {
-	defer testutils.ClearData()
+// mustNewServer is a test utility function to initialize a new server
+// with the given app paratmers
+func mustNewServer(t *testing.T, app *App) *httptest.Server {
+	app.WebURL = os.Getenv("WebURL")
 
-	// Setup
-	server := mustNewServer(t, &App{
-		Clock: clock.NewMock(),
-	})
-	defer server.Close()
+	r, err := NewRouter(app)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "initializing server"))
+	}
 
-	// Execute
-	req := testutils.MakeReq(server, "GET", "/health", "")
-	res := testutils.HTTPDo(t, req)
+	server := httptest.NewServer(r)
 
-	// Test
-	assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
+	return server
 }

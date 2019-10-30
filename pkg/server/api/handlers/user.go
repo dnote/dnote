@@ -188,12 +188,10 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subject := "Verify your email"
-	data := struct {
-		Subject string
-		Token   string
-	}{
-		subject,
-		tokenValue,
+	data := mailer.EmailVerificationTmplData{
+		Subject: subject,
+		Token:   tokenValue,
+		WebURL:  a.WebURL,
 	}
 	email := mailer.NewEmail("noreply@getdnote.com", []string{account.Email.String}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeEmailVerification, data); err != nil {

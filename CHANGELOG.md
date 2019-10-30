@@ -12,7 +12,13 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
-- N/A
+#### Upgrade Guide
+
+* Please define a new environment variable `WebURL` whose value is the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
+
+#### Fixed
+
+- Allow to customize the app URL in the emails (#290)
 
 ### 0.2.0 - 2019-10-28
 
@@ -24,6 +30,9 @@ The following log documentes the history of the server project.
 
 - Treat a linebreak as a new line in the preview (#261)
 - Allow to have multiple editor states for adding and editing notes (#260)
+
+#### Fixed
+
 - Fix jumping focus on editor (#265)
 
 ### 0.1.1 - 2019-09-30

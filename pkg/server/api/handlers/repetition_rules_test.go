@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -43,9 +42,9 @@ func TestGetRepetitionRule(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -117,9 +116,9 @@ func TestGetRepetitionRules(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -225,9 +224,10 @@ func TestCreateRepetitionRules(t *testing.T) {
 		c := clock.NewMock()
 		t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 		c.SetNow(t0)
-		server := httptest.NewServer(NewRouter(&App{
+
+		server := mustNewServer(t, &App{
 			Clock: c,
-		}))
+		})
 		defer server.Close()
 
 		user := testutils.SetupUserData()
@@ -282,9 +282,10 @@ func TestCreateRepetitionRules(t *testing.T) {
 			c := clock.NewMock()
 			t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 			c.SetNow(t0)
-			server := httptest.NewServer(NewRouter(&App{
+
+			server := mustNewServer(t, &App{
 				Clock: c,
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()
@@ -345,9 +346,9 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	c := clock.NewMock()
 	t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 	c.SetNow(t0)
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: c,
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -419,9 +420,9 @@ func TestDeleteRepetitionRules(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := httptest.NewServer(NewRouter(&App{
+	server := mustNewServer(t, &App{
 		Clock: clock.NewMock(),
-	}))
+	})
 	defer server.Close()
 
 	user := testutils.SetupUserData()
@@ -544,9 +545,9 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()
@@ -588,9 +589,9 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			}
 			testutils.MustExec(t, db.Save(&b1), "preparing book1")
 
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			// Execute
@@ -627,9 +628,9 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := httptest.NewServer(NewRouter(&App{
+			server := mustNewServer(t, &App{
 				Clock: clock.NewMock(),
-			}))
+			})
 			defer server.Close()
 
 			user := testutils.SetupUserData()

@@ -23,10 +23,13 @@ DBPort=5432 \
 DBName=dnote \
 DBUser=$user \
 DBPassword=$password \
+WebURL=$webURL
   dnote-server start
 ```
 
-Replace $user and $password with the credentials of the Postgres user that owns the `dnote` database.
+Replace `$user`, `$password` with the credentials of the Postgres user that owns the `dnote` database.
+
+Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
 
 By default, dnote server will run on the port 3000.
 
@@ -91,6 +94,7 @@ Environment=GO_ENV=PRODUCTION
 Environment=DBHost=localhost
 Environment=DBPort=5432
 Environment=DBName=dnote
+Environment=WebURL=$WebURL
 Environment=DBUser=$DBUser
 Environment=DBPassword=$DBPassword
 Environment=SmtpHost=
@@ -101,9 +105,9 @@ Environment=SmtpPassword=
 WantedBy=multi-user.target
 ```
 
-Replace `$user`, `$DBUser`, and `$DBPassword` with the actual values.
+Replace `$user`, `$WebURL`, `$DBUser`, and `$DBPassword` with the actual values.
 
-Optionally, if you would like to send email digests, populate `SmtpHost`,  `SmtpUsername`, and `SmtpPassword`.
+Optionally, if you would like to send spaced repetitions throught email, populate `SmtpHost`,  `SmtpUsername`, and `SmtpPassword`.
 
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
@@ -144,3 +148,7 @@ e.g.
 editor: nvim
 apiEndpoint: my-dnote-server.com/api
 ```
+
+#### Browser extension
+
+Navigate into the 'Settings' tab and set the values for 'API URL', and 'Web URL'.
