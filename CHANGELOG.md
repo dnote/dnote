@@ -14,11 +14,15 @@ The following log documentes the history of the server project.
 
 #### Upgrade Guide
 
-* Please define a new environment variable `WebURL` whose value is the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
+* Please define the follwoing new environment variables:
+
+  - `WebURL`: the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
+  - `SmtpPort`: the SMTP port. (e.g. `465`) optional - required *if you want to configure email*
 
 #### Fixed
 
 - Allow to customize the app URL in the emails (#290)
+- Allow to customize the SMTP port
 
 ### 0.2.0 - 2019-10-28
 
