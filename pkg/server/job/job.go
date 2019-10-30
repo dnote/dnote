@@ -59,7 +59,7 @@ func schedule(ch chan error) {
 	select {}
 }
 
-// Run starts the background tasks and blocks forever.
+// Run starts the background tasks in a separate goroutine that runs forever
 func Run() error {
 	if err := checkEnvironment(); err != nil {
 		return errors.Wrap(err, "checking environment variables")

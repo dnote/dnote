@@ -133,14 +133,10 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subject := "Reset your password"
-	data := struct {
-		Subject string
-		Token   string
-		WebURL  string
-	}{
-		subject,
-		resetToken,
-		a.WebURL,
+	data := mailer.EmailResetPasswordTmplData{
+		Subject: subject,
+		Token:   resetToken,
+		WebURL:  a.WebURL,
 	}
 	email := mailer.NewEmail("noreply@getdnote.com", []string{params.Email}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeResetPassword, data); err != nil {
