@@ -25,6 +25,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/aymerick/douceur/inliner"
 	"github.com/gobuffalo/packr/v2"
@@ -124,6 +125,30 @@ func NewEmail(from string, to []string, subject string) *Email {
 	}
 }
 
+type dialerParams struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+}
+
+func getSMTPParams() (*dialerParams, error) {
+	portStr := os.Getenv("SmtpPort")
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing SMTP port")
+	}
+
+	p := &dialerParams{
+		Host:     os.Getenv("SmtpHost"),
+		Port:     port,
+		Username: os.Getenv("SmtpUsername"),
+		Password: os.Getenv("SmtpPassword"),
+	}
+
+	return p, nil
+}
+
 // Send sends the email
 func (e *Email) Send() error {
 	// If not production, never actually send an email
@@ -134,16 +159,18 @@ func (e *Email) Send() error {
 		return nil
 	}
 
-	smtpPort := 465
-
 	m := gomail.NewMessage()
 	m.SetHeader("From", e.from)
 	m.SetHeader("To", e.to...)
 	m.SetHeader("Subject", e.subject)
 	m.SetBody("text/html", e.Body)
 
-	d := gomail.NewPlainDialer(os.Getenv("SmtpHost"), smtpPort, os.Getenv("SmtpUsername"), os.Getenv("SmtpPassword"))
+	p, err := getSMTPParams()
+	if err != nil {
+		return errors.Wrap(err, "getting dialer params")
+	}
 
+	d := gomail.NewPlainDialer(p.Host, p.Port, p.Username, p.Password)
 	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
