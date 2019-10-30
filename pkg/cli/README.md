@@ -2,7 +2,7 @@
 
 A simple command line interface for Dnote. 
 
-![Dnote](assets/cli.gif)
+![Dnote](/assets/cli.gif)
 
 It is Designed to minimize environment switching for taking notes.
 
@@ -30,4 +30,4 @@ Otherwise, you can download the binary for your platform manually from the [rele
 
 ## Commands
 
-Please refer to [commands](/COMMANDS.md).
+Please refer to [commands](./COMMANDS.md).
