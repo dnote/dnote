@@ -23,3 +23,4 @@ declare module '*.scss';
 declare const __STRIPE_PUBLIC_KEY__: string;
 declare const __ROOT_URL__: string;
 declare const __CDN_URL__: string;
+declare const __VERSION__: string;

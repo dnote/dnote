@@ -19,6 +19,7 @@ appPath="$basePath"/web
     node "$appPath"/scripts/placeholder.js &&
 
   ROOT_URL=$ROOT_URL \
+  VERSION="$VERSION" \
   "$appPath"/node_modules/.bin/webpack-dev-server\
     --env.isTest="$IS_TEST"\
     --config "$appPath"/webpack/dev.config.js

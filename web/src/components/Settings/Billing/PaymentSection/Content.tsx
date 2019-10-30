@@ -16,7 +16,3 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export default {
-  cdnUrl: __CDN_URL__,
-  version: __VERSION__
-};

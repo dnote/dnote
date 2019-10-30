@@ -21,11 +21,11 @@ import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
 import { getPlanLabel } from 'web/libs/subscription';
-import LogoIcon from '../../Icons/Logo';
-import { nanosecToMillisec } from 'web/helpers/time';
+import LogoIcon from '../../../Icons/Logo';
+import { SECOND } from 'web/helpers/time';
 import formatDate from 'web/helpers/time/format';
 import styles from './PlanRow.scss';
-import settingRowStyles from '../SettingRow.scss';
+import settingRowStyles from '../../SettingRow.scss';
 
 function getPlanPeriodMessage(subscription: any): string {
   if (!subscription.id) {
@@ -34,12 +34,12 @@ function getPlanPeriodMessage(subscription: any): string {
 
   const label = getPlanLabel(subscription);
 
-  const endDate = new Date(nanosecToMillisec(subscription.current_period_end));
+  const endDate = new Date(subscription.current_period_end * SECOND);
 
   if (subscription.cancel_at_period_end) {
     return `Your ${label} plan will end on ${formatDate(
       endDate,
-      'YYYY MMM Do'
+      '%YYYY %MMM %Do'
     )} and will not renew.`;
   }
 
@@ -47,7 +47,7 @@ function getPlanPeriodMessage(subscription: any): string {
   renewDate.setDate(endDate.getDate() + 1);
   return `Your ${label} plan will renew on ${formatDate(
     renewDate,
-    'YYYY MMM Do'
+    '%YYYY %MMM %Do'
   )}.`;
 }
 

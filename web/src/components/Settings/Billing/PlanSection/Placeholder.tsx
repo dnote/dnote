@@ -19,7 +19,7 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import settingsStyles from '../Settings.scss';
+import settingsStyles from '../../Settings.scss';
 import styles from './Placeholder.scss';
 
 const Placeholder: React.FunctionComponent = () => {
@@ -28,10 +28,6 @@ const Placeholder: React.FunctionComponent = () => {
       <div className="row">
         <div className="col-12 col-md-12 col-lg-10">
           <section className={settingsStyles.section}>
-            <div className={settingsStyles['section-heading']}>
-              <span>&nbsp;</span>
-            </div>
-
             <div className={styles.content1}>
               <div className={classnames('holder', styles['content1-line1'])} />
               <div className={classnames('holder', styles['content1-line2'])} />
@@ -51,26 +47,6 @@ const Placeholder: React.FunctionComponent = () => {
               <div className={styles['content2-right']}>
                 <div
                   className={classnames('holder', styles['content2-line2'])}
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className={settingsStyles.section}>
-            <div className={settingsStyles['section-heading']}>
-              <span>&nbsp;</span>
-            </div>
-
-            <div className={styles.content3}>
-              <div className={styles['content3-left']}>
-                <div
-                  className={classnames('holder', styles['content3-line1'])}
-                />
-              </div>
-
-              <div className={styles['content3-right']}>
-                <div
-                  className={classnames('holder', styles['content3-line2'])}
                 />
               </div>
             </div>

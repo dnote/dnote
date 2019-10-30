@@ -16,40 +16,34 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 
-import styles from './SettingRow.scss';
+import SettingRow from '../../SettingRow';
+import styles from '../../Settings.scss';
 
 interface Props {
-  name: string;
-  actionContent?: React.ReactNode;
-  id?: string;
-  desc?: string;
-  value?: React.ReactNode;
+  setIsPlanModalOpen: (bool) => void;
 }
 
-const SettingRow: React.FunctionComponent<Props> = ({
-  name,
-  desc,
-  value,
-  actionContent,
-  id
-}) => {
+const CancelRow: React.FunctionComponent<Props> = ({ setIsPlanModalOpen }) => {
   return (
-    <div className={classnames(styles.wrapper, styles.row)} id={id}>
-      <div>
-        <h3 className={styles.name}>{name}</h3>
-        <p className={styles.desc}>{desc}</p>
-      </div>
-
-      <div className={styles.right}>
-        {value}
-
-        {actionContent && <div className={styles.action}>{actionContent}</div>}
-      </div>
-    </div>
+    <SettingRow
+      name="Cancel current plan"
+      desc="If you cancel, the plan will expire at the end of current billing period."
+      actionContent={
+        <button
+          className={classnames('button-no-ui', styles.edit)}
+          type="button"
+          onClick={() => {
+            setIsPlanModalOpen(true);
+          }}
+        >
+          Cancel plan
+        </button>
+      }
+    />
   );
 };
 
-export default SettingRow;
+export default CancelRow;

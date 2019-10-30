@@ -16,40 +16,41 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import classnames from 'classnames';
 
-import styles from './SettingRow.scss';
+import PaymentMethodRow from './PaymentMethodRow';
+import settingsStyles from '../../Settings.scss';
+import { SourceData } from '../../../../store/auth/type';
+import Placeholder from './Placeholder';
+import styles from './Placeholder.scss';
 
 interface Props {
-  name: string;
-  actionContent?: React.ReactNode;
-  id?: string;
-  desc?: string;
-  value?: React.ReactNode;
+  source: SourceData;
+  setIsPaymentMethodModalOpen: (boolean) => void;
+  stripeLoaded: boolean;
+  isFetched: boolean;
 }
 
-const SettingRow: React.FunctionComponent<Props> = ({
-  name,
-  desc,
-  value,
-  actionContent,
-  id
+const PaymentSection: React.FunctionComponent<Props> = ({
+  source,
+  setIsPaymentMethodModalOpen,
+  stripeLoaded,
+  isFetched
 }) => {
+  if (!isFetched) {
+    return <Placeholder />;
+  }
+
   return (
-    <div className={classnames(styles.wrapper, styles.row)} id={id}>
-      <div>
-        <h3 className={styles.name}>{name}</h3>
-        <p className={styles.desc}>{desc}</p>
-      </div>
-
-      <div className={styles.right}>
-        {value}
-
-        {actionContent && <div className={styles.action}>{actionContent}</div>}
-      </div>
-    </div>
+    <Fragment>
+      <PaymentMethodRow
+        source={source}
+        setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
+        stripeLoaded={stripeLoaded}
+      />
+    </Fragment>
   );
 };
 
-export default SettingRow;
+export default PaymentSection;

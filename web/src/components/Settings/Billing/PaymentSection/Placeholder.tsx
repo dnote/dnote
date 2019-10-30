@@ -19,37 +19,33 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import styles from './SettingRow.scss';
+import settingsStyles from '../../Settings.scss';
+import styles from './Placeholder.scss';
 
-interface Props {
-  name: string;
-  actionContent?: React.ReactNode;
-  id?: string;
-  desc?: string;
-  value?: React.ReactNode;
-}
-
-const SettingRow: React.FunctionComponent<Props> = ({
-  name,
-  desc,
-  value,
-  actionContent,
-  id
-}) => {
+const Placeholder: React.FunctionComponent = () => {
   return (
-    <div className={classnames(styles.wrapper, styles.row)} id={id}>
-      <div>
-        <h3 className={styles.name}>{name}</h3>
-        <p className={styles.desc}>{desc}</p>
-      </div>
+    <div className="container-wide">
+      <div className="row">
+        <div className="col-12 col-md-12 col-lg-10">
+          <section className={settingsStyles.section}>
+            <div className={styles.content}>
+              <div className={styles['content-left']}>
+                <div
+                  className={classnames('holder', styles['content-line1'])}
+                />
+              </div>
 
-      <div className={styles.right}>
-        {value}
-
-        {actionContent && <div className={styles.action}>{actionContent}</div>}
+              <div className={styles['content-right']}>
+                <div
+                  className={classnames('holder', styles['content-line2'])}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
 };
 
-export default SettingRow;
+export default Placeholder;

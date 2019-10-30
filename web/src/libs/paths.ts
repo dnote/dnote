@@ -210,8 +210,8 @@ export function getPasswordResetConfirmPath(searchObj = {}): Location {
 
 export enum SettingSections {
   account = 'account',
-  spacedRepeition = 'spaced-repetition',
-  billing = 'billing'
+  billing = 'billing',
+  about = 'about'
 }
 
 export function getSettingsPath(section: SettingSections) {
