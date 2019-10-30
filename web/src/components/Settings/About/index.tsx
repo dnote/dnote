@@ -22,11 +22,18 @@ import classnames from 'classnames';
 
 import SettingRow from '../SettingRow';
 import styles from '../Settings.scss';
+import { useSelector } from '../../../store';
 import config from '../../../libs/config';
 
 interface Props {}
 
 const About: React.FunctionComponent<Props> = () => {
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user.data
+    };
+  });
+
   return (
     <div>
       <Helmet>
@@ -40,6 +47,12 @@ const About: React.FunctionComponent<Props> = () => {
           <h2 className={styles['section-heading']}>Software</h2>
 
           <SettingRow name="Version" value={config.version} />
+          {user.pro && (
+            <SettingRow
+              name="Support"
+              value={<a href="mailto:sung@getdnote.com">sung@getdnote.com</a>}
+            />
+          )}
         </section>
       </div>
     </div>
