@@ -83,7 +83,7 @@ const CancelPlanModal: React.FunctionComponent<Props> = ({
             <Button
               type="button"
               kind="first"
-              size="small"
+              size="normal"
               isBusy={inProgress}
               onClick={onDismiss}
             >
@@ -93,7 +93,7 @@ const CancelPlanModal: React.FunctionComponent<Props> = ({
             <Button
               type="submit"
               kind="second"
-              size="small"
+              size="normal"
               isBusy={inProgress}
             >
               Cancel my plan.
