@@ -12,9 +12,13 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
+#### Upgrade Guide
+
+* Please define a new environment variable `WebURL` whose value is the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
+
 #### Fixed
 
-- Allow to customize the app URL in the emails
+- Allow to customize the app URL in the emails (#290)
 
 ### 0.2.0 - 2019-10-28
 
