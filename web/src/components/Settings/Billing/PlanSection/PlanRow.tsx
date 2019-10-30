@@ -21,11 +21,11 @@ import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
 import { getPlanLabel } from 'web/libs/subscription';
-import LogoIcon from '../../Icons/Logo';
+import LogoIcon from '../../../Icons/Logo';
 import { nanosecToMillisec } from 'web/helpers/time';
 import formatDate from 'web/helpers/time/format';
 import styles from './PlanRow.scss';
-import settingRowStyles from '../SettingRow.scss';
+import settingRowStyles from '../../SettingRow.scss';
 
 function getPlanPeriodMessage(subscription: any): string {
   if (!subscription.id) {

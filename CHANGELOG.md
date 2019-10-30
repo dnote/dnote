@@ -19,6 +19,10 @@ The following log documentes the history of the server project.
   - `WebURL`: the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
   - `SmtpPort`: the SMTP port. (e.g. `465`) optional - required *if you want to configure email*
 
+#### Added
+
+- Display version number in the settings (#293)
+
 #### Fixed
 
 - Allow to customize the app URL in the emails (#290)

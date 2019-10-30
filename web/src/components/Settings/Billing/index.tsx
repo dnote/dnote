@@ -32,142 +32,9 @@ import {
   clearSource
 } from '../../../store/auth';
 import SettingRow from '../SettingRow';
-import ReactivateRow from './ReactivateRow';
-import PlanRow from './PlanRow';
-import Placeholder from './Placeholder';
+import PlanSection from './PlanSection';
+import PaymentSection from './PaymentSection';
 import styles from '../Settings.scss';
-
-function CancelRow({ setIsPlanModalOpen }) {
-  return (
-    <SettingRow
-      name="Cancel current plan"
-      desc="If you cancel, the plan will expire at the end of current billing period."
-      actionContent={
-        <button
-          className={classnames('button-no-ui', styles.edit)}
-          type="button"
-          onClick={() => {
-            setIsPlanModalOpen(true);
-          }}
-        >
-          Cancel plan
-        </button>
-      }
-    />
-  );
-}
-
-function PaymentMethodRow({
-  stripeLoaded,
-  source,
-  setIsPaymentMethodModalOpen
-}) {
-  let value;
-  if (source.brand) {
-    value = `${source.brand} ending in ${source.last4}. expiry ${source.exp_month}/${source.exp_year}`;
-  } else {
-    value = 'No payment method';
-  }
-
-  return (
-    <SettingRow
-      id="T-payment-method-row"
-      name="Payment method"
-      value={value}
-      actionContent={
-        <button
-          id="T-update-payment-method-button"
-          className={classnames('button-no-ui', styles.edit)}
-          type="button"
-          onClick={() => {
-            setIsPaymentMethodModalOpen(true);
-          }}
-          disabled={!stripeLoaded}
-        >
-          Update
-        </button>
-      }
-    />
-  );
-}
-
-interface ContentProps {
-  subscription: any;
-  source: any;
-  setIsPlanModalOpen: (boolean) => void;
-  setIsPaymentMethodModalOpen: (boolean) => void;
-  successMsg: string;
-  failureMsg: string;
-  setSuccessMsg: (string) => void;
-  setFailureMsg: (string) => void;
-  stripeLoaded: boolean;
-}
-
-const Content: React.FunctionComponent<ContentProps> = ({
-  subscription,
-  source,
-  setIsPlanModalOpen,
-  setIsPaymentMethodModalOpen,
-  successMsg,
-  failureMsg,
-  setSuccessMsg,
-  setFailureMsg,
-  stripeLoaded
-}) => {
-  return (
-    <div>
-      <Flash
-        when={successMsg !== ''}
-        kind="success"
-        wrapperClassName={styles.flash}
-        onDismiss={() => {
-          setSuccessMsg('');
-        }}
-      >
-        {successMsg}
-      </Flash>
-      <Flash
-        when={failureMsg !== ''}
-        kind="danger"
-        wrapperClassName={styles.flash}
-        onDismiss={() => {
-          setFailureMsg('');
-        }}
-      >
-        {failureMsg}
-      </Flash>
-
-      <div className={styles.wrapper}>
-        <section className={styles.section}>
-          <h2 className={styles['section-heading']}>Plan</h2>
-
-          <PlanRow subscription={subscription} />
-
-          {subscription.id && !subscription.cancel_at_period_end && (
-            <CancelRow setIsPlanModalOpen={setIsPlanModalOpen} />
-          )}
-          {subscription.id && subscription.cancel_at_period_end && (
-            <ReactivateRow
-              subscriptionId={subscription.id}
-              setSuccessMsg={setSuccessMsg}
-              setFailureMsg={setFailureMsg}
-            />
-          )}
-        </section>
-
-        <section className={styles.section}>
-          <h2 className={styles['section-heading']}>Payment</h2>
-
-          <PaymentMethodRow
-            source={source}
-            setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
-            stripeLoaded={stripeLoaded}
-          />
-        </section>
-      </div>
-    </div>
-  );
-};
 
 const Billing: React.FunctionComponent = () => {
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -239,21 +106,53 @@ const Billing: React.FunctionComponent = () => {
         {stripeLoadError}
       </Flash>
 
-      {!subscriptionData.isFetched || !sourceData.isFetched ? (
-        <Placeholder />
-      ) : (
-        <Content
-          subscription={subscription}
-          source={source}
-          setIsPlanModalOpen={setIsPlanModalOpen}
-          successMsg={successMsg}
-          failureMsg={failureMsg}
-          setSuccessMsg={setSuccessMsg}
-          setFailureMsg={setFailureMsg}
-          setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
-          stripeLoaded={stripeLoaded}
-        />
-      )}
+      <div>
+        <Flash
+          when={successMsg !== ''}
+          kind="success"
+          wrapperClassName={styles.flash}
+          onDismiss={() => {
+            setSuccessMsg('');
+          }}
+        >
+          {successMsg}
+        </Flash>
+        <Flash
+          when={failureMsg !== ''}
+          kind="danger"
+          wrapperClassName={styles.flash}
+          onDismiss={() => {
+            setFailureMsg('');
+          }}
+        >
+          {failureMsg}
+        </Flash>
+
+        <div className={styles.wrapper}>
+          <section className={styles.section}>
+            <h2 className={styles['section-heading']}>Plan</h2>
+
+            <PlanSection
+              subscription={subscriptionData.data}
+              setIsPlanModalOpen={setIsPlanModalOpen}
+              setSuccessMsg={setSuccessMsg}
+              setFailureMsg={setFailureMsg}
+              isFetched={subscriptionData.isFetched}
+            />
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles['section-heading']}>Payment</h2>
+
+            <PaymentSection
+              source={sourceData.data}
+              setIsPaymentMethodModalOpen={setIsPaymentMethodModalOpen}
+              stripeLoaded={stripeLoaded}
+              isFetched={sourceData.isFetched}
+            />
+          </section>
+        </div>
+      </div>
 
       <CancelPlanModal
         isOpen={isPlanModalOpen}
@@ -276,19 +175,5 @@ const Billing: React.FunctionComponent = () => {
     </div>
   );
 };
-
-// function mapStateToProps(state) {
-//   return {
-//     subscriptionData: state.auth.subscription,
-//     sourceData: state.auth.source
-//   };
-// }
-
-// const mapDispatchToProps = {
-//   doGetSubscription: getSubscription,
-//   doClearSubscription: clearSubscription,
-//   doGetSource: getSource,
-//   doClearSource: clearSource
-// };
 
 export default Billing;

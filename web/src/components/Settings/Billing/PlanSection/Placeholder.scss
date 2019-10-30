@@ -16,37 +16,26 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../../App/rem';
-@import '../../App/font';
-@import '../../App/theme';
+@import '../../../App/rem';
+@import '../../../App/font';
+@import '../../../App/theme';
 
-.wrapper {
-  padding-top: rem(48px);
-  padding-bottom: rem(48px);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+.content1 {
+  position: relative;
+  padding: rem(48px) rem(12px);
 }
 
-.content {
-  display: flex;
+.content1-line1 {
+  width: rem(140px);
+  height: rem(16px);
 }
-
-.detail {
-  margin-left: rem(8px);
+.content1-line2 {
+  width: rem(240px);
+  height: rem(16px);
+  margin-top: rem(8px);
 }
-
-.label {
-  @include font-size('regular');
-}
-
-.desc {
-  @include font-size('small');
-  color: $gray;
-  max-width: rem(400px);
-}
-
-.status {
-  margin-left: rem(8px);
+.content1-line3 {
+  width: rem(80px);
+  height: rem(16px);
+  margin-top: rem(8px);
 }
