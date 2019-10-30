@@ -77,7 +77,7 @@ func TestClassicPresignin(t *testing.T) {
 		t.Run(fmt.Sprintf("presignin %s", tc.email), func(t *testing.T) {
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -105,7 +105,7 @@ func TestClassicPresignin_MissingParams(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -128,7 +128,7 @@ func TestClassicSignin(t *testing.T) {
 	testutils.MustExec(t, db.Save(&alice), "saving alice")
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -226,7 +226,7 @@ func TestClassicSignin_Failure(t *testing.T) {
 		t.Run(fmt.Sprintf("signin %s %s", tc.email, tc.authKey), func(t *testing.T) {
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()

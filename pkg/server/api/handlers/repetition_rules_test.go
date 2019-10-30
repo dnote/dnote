@@ -42,7 +42,7 @@ func TestGetRepetitionRule(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -116,7 +116,7 @@ func TestGetRepetitionRules(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -225,7 +225,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 		t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 		c.SetNow(t0)
 
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: c,
 		})
 		defer server.Close()
@@ -283,7 +283,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 			t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 			c.SetNow(t0)
 
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: c,
 			})
 			defer server.Close()
@@ -346,7 +346,7 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	c := clock.NewMock()
 	t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 	c.SetNow(t0)
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: c,
 	})
 	defer server.Close()
@@ -420,7 +420,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -545,7 +545,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -589,7 +589,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			}
 			testutils.MustExec(t, db.Save(&b1), "preparing book1")
 
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -628,7 +628,7 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()

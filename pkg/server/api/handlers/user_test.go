@@ -46,7 +46,7 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -74,7 +74,7 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -100,7 +100,7 @@ func TestUpdatePassword(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -134,7 +134,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		templatePath := fmt.Sprintf("%s/mailer/templates/src", testutils.ServerPath)
 		mailer.InitTemplates(&templatePath)
 
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -167,7 +167,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -200,7 +200,7 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -241,7 +241,7 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -285,7 +285,7 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -327,7 +327,7 @@ func TestVerifyEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -372,7 +372,7 @@ func TestUpdateEmail(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -406,7 +406,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -432,7 +432,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -472,7 +472,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -506,7 +506,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -542,7 +542,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -578,7 +578,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -604,7 +604,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		db := database.DBConn
 
 		// Setup
-		server := mustNewServer(t, &App{
+		server := MustNewServer(t, &App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -640,7 +640,7 @@ func TestGetEmailPreference(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()

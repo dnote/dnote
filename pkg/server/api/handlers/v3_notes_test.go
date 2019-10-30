@@ -38,7 +38,7 @@ func TestCreateNote(t *testing.T) {
 	db := database.DBConn
 
 	// Setup
-	server := mustNewServer(t, &App{
+	server := MustNewServer(t, &App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -171,7 +171,7 @@ func TestUpdateNote(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -264,7 +264,7 @@ func TestDeleteNote(t *testing.T) {
 			db := database.DBConn
 
 			// Setup
-			server := mustNewServer(t, &App{
+			server := MustNewServer(t, &App{
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()

@@ -26,9 +26,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// mustNewServer is a test utility function to initialize a new server
+// MustNewServer is a test utility function to initialize a new server
 // with the given app paratmers
-func mustNewServer(t *testing.T, app *App) *httptest.Server {
+func MustNewServer(t *testing.T, app *App) *httptest.Server {
 	app.WebURL = os.Getenv("WebURL")
 
 	r, err := NewRouter(app)
