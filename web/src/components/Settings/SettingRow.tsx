@@ -23,10 +23,10 @@ import styles from './SettingRow.scss';
 
 interface Props {
   name: string;
-  actionContent: React.ReactNode;
+  actionContent?: React.ReactNode;
   id?: string;
   desc?: string;
-  value?: string;
+  value?: React.ReactNode;
 }
 
 const SettingRow: React.FunctionComponent<Props> = ({
@@ -45,7 +45,8 @@ const SettingRow: React.FunctionComponent<Props> = ({
 
       <div className={styles.right}>
         {value}
-        <div className={styles.action}>{actionContent}</div>
+
+        {actionContent && <div className={styles.action}>{actionContent}</div>}
       </div>
     </div>
   );

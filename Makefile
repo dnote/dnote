@@ -87,13 +87,16 @@ endif
 # development
 dev-server:
 	@echo "==> running dev environment"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && ./scripts/dev.sh)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && VERSION=master ./scripts/dev.sh)
 .PHONY: dev-server
 
 ## build
 build-web:
+ifndef version
+	$(error version is required. Usage: make version=0.1.0 build-web)
+endif
 	@echo "==> building web"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && ./scripts/build-prod.sh)
+	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && VERSION=$(version) ./scripts/build-prod.sh)
 .PHONY: build-web
 
 build-server: build-web

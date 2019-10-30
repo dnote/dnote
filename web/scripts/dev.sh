@@ -31,6 +31,7 @@ set +a
   PUBLIC_PATH="$appPath"/public \
   COMPILED_PATH="$basePath/web/compiled" \
   IS_TEST=true \
+  VERSION="$VERSION" \
     "$appPath"/scripts/webpack-dev.sh
 ) &
 devServerPID=$!

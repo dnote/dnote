@@ -62,6 +62,7 @@
 .right {
   display: flex;
   flex-direction: column;
+  word-break: break-all;
 
   @include breakpoint(md) {
     flex-direction: row;

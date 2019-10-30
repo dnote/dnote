@@ -16,7 +16,34 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export default {
-  cdnUrl: __CDN_URL__,
-  version: __VERSION__
+import React, { useState } from 'react';
+import Helmet from 'react-helmet';
+import classnames from 'classnames';
+
+import SettingRow from '../SettingRow';
+import styles from '../Settings.scss';
+import config from '../../../libs/config';
+
+interface Props {}
+
+const About: React.FunctionComponent<Props> = () => {
+  return (
+    <div>
+      <Helmet>
+        <title>About</title>
+      </Helmet>
+
+      <h1 className="sr-only">About</h1>
+
+      <div className={styles.wrapper}>
+        <section className={styles.section}>
+          <h2 className={styles['section-heading']}>Software</h2>
+
+          <SettingRow name="Version" value={config.version} />
+        </section>
+      </div>
+    </div>
+  );
 };
+
+export default About;

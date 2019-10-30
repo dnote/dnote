@@ -17,6 +17,7 @@ pushd "$basePath/web"
 
   OUTPUT_PATH="$COMPILED_PATH" \
   ROOT_URL="$ROOT_URL" \
+  VERSION="$VERSION" \
     "$basePath"/web/node_modules/.bin/webpack\
       --colors\
       --display-error-details\

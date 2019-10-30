@@ -31,11 +31,13 @@ module.exports = ({ production = false, test = false } = {}) => {
   }
 
   const cdnUrl = 'https://cdn.getdnote.com';
+  const version = process.env.VERSION;
 
   const compileTimeConstantForMinification = {
     __ROOT_URL__: JSON.stringify(rootUrl),
     __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey),
-    __CDN_URL__: JSON.stringify(cdnUrl)
+    __CDN_URL__: JSON.stringify(cdnUrl),
+    __VERSION__: JSON.stringify(version)
   };
 
   if (!production) {
