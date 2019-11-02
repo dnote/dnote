@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -321,9 +320,7 @@ func TestMigrateToV6(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "Failed to unmarshal the result into Dnote").Error())
 	}
 
-	if ok := reflect.DeepEqual(expected, got); !ok {
-		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", got, expected)
-	}
+	assert.DeepEqual(t, expected, got, "payload mismatch")
 }
 
 func TestMigrateToV7(t *testing.T) {
