@@ -1,6 +1,6 @@
 # Contributing to Dnote
 
-This repository contains the server side and the client side code for Dnote.
+This repository contains the source code for Dnote server and clients.
 
 * [Setting up](#setting-up)
 * [Command Linux Interface](#command-line-interface)
@@ -8,19 +8,15 @@ This repository contains the server side and the client side code for Dnote.
 
 ## Setting up
 
-1. Install the following prerequisites if necessary:
+Dnote uses [Vagrant](https://github.com/hashicorp/vagrant) to provision a consistent development environment.
 
-* [Go programming language](https://golang.org/dl/) 1.13+
-* [Node.js](https://nodejs.org/) 10.16+
-* Postgres 10.9+
+1. Install Vagrant. ([Download](https://www.vagrantup.com/downloads.html))
+2. Install VirtualBox. ([Download](https://www.virtualbox.org/))
+2. Run `vagrant up` to start a virtual machine and bootstrap the development environment.
+3. Run `vagrant rsync-auto` to sync the files with the virtual machine.
 
-2. Get the Dnote code:
-
-```sh
-go get github.com/dnote/dnote
-```
-
-3. Run `make` to install dependencies
+* You can make changes to the source code from the host machine.
+* Any commands need to be run inside the virtual machine. You can connect to it by running `vagrant ssh`.
 
 ## Command Line Interface
 
@@ -74,9 +70,6 @@ DNOTE_DEBUG=1 dnote sync
 The server consists of the frontend web application and a web server.
 
 ### Development
-
-* Create a postgres database by running `createdb -O postgres dnote`
-* If the role does not exist, you can create it by running `sudo -u postgres createuser postgres`
 
 * Run `make dev-server` to start a local server
 

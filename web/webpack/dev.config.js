@@ -44,9 +44,6 @@ module.exports = env => {
       production: false,
       test: isTest
     }),
-    externals,
-    watchOptions: {
-      poll: 300
-    }
+    externals
   };
 };
