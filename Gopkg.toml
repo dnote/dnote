@@ -108,3 +108,7 @@
 [[constraint]]
   name = "github.com/gobuffalo/packr"
   version = "2.5.2"
+
+[[constraint]]
+  name = "github.com/radovskyb/watcher"
+  version = "1.0.7"

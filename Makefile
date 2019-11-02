@@ -29,7 +29,7 @@ ifndef COMPILEDAEMON
 endif
 
 	@echo "==> installing go dependencies"
-	@dep ensure
+	@dep ensure -v
 .PHONY: install-go
 
 install-js:

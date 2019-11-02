@@ -245,6 +245,14 @@
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:a278d57d6315d6f405dbaebdece8eb0a17e243e5f96456b00bfc0dbfb3fe3286"
+  name = "github.com/radovskyb/watcher"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f5989f8deca223d590d5a130c77ea375fe9fde30"
+  version = "v1.0.7"
+
+[[projects]]
   digest = "1:ed615c5430ecabbb0fb7629a182da65ecee6523900ac1ac932520860878ffcad"
   name = "github.com/robfig/cron"
   packages = ["."]
@@ -424,6 +432,7 @@
     "github.com/lib/pq",
     "github.com/mattn/go-sqlite3",
     "github.com/pkg/errors",
+    "github.com/radovskyb/watcher",
     "github.com/robfig/cron",
     "github.com/rubenv/sql-migrate",
     "github.com/sergi/go-diff/diffmatchpatch",
