@@ -140,3 +140,17 @@ func (a *App) notSupported(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
 	return
 }
+
+func respondForbidden(w http.ResponseWriter) {
+	http.Error(w, "forbidden", http.StatusForbidden)
+}
+
+func respondUnauthorized(w http.ResponseWriter) {
+	unsetSessionCookie(w)
+	w.Header().Add("WWW-Authenticate", `Bearer realm="Dnote Pro", charset="UTF-8"`)
+	http.Error(w, "unauthorized", http.StatusUnauthorized)
+}
+
+func respondNotFound(w http.ResponseWriter) {
+	http.Error(w, "not found", http.StatusNotFound)
+}

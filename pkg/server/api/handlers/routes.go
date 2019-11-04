@@ -35,12 +35,6 @@ import (
 	"github.com/stripe/stripe-go"
 )
 
-// ErrInvalidAuthHeader is an error for invalid format of Authorization HTTP header
-var ErrInvalidAuthHeader = errors.New("Invalid authorization header")
-
-// ErrForbidden is an error for forbidden requests
-var ErrForbidden = errors.New("forbidden")
-
 // Route represents a single route
 type Route struct {
 	Method      string
@@ -58,7 +52,7 @@ func parseAuthHeader(h string) (authHeader, error) {
 	parts := strings.Split(h, " ")
 
 	if len(parts) != 2 {
-		return authHeader{}, ErrInvalidAuthHeader
+		return authHeader{}, errors.New("Invalid authorization header")
 	}
 
 	parsed := authHeader{
@@ -67,16 +61,6 @@ func parseAuthHeader(h string) (authHeader, error) {
 	}
 
 	return parsed, nil
-}
-
-func respondForbidden(w http.ResponseWriter) {
-	http.Error(w, "forbidden", http.StatusForbidden)
-}
-
-func respondUnauthorized(w http.ResponseWriter) {
-	unsetSessionCookie(w)
-	w.Header().Add("WWW-Authenticate", `Bearer realm="Dnote Pro", charset="UTF-8"`)
-	http.Error(w, "unauthorized", http.StatusUnauthorized)
 }
 
 func legacyAuth(next http.HandlerFunc) http.HandlerFunc {
@@ -187,12 +171,6 @@ func authWithSession(r *http.Request, p *authMiddlewareParams) (database.User, b
 		return user, false, errors.Wrap(err, "finding user from token")
 	}
 
-	if p != nil && p.ProOnly {
-		if !user.Cloud {
-			return user, false, ErrForbidden
-		}
-	}
-
 	return user, true, nil
 }
 
@@ -222,12 +200,6 @@ func authWithToken(r *http.Request, tokenType string, p *authMiddlewareParams) (
 		return user, token, false, errors.Wrap(err, "finding user")
 	}
 
-	if p != nil && p.ProOnly {
-		if !user.Cloud {
-			return user, token, false, ErrForbidden
-		}
-	}
-
 	return user, token, true, nil
 }
 
@@ -238,13 +210,19 @@ type authMiddlewareParams struct {
 func auth(next http.HandlerFunc, p *authMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok, err := authWithSession(r, p)
-		if !ok || err != nil {
-			if err == ErrForbidden {
-				http.Error(w, "forbidden", http.StatusForbidden)
-			} else {
-				respondUnauthorized(w)
-			}
+		if !ok {
+			respondUnauthorized(w)
 			return
+		}
+		if err != nil {
+			handleError(w, "authenticating with session", err, http.StatusInternalServerError)
+			return
+		}
+
+		if p != nil && p.ProOnly {
+			if !user.Cloud {
+				respondForbidden(w)
+			}
 		}
 
 		ctx := context.WithValue(r.Context(), helpers.KeyUser, user)
@@ -256,11 +234,6 @@ func tokenAuth(next http.HandlerFunc, tokenType string, p *authMiddlewareParams)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, token, ok, err := authWithToken(r, tokenType, p)
 		if err != nil {
-			if err == ErrForbidden {
-				respondForbidden(w)
-				return
-			}
-
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with token")
 		}
@@ -273,17 +246,19 @@ func tokenAuth(next http.HandlerFunc, tokenType string, p *authMiddlewareParams)
 			// If token-based auth fails, fall back to session-based auth
 			user, ok, err = authWithSession(r, p)
 			if err != nil {
-				// log the error and continue
-				log.ErrorWrap(err, "authenticating with session")
+				handleError(w, "authenticating with session", err, http.StatusInternalServerError)
+				return
 			}
 
 			if !ok {
-				if err == ErrForbidden {
-					respondForbidden(w)
-				} else {
-					respondUnauthorized(w)
-				}
+				respondUnauthorized(w)
 				return
+			}
+		}
+
+		if p != nil && p.ProOnly {
+			if !user.Cloud {
+				respondForbidden(w)
 			}
 		}
 
@@ -404,7 +379,7 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"GET", "/stripe_source", auth(app.getStripeSource, nil), true},
 		{"PATCH", "/stripe_source", auth(app.updateStripeSource, nil), true},
 		{"GET", "/notes", auth(app.getNotes, &proOnly), false},
-		{"GET", "/notes/{noteUUID}", auth(app.getNote, &proOnly), true},
+		{"GET", "/notes/{noteUUID}", app.getNote, true},
 		{"GET", "/calendar", auth(app.getCalendar, &proOnly), true},
 		{"GET", "/repetition_rules", auth(app.getRepetitionRules, &proOnly), true},
 		{"GET", "/repetition_rules/{repetitionRuleUUID}", tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},

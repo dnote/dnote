@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/api/helpers"
+	"github.com/dnote/dnote/pkg/server/api/permissions"
 	"github.com/dnote/dnote/pkg/server/api/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
@@ -85,7 +86,7 @@ func parseSearchQuery(q url.Values) string {
 	return escapeSearchQuery(searchStr)
 }
 
-func getNoteBaseQuery(noteUUID string, userID int, search string) *gorm.DB {
+func getNoteBaseQuery(noteUUID string, search string) *gorm.DB {
 	db := database.DBConn
 
 	var conn *gorm.DB
@@ -95,15 +96,15 @@ func getNoteBaseQuery(noteUUID string, userID int, search string) *gorm.DB {
 		conn = db
 	}
 
-	conn = conn.Where("notes.uuid = ? AND notes.user_id = ?", noteUUID, userID)
+	conn = conn.Where("notes.uuid = ?", noteUUID)
 
 	return conn
 }
 
 func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
-	if !ok {
-		handleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+	user, _, err := authWithSession(r, nil)
+	if err != nil {
+		handleError(w, "authenticating", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -112,15 +113,20 @@ func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
 	search := parseSearchQuery(r.URL.Query())
 
 	var note database.Note
-	conn := getNoteBaseQuery(noteUUID, user.ID, search)
+	conn := getNoteBaseQuery(noteUUID, search)
 	conn = preloadNote(conn)
 	conn.Find(&note)
 
 	if conn.RecordNotFound() {
-		http.Error(w, "not found", http.StatusNotFound)
+		respondNotFound(w)
 		return
 	} else if err := conn.Error; err != nil {
 		handleError(w, "finding note", err, http.StatusInternalServerError)
+		return
+	}
+
+	if ok := permissions.ViewNote(&user, note); !ok {
+		respondNotFound(w)
 		return
 	}
 

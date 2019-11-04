@@ -155,7 +155,7 @@ func (e *Email) Send() error {
 	if os.Getenv("GO_ENV") != "PRODUCTION" {
 		fmt.Println("Not sending email because not production")
 		fmt.Println(e.subject, e.to, e.from)
-		fmt.Println("Body", e.Body)
+		// fmt.Println("Body", e.Body)
 		return nil
 	}
 

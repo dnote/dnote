@@ -96,10 +96,12 @@ func TestUpdateNote(t *testing.T) {
 		noteUUID             string
 		noteBookUUID         string
 		noteBody             string
+		notePublic           bool
 		noteDeleted          bool
 		expectedNoteBody     string
 		expectedNoteBookName string
 		expectedNoteBookUUID string
+		expectedNotePublic   bool
 	}{
 		{
 			payload: fmt.Sprintf(`{
@@ -107,11 +109,13 @@ func TestUpdateNote(t *testing.T) {
 			}`, updatedBody),
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
+			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     "some updated content",
 			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
 		},
 		{
 			payload: fmt.Sprintf(`{
@@ -119,11 +123,13 @@ func TestUpdateNote(t *testing.T) {
 			}`, b1UUID),
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
+			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     "original content",
 			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
 		},
 		{
 			payload: fmt.Sprintf(`{
@@ -131,11 +137,13 @@ func TestUpdateNote(t *testing.T) {
 			}`, b2UUID),
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
+			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b2UUID,
 			expectedNoteBody:     "original content",
 			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
 		},
 		{
 			payload: fmt.Sprintf(`{
@@ -144,11 +152,13 @@ func TestUpdateNote(t *testing.T) {
 			}`, b2UUID, updatedBody),
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
+			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b2UUID,
 			expectedNoteBody:     "some updated content",
 			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
 		},
 		{
 			payload: fmt.Sprintf(`{
@@ -157,16 +167,77 @@ func TestUpdateNote(t *testing.T) {
 			}`, b1UUID, updatedBody),
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
+			notePublic:           false,
 			noteBody:             "",
 			noteDeleted:          true,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     updatedBody,
 			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: fmt.Sprintf(`{
+				"public": %t
+			}`, true),
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   true,
+		},
+		{
+			payload: fmt.Sprintf(`{
+				"public": %t
+			}`, false),
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           true,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: fmt.Sprintf(`{
+				"content": "%s",
+				"public": %t
+			}`, updatedBody, false),
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           true,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     updatedBody,
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: fmt.Sprintf(`{
+				"book_uuid": "%s",
+				"content": "%s",
+				"public": %t
+			}`, b2UUID, updatedBody, true),
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b2UUID,
+			expectedNoteBody:     updatedBody,
+			expectedNoteBookName: "js",
+			expectedNotePublic:   true,
 		},
 	}
 
 	for idx, tc := range testCases {
-		func() {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			defer testutils.ClearData()
 			db := database.DBConn
 
@@ -198,6 +269,7 @@ func TestUpdateNote(t *testing.T) {
 				BookUUID: tc.noteBookUUID,
 				Body:     tc.noteBody,
 				Deleted:  tc.noteDeleted,
+				Public:   tc.notePublic,
 			}
 			testutils.MustExec(t, db.Save(&note), "preparing note")
 
@@ -207,7 +279,7 @@ func TestUpdateNote(t *testing.T) {
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
-			assert.StatusCodeEquals(t, res, http.StatusOK, fmt.Sprintf("status code mismatch for test case %d", idx))
+			assert.StatusCodeEquals(t, res, http.StatusOK, "status code mismatch for test case")
 
 			var bookRecord database.Book
 			var noteRecord database.Note
@@ -222,13 +294,14 @@ func TestUpdateNote(t *testing.T) {
 			assert.Equalf(t, bookCount, 2, "book count mismatch")
 			assert.Equalf(t, noteCount, 1, "note count mismatch")
 
-			assert.Equal(t, noteRecord.UUID, tc.noteUUID, fmt.Sprintf("note uuid mismatch for test case %d", idx))
-			assert.Equal(t, noteRecord.Body, tc.expectedNoteBody, fmt.Sprintf("note content mismatch for test case %d", idx))
-			assert.Equal(t, noteRecord.BookUUID, tc.expectedNoteBookUUID, fmt.Sprintf("note book_uuid mismatch for test case %d", idx))
-			assert.Equal(t, noteRecord.USN, 102, fmt.Sprintf("note usn mismatch for test case %d", idx))
+			assert.Equal(t, noteRecord.UUID, tc.noteUUID, "note uuid mismatch for test case")
+			assert.Equal(t, noteRecord.Body, tc.expectedNoteBody, "note content mismatch for test case")
+			assert.Equal(t, noteRecord.BookUUID, tc.expectedNoteBookUUID, "note book_uuid mismatch for test case")
+			assert.Equal(t, noteRecord.Public, tc.expectedNotePublic, "note public mismatch for test case")
+			assert.Equal(t, noteRecord.USN, 102, "note usn mismatch for test case")
 
-			assert.Equal(t, userRecord.MaxUSN, 102, fmt.Sprintf("user max_usn mismatch for test case %d", idx))
-		}()
+			assert.Equal(t, userRecord.MaxUSN, 102, "user max_usn mismatch for test case")
+		})
 	}
 }
 

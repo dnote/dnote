@@ -78,18 +78,51 @@ func CreateNote(user database.User, clock clock.Clock, bookUUID, content string,
 	return note, nil
 }
 
+type UpdateNoteParams struct {
+	BookUUID *string
+	Content  *string
+	Public   *bool
+}
+
+func (r UpdateNoteParams) GetBookUUID() string {
+	if r.BookUUID == nil {
+		return ""
+	}
+
+	return *r.BookUUID
+}
+
+func (r UpdateNoteParams) GetContent() string {
+	if r.Content == nil {
+		return ""
+	}
+
+	return *r.Content
+}
+
+func (r UpdateNoteParams) GetPublic() bool {
+	if r.Public == nil {
+		return false
+	}
+
+	return *r.Public
+}
+
 // UpdateNote creates a note with the next usn and updates the user's max_usn
-func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note database.Note, bookUUID, content *string) (database.Note, error) {
+func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note database.Note, p *UpdateNoteParams) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
 	}
 
-	if bookUUID != nil {
-		note.BookUUID = *bookUUID
+	if p.BookUUID != nil {
+		note.BookUUID = p.GetBookUUID()
 	}
-	if content != nil {
-		note.Body = *content
+	if p.Content != nil {
+		note.Body = p.GetContent()
+	}
+	if p.Public != nil {
+		note.Public = p.GetPublic()
 	}
 
 	note.USN = nextUSN

@@ -123,45 +123,45 @@ func TestCreateNote(t *testing.T) {
 
 func TestUpdateNote(t *testing.T) {
 	testCases := []struct {
-		userUSN     int
-		expectedUSN int
+		userUSN int
 	}{
 		{
-			userUSN:     8,
-			expectedUSN: 9,
+			userUSN: 8,
 		},
 		{
-			userUSN:     102229,
-			expectedUSN: 102230,
+			userUSN: 102229,
 		},
 		{
-			userUSN:     8099,
-			expectedUSN: 8100,
+			userUSN: 8099,
 		},
 	}
 
 	for idx, tc := range testCases {
-		func() {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			defer testutils.ClearData()
 			db := database.DBConn
 
 			user := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), "preparing user max_usn for test case")
 
 			anotherUser := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), "preparing user max_usn for test case")
 
 			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
-			testutils.MustExec(t, db.Save(&b1), fmt.Sprintf("preparing b1 for test case %d", idx))
+			testutils.MustExec(t, db.Save(&b1), "preparing b1 for test case")
 
 			note := database.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
-			testutils.MustExec(t, db.Save(&note), fmt.Sprintf("preparing note for test case %d", idx))
+			testutils.MustExec(t, db.Save(&note), "preparing note for test case")
 
 			c := clock.NewMock()
 			content := "updated test content"
+			public := true
 
 			tx := db.Begin()
-			if _, err := UpdateNote(tx, user, c, note, nil, &content); err != nil {
+			if _, err := UpdateNote(tx, user, c, note, &UpdateNoteParams{
+				Content: &content,
+				Public:  &public,
+			}); err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "deleting note"))
 			}
@@ -171,20 +171,21 @@ func TestUpdateNote(t *testing.T) {
 			var noteRecord database.Note
 			var userRecord database.User
 
-			testutils.MustExec(t, db.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting book for test case %d", idx))
-			testutils.MustExec(t, db.Model(&database.Note{}).Count(&noteCount), fmt.Sprintf("counting notes for test case %d", idx))
-			testutils.MustExec(t, db.First(&noteRecord), fmt.Sprintf("finding note for test case %d", idx))
-			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			testutils.MustExec(t, db.Model(&database.Book{}).Count(&bookCount), "counting book for test case")
+			testutils.MustExec(t, db.Model(&database.Note{}).Count(&noteCount), "counting notes for test case")
+			testutils.MustExec(t, db.First(&noteRecord), "finding note for test case")
+			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&userRecord), "finding user for test case")
 
+			expectedUSN := tc.userUSN + 1
 			assert.Equal(t, bookCount, 1, "book count mismatch")
 			assert.Equal(t, noteCount, 1, "note count mismatch")
 			assert.Equal(t, noteRecord.UserID, user.ID, "note UserID mismatch")
 			assert.Equal(t, noteRecord.Body, content, "note Body mismatch")
+			assert.Equal(t, noteRecord.Public, public, "note Public mismatch")
 			assert.Equal(t, noteRecord.Deleted, false, "note Deleted mismatch")
-			assert.Equal(t, noteRecord.USN, tc.expectedUSN, "note USN mismatch")
-
-			assert.Equal(t, userRecord.MaxUSN, tc.expectedUSN, "user MaxUSN mismatch")
-		}()
+			assert.Equal(t, noteRecord.USN, expectedUSN, "note USN mismatch")
+			assert.Equal(t, userRecord.MaxUSN, expectedUSN, "user MaxUSN mismatch")
+		})
 	}
 }
 
