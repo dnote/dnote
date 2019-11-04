@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -407,9 +406,7 @@ func TestCreateBook(t *testing.T) {
 		},
 	}
 
-	if ok := reflect.DeepEqual(got, expected); !ok {
-		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", got, expected)
-	}
+	assert.DeepEqual(t, got, expected, "payload mismatch")
 }
 
 func TestCreateBookDuplicate(t *testing.T) {

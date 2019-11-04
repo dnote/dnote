@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 	"time"
 
@@ -176,9 +175,7 @@ func TestGetNotes(t *testing.T) {
 		Total: 2,
 	}
 
-	if ok := reflect.DeepEqual(payload, expected); !ok {
-		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", payload, expected)
-	}
+	assert.DeepEqual(t,payload, expected, "payload mismatch")
 }
 
 func TestGetNote(t *testing.T) {
@@ -256,9 +253,7 @@ func TestGetNote(t *testing.T) {
 		},
 	}
 
-	if ok := reflect.DeepEqual(payload, expected); !ok {
-		t.Errorf("Payload does not match.\nActual:   %+v\nExpected: %+v", payload, expected)
-	}
+	assert.DeepEqual(t,payload, expected, "payload mismatch")
 }
 
 // TODO: finish the test after implementing note sharing

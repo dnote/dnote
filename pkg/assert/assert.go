@@ -89,7 +89,7 @@ func NotEqual(t *testing.T, a, b interface{}, message string) {
 
 // DeepEqual fails a test if the actual does not deeply equal the expected
 func DeepEqual(t *testing.T, a, b interface{}, message string) {
-	if reflect.DeepEqual(a, b) {
+	if cmp.Equal(a, b) {
 		return
 	}
 

@@ -1,26 +1,49 @@
 # Contributing to Dnote
 
-This repository contains the server side and the client side code for Dnote.
+Dnote is an open source project.
 
 * [Setting up](#setting-up)
-* [Command Linux Interface](#command-line-interface)
 * [Server](#server)
+* [Command Linux Interface](#command-line-interface)
 
 ## Setting up
 
-1. Install the following prerequisites if necessary:
+Dnote uses [Vagrant](https://github.com/hashicorp/vagrant) to provision a consistent development environment.
 
-* [Go programming language](https://golang.org/dl/) 1.13+
-* [Node.js](https://nodejs.org/) 10.16+
-* Postgres 10.9+
+*Prerequisites*
 
-2. Get the Dnote code:
+* Vagrant ([Download](https://www.vagrantup.com/downloads.html))
+* VirtualBox ([Download](https://www.virtualbox.org/))
 
-```sh
-go get github.com/dnote/dnote
+Following steps will set up your development environment and install dependencies in a virtual machine.
+
+1. Run `vagrant up` to start a virtual machine and bootstrap the development environment.
+2. Run `vagrant rsync-auto` to sync the files with the virtual machine.
+
+*Workflow*
+
+* You can make changes to the source code from the host machine.
+* Any commands need to be run inside the virtual machine. You can connect to it by running `vagrant ssh`.
+
+## Server
+
+The server consists of the frontend web application and a web server.
+
+### Development
+
+* Run `make dev-server` to start a local server.
+* You can access the server on `localhost:3000` on your machine.
+
+### Test
+
+```bash
+# Run tests for the frontend web application
+make test-web
+
+# Run tests for API
+make test-api
 ```
 
-3. Run `make` to install dependencies
 
 ## Command Line Interface
 
@@ -68,25 +91,4 @@ DNOTE_DEBUG=1 dnote sync
 - If a release is not stable,
   - disable the homebrew release by commenting out relevant code in the release script.
   - mark release as pre-release on GitHub release
-
-## Server
-
-The server consists of the frontend web application and a web server.
-
-### Development
-
-* Create a postgres database by running `createdb -O postgres dnote`
-* If the role does not exist, you can create it by running `sudo -u postgres createuser postgres`
-
-* Run `make dev-server` to start a local server
-
-### Test
-
-```bash
-# Run tests for the frontend web application
-make test-web
-
-# Run tests for API
-make test-api
-```
 
