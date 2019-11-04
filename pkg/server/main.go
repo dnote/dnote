@@ -26,13 +26,13 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/api/handlers"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/tmpl"
 
 	"github.com/gobuffalo/packr/v2"
-	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
 
@@ -62,10 +62,25 @@ func getStaticHandler() http.Handler {
 // getRootHandler returns an HTTP handler that serves the app shell
 func getRootHandler() http.HandlerFunc {
 	b := mustFind(rootBox, "index.html")
+	appShell, err := tmpl.NewAppShell(b)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing app shell"))
+	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache")
-		w.Write(b)
+
+		buf, err := appShell.Execute(r)
+		if err != nil {
+			if errors.Cause(err) == tmpl.ErrNotFound {
+				handlers.RespondNotFound(w)
+			} else {
+				handlers.HandleError(w, "executing app shell", err, http.StatusInternalServerError)
+			}
+			return
+		}
+
+		w.Write(buf)
 	}
 }
 
@@ -88,9 +103,7 @@ func getSWHandler() http.HandlerFunc {
 	}
 }
 
-func initServer() (*mux.Router, error) {
-	srv := mux.NewRouter()
-
+func initServer() (*http.ServeMux, error) {
 	apiRouter, err := handlers.NewRouter(&handlers.App{
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
@@ -100,15 +113,15 @@ func initServer() (*mux.Router, error) {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	srv.PathPrefix("/api").Handler(http.StripPrefix("/api", apiRouter))
-	srv.PathPrefix("/static").Handler(getStaticHandler())
-	srv.Handle("/service-worker.js", getSWHandler())
-	srv.Handle("/robots.txt", getRobotsHandler())
+	mux := http.NewServeMux()
 
-	// For all other requests, serve the index.html file
-	srv.PathPrefix("/").Handler(getRootHandler())
+	mux.Handle("/api/", http.StripPrefix("/api", apiRouter))
+	mux.Handle("/static/", getStaticHandler())
+	mux.HandleFunc("/service-worker.js", getSWHandler())
+	mux.HandleFunc("/robots.txt", getRobotsHandler())
+	mux.HandleFunc("/", getRootHandler())
 
-	return srv, nil
+	return mux, nil
 }
 
 func startCmd() {

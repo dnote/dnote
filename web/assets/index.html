@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,minimum-scale=1" />
-  <title>Dnote</title>
+  <title>{{ .Title }}</title>
   <style>
     body {
       margin: 0;
@@ -25,6 +25,8 @@
   <meta name="msapplication-TileColor" content="#ffffff" />
   <meta name="msapplication-TileImage" content="<!--ASSET_BASE_PLACEHOLDER-->/ms-icon-144x144.png" />
   <meta name="theme-color" content="#ffffff" />
+
+  {{ .MetaTags }}
 
   <!--CSS_BUNDLE_PLACEHOLDER-->
 </head>

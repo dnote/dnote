@@ -21,7 +21,6 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { notePathDef } from 'web/libs/paths';
 import { parseSearchString } from 'jslib/helpers/url';
-import HeaderData from './HeaderData';
 import NoteContent from './NoteContent';
 import Flash from '../Common/Flash';
 import { getNote } from '../../store/note';
@@ -82,8 +81,6 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
 
   return (
     <div id="T-note-page" className={styles.wrapper}>
-      <HeaderData note={note} />
-
       <div className="container mobile-nopadding page page-mobile-full">
         {note.isFetched ? (
           <NoteContent

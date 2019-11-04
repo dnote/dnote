@@ -85,6 +85,11 @@ button:disabled {
   opacity: 0.6;
 }
 
+.button-small {
+  @include font-size('small');
+  padding: rem(4px) rem(12px);
+}
+
 .button-normal {
   @include font-size('small');
   padding: rem(8px) rem(16px);

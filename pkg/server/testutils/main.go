@@ -236,8 +236,8 @@ func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Respo
 }
 
 // MakeReq makes an HTTP request and returns a response
-func MakeReq(server *httptest.Server, method, url, data string) *http.Request {
-	endpoint := fmt.Sprintf("%s%s", server.URL, url)
+func MakeReq(server *httptest.Server, method, path, data string) *http.Request {
+	endpoint := fmt.Sprintf("%s%s", server.URL, path)
 
 	req, err := http.NewRequest(method, endpoint, strings.NewReader(data))
 	if err != nil {

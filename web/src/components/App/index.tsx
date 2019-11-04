@@ -30,7 +30,8 @@ import {
   noHeaderPaths,
   subscriptionPaths,
   noFooterPaths,
-  checkCurrentPathIn
+  checkCurrentPathIn,
+  checkCurrentPath
 } from 'web/libs/paths';
 import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
 import Splash from '../Splash';
@@ -120,6 +121,16 @@ function useMobileMenuState(
   return [isMobileMenuOpen, setMobileMenuOpen];
 }
 
+function checkNoFooter(location: Location, loggedIn: boolean): boolean {
+  if (checkCurrentPath(location, notePathDef)) {
+    if (!loggedIn) {
+      return true;
+    }
+  }
+
+  return checkCurrentPathIn(location, noFooterPaths);
+}
+
 const App: React.FunctionComponent<Props> = ({ location }) => {
   useFetchData();
   useSavePrevLocation(location);
@@ -137,8 +148,9 @@ const App: React.FunctionComponent<Props> = ({ location }) => {
     return <Splash />;
   }
 
+  const loggedIn = user.data.uuid !== '';
   const noHeader = checkCurrentPathIn(location, noHeaderPaths);
-  const noFooter = checkCurrentPathIn(location, noFooterPaths);
+  const noFooter = checkNoFooter(location, loggedIn);
 
   return (
     <Fragment>
@@ -166,7 +178,11 @@ const App: React.FunctionComponent<Props> = ({ location }) => {
         <Route path={noFooterPaths} exact component={null} />
         <Route
           path="/"
-          render={() => {
+          render={({ location }) => {
+            if (noFooter) {
+              return null;
+            }
+
             return (
               <TabBar
                 isMobileMenuOpen={isMobileMenuOpen}
