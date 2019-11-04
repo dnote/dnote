@@ -4,7 +4,7 @@ Dnote is an open source project.
 
 * [Setting up](#setting-up)
 * [Server](#server)
-* [Command Linux Interface](#command-line-interface)
+* [Command Line Interface](#command-line-interface)
 
 ## Setting up
 
