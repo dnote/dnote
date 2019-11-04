@@ -12,6 +12,10 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
+N/A
+
+### 0.2.1 - 2019-11-04
+
 #### Upgrade Guide
 
 * Please define the follwoing new environment variables:
@@ -22,11 +26,12 @@ The following log documentes the history of the server project.
 #### Added
 
 - Display version number in the settings (#293)
+- Allow unsecure database connection in production (#276)
 
 #### Fixed
 
 - Allow to customize the app URL in the emails (#290)
-- Allow to customize the SMTP port
+- Allow to customize the SMTP port (#292)
 
 ### 0.2.0 - 2019-10-28
 
