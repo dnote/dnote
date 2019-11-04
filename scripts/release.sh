@@ -49,5 +49,5 @@ set -x
 hub release create \
   "${file_flags[@]}" \
   "${flags[@]}" \
-  --message="$version_tag"\
+  --message="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)"\
   "$version_tag"

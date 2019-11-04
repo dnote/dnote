@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
-# set env var
 echo "export DNOTE=/go/src/github.com/dnote/dnote" >> /home/vagrant/.bash_profile
+echo "cd /go/src/github.com/dnote/dnote" >> /home/vagrant/.bash_profile
 
 # install dependencies
 (cd /go/src/github.com/dnote/dnote && make install)
