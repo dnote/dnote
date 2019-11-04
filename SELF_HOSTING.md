@@ -98,6 +98,7 @@ Environment=WebURL=$WebURL
 Environment=DBUser=$DBUser
 Environment=DBPassword=$DBPassword
 Environment=SmtpHost=
+Environment=SmtpPort=
 Environment=SmtpUsername=
 Environment=SmtpPassword=
 
@@ -107,7 +108,7 @@ WantedBy=multi-user.target
 
 Replace `$user`, `$WebURL`, `$DBUser`, and `$DBPassword` with the actual values.
 
-Optionally, if you would like to send spaced repetitions throught email, populate `SmtpHost`,  `SmtpUsername`, and `SmtpPassword`.
+Optionally, if you would like to send spaced repetitions throught email, populate `SmtpHost`, `SmtpPort`, `SmtpUsername`, and `SmtpPassword`.
 
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
