@@ -44,12 +44,20 @@ import React from 'react';
 
 import { IconProps } from './types';
 
-const Icon = ({ fill, width, height, className }: IconProps) => {
+interface Props extends IconProps {
+  title?: string;
+  desc?: string;
+  ariaLabel?: string;
+}
+
+const Icon = ({ fill, width, height, className, ariaLabel }: Props) => {
   const h = `${height}px`;
   const w = `${width}px`;
 
   return (
     <svg
+      role="img"
+      aria-label={ariaLabel}
       width={w}
       height={h}
       viewBox="0 0 14 16"

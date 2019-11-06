@@ -21,13 +21,15 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { notePathDef } from 'web/libs/paths';
 import { parseSearchString } from 'jslib/helpers/url';
-import NoteContent from './NoteContent';
+import Content from './Content';
 import Flash from '../Common/Flash';
 import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import { unsetMessage } from '../../store/ui';
-import DeleteNoteModal from './DeleteNoteModal';
+import DeleteModal from './DeleteModal';
+import ShareModal from './ShareModal';
+import HeaderData from './HeaderData';
 import styles from './index.scss';
 
 interface Match {
@@ -71,6 +73,7 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
     };
   });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useFetchData(dispatch, noteUUID, location.search);
   useClearMessage(dispatch);
@@ -81,11 +84,16 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
 
   return (
     <div id="T-note-page" className={styles.wrapper}>
+      <HeaderData note={note} />
+
       <div className="container mobile-nopadding page page-mobile-full">
         {note.isFetched ? (
-          <NoteContent
+          <Content
             onDeleteModalOpen={() => {
               setIsDeleteModalOpen(true);
+            }}
+            onShareModalOpen={() => {
+              setIsShareModalOpen(true);
             }}
           />
         ) : (
@@ -93,12 +101,20 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
         )}
       </div>
 
-      <DeleteNoteModal
+      <DeleteModal
         isOpen={isDeleteModalOpen}
         onDismiss={() => {
           setIsDeleteModalOpen(false);
         }}
         noteUUID={note.data.uuid}
+      />
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onDismiss={() => {
+          setIsShareModalOpen(false);
+        }}
+        note={note.data}
       />
     </div>
   );

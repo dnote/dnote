@@ -20,7 +20,7 @@ import React from 'react';
 import classnames from 'classnames';
 
 import styles from './Placeholder.scss';
-import noteStyles from './NoteContent.scss';
+import noteStyles from './Content.scss';
 
 interface Props {}
 

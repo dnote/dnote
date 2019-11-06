@@ -102,3 +102,21 @@ export function isMobileWidth() {
 
   return width < mdThreshold;
 }
+
+// copyToClipboard copies the given string to the user's clipboard
+export function copyToClipboard(s: string) {
+  const el = document.createElement('textarea');
+  el.value = s;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+}
+
+// selectTextInputValue visually selects the value of the given text input
+export function selectTextInputValue(
+  el: HTMLInputElement | HTMLTextAreaElement
+) {
+  const len = el.value.length;
+  el.setSelectionRange(0, len);
+}

@@ -32,11 +32,12 @@ interface Props {
   id: string;
   alignment: Alignment;
   direction: Direction;
-  overlay: React.ReactElement;
+  overlay: React.ReactNode;
   children: React.ReactChild;
   contentClassName?: string;
   wrapperClassName?: string;
   triggerClassName?: string;
+  noArrow?: boolean;
 }
 
 const Tooltip: React.FunctionComponent<Props> = ({
@@ -45,7 +46,8 @@ const Tooltip: React.FunctionComponent<Props> = ({
   direction,
   wrapperClassName,
   overlay,
-  children
+  children,
+  noArrow = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef(null);
@@ -75,6 +77,7 @@ const Tooltip: React.FunctionComponent<Props> = ({
         triggerEl={triggerRef.current}
         alignment={alignment}
         direction={direction}
+        noArrow={noArrow}
       >
         {overlay}
       </Overlay>

@@ -43,42 +43,15 @@ function getTitle(note: NoteState): string {
   }`;
 }
 
-function getDescription(note: NoteState): string {
-  if (!note.isFetched) {
-    return 'View microlessons and write your own.';
-  }
-
-  const book = note.data.book;
-  return `View microlessons in ${book.label} and write your own. Dnote is a home for your everyday learning.`;
-}
-
 interface Props {
   note: NoteState;
 }
 
 const HeaderData: React.FunctionComponent<Props> = ({ note }) => {
   const title = getTitle(note);
-  const description = getDescription(note);
-
-  const noteData = note.data;
-
   return (
     <Helmet>
       <title>{title}</title>
-      <meta name="description" content={description} />
-      <meta name="twitter:card" content="summary" />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={noteData.content} />
-      <meta
-        name="twitter:image"
-        content="https://s3.amazonaws.com/dnote-assets/images/bf3fed4fb122e394e26bcf35d63e26f8.png"
-      />
-      <meta
-        name="og:image"
-        content="https://s3.amazonaws.com/dnote-assets/images/bf3fed4fb122e394e26bcf35d63e26f8.png"
-      />
-      <meta name="og:title" content={title} />
-      <meta name="og:description" content={noteData.content} />
     </Helmet>
   );
 };

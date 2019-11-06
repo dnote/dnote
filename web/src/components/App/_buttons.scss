@@ -55,7 +55,10 @@
   user-select: none;
   border-image: initial;
   border-radius: 0.25rem;
-  transition: all 0.2s ease-in-out;
+  transition-property: color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
   text-decoration: none;
   border-radius: 5px;
   cursor: pointer;

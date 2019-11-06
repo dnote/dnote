@@ -26,10 +26,11 @@ import styles from './Tooltip.scss';
 interface Props {
   id: string;
   isOpen: boolean;
-  children: React.ReactElement;
+  children: React.ReactNode;
   triggerEl: HTMLElement;
   alignment: Alignment;
   direction: Direction;
+  noArrow: boolean;
 }
 
 // cumulativeOffset calculates the top and left offsets of the given element
@@ -162,7 +163,7 @@ function calcArrowX(
   const arrowWidth = arrowRect.width / 2;
 
   if (direction === 'top' || direction === 'bottom') {
-    return offsetX + triggerRect.width / 2;
+    return offsetX + triggerRect.width / 2 - arrowWidth;
   }
   if (direction === 'left') {
     return offsetX - arrowWidth;
@@ -223,7 +224,8 @@ const Overlay: React.FunctionComponent<Props> = ({
   children,
   triggerEl,
   alignment,
-  direction
+  direction,
+  noArrow
 }) => {
   const [overlayEl, setOverlayEl] = useState(null);
   const [arrowEl, setArrowEl] = useState(null);
@@ -249,7 +251,8 @@ const Overlay: React.FunctionComponent<Props> = ({
           [styles.top]: direction === 'top',
           [styles.bottom]: direction === 'bottom',
           [styles.left]: direction === 'left',
-          [styles.right]: direction === 'right'
+          [styles.right]: direction === 'right',
+          [styles.hidden]: noArrow
         })}
         style={{ top: arrowPos.top, left: arrowPos.left }}
         ref={el => {

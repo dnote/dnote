@@ -33,8 +33,14 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: rem(12px) rem(16px);
   border-bottom: 1px solid $border-color;
+}
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .book-icon {

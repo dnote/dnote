@@ -25,12 +25,14 @@ import { Link } from 'react-router-dom';
 import { getNoteEditPath, getHomePath } from 'web/libs/paths';
 import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import BookIcon from '../Icons/Book';
+import GlobeIcon from '../Icons/Globe';
 import { parseMarkdown } from '../../helpers/markdown';
 import { nanosecToMillisec, getMonthName } from '../../helpers/time';
 import formatTime from '../../helpers/time/format';
 import { useSelector } from '../../store';
 import Time from '../Common/Time';
-import styles from './NoteContent.scss';
+import Tooltip from '../Common/Tooltip';
+import styles from './Content.scss';
 
 function formatAddedOn(ts: number): string {
   const ms = nanosecToMillisec(ts);
@@ -77,9 +79,13 @@ function formatContent(content: string): string {
 
 interface Props {
   onDeleteModalOpen: () => void;
+  onShareModalOpen: () => void;
 }
 
-const Content: React.FunctionComponent<Props> = ({ onDeleteModalOpen }) => {
+const Content: React.FunctionComponent<Props> = ({
+  onDeleteModalOpen,
+  onShareModalOpen
+}) => {
   const { note, user } = useSelector(state => {
     return {
       note: state.note.data,
@@ -87,24 +93,46 @@ const Content: React.FunctionComponent<Props> = ({ onDeleteModalOpen }) => {
     };
   });
 
+  const publicTooltip = 'Anyone on the Internet can see this note.';
+
   return (
     <article className={styles.frame}>
       <header className={styles.header}>
-        <BookIcon
-          fill="#000000"
-          width={20}
-          height={20}
-          className={styles['book-icon']}
-        />
+        <div className={styles['header-left']}>
+          <BookIcon
+            fill="#000000"
+            width={20}
+            height={20}
+            className={styles['book-icon']}
+          />
 
-        <h1 className={styles['book-label']}>
-          <Link
-            to={getHomePath({ book: note.book.label })}
-            className={styles['book-label-link']}
-          >
-            {note.book.label}
-          </Link>
-        </h1>
+          <h1 className={styles['book-label']}>
+            <Link
+              to={getHomePath({ book: note.book.label })}
+              className={styles['book-label-link']}
+            >
+              {note.book.label}
+            </Link>
+          </h1>
+        </div>
+
+        <div className={styles['header-right']}>
+          {note.public && (
+            <Tooltip
+              id="note-public-indicator"
+              alignment="right"
+              direction="bottom"
+              overlay={publicTooltip}
+            >
+              <GlobeIcon
+                fill="#8c8c8c"
+                width={16}
+                height={16}
+                ariaLabel={publicTooltip}
+              />
+            </Tooltip>
+          )}
+        </div>
       </header>
 
       <section
@@ -126,6 +154,19 @@ const Content: React.FunctionComponent<Props> = ({ onDeleteModalOpen }) => {
 
         {note.user.uuid === user.uuid && (
           <div className={styles.actions}>
+            <button
+              id="T-share-note-button"
+              type="button"
+              className={classnames('button-no-ui', styles.action)}
+              onClick={e => {
+                e.preventDefault();
+
+                onShareModalOpen();
+              }}
+            >
+              Share
+            </button>
+
             <button
               id="T-delete-note-button"
               type="button"

@@ -26,7 +26,7 @@ import Flash from '../Common/Flash';
 import { setMessage } from '../../store/ui';
 import { useDispatch } from '../../store';
 import Button from '../Common/Button';
-import styles from './DeleteNoteModal.scss';
+import styles from './DeleteModal.scss';
 
 interface Props extends RouteComponentProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ interface Props extends RouteComponentProps {
   noteUUID: string;
 }
 
-const DeleteNoteModal: React.FunctionComponent<Props> = ({
+const DeleteModal: React.FunctionComponent<Props> = ({
   isOpen,
   onDismiss,
   noteUUID,
@@ -136,4 +136,4 @@ const DeleteNoteModal: React.FunctionComponent<Props> = ({
   );
 };
 
-export default withRouter(DeleteNoteModal);
+export default withRouter(DeleteModal);

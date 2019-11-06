@@ -21,7 +21,7 @@ import { NoteData } from 'jslib/operations/types';
 import { RECEIVE, START_FETCHING, ERROR, RESET } from './type';
 import { ThunkAction } from '../types';
 
-export function receiveNote(note) {
+export function receiveNote(note: NoteData) {
   return {
     type: RECEIVE,
     data: { note }
@@ -40,7 +40,7 @@ function startFetchingNote() {
   };
 }
 
-function receiveNoteError(errorMessage) {
+function receiveNoteError(errorMessage: string) {
   return {
     type: ERROR,
     data: { errorMessage }
