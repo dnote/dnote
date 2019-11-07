@@ -175,7 +175,7 @@ func GetNote(uuid string, user database.User) (database.Note, bool, error) {
 	conn = database.PreloadNote(conn)
 
 	var note database.Note
-	conn.Find(&note)
+	conn = conn.Find(&note)
 
 	if conn.RecordNotFound() {
 		return zeroNote, false, nil

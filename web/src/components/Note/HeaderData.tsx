@@ -20,17 +20,14 @@ import React from 'react';
 import Helmet from 'react-helmet';
 
 import { NoteState } from '../../store/note';
-import { nanosecToMillisec, getMonthName } from '../../helpers/time';
+import { nanosecToMillisec } from '../../helpers/time';
+import formatTime from '../../helpers/time/format';
 
 function formatAddedOn(ts: number): string {
   const ms = nanosecToMillisec(ts);
   const d = new Date(ms);
 
-  const month = getMonthName(d, true);
-  const date = d.getDate();
-  const year = d.getFullYear();
-
-  return `${month} ${date} ${year}`;
+  return formatTime(d, '%MMM %D %YYYY');
 }
 
 function getTitle(note: NoteState): string {
@@ -38,9 +35,7 @@ function getTitle(note: NoteState): string {
     return 'Note';
   }
 
-  return `Note (${formatAddedOn(note.data.added_on)}) in ${
-    note.data.book.label
-  }`;
+  return `Note: ${note.data.book.label} (${formatAddedOn(note.data.added_on)})`;
 }
 
 interface Props {

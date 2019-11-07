@@ -94,6 +94,7 @@ const Content: React.FunctionComponent<Props> = ({
   });
 
   const publicTooltip = 'Anyone on the Internet can see this note.';
+  const isOwner = note.user.uuid === user.uuid;
 
   return (
     <article className={styles.frame}>
@@ -117,7 +118,7 @@ const Content: React.FunctionComponent<Props> = ({
         </div>
 
         <div className={styles['header-right']}>
-          {note.public && (
+          {isOwner && note.public && (
             <Tooltip
               id="note-public-indicator"
               alignment="right"
@@ -152,7 +153,7 @@ const Content: React.FunctionComponent<Props> = ({
           tooltipDirection="bottom"
         />
 
-        {note.user.uuid === user.uuid && (
+        {isOwner && (
           <div className={styles.actions}>
             <button
               id="T-share-note-button"

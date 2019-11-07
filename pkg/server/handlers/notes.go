@@ -277,7 +277,7 @@ func getDateBounds(year, month int) (int64, int64) {
 func getNotesBaseQuery(userID int, q getNotesQuery) *gorm.DB {
 	db := database.DBConn
 
-	conn := db.Debug().Where(
+	conn := db.Where(
 		"notes.user_id = ? AND notes.deleted = ? AND notes.encrypted = ?",
 		userID, false, q.Encrypted,
 	)

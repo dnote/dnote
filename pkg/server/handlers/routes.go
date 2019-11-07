@@ -146,7 +146,6 @@ func AuthWithSession(r *http.Request, p *AuthMiddlewareParams) (database.User, b
 	if err != nil {
 		return user, false, errors.Wrap(err, "getting credential")
 	}
-
 	if sessionKey == "" {
 		return user, false, nil
 	}

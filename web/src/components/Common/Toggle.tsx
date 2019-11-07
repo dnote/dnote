@@ -24,11 +24,13 @@ import styles from './Toggle.scss';
 interface Props {
   checked: boolean;
   onChange: (boolean) => void;
-  disabled?: boolean;
   label: React.ReactNode;
+  id?: string;
+  disabled?: boolean;
 }
 
 const Toggle: React.FunctionComponent<Props> = ({
+  id,
   checked,
   onChange,
   disabled,
@@ -37,12 +39,14 @@ const Toggle: React.FunctionComponent<Props> = ({
   return (
     <div>
       <label
+        htmlFor={id}
         className={classnames(styles.label, {
           [styles.enabled]: checked,
           [styles.disabled]: !checked
         })}
       >
         <input
+          id={id}
           type="checkbox"
           checked={checked}
           onChange={e => {

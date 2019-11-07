@@ -60,7 +60,7 @@ func DeleteUserSessions(db *gorm.DB, userID int) error {
 
 // DeleteSession deletes the session that match the given info
 func DeleteSession(db *gorm.DB, sessionKey string) error {
-	if err := db.Debug().Where("key = ?", sessionKey).Delete(&database.Session{}).Error; err != nil {
+	if err := db.Where("key = ?", sessionKey).Delete(&database.Session{}).Error; err != nil {
 		return errors.Wrap(err, "deleting the session")
 	}
 

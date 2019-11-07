@@ -130,6 +130,7 @@ const ShareModal: React.FunctionComponent<Props> = ({
           </label>
 
           <Toggle
+            id="T-note-public-toggle"
             checked={note.public}
             onChange={handleToggle}
             disabled={inProgress}
@@ -183,6 +184,7 @@ const ShareModal: React.FunctionComponent<Props> = ({
           )}
 
           <Button
+            id="T-share-note-modal-close"
             type="button"
             size="normal"
             kind="second"

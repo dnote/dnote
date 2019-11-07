@@ -348,3 +348,36 @@ func TestGetNote(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNote_nonexistent(t *testing.T) {
+	user := testutils.SetupUserData()
+
+	db := database.DBConn
+	defer testutils.ClearData()
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, db.Save(&b1), "preparing b1")
+
+	n1UUID := "4fd19336-671e-4ff3-8f22-662b80e22edc"
+	n1 := database.Note{
+		UUID:     n1UUID,
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "n1 content",
+		Deleted:  false,
+		Public:   false,
+	}
+	testutils.MustExec(t, db.Save(&n1), "preparing n1")
+
+	nonexistentUUID := "4fd19336-671e-4ff3-8f22-662b80e22edd"
+	note, ok, err := GetNote(nonexistentUUID, user)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "executing"))
+	}
+
+	assert.Equal(t, ok, false, "ok mismatch")
+	assert.DeepEqual(t, note, database.Note{}, "note mismatch")
+}
