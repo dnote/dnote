@@ -144,7 +144,6 @@ const ShareModal: React.FunctionComponent<Props> = ({
         <input
           id="link-value"
           type="text"
-          autoFocus
           disabled={!note.public}
           value={linkValue}
           onChange={e => {
