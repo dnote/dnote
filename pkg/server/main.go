@@ -30,7 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/tmpl"
+	"github.com/dnote/dnote/pkg/server/web"
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
@@ -53,53 +53,14 @@ func mustFind(box *packr.Box, path string) []byte {
 	return b
 }
 
-func getStaticHandler() http.Handler {
-	box := packr.New("static", "../../web/public/static")
+func initContext() web.Context {
+	staticBox := packr.New("static", "../../web/public/static")
 
-	return http.StripPrefix("/static/", http.FileServer(box))
-}
-
-// getRootHandler returns an HTTP handler that serves the app shell
-func getRootHandler() http.HandlerFunc {
-	b := mustFind(rootBox, "index.html")
-	appShell, err := tmpl.NewAppShell(b)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing app shell"))
-	}
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-cache")
-
-		buf, err := appShell.Execute(r)
-		if err != nil {
-			if errors.Cause(err) == tmpl.ErrNotFound {
-				handlers.RespondNotFound(w)
-			} else {
-				handlers.HandleError(w, "executing app shell", err, http.StatusInternalServerError)
-			}
-			return
-		}
-
-		w.Write(buf)
-	}
-}
-
-func getRobotsHandler() http.HandlerFunc {
-	b := mustFind(rootBox, "robots.txt")
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Write(b)
-	}
-}
-
-func getSWHandler() http.HandlerFunc {
-	b := mustFind(rootBox, "service-worker.js")
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-cache")
-		w.Header().Set("Content-Type", "application/javascript")
-		w.Write(b)
+	return web.Context{
+		IndexHTML:        mustFind(rootBox, "index.html"),
+		RobotsTxt:        mustFind(rootBox, "robots.txt"),
+		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
+		StaticFileSystem: staticBox,
 	}
 }
 
@@ -113,13 +74,14 @@ func initServer() (*http.ServeMux, error) {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	mux := http.NewServeMux()
+	ctx := initContext()
 
+	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", apiRouter))
-	mux.Handle("/static/", getStaticHandler())
-	mux.HandleFunc("/service-worker.js", getSWHandler())
-	mux.HandleFunc("/robots.txt", getRobotsHandler())
-	mux.HandleFunc("/", getRootHandler())
+	mux.Handle("/static/", web.GetStaticHandler(ctx.StaticFileSystem))
+	mux.HandleFunc("/service-worker.js", web.GetSWHandler(ctx.ServiceWorkerJs))
+	mux.HandleFunc("/robots.txt", web.GetRobotsHandler(ctx.RobotsTxt))
+	mux.HandleFunc("/", web.GetRootHandler(ctx.IndexHTML))
 
 	return mux, nil
 }
@@ -150,8 +112,7 @@ func startCmd() {
 	}
 
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
-	addr := fmt.Sprintf(":%s", *port)
-	log.Fatalln(http.ListenAndServe(addr, srv))
+	log.Fatalln(http.ListenAndServe(":"+*port, srv))
 }
 
 func versionCmd() {
