@@ -1,0 +1,79 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import '../App/responsive';
+@import '../App/rem';
+@import '../App/theme';
+@import '../App/font';
+
+.label {
+  display: flex;
+  align-items: center;
+  margin-left: rem(12px);
+  margin-bottom: 0;
+
+  input[type='checkbox'] {
+    position: absolute;
+    z-index: 2;
+    opacity: 0;
+  }
+
+  input[type='checkbox']:focus + .toggle {
+    outline: #5d9dd5 solid 1px;
+    box-shadow: 0 0 8px #5e9ed6;
+  }
+
+  &.enabled {
+    color: $green;
+
+    .toggle {
+      background-color: $green;
+    }
+    .indicator {
+      transform: translateX(15px);
+    }
+  }
+
+  &.disabled {
+    color: $gray;
+
+    .toggle {
+      background-color: $gray;
+    }
+    .indicator {
+      transform: translateX(3px);
+    }
+  }
+}
+
+.toggle {
+  height: 20px;
+  border-radius: 16px;
+  width: 32px;
+  position: relative;
+}
+
+.indicator {
+  position: absolute;
+  top: 3px;
+  border-radius: 100%;
+  background-color: $white;
+  height: 14px;
+  width: 14px;
+  min-width: 14px;
+}

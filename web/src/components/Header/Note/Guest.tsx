@@ -19,6 +19,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+import LogoWithText from '../../Icons/LogoWithText';
 import Logo from '../../Icons/Logo';
 import { getHomePath } from 'web/libs/paths';
 import styles from './Guest.scss';
@@ -28,15 +29,11 @@ const UserNoteHeader: React.FunctionComponent = () => {
     <header className={styles.wrapper}>
       <div className={styles.content}>
         <Link to={getHomePath({})} className={styles.brand}>
-          <Logo width={32} height={32} fill="#909090" className="logo" />
-          <span className={styles['brand-name']}>Dnote</span>
+          <LogoWithText id="main-logo-text" width={75} fill="#909090" />
         </Link>
 
-        <Link
-          to={getHomePath({})}
-          className="button button-normal button-slim button-first-outline"
-        >
-          Go to Dnote
+        <Link to={getHomePath()} className={styles.cta}>
+          Go to Dnote &#8250;
         </Link>
       </div>
     </header>

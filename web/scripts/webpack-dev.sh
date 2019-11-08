@@ -22,6 +22,6 @@ appPath="$basePath"/web
   VERSION="$VERSION" \
   "$appPath"/node_modules/.bin/webpack-dev-server\
     --env.isTest="$IS_TEST" \
-    --host 0.0.0.0 \
+    --host "$WEBPACK_HOST" \
     --config "$appPath"/webpack/dev.config.js
 )

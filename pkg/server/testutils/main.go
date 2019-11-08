@@ -20,8 +20,10 @@
 package testutils
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,6 +37,10 @@ import (
 	"github.com/stripe/stripe-go"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // InitTestDB establishes connection pool with the test database specified by
 // the environment variable configuration and initalizes a new schema
@@ -209,8 +215,13 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
 	db := database.DBConn
 
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		t.Fatal(errors.Wrap(err, "reading random bits"))
+	}
+
 	session := database.Session{
-		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
+		Key:       base64.StdEncoding.EncodeToString(b),
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
 	}
@@ -225,8 +236,8 @@ func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Respo
 }
 
 // MakeReq makes an HTTP request and returns a response
-func MakeReq(server *httptest.Server, method, url, data string) *http.Request {
-	endpoint := fmt.Sprintf("%s%s", server.URL, url)
+func MakeReq(server *httptest.Server, method, path, data string) *http.Request {
+	endpoint := fmt.Sprintf("%s%s", server.URL, path)
 
 	req, err := http.NewRequest(method, endpoint, strings.NewReader(data))
 	if err != nil {

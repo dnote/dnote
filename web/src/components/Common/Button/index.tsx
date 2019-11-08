@@ -57,16 +57,11 @@ const Button: React.FunctionComponent<Props> = ({
     <button
       id={id}
       type={type}
-      className={classnames(
-        className,
-        'button',
-        `button-${kind}`,
-        `button-${size}`,
-        {
-          [styles.busy]: isBusy,
-          'button-stretch': stretch
-        }
-      )}
+      className={classnames(className, 'button', `button-${kind}`, {
+        [styles.busy]: isBusy,
+        'button-stretch': stretch,
+        [`button-${size}`]: size
+      })}
       disabled={isBusy || disabled}
       onClick={onClick}
       tabIndex={tabIndex}
@@ -83,10 +78,6 @@ const Button: React.FunctionComponent<Props> = ({
       )}
     </button>
   );
-};
-
-Button.defaultProps = {
-  size: 'normal'
 };
 
 export default Button;

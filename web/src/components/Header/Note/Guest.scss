@@ -54,3 +54,26 @@
   margin-left: rem(12px);
   vertical-align: middle;
 }
+
+.logo {
+  margin: 0 auto;
+  display: none;
+
+  @include breakpoint(md) {
+    display: block;
+  }
+}
+
+.logosm {
+  @include breakpoint(md) {
+    display: none;
+  }
+}
+
+.cta {
+  @include font-size('small', false);
+
+  @include breakpoint(lg) {
+    @include font-size('regular', false);
+  }
+}

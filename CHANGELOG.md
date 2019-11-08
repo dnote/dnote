@@ -12,7 +12,9 @@ The following log documentes the history of the server project.
 
 ### [Unreleased]
 
-N/A
+#### Added
+
+- Share notes (#300)
 
 ### 0.2.1 - 2019-11-04
 

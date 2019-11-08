@@ -28,6 +28,10 @@
   min-height: calc(100vh - #{$header-height} - #{$footer-height});
   margin-bottom: $footer-height;
 
+  &.nofooter {
+    margin-bottom: 0;
+  }
+
   &.noheader:not(.nofooter) {
     min-height: calc(100vh - #{$footer-height});
   }
