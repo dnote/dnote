@@ -90,7 +90,7 @@ func main() {
 	e = execCmd()
 
 	log.Printf("watching %d files", len(w.WatchedFiles()))
-	if err := w.Start(time.Millisecond * 500); err != nil {
+	if err := w.Start(time.Millisecond * 1000); err != nil {
 		log.Fatalln(err)
 	}
 }

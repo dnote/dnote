@@ -15,15 +15,17 @@ Dnote uses [Vagrant](https://github.com/hashicorp/vagrant) to provision a consis
 * Vagrant ([Download](https://www.vagrantup.com/downloads.html))
 * VirtualBox ([Download](https://www.virtualbox.org/))
 
-Following steps will set up your development environment and install dependencies in a virtual machine.
+Run the following command from the project root. It starts the virtual machine and bootstraps the project.
 
-1. Run `vagrant up` to start a virtual machine and bootstrap the development environment.
-2. Run `vagrant rsync-auto` to sync the files with the virtual machine.
+```
+vagrant up
+```
 
 *Workflow*
 
 * You can make changes to the source code from the host machine.
 * Any commands need to be run inside the virtual machine. You can connect to it by running `vagrant ssh`.
+* If you want to run tests in a WATCH mode, please do so from the host machine. We cannot watch file changes due to the limitation of file system used in a virtual machine.
 
 ## Server
 
@@ -40,8 +42,14 @@ The server consists of the frontend web application and a web server.
 # Run tests for the frontend web application
 make test-web
 
+# Run in watch mode
+WATCH=true make test-web
+
 # Run tests for API
 make test-api
+
+# Run in watch mode
+WATCH=true make test-api
 ```
 
 
