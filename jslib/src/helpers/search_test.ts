@@ -16,7 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
 import { TokenKind, tokenize, parse } from './search';
 
 describe('search.ts', () => {
@@ -152,7 +151,7 @@ describe('search.ts', () => {
       it(`tokenizes ${tc.input}`, () => {
         const result = tokenize(tc.input);
 
-        expect(result).to.eql(tc.tokens);
+        expect(result).toEqual(tc.tokens);
       });
     }
   });
@@ -165,7 +164,7 @@ describe('search.ts', () => {
         it(`keyword [${tc.keywords}] - parses ${tc.input} `, () => {
           const result = parse(tc.input, tc.keywords);
 
-          expect(result).to.eql(tc.result);
+          expect(result).toEqual(tc.result);
         });
       }
     }

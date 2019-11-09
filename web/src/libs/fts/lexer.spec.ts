@@ -16,7 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
 import { TokenKind, tokenize, scanToken } from './lexer';
 
 describe('lexer.ts', () => {
@@ -106,10 +105,10 @@ describe('lexer.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`scans ${tc.input}`, () => {
+      test(`scans ${tc.input}`, () => {
         const result = scanToken(tc.idx, tc.input);
 
-        expect(result.tok).to.deep.equal(tc.retTok);
+        expect(result.tok).toEqual(tc.retTok);
       });
     }
   });
@@ -212,10 +211,10 @@ describe('lexer.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`tokenizes ${tc.input}`, () => {
+      test(`tokenizes ${tc.input}`, () => {
         const result = tokenize(tc.input);
 
-        expect(result).to.deep.equal(tc.tokens);
+        expect(result).toEqual(tc.tokens);
       });
     }
   });

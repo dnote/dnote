@@ -16,8 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
-
 import { getEditorSessionkey } from './editor';
 
 describe('editor.ts', () => {
@@ -40,9 +38,9 @@ describe('editor.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`generates a session key for input: ${tc.noteUUID}`, () => {
+      test(`generates a session key for input: ${tc.noteUUID}`, () => {
         const result = getEditorSessionkey(tc.noteUUID);
-        expect(result).to.equal;
+        expect(result).toBe;
       });
     }
   });

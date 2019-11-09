@@ -16,8 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
-
 import { populateParams } from './paths';
 
 describe('paths.ts', () => {
@@ -52,9 +50,9 @@ describe('paths.ts', () => {
       const tc = testCases[i];
 
       const stringifiedParams = JSON.stringify(tc.params);
-      it(`populates ${tc.pathDef} with params ${stringifiedParams}`, () => {
+      test(`populates ${tc.pathDef} with params ${stringifiedParams}`, () => {
         const result = populateParams(tc.pathDef, tc.params);
-        expect(result).to.equal(tc.expected);
+        expect(result).toBe(tc.expected);
       });
     }
   });

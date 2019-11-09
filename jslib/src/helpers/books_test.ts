@@ -16,14 +16,13 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
 import {
   validateBookName,
   checkDuplicate,
   errBookNameNumeric,
   errBookNameHasSpace,
   errBookNameReserved,
-  errBookNameHasComma
+  errBookNameHasComma,
 } from './books';
 
 describe('books lib', () => {
@@ -177,7 +176,7 @@ describe('books lib', () => {
 
       it(`checks duplicate for the test case ${i}`, () => {
         const result = checkDuplicate(tc.books, tc.bookName);
-        expect(result).to.equal(tc.expected);
+        expect(result).toBe(tc.expected);
       });
     }
   });

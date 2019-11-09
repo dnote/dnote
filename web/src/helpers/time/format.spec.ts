@@ -16,8 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
-
 import formatTime from './format';
 
 describe('time/format.ts', () => {
@@ -49,9 +47,9 @@ describe('time/format.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`converts the input ${tc.format}`, () => {
+      test(`converts the input ${tc.format}`, () => {
         const result = formatTime(date, tc.format);
-        expect(result).to.equal(tc.expected);
+        expect(result).toBe(tc.expected);
       });
     }
   });
