@@ -22,7 +22,7 @@ import {
   errBookNameNumeric,
   errBookNameHasSpace,
   errBookNameReserved,
-  errBookNameHasComma,
+  errBookNameHasComma
 } from './books';
 
 describe('books lib', () => {
@@ -111,13 +111,13 @@ describe('books lib', () => {
     for (let i = 0; i < testCases.length; ++i) {
       const tc = testCases[i];
 
-      it(`validates ${tc.input}`, () => {
+      test(`validates ${tc.input}`, () => {
         const base = expect(() => validateBookName(tc.input));
 
         if (tc.expectedErr) {
-          base.to.throw(tc.expectedErr);
+          base.toThrow(tc.expectedErr);
         } else {
-          base.to.not.throw();
+          base.not.toThrow();
         }
       });
     }
@@ -174,7 +174,7 @@ describe('books lib', () => {
     for (let i = 0; i < testCases.length; ++i) {
       const tc = testCases[i];
 
-      it(`checks duplicate for the test case ${i}`, () => {
+      test(`checks duplicate for the test case ${i}`, () => {
         const result = checkDuplicate(tc.books, tc.bookName);
         expect(result).toBe(tc.expected);
       });

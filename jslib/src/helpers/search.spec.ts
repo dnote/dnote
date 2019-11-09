@@ -148,7 +148,7 @@ describe('search.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`tokenizes ${tc.input}`, () => {
+      test(`tokenizes ${tc.input}`, () => {
         const result = tokenize(tc.input);
 
         expect(result).toEqual(tc.tokens);
@@ -161,7 +161,7 @@ describe('search.ts', () => {
       for (let i = 0; i < testCases.length; i++) {
         const tc = testCases[i];
 
-        it(`keyword [${tc.keywords}] - parses ${tc.input} `, () => {
+        test(`keyword [${tc.keywords}] - parses ${tc.input} `, () => {
           const result = parse(tc.input, tc.keywords);
 
           expect(result).toEqual(tc.result);
