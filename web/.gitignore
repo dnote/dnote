@@ -23,3 +23,5 @@ app.zip
 /public
 /web
 /vendor
+
+/coverage

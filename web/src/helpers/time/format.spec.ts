@@ -16,45 +16,40 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
+import formatTime from './format';
 
-import { populateParams } from './paths';
-
-describe('paths.ts', () => {
-  describe('populateParams', () => {
+describe('time/format.ts', () => {
+  describe('formatTime', () => {
+    const date = new Date(2017, 2, 30, 8, 30);
     const testCases = [
       {
-        pathDef: '/foo/:bar',
-        params: {
-          bar: '123'
-        },
-        expected: '/foo/123'
+        format: '%YYYY %MM %DD %hh:%mm',
+        expected: '2017 03 30 08:30'
       },
       {
-        pathDef: '/foo/:bar/baz',
-        params: {
-          bar: '123'
-        },
-        expected: '/foo/123/baz'
+        format: '%YYYY %MMM %DD %hh:%mm %A',
+        expected: '2017 Mar 30 08:30 AM'
       },
       {
-        pathDef: '/foo/:bar/:baz/:quz/qux',
-        params: {
-          bar: '123',
-          baz: '456',
-          quz: 'abcd'
-        },
-        expected: '/foo/123/456/abcd/qux'
+        format: '%YYYY %MMM %DD %h:%mm%a',
+        expected: '2017 Mar 30 8:30am'
+      },
+      {
+        format: '%dddd %M/%D',
+        expected: 'Thursday 3/30'
+      },
+      {
+        format: '%MMMM %Do',
+        expected: 'March 30th'
       }
     ];
 
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      const stringifiedParams = JSON.stringify(tc.params);
-      it(`populates ${tc.pathDef} with params ${stringifiedParams}`, () => {
-        const result = populateParams(tc.pathDef, tc.params);
-        expect(result).to.equal(tc.expected);
+      test(`converts the input ${tc.format}`, () => {
+        const result = formatTime(date, tc.format);
+        expect(result).toBe(tc.expected);
       });
     }
   });

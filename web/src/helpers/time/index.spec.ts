@@ -16,8 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
-
 import { daysToMs } from './index';
 
 describe('time.ts', () => {
@@ -37,9 +35,9 @@ describe('time.ts', () => {
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`converts the input ${tc.input}`, () => {
+      test(`converts the input ${tc.input}`, () => {
         const result = daysToMs(tc.input);
-        expect(result).to.equal(tc.expected);
+        expect(result).toBe(tc.expected);
       });
     }
   });

@@ -16,33 +16,43 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
+import { populateParams } from './paths';
 
-import { getEditorSessionkey } from './editor';
-
-describe('editor.ts', () => {
-  describe('getEditorSessionkey', () => {
+describe('paths.ts', () => {
+  describe('populateParams', () => {
     const testCases = [
       {
-        noteUUID: null,
-        expected: 'new'
+        pathDef: '/foo/:bar',
+        params: {
+          bar: '123'
+        },
+        expected: '/foo/123'
       },
       {
-        noteUUID: '0ad88090-ab44-4432-be80-09c033f4c582',
-        expected: '0ad88090-ab44-4432-be80-09c033f4c582'
+        pathDef: '/foo/:bar/baz',
+        params: {
+          bar: '123'
+        },
+        expected: '/foo/123/baz'
       },
       {
-        noteUUID: '6c20d136-8a15-443b-bd58-d2d963d38938',
-        expected: '6c20d136-8a15-443b-bd58-d2d963d38938'
+        pathDef: '/foo/:bar/:baz/:quz/qux',
+        params: {
+          bar: '123',
+          baz: '456',
+          quz: 'abcd'
+        },
+        expected: '/foo/123/456/abcd/qux'
       }
     ];
 
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
 
-      it(`generates a session key for input: ${tc.noteUUID}`, () => {
-        const result = getEditorSessionkey(tc.noteUUID);
-        expect(result).to.equal;
+      const stringifiedParams = JSON.stringify(tc.params);
+      test(`populates ${tc.pathDef} with params ${stringifiedParams}`, () => {
+        const result = populateParams(tc.pathDef, tc.params);
+        expect(result).toBe(tc.expected);
       });
     }
   });

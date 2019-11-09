@@ -16,7 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { expect } from 'chai';
 import {
   validateBookName,
   checkDuplicate,
@@ -112,13 +111,13 @@ describe('books lib', () => {
     for (let i = 0; i < testCases.length; ++i) {
       const tc = testCases[i];
 
-      it(`validates ${tc.input}`, () => {
+      test(`validates ${tc.input}`, () => {
         const base = expect(() => validateBookName(tc.input));
 
         if (tc.expectedErr) {
-          base.to.throw(tc.expectedErr);
+          base.toThrow(tc.expectedErr);
         } else {
-          base.to.not.throw();
+          base.not.toThrow();
         }
       });
     }
@@ -175,9 +174,9 @@ describe('books lib', () => {
     for (let i = 0; i < testCases.length; ++i) {
       const tc = testCases[i];
 
-      it(`checks duplicate for the test case ${i}`, () => {
+      test(`checks duplicate for the test case ${i}`, () => {
         const result = checkDuplicate(tc.books, tc.bookName);
-        expect(result).to.equal(tc.expected);
+        expect(result).toBe(tc.expected);
       });
     }
   });
