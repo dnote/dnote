@@ -16,12 +16,18 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const webpackConf = require('./webpack/rules/javascript');
+const path = require('path');
+
+// const webpackConf = require('./webpack/rules/javascript');
+
+const webpackConf = require('./webpack/dev.config.js')('development');
 
 module.exports = config => {
+  console.log(path.join(__dirname, './jslib/src'));
+
   config.set({
     frameworks: ['mocha'],
-    reporters: ['mocha'],
+    reporters: ['mocha', 'coverage'],
     browsers: ['ChromeHeadlessNoSandbox'],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
@@ -31,24 +37,21 @@ module.exports = config => {
         flags: ['--no-sandbox']
       }
     },
-    files: [
-      'node_modules/regenerator-runtime/runtime.js',
-      './src/**/*_test.ts'
-    ],
+    files: ['node_modules/regenerator-runtime/runtime.js', './src/**/*.ts'],
     preprocessors: {
-      './src/**/*.ts': ['webpack']
+      './src/**/*.ts': ['webpack', 'coverage']
     },
     webpack: {
-      mode: 'none',
-      resolve: {
-        extensions: ['.js', '.ts']
-      },
-      module: {
-        rules: [...webpackConf({ produciton: false, browser: true })]
-      }
+      module: webpackConf.module,
+      resolve: webpackConf.resolve,
+      plugins: webpackConf.plugins,
+      externals: webpackConf.externals
     },
     mochaReporter: {
       showDiff: true
+    },
+    coverageReporter: {
+      type: 'text'
     }
   });
 };
