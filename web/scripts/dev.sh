@@ -38,5 +38,4 @@ set +a
 devServerPID=$!
 
 # run server
-(cd "$serverPath" && CompileDaemon \
-  -command="$serverPath/server start -port $serverPort")
+(cd "$serverPath/watcher" && go run main.go)
