@@ -2,7 +2,8 @@
 # setup.sh prepares the directory structure and copies static files
 set -eux -o pipefail
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
+dir=$(dirname $"{BASH_SOURCE[0]}")
+basePath="$dir/../.."
 publicPath=$PUBLIC_PATH
 compiledPath=$COMPILED_PATH
 assetBaseUrl=$ASSET_BASE_URL

@@ -1,35 +1,24 @@
-DEP := $(shell command -v dep 2> /dev/null)
 PACKR2 := $(shell command -v packr2 2> /dev/null)
 NPM := $(shell command -v npm 2> /dev/null)
 HUB := $(shell command -v hub 2> /dev/null)
-COMPILEDAEMON := $(shell command -v CompileDaemon 2> /dev/null)
 
-serverOutputDir = ${GOPATH}/src/github.com/dnote/dnote/build/server
-cliOutputDir = ${GOPATH}/src/github.com/dnote/dnote/build/cli
-cliHomebrewDir = ${GOPATH}/src/github.com/dnote/homebrew-dnote
+currentDir = $(shell pwd)
+serverOutputDir = ${currentDir}/build/server
+cliOutputDir = ${currentDir}/build/cli
+cliHomebrewDir = ${currentDir}/../homebrew-dnote
 
 ## installation
 install: install-go install-js
 .PHONY: install
 
 install-go:
-ifndef DEP
-	@echo "==> installing dep"
-	@curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-endif
-
 ifndef PACKR2
 	@echo "==> installing packr2"
 	@go get -u github.com/gobuffalo/packr/v2/packr2
 endif
 
-ifndef COMPILEDAEMON
-	@echo "==> installing CompileDaemon"
-	@go get -u github.com/githubnemo/CompileDaemon
-endif
-
 	@echo "==> installing go dependencies"
-	@dep ensure -v
+	@go mod download
 .PHONY: install-go
 
 install-js:
@@ -40,13 +29,13 @@ endif
 	@echo "==> installing js dependencies"
 
 ifeq ($(CI), true)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install --unsafe-perm=true)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/browser && npm install --unsafe-perm=true)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm install --unsafe-perm=true)
+	@(cd ${currentDir}/web && npm install --unsafe-perm=true)
+	@(cd ${currentDir}/browser && npm install --unsafe-perm=true)
+	@(cd ${currentDir}/jslib && npm install --unsafe-perm=true)
 else
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm install)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/browser && npm install)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm install)
+	@(cd ${currentDir}/web && npm install)
+	@(cd ${currentDir}/browser && npm install)
+	@(cd ${currentDir}/jslib && npm install)
 endif
 .PHONY: install-js
 

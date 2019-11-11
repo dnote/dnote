@@ -2,7 +2,9 @@
 # build.sh builds a production bundle
 set -eux
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
+dir=$(dirname $"{BASH_SOURCE[0]}")
+
+basePath="$dir/../.."
 publicPath="$basePath/web/public"
 compiledPath="$basePath/web/compiled"
 

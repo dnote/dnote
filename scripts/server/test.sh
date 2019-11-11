@@ -3,7 +3,8 @@
 # appropriate env vars.
 set -eux
 
-pushd "$GOPATH"/src/github.com/dnote/dnote/pkg/server
+dir=$(dirname $"{BASH_SOURCE[0]}")
+pushd "$dir/../../pkg/server"
 
 if [ "${WATCH-false}" == true ]; then
   set +e

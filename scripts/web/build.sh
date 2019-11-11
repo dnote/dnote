@@ -2,7 +2,8 @@
 # build.sh builds a bundle
 set -ex
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
+dir=$(dirname $"{BASH_SOURCE[0]}")
+basePath="$dir/../.."
 isTest=${IS_TEST:-false}
 
 set -u

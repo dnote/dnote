@@ -10,12 +10,13 @@
 # use:
 # ./scripts/build.sh 0.4.8
 # GOOS=linux GOARCH=amd64 ./scripts/build.sh 0.4.8
-
 set -ex
 
+dir=$(dirname $"{BASH_SOURCE[0]}")
+
 version=$1
-projectDir="$GOPATH/src/github.com/dnote/dnote"
-basedir="$GOPATH/src/github.com/dnote/dnote/pkg/cli"
+projectDir="$dir/../.."
+basedir="$projectDir/pkg/cli"
 outputDir="$projectDir/build/cli"
 
 command_exists () {

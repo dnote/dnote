@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -eux
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
-appPath="$basePath"/web
+dir=$(dirname $"{BASH_SOURCE[0]}")
+basePath="$dir/../.."
+appPath="$basePath/web"
 
 (
   cd "$appPath" &&
