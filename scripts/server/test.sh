@@ -3,8 +3,10 @@
 # appropriate env vars.
 set -eux
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 pushd "$dir/../../pkg/server"
+
+export DNOTE_TEST_EMAIL_TEMPLATE_DIR="$dir/../../pkg/server/mailer/templates/src"
 
 if [ "${WATCH-false}" == true ]; then
   set +e

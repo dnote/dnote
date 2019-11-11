@@ -20,6 +20,7 @@ package mailer
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -30,7 +31,7 @@ import (
 func init() {
 	testutils.InitTestDB()
 
-	templatePath := fmt.Sprintf("%s/mailer/templates/src", testutils.ServerPath)
+	templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
 	InitTemplates(&templatePath)
 }
 

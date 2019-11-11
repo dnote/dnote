@@ -2,7 +2,7 @@
 # build.sh builds a bundle
 set -ex
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../.."
 isTest=${IS_TEST:-false}
 
@@ -14,7 +14,7 @@ pushd "$basePath/web"
   PUBLIC_PATH="$PUBLIC_PATH" \
   COMPILED_PATH="$COMPILED_PATH" \
   ASSET_BASE_URL="$ASSET_BASE_URL" \
-    "$basePath"/web/scripts/setup.sh
+    "$dir/setup.sh"
 
   OUTPUT_PATH="$COMPILED_PATH" \
   ROOT_URL="$ROOT_URL" \
@@ -30,7 +30,7 @@ pushd "$basePath/web"
   ASSET_BASE_URL=$ASSET_BASE_URL \
   PUBLIC_PATH=$PUBLIC_PATH \
   COMPILED_PATH=$COMPILED_PATH \
-    node "$basePath"/web/scripts/placeholder.js
+    node "$dir/placeholder.js"
 
   cp "$COMPILED_PATH"/*.js "$COMPILED_PATH"/*.css "$PUBLIC_PATH"/static
 

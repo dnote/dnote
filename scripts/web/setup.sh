@@ -2,7 +2,7 @@
 # setup.sh prepares the directory structure and copies static files
 set -eux -o pipefail
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../.."
 publicPath=$PUBLIC_PATH
 compiledPath=$COMPILED_PATH

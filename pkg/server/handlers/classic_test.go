@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -35,7 +36,7 @@ import (
 func init() {
 	testutils.InitTestDB()
 
-	templatePath := fmt.Sprintf("%s/mailer/templates/src", testutils.ServerPath)
+	templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
 	mailer.InitTemplates(&templatePath)
 }
 

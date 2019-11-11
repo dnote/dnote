@@ -2,7 +2,7 @@
 # dev.sh builds a new binary and replaces the old one in the PATH with it
 set -eux
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 sudo rm -rf "$(which dnote)" "$GOPATH/bin/cli"
 
 # change tags to darwin if on macos

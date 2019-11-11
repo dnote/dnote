@@ -12,7 +12,7 @@
 # GOOS=linux GOARCH=amd64 ./scripts/build.sh 0.4.8
 set -ex
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 
 version=$1
 projectDir="$dir/../.."

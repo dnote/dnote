@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 
 version=$1
 projectDir="$dir/../.."

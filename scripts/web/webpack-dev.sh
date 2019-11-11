@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eux
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../.."
 appPath="$basePath/web"
 
@@ -10,14 +10,14 @@ appPath="$basePath/web"
   PUBLIC_PATH=$PUBLIC_PATH \
   COMPILED_PATH=$COMPILED_PATH \
   ASSET_BASE_URL=$ASSET_BASE_URL \
-    "$appPath"/scripts/setup.sh &&
+    "$dir/setup.sh" &&
 
   BUNDLE_BASE_URL=$BUNDLE_BASE_URL
   ASSET_BASE_URL=$ASSET_BASE_URL \
   COMPILED_PATH=$COMPILED_PATH \
   PUBLIC_PATH=$PUBLIC_PATH \
   IS_TEST=true \
-    node "$appPath"/scripts/placeholder.js &&
+    node "$dir/placeholder.js" &&
 
   ROOT_URL=$ROOT_URL \
   VERSION="$VERSION" \

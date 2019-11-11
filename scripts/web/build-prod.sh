@@ -2,7 +2,7 @@
 # build.sh builds a production bundle
 set -eux
 
-dir=$(dirname $"{BASH_SOURCE[0]}")
+dir=$(dirname "${BASH_SOURCE[0]}")
 
 basePath="$dir/../.."
 publicPath="$basePath/web/public"
@@ -18,4 +18,4 @@ ROOT_URL="$rootUrl" \
 PUBLIC_PATH="$publicPath" \
 COMPILED_PATH="$compiledPath" \
 VERSION="$VERSION" \
-  "$basePath"/web/scripts/build.sh
+  "$dir/build.sh"

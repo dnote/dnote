@@ -45,21 +45,21 @@ test: test-cli test-api test-web test-jslib
 
 test-cli:
 	@echo "==> running CLI test"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/test.sh
+	@(${currentDir}/scripts/cli/test.sh)
 .PHONY: test-cli
 
 test-api:
 	@echo "==> running API test"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/server/scripts/test-local.sh
+	@(${currentDir}/scripts/server/test-local.sh)
 .PHONY: test-api
 
 test-web:
 	@echo "==> running web test"
 
 ifeq ($(WATCH), true)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test:watch)
+	@(cd ${currentDir}/web && npm run test:watch)
 else 
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && npm run test)
+	@(cd ${currentDir}/web && npm run test)
 endif
 .PHONY: test-web
 
@@ -67,16 +67,16 @@ test-jslib:
 	@echo "==> running jslib test"
 
 ifeq ($(WATCH), true)
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm run test:watch)
+	@(cd ${currentDir}/jslib && npm run test:watch)
 else
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/jslib && npm run test)
+	@(cd ${currentDir}/jslib && npm run test)
 endif
 .PHONY: test-jslib
 
 # development
 dev-server:
 	@echo "==> running dev environment"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && VERSION=master ./scripts/dev.sh)
+	@VERSION=master ${currentDir}/scripts/web/dev.sh
 .PHONY: dev-server
 
 ## build
@@ -85,7 +85,7 @@ ifndef version
 	$(error version is required. Usage: make version=0.1.0 build-web)
 endif
 	@echo "==> building web"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/web && VERSION=$(version) ./scripts/build-prod.sh)
+	@VERSION=${version} ${currentDir}/scripts/web/build-prod.sh
 .PHONY: build-web
 
 build-server: build-web
@@ -94,13 +94,13 @@ ifndef version
 endif
 
 	@echo "==> building server"
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server && ./scripts/build.sh $(version))
+	@${currentDir}/scripts/server/build.sh $(version)
 .PHONY: build-server
 
 build-cli:
 ifeq ($(debug), true)
 	@echo "==> building cli in dev mode"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/dev.sh
+	@${currentDir}/scripts/cli/dev.sh
 else
 
 ifndef version
@@ -108,7 +108,7 @@ ifndef version
 endif
 
 	@echo "==> building cli"
-	@${GOPATH}/src/github.com/dnote/dnote/pkg/cli/scripts/build.sh $(version)
+	@${currentDir}/scripts/cli/build.sh $(version)
 endif
 .PHONY: build-cli
 
@@ -127,7 +127,7 @@ endif
 	fi
 
 	@echo "==> releasing cli"
-	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh cli $(version) ${cliOutputDir}
+	@${currentDir}/scripts/release.sh cli $(version) ${cliOutputDir}
 
 	@echo "===> releading on Homebrew"
 	@(cd "${cliHomebrewDir}" && \
@@ -146,7 +146,7 @@ ifndef HUB
 endif
 
 	@echo "==> releasing server"
-	@${GOPATH}/src/github.com/dnote/dnote/scripts/release.sh server $(version) ${serverOutputDir}
+	@${currentDir}/scripts/release.sh server $(version) ${serverOutputDir}
 .PHONY: release-server
 
 # migrations
@@ -155,7 +155,7 @@ ifndef filename
 	$(error filename is required. Usage: make filename=your-filename create-migration)
 endif
 
-	@(cd ${GOPATH}/src/github.com/dnote/dnote/pkg/server/database && ./scripts/create-migration.sh $(filename))
+	@(cd ${currentDir}/pkg/server/database && ./scripts/create-migration.sh $(filename))
 .PHONY: create-migration
 
 clean:
@@ -165,7 +165,7 @@ clean:
 .PHONY: clean
 
 clean-dep:
-	@rm -rf ./web/node_modules
-	@rm -rf ./jslib/node_modules
-	@rm -rf ./browser/node_modules
+	@rm -rf ${currentDir}/web/node_modules
+	@rm -rf ${currentDir}/jslib/node_modules
+	@rm -rf ${currentDir}/browser/node_modules
 .PHONY: clean-dep
