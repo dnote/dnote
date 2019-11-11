@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -eux
 
+dir=$(dirname "${BASH_SOURCE[0]}")
+
 version=$1
-basePath="$GOPATH/src/github.com/dnote/dnote"
-projectDir="$GOPATH/src/github.com/dnote/dnote"
-basedir="$GOPATH/src/github.com/dnote/dnote/pkg/server"
+projectDir="$dir/../.."
+basedir="$projectDir/pkg/server"
 outputDir="$projectDir/build/server"
 
 command_exists () {
@@ -38,7 +39,7 @@ build() {
   GOARCH="$arch" go build \
     -o "$destDir/dnote-server" \
     -ldflags "-X main.versionTag=$version" \
-    "$basePath"/pkg/server/*.go
+    "$projectDir"/pkg/server/*.go
 
   packr2 clean
 

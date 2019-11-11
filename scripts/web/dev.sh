@@ -9,7 +9,8 @@ function cleanup {
 }
 trap cleanup EXIT
 
-basePath="$GOPATH/src/github.com/dnote/dnote"
+dir=$(dirname "${BASH_SOURCE[0]}")
+basePath="$dir/../.."
 appPath="$basePath/web"
 serverPath="$basePath/pkg/server"
 serverPort=3000
@@ -22,8 +23,6 @@ set +a
 
 # run webpack-dev-server for js in the background
 (
-  cd "$appPath" &&
-
   BUNDLE_BASE_URL=http://localhost:8080 \
   ASSET_BASE_URL=http://localhost:3000/static \
   ROOT_URL=http://localhost:$serverPort \
@@ -33,7 +32,7 @@ set +a
   IS_TEST=true \
   VERSION="$VERSION" \
   WEBPACK_HOST="0.0.0.0" \
-    "$appPath"/scripts/webpack-dev.sh
+    "$dir/webpack-dev.sh"
 ) &
 devServerPID=$!
 

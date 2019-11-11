@@ -3,7 +3,10 @@
 # appropriate env vars.
 set -eux
 
-pushd "$GOPATH"/src/github.com/dnote/dnote/pkg/server
+dir=$(dirname "${BASH_SOURCE[0]}")
+pushd "$dir/../../pkg/server"
+
+export DNOTE_TEST_EMAIL_TEMPLATE_DIR="$dir/../../pkg/server/mailer/templates/src"
 
 if [ "${WATCH-false}" == true ]; then
   set +e

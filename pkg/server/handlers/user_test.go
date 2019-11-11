@@ -22,14 +22,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -131,7 +132,8 @@ func TestCreateVerificationToken(t *testing.T) {
 
 		// TODO: send emails in the background using job queue to avoid coupling the
 		// handler itself to the mailer
-		templatePath := fmt.Sprintf("%s/mailer/templates/src", testutils.ServerPath)
+
+		templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
 		mailer.InitTemplates(&templatePath)
 
 		server := MustNewServer(t, &App{

@@ -3,10 +3,10 @@
 # test-local.sh runs api tests using local setting
 set -eux
 
-basePath=$GOPATH/src/github.com/dnote/dnote/pkg/server
+dir=$(dirname "${BASH_SOURCE[0]}")
 
 set -a
-source "$basePath/.env.test"
+source "$dir/../../pkg/server/.env.test"
 set +a
 
-"$basePath/scripts/test.sh"
+"$dir/test.sh"
