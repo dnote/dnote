@@ -1,4 +1,4 @@
 /vendor
 /build
-/.vagrant
+.vagrant
 *.log

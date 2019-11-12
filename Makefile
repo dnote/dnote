@@ -73,6 +73,12 @@ else
 endif
 .PHONY: test-jslib
 
+test-selfhost:
+	@echo "==> running a smoke test for self-hosting"
+
+	@${currentDir}/host/smoketest/run_test.sh ${tarballPath}
+.PHONY: test-jslib
+
 # development
 dev-server:
 	@echo "==> running dev environment"
