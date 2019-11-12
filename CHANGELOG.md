@@ -10,6 +10,13 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
+### 0.3.1 - 2019-11-12
+
+#### Fixed
+
+- Fix static files not being embedded in the binary. (#309)
+- Fix mobile menu not covering the whole screen. (#308)
+
 ### 0.3.0 - 2019-11-12
 
 #### Added
