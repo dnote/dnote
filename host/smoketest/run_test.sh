@@ -40,4 +40,3 @@ set -e
 
 vagrant halt
 popd
-

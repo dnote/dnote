@@ -6,6 +6,9 @@ set -eu
 
 echo 'Running a smoke test'
 
+sudo -u postgres dropdb dnote
+sudo -u postgres createdb dnote
+
 cd /vagrant
 
 tar -xvf dnote_server_integration_test_linux_amd64.tar.gz
