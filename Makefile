@@ -76,7 +76,7 @@ endif
 test-selfhost:
 	@echo "==> running a smoke test for self-hosting"
 
-	@${currentDir}/host/smoketest/run_test.sh
+	@${currentDir}/host/smoketest/run_test.sh ${tarballPath}
 .PHONY: test-jslib
 
 # development

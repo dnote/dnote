@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# testsuite.sh runs the smoke tests.
+# testsuite.sh runs the smoke tests for a self-hosted instance.
 # It is meant to be run inside a virtual machine which has been
-# set up by the test script.
+# set up by an entry script.
 set -eu
 
-echo 'running test'
+echo 'Running a smoke test'
 
 cd /vagrant
 
@@ -22,6 +22,9 @@ GO_ENV=PRODUCTION \
 assert_http_status() {
   url=$1
   expected=$2
+
+  echo "======== [TEST CASE] asserting response status code for $url ========"
+
   got=$(curl --write-out %"{http_code}" --silent --output /dev/null "$url")
 
   if [ "$got" != "$expected" ]; then
