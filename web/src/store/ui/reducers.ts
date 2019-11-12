@@ -40,7 +40,7 @@ export default function(state = initialState, action: UIActionType): UIState {
     case UNSET_MESSAGE: {
       return {
         ...state,
-        message: removeKey(state.message, action.data.path)
+        message: initialState.message
       };
     }
     default:

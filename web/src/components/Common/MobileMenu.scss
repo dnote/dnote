@@ -22,7 +22,7 @@
 @import '../App/font';
 
 .wrapper {
-  position: absolute;
+  position: fixed;
   top: 0;
   bottom: $footer-height;
   left: 0;
@@ -61,6 +61,10 @@
   display: block;
   color: $white;
   padding: rem(12px) 0;
+
+  &:hover {
+    color: $white;
+  }
 }
 
 .item {

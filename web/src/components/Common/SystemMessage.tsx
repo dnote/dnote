@@ -68,7 +68,7 @@ const SystemMessage: React.FunctionComponent<Props> = ({ location }) => {
       <Flash
         kind={messageData.kind}
         onDismiss={() => {
-          dispatch(unsetMessage(matchedPath));
+          dispatch(unsetMessage());
         }}
         noMargin
       >
