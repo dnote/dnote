@@ -140,6 +140,20 @@ func TestDo(t *testing.T) {
 		assertDigestCount(t, r1, 3)
 	})
 
+	/*
+	* |----|----|----|----|----|----|----|----|----|----|----|----|----|
+	* t0             t1        td   t2        tu   t3             t4
+	*
+	* Suppose a repetition with a frequency of 3 days.
+	*
+	* t0 - original last_active value (Nov 1, 2009)
+	* t1 - original next_active value (Nov 4, 2009)
+	* td - server goes down
+	* t2 - repetition processing is missed (Nov 7, 2009)
+	* tu - server comes up
+	* t3 - new last_active value (Nov 10, 2009)
+	* t4 - new next_active value (Nov 13, 2009)
+	 */
 	t.Run("recovers correct next_active value if missed processing in the past", func(t *testing.T) {
 		defer testutils.ClearData()
 

@@ -8,13 +8,14 @@ All notable changes to the projects under this repository will be documented in 
 
 ## Server
 
-The following log documentes the history of the server project.
+The following log documents the history of the server project.
 
-### [Unreleased]
+### 0.3.0 - 2019-11-12
 
 #### Added
 
 - Share notes (#300)
+- Allow to recover from a missed repetition processing (#305)
 
 ### 0.2.1 - 2019-11-04
 
