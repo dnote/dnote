@@ -115,11 +115,21 @@ function useMobileMenuState(
 ): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  function wrappedSetMobileMenuOpen(nextState: boolean) {
+    setMobileMenuOpen(nextState);
+
+    if (nextState) {
+      document.body.classList.add('no-scroll');
+    } else {
+      document.body.classList.remove('no-scroll');
+    }
+  }
+
   useEffect(() => {
-    setMobileMenuOpen(false);
+    wrappedSetMobileMenuOpen(false);
   }, [location, setMobileMenuOpen]);
 
-  return [isMobileMenuOpen, setMobileMenuOpen];
+  return [isMobileMenuOpen, wrappedSetMobileMenuOpen];
 }
 
 function checkNoFooter(location: Location, loggedIn: boolean): boolean {
