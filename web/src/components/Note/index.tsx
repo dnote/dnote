@@ -26,7 +26,6 @@ import Flash from '../Common/Flash';
 import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
-import { unsetMessage } from '../../store/ui';
 import DeleteModal from './DeleteModal';
 import ShareModal from './ShareModal';
 import HeaderData from './HeaderData';
@@ -37,14 +36,6 @@ interface Match {
 }
 
 interface Props extends RouteComponentProps<Match> {}
-
-function useClearMessage(dispatch: ReduxDispatch) {
-  useEffect(() => {
-    return () => {
-      dispatch(unsetMessage(notePathDef));
-    };
-  }, [dispatch]);
-}
 
 function useFetchData(
   dispatch: ReduxDispatch,
@@ -76,7 +67,6 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useFetchData(dispatch, noteUUID, location.search);
-  useClearMessage(dispatch);
 
   if (note.errorMessage) {
     return <Flash kind="danger">Error: {note.errorMessage}</Flash>;

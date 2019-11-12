@@ -40,11 +40,8 @@ export function setMessage({
   };
 }
 
-export function unsetMessage(path: string): UnsetMessageAction {
+export function unsetMessage(): UnsetMessageAction {
   return {
-    type: UNSET_MESSAGE,
-    data: {
-      path
-    }
+    type: UNSET_MESSAGE
   };
 }

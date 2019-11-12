@@ -38,6 +38,7 @@ import Splash from '../Splash';
 import { getCurrentUser } from '../../store/auth';
 import { getBooks } from '../../store/books';
 import { setPrevLocation } from '../../store/route';
+import { unsetMessage } from '../../store/ui';
 import { useDispatch, useSelector } from '../../store';
 import HeaderData from './HeaderData';
 import render from '../../routes';
@@ -131,10 +132,19 @@ function checkNoFooter(location: Location, loggedIn: boolean): boolean {
   return checkCurrentPathIn(location, noFooterPaths);
 }
 
+function useClearMessage(location: Location) {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(unsetMessage());
+  }, [dispatch, location.pathname]);
+}
+
 const App: React.FunctionComponent<Props> = ({ location }) => {
   useFetchData();
   useSavePrevLocation(location);
   usePersistFilters(location);
+  useClearMessage(location);
   const [isMobileMenuOpen, setMobileMenuOpen] = useMobileMenuState(location);
 
   const { user } = useSelector(state => {

@@ -43,9 +43,6 @@ export interface SetMessageAction {
 
 export interface UnsetMessageAction {
   type: typeof UNSET_MESSAGE;
-  data: {
-    path: string;
-  };
 }
 
 export type UIActionType = SetMessageAction | UnsetMessageAction;
