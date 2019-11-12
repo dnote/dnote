@@ -61,6 +61,10 @@
   display: block;
   color: $white;
   padding: rem(12px) 0;
+
+  &:hover {
+    color: $white;
+  }
 }
 
 .item {
