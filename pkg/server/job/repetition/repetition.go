@@ -163,11 +163,20 @@ func checkCooldown(now time.Time, rule database.RepetitionRule) bool {
 	return present >= rule.NextActive
 }
 
+func getNextActive(base int64, frequency int64, now time.Time) int64 {
+	candidate := base + frequency
+	if candidate >= now.UnixNano()/int64(time.Millisecond) {
+		return candidate
+	}
+
+	return getNextActive(candidate, frequency, now)
+}
+
 func touchTimestamp(tx *gorm.DB, rule database.RepetitionRule, now time.Time) error {
-	lastActive := rule.NextActive
+	lastActive := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()).UnixNano() / int64(time.Millisecond)
 
 	rule.LastActive = lastActive
-	rule.NextActive = lastActive + rule.Frequency
+	rule.NextActive = getNextActive(rule.LastActive, rule.Frequency, now)
 
 	if err := tx.Save(&rule).Error; err != nil {
 		return errors.Wrap(err, "updating repetition rule")
