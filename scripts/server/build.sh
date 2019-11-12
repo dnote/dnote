@@ -29,6 +29,8 @@ build() {
   platform=$1
   arch=$2
 
+  pushd "$basedir"
+
   destDir="$outputDir/$platform-$arch"
   mkdir -p "$destDir"
 
@@ -39,9 +41,11 @@ build() {
   GOARCH="$arch" go build \
     -o "$destDir/dnote-server" \
     -ldflags "-X main.versionTag=$version" \
-    "$projectDir"/pkg/server/*.go
+    "$basedir"/*.go
 
   packr2 clean
+
+  popd
 
   # build tarball
   tarballName="dnote_server_${version}_${platform}_${arch}.tar.gz"
@@ -56,6 +60,7 @@ build() {
   pushd "$outputDir"
   shasum -a 256 "$tarballName" >> "$outputDir/dnote_${version}_checksums.txt"
   popd
+
 }
 
 build linux amd64
