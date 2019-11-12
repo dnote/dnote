@@ -23,7 +23,7 @@ pushd "$basePath/web"
       --colors\
       --display-error-details\
       --env.isTest="$isTest"\
-      --config "$basePath"/web/webpack/prod.config.js
+      --config "$(realpath "$basePath/web/webpack/prod.config.js")"
 
   NODE_ENV=PRODUCTION \
   BUNDLE_BASE_URL=$BUNDLE_BASE_URL \
