@@ -413,11 +413,11 @@ func TestMigrateToV8(t *testing.T) {
 	// 2. test if notes and books are migrated
 
 	var bookCount, noteCount int
-	err = testutils.DB.QueryRow("SELECT count(*) FROM books").Scan(&bookCount)
+	err = db.QueryRow("SELECT count(*) FROM books").Scan(&bookCount)
 	if err != nil {
 		panic(errors.Wrap(err, "counting books"))
 	}
-	err = testutils.DB.QueryRow("SELECT count(*) FROM notes").Scan(&noteCount)
+	err = db.QueryRow("SELECT count(*) FROM notes").Scan(&noteCount)
 	if err != nil {
 		panic(errors.Wrap(err, "counting notes"))
 	}
@@ -440,23 +440,23 @@ func TestMigrateToV8(t *testing.T) {
 
 	var b1, b2 bookInfo
 	var n1, n2, n3 noteInfo
-	err = testutils.DB.QueryRow("SELECT label, uuid FROM books WHERE label = ?", "js").Scan(&b1.label, &b1.uuid)
+	err = db.QueryRow("SELECT label, uuid FROM books WHERE label = ?", "js").Scan(&b1.label, &b1.uuid)
 	if err != nil {
 		panic(errors.Wrap(err, "finding book 1"))
 	}
-	err = testutils.DB.QueryRow("SELECT label, uuid FROM books WHERE label = ?", "css").Scan(&b2.label, &b2.uuid)
+	err = db.QueryRow("SELECT label, uuid FROM books WHERE label = ?", "css").Scan(&b2.label, &b2.uuid)
 	if err != nil {
 		panic(errors.Wrap(err, "finding book 2"))
 	}
-	err = testutils.DB.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "d69edb54-5b31-4cdd-a4a5-34f0a0bfa153").Scan(&n1.id, &n1.uuid, &n1.bookUUID, &n1.content, &n1.addedOn, &n1.editedOn, &n1.public)
+	err = db.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "d69edb54-5b31-4cdd-a4a5-34f0a0bfa153").Scan(&n1.id, &n1.uuid, &n1.bookUUID, &n1.content, &n1.addedOn, &n1.editedOn, &n1.public)
 	if err != nil {
 		panic(errors.Wrap(err, "finding note 1"))
 	}
-	err = testutils.DB.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "35cbcab1-6a2a-4cc8-97e0-e73bbbd54626").Scan(&n2.id, &n2.uuid, &n2.bookUUID, &n2.content, &n2.addedOn, &n2.editedOn, &n2.public)
+	err = db.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "35cbcab1-6a2a-4cc8-97e0-e73bbbd54626").Scan(&n2.id, &n2.uuid, &n2.bookUUID, &n2.content, &n2.addedOn, &n2.editedOn, &n2.public)
 	if err != nil {
 		panic(errors.Wrap(err, "finding note 2"))
 	}
-	err = testutils.DB.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "7c1fcfb2-de8b-4350-88f0-fb3cbaf6630a").Scan(&n3.id, &n3.uuid, &n3.bookUUID, &n3.content, &n3.addedOn, &n3.editedOn, &n3.public)
+	err = db.QueryRow("SELECT id, uuid, book_uuid, content, added_on, edited_on, public FROM notes WHERE uuid = ?", "7c1fcfb2-de8b-4350-88f0-fb3cbaf6630a").Scan(&n3.id, &n3.uuid, &n3.bookUUID, &n3.content, &n3.addedOn, &n3.editedOn, &n3.public)
 	if err != nil {
 		panic(errors.Wrap(err, "finding note 3"))
 	}
@@ -492,7 +492,7 @@ func TestMigrateToV8(t *testing.T) {
 
 	// 3. test if actions are migrated
 	var actionCount int
-	err = testutils.DB.QueryRow("SELECT count(*) FROM actions").Scan(&actionCount)
+	err = db.QueryRow("SELECT count(*) FROM actions").Scan(&actionCount)
 	if err != nil {
 		panic(errors.Wrap(err, "counting actions"))
 	}
@@ -508,47 +508,47 @@ func TestMigrateToV8(t *testing.T) {
 	}
 
 	var a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11 actionInfo
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "6145c1b7-f286-4d9f-b0f6-00d274baefc6").Scan(&a1.uuid, &a1.schema, &a1.actionType, &a1.data, &a1.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "6145c1b7-f286-4d9f-b0f6-00d274baefc6").Scan(&a1.uuid, &a1.schema, &a1.actionType, &a1.data, &a1.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a1"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "c048a56b-179c-4f31-9995-81e9b32b7dd6").Scan(&a2.uuid, &a2.schema, &a2.actionType, &a2.data, &a2.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "c048a56b-179c-4f31-9995-81e9b32b7dd6").Scan(&a2.uuid, &a2.schema, &a2.actionType, &a2.data, &a2.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a2"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "f557ef48-c304-47dc-adfb-46b7306e701f").Scan(&a3.uuid, &a3.schema, &a3.actionType, &a3.data, &a3.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "f557ef48-c304-47dc-adfb-46b7306e701f").Scan(&a3.uuid, &a3.schema, &a3.actionType, &a3.data, &a3.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a3"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "8d79db34-343d-4331-ae5b-24743f17ca7f").Scan(&a4.uuid, &a4.schema, &a4.actionType, &a4.data, &a4.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "8d79db34-343d-4331-ae5b-24743f17ca7f").Scan(&a4.uuid, &a4.schema, &a4.actionType, &a4.data, &a4.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a4"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "b9c1ed4a-e6b3-41f2-983b-593ec7b8b7a1").Scan(&a5.uuid, &a5.schema, &a5.actionType, &a5.data, &a5.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "b9c1ed4a-e6b3-41f2-983b-593ec7b8b7a1").Scan(&a5.uuid, &a5.schema, &a5.actionType, &a5.data, &a5.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a5"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "06ed7ef0-f171-4bd7-ae8e-97b5d06a4c49").Scan(&a6.uuid, &a6.schema, &a6.actionType, &a6.data, &a6.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "06ed7ef0-f171-4bd7-ae8e-97b5d06a4c49").Scan(&a6.uuid, &a6.schema, &a6.actionType, &a6.data, &a6.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a6"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "7f173cef-1688-4177-a373-145fcd822b2f").Scan(&a7.uuid, &a7.schema, &a7.actionType, &a7.data, &a7.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "7f173cef-1688-4177-a373-145fcd822b2f").Scan(&a7.uuid, &a7.schema, &a7.actionType, &a7.data, &a7.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a7"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "64352e08-aa7a-45f4-b760-b3f38b5e11fa").Scan(&a8.uuid, &a8.schema, &a8.actionType, &a8.data, &a8.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "64352e08-aa7a-45f4-b760-b3f38b5e11fa").Scan(&a8.uuid, &a8.schema, &a8.actionType, &a8.data, &a8.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a8"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "82e20a12-bda8-45f7-ac42-b453b6daa5ec").Scan(&a9.uuid, &a9.schema, &a9.actionType, &a9.data, &a9.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "82e20a12-bda8-45f7-ac42-b453b6daa5ec").Scan(&a9.uuid, &a9.schema, &a9.actionType, &a9.data, &a9.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a9"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "a29055f4-ace4-44fd-8800-3396edbccaef").Scan(&a10.uuid, &a10.schema, &a10.actionType, &a10.data, &a10.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "a29055f4-ace4-44fd-8800-3396edbccaef").Scan(&a10.uuid, &a10.schema, &a10.actionType, &a10.data, &a10.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a10"))
 	}
-	err = testutils.DB.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "871a5562-1bd0-43c1-b550-5bbb727ac7c4").Scan(&a11.uuid, &a11.schema, &a11.actionType, &a11.data, &a11.timestamp)
+	err = db.QueryRow("SELECT uuid, schema, type, data, timestamp FROM actions WHERE uuid = ?", "871a5562-1bd0-43c1-b550-5bbb727ac7c4").Scan(&a11.uuid, &a11.schema, &a11.actionType, &a11.data, &a11.timestamp)
 	if err != nil {
 		panic(errors.Wrap(err, "finding a11"))
 	}
@@ -621,7 +621,7 @@ func TestMigrateToV8(t *testing.T) {
 
 	// 3. test if system is migrated
 	var systemCount int
-	err = testutils.DB.QueryRow("SELECT count(*) FROM system").Scan(&systemCount)
+	err = db.QueryRow("SELECT count(*) FROM system").Scan(&systemCount)
 	if err != nil {
 		panic(errors.Wrap(err, "counting system"))
 	}
@@ -629,15 +629,15 @@ func TestMigrateToV8(t *testing.T) {
 	assert.Equal(t, systemCount, 3, "action count mismatch")
 
 	var lastUpgrade, lastAction, bookmark int
-	err = testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", "last_upgrade").Scan(&lastUpgrade)
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "last_upgrade").Scan(&lastUpgrade)
 	if err != nil {
 		panic(errors.Wrap(err, "finding last_upgrade"))
 	}
-	err = testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", "last_action").Scan(&lastAction)
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "last_action").Scan(&lastAction)
 	if err != nil {
 		panic(errors.Wrap(err, "finding last_action"))
 	}
-	err = testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
+	err = db.QueryRow("SELECT value FROM system WHERE key = ?", "bookmark").Scan(&bookmark)
 	if err != nil {
 		panic(errors.Wrap(err, "finding bookmark"))
 	}

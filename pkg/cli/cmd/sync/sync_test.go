@@ -113,7 +113,7 @@ func TestGetLastSyncAt(t *testing.T) {
 	database.MustExec(t, "setting up last_sync_at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, 1541108743)
 
 	// exec
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -136,7 +136,7 @@ func TestGetLastMaxUSN(t *testing.T) {
 	database.MustExec(t, "setting up last_max_usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 20001)
 
 	// exec
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -189,7 +189,7 @@ func TestResolveLabel(t *testing.T) {
 			database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b6-uuid", "cool_ideas")
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -212,7 +212,7 @@ func TestSyncDeleteNote(t *testing.T) {
 		defer database.CloseTestDB(t, db)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -226,8 +226,8 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 0, "book count mismatch")
@@ -246,15 +246,15 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1 database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
 			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 		var n2 database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
 			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
@@ -268,8 +268,8 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes for test case", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books for test case", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes for test case", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books for test case", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		// do not delete note if local copy is dirty
 		assert.Equalf(t, noteCount, 2, "note count mismatch for test case")
@@ -277,11 +277,11 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1Record database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
 			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 		var n2Record database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
 			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		assert.Equal(t, n1Record.UUID, n1.UUID, "n1 UUID mismatch for test case")
@@ -316,15 +316,15 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		var n1 database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
 			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 		var n2 database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
 			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
@@ -338,15 +338,15 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes for test case", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books for test case", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes for test case", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books for test case", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 1, "note count mismatch for test case")
 		assert.Equalf(t, bookCount, 1, "book count mismatch for test case")
 
 		var n2Record database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
 			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		assert.Equal(t, n2Record.UUID, n2.UUID, "n2 UUID mismatch for test case")
@@ -369,11 +369,11 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		var b1 database.Book
 		database.MustScan(t, "getting b1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -387,15 +387,15 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 		var b1Record database.Book
 		database.MustScan(t, "getting b1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 
 		assert.Equal(t, b1Record.UUID, b1.UUID, "b1 UUID mismatch for test case")
@@ -416,15 +416,15 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		var b1 database.Book
 		database.MustScan(t, "getting b1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
 			&b1.UUID, &b1.Label, &b1.USN, &b1.Dirty)
 		var n1 database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
 			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
@@ -438,8 +438,8 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes for test case", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books for test case", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes for test case", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books for test case", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		// do not delete note if local copy is dirty
 		assert.Equalf(t, noteCount, 1, "note count mismatch for test case")
@@ -447,11 +447,11 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		var b1Record database.Book
 		database.MustScan(t, "getting b1Record for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		var n1Record database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1.UUID),
 			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 
 		assert.Equal(t, b1Record.UUID, b1.UUID, "b1 UUID mismatch for test case")
@@ -484,15 +484,15 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		var b2 database.Book
 		database.MustScan(t, "getting b2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
 			&b2.UUID, &b2.Label, &b2.USN, &b2.Dirty)
 		var n2 database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", "n2-uuid"),
 			&n2.UUID, &n2.BookUUID, &n2.USN, &n2.AddedOn, &n2.EditedOn, &n2.Body, &n2.Deleted, &n2.Dirty)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
@@ -506,19 +506,19 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes for test case", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books for test case", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes for test case", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books for test case", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 1, "note count mismatch for test case")
 		assert.Equalf(t, bookCount, 1, "book count mismatch for test case")
 
 		var b2Record database.Book
 		database.MustScan(t, "getting b2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 		var n2Record database.Note
 		database.MustScan(t, "getting n2 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
 			&n2Record.UUID, &n2Record.BookUUID, &n2Record.USN, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.Body, &n2Record.Deleted, &n2Record.Dirty)
 
 		assert.Equal(t, b2Record.UUID, b2.UUID, "b2 UUID mismatch for test case")
@@ -547,7 +547,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
@@ -561,18 +561,18 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes for test case", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books for test case", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes for test case", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books for test case", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 		assert.Equalf(t, noteCount, 1, "note count mismatch for test case")
 		assert.Equalf(t, bookCount, 1, "book count mismatch for test case")
 
 		var b1Record database.Book
 		database.MustScan(t, "getting b1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		var n1Record database.Note
 		database.MustScan(t, "getting n1 for test case",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, body,deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, body,deleted, dirty FROM notes WHERE uuid = ?", "n1-uuid"),
 			&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 
 		assert.Equal(t, b1Record.UUID, b1UUID, "b1 UUID mismatch for test case")
@@ -599,7 +599,7 @@ func TestFullSyncNote(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -623,15 +623,15 @@ func TestFullSyncNote(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 1, "note count mismatch")
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 		var n1 database.Note
 		database.MustScan(t, "getting n1",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
 			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 		assert.Equal(t, n1.UUID, n.UUID, "n1 UUID mismatch")
@@ -834,7 +834,7 @@ n1 body edited
 				database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -859,15 +859,15 @@ n1 body edited
 
 				// test
 				var noteCount, bookCount int
-				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 				assert.Equalf(t, noteCount, 1, fmt.Sprintf("note count mismatch for test case %d", idx))
 				assert.Equalf(t, bookCount, 3, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 				var n1 database.Note
 				database.MustScan(t, fmt.Sprintf("getting n1 for test case %d", idx),
-					testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
 					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 				assert.Equal(t, n1.UUID, n.UUID, fmt.Sprintf("n1 UUID mismatch for test case %d", idx))
@@ -893,7 +893,7 @@ func TestFullSyncBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -916,18 +916,18 @@ func TestFullSyncBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 2, "book count mismatch")
 
 		var b1, b2 database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
 			&b1.UUID, &b1.USN, &b1.Label, &b1.Dirty, &b1.Deleted)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
+			db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
 			&b2.UUID, &b2.USN, &b2.Label, &b2.Dirty, &b2.Deleted)
 
 		assert.Equal(t, b1.UUID, b1UUID, "b1 UUID mismatch")
@@ -1032,7 +1032,7 @@ func TestFullSyncBook(t *testing.T) {
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -1054,15 +1054,15 @@ func TestFullSyncBook(t *testing.T) {
 
 				// test
 				var noteCount, bookCount int
-				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 				assert.Equalf(t, noteCount, 0, fmt.Sprintf("note count mismatch for test case %d", idx))
 				assert.Equalf(t, bookCount, 1, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 				var b1 database.Book
 				database.MustScan(t, "getting b1",
-					testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
+					db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
 					&b1.UUID, &b1.USN, &b1.Label, &b1.Dirty, &b1.Deleted)
 
 				assert.Equal(t, b1.UUID, b1UUID, fmt.Sprintf("b1 UUID mismatch for idx %d", idx))
@@ -1085,7 +1085,7 @@ func TestStepSyncNote(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1109,15 +1109,15 @@ func TestStepSyncNote(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 1, "note count mismatch")
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 		var n1 database.Note
 		database.MustScan(t, "getting n1",
-			testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+			db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
 			&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 		assert.Equal(t, n1.UUID, n.UUID, "n1 UUID mismatch")
@@ -1246,7 +1246,7 @@ n1 body edited
 				database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, tc.clientBookUUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -1271,15 +1271,15 @@ n1 body edited
 
 				// test
 				var noteCount, bookCount int
-				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 				assert.Equalf(t, noteCount, 1, fmt.Sprintf("note count mismatch for test case %d", idx))
 				assert.Equalf(t, bookCount, 3, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 				var n1 database.Note
 				database.MustScan(t, fmt.Sprintf("getting n1 for test case %d", idx),
-					testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
+					db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body,  deleted, dirty FROM notes WHERE uuid = ?", n.UUID),
 					&n1.UUID, &n1.BookUUID, &n1.USN, &n1.AddedOn, &n1.EditedOn, &n1.Body, &n1.Deleted, &n1.Dirty)
 
 				assert.Equal(t, n1.UUID, n.UUID, fmt.Sprintf("n1 UUID mismatch for test case %d", idx))
@@ -1305,7 +1305,7 @@ func TestStepSyncBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
 
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1328,18 +1328,18 @@ func TestStepSyncBook(t *testing.T) {
 
 		// test
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 2, "book count mismatch")
 
 		var b1, b2 database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
 			&b1.UUID, &b1.USN, &b1.Label, &b1.Dirty, &b1.Deleted)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
+			db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
 			&b2.UUID, &b2.USN, &b2.Label, &b2.Dirty, &b2.Deleted)
 
 		assert.Equal(t, b1.UUID, b1UUID, "b1 UUID mismatch")
@@ -1430,7 +1430,7 @@ func TestStepSyncBook(t *testing.T) {
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b2UUID, 2, tc.anotherBookLabel, false, false)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -1452,18 +1452,18 @@ func TestStepSyncBook(t *testing.T) {
 
 				// test
 				var noteCount, bookCount int
-				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+				database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+				database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 				assert.Equalf(t, noteCount, 0, fmt.Sprintf("note count mismatch for test case %d", idx))
 				assert.Equalf(t, bookCount, 2, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 				var b1Record, b2Record database.Book
 				database.MustScan(t, "getting b1Record",
-					testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
+					db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b1UUID),
 					&b1Record.UUID, &b1Record.USN, &b1Record.Label, &b1Record.Dirty, &b1Record.Deleted)
 				database.MustScan(t, "getting b2Record",
-					testutils.DB.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
+					db.QueryRow("SELECT uuid, usn, label, dirty, deleted FROM books WHERE uuid = ?", b2UUID),
 					&b2Record.UUID, &b2Record.USN, &b2Record.Label, &b2Record.Dirty, &b2Record.Deleted)
 
 				assert.Equal(t, b1Record.UUID, b1UUID, fmt.Sprintf("b1Record UUID mismatch for idx %d", idx))
@@ -1489,7 +1489,7 @@ func TestMergeBook(t *testing.T) {
 		defer database.CloseTestDB(t, db)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1511,15 +1511,15 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 		var b1Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 
 		assert.Equal(t, b1Record.UUID, b1.UUID, "b1 UUID mismatch")
@@ -1534,7 +1534,7 @@ func TestMergeBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1556,18 +1556,18 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 2, "book count mismatch")
 
 		var b1Record, b2Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 
 		assert.Equal(t, b1Record.Label, "foo_2", "b1 Label mismatch")
@@ -1589,7 +1589,7 @@ func TestMergeBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b3-uuid", 3, "foo_3", false, false)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1611,24 +1611,24 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 4, "book count mismatch")
 
 		var b1Record, b2Record, b3Record, b4Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 		database.MustScan(t, "getting b3",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b3-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b3-uuid"),
 			&b3Record.UUID, &b3Record.Label, &b3Record.USN, &b3Record.Dirty)
 		database.MustScan(t, "getting b4",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b4-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b4-uuid"),
 			&b4Record.UUID, &b4Record.Label, &b4Record.USN, &b4Record.Dirty)
 
 		assert.Equal(t, b1Record.Label, "foo_4", "b1 Label mismatch")
@@ -1654,7 +1654,7 @@ func TestMergeBook(t *testing.T) {
 		defer database.CloseTestDB(t, db)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1679,15 +1679,15 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 		var b1Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 
 		assert.Equal(t, b1Record.UUID, b1UUID, "b1 UUID mismatch")
@@ -1704,7 +1704,7 @@ func TestMergeBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1726,18 +1726,18 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 2, "book count mismatch")
 
 		var b1Record, b2Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 
 		assert.Equal(t, b1Record.Label, "bar", "b1 Label mismatch")
@@ -1760,7 +1760,7 @@ func TestMergeBook(t *testing.T) {
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b4-uuid", 4, "bar_3", false, false)
 
 		// test
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -1782,24 +1782,24 @@ func TestMergeBook(t *testing.T) {
 
 		// execute
 		var noteCount, bookCount int
-		database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-		database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 		assert.Equalf(t, noteCount, 0, "note count mismatch")
 		assert.Equalf(t, bookCount, 4, "book count mismatch")
 
 		var b1Record, b2Record, b3Record, b4Record database.Book
 		database.MustScan(t, "getting b1",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b1-uuid"),
 			&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 		database.MustScan(t, "getting b2",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 			&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 		database.MustScan(t, "getting b3",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b3-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b3-uuid"),
 			&b3Record.UUID, &b3Record.Label, &b3Record.USN, &b3Record.Dirty)
 		database.MustScan(t, "getting b4",
-			testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b4-uuid"),
+			db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", "b4-uuid"),
 			&b4Record.UUID, &b4Record.Label, &b4Record.USN, &b4Record.Dirty)
 
 		assert.Equal(t, b1Record.Label, "bar", "b1 Label mismatch")
@@ -1832,7 +1832,7 @@ func TestSaveServerState(t *testing.T) {
 	database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 8)
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -1853,9 +1853,9 @@ func TestSaveServerState(t *testing.T) {
 	var lastMaxUSN int
 
 	database.MustScan(t, "getting system value",
-		testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
+		db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
 	database.MustScan(t, "getting system value",
-		testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+		db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
 
 	assert.Equal(t, lastSyncedAt, serverTime, "last synced at mismatch")
 	assert.Equal(t, lastMaxUSN, serverMaxUSN, "last max usn mismatch")
@@ -1955,7 +1955,7 @@ func TestSendBooks(t *testing.T) {
 	ctx.APIEndpoint = ts.URL
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -1979,15 +1979,15 @@ func TestSendBooks(t *testing.T) {
 	assert.DeepEqual(t, deletedUUIDs, []string{"b6-uuid"}, "deletedUUIDs mismatch")
 
 	var b1, b2, b3, b4, b7, b8 database.Book
-	database.MustScan(t, "getting b1", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b1-label"), &b1.UUID, &b1.Dirty)
-	database.MustScan(t, "getting b2", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b2-label"), &b2.UUID, &b2.Dirty)
-	database.MustScan(t, "getting b3", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b3-label"), &b3.UUID, &b3.Dirty)
-	database.MustScan(t, "getting b4", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b4-label"), &b4.UUID, &b4.Dirty)
-	database.MustScan(t, "getting b7", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b7-label"), &b7.UUID, &b7.Dirty)
-	database.MustScan(t, "getting b8", testutils.DB.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b8-label"), &b8.UUID, &b8.Dirty)
+	database.MustScan(t, "getting b1", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b1-label"), &b1.UUID, &b1.Dirty)
+	database.MustScan(t, "getting b2", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b2-label"), &b2.UUID, &b2.Dirty)
+	database.MustScan(t, "getting b3", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b3-label"), &b3.UUID, &b3.Dirty)
+	database.MustScan(t, "getting b4", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b4-label"), &b4.UUID, &b4.Dirty)
+	database.MustScan(t, "getting b7", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b7-label"), &b7.UUID, &b7.Dirty)
+	database.MustScan(t, "getting b8", db.QueryRow("SELECT uuid, dirty FROM books WHERE label = ?", "b8-label"), &b8.UUID, &b8.Dirty)
 
 	var bookCount int
-	database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	assert.Equalf(t, bookCount, 6, "book count mismatch")
 
 	assert.Equal(t, b1.Dirty, false, "b1 Dirty mismatch")
@@ -2005,13 +2005,13 @@ func TestSendBooks(t *testing.T) {
 	assert.Equal(t, b8.UUID, "b8-uuid", "b8 UUID mismatch")
 
 	var n1, n2, n3, n4, n5, n6, n7 database.Note
-	database.MustScan(t, "getting n1", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n1 body"), &n1.BookUUID)
-	database.MustScan(t, "getting n2", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n2 body"), &n2.BookUUID)
-	database.MustScan(t, "getting n3", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n3 body"), &n3.BookUUID)
-	database.MustScan(t, "getting n4", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n4 body"), &n4.BookUUID)
-	database.MustScan(t, "getting n5", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n5 body"), &n5.BookUUID)
-	database.MustScan(t, "getting n6", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n6 body"), &n6.BookUUID)
-	database.MustScan(t, "getting n7", testutils.DB.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n7 body"), &n7.BookUUID)
+	database.MustScan(t, "getting n1", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n1 body"), &n1.BookUUID)
+	database.MustScan(t, "getting n2", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n2 body"), &n2.BookUUID)
+	database.MustScan(t, "getting n3", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n3 body"), &n3.BookUUID)
+	database.MustScan(t, "getting n4", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n4 body"), &n4.BookUUID)
+	database.MustScan(t, "getting n5", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n5 body"), &n5.BookUUID)
+	database.MustScan(t, "getting n6", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n6 body"), &n6.BookUUID)
+	database.MustScan(t, "getting n7", db.QueryRow("SELECT book_uuid FROM notes WHERE body = ?", "n7 body"), &n7.BookUUID)
 	assert.Equal(t, n1.BookUUID, "b1-uuid", "n1 bookUUID mismatch")
 	assert.Equal(t, n2.BookUUID, "b5-uuid", "n2 bookUUID mismatch")
 	assert.Equal(t, n3.BookUUID, "b6-uuid", "n3 bookUUID mismatch")
@@ -2110,7 +2110,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 0, false, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2158,7 +2158,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 1, true, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2206,7 +2206,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 11, false, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2319,7 +2319,7 @@ func TestSendNotes(t *testing.T) {
 	ctx.APIEndpoint = ts.URL
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -2341,17 +2341,17 @@ func TestSendNotes(t *testing.T) {
 	assert.DeepEqual(t, deletedUUIDs, []string{"n5-uuid", "n9-uuid"}, "deletedUUIDs mismatch")
 
 	var noteCount int
-	database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 	assert.Equalf(t, noteCount, 7, "note count mismatch")
 
 	var n1, n2, n3, n6, n7, n8, n10 database.Note
-	database.MustScan(t, "getting n1", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
-	database.MustScan(t, "getting n2", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.AddedOn, &n2.Dirty)
-	database.MustScan(t, "getting n3", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.AddedOn, &n3.Dirty)
-	database.MustScan(t, "getting n6", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.AddedOn, &n6.Dirty)
-	database.MustScan(t, "getting n7", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.AddedOn, &n7.Dirty)
-	database.MustScan(t, "getting n8", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.AddedOn, &n8.Dirty)
-	database.MustScan(t, "getting n10", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.AddedOn, &n10.Dirty)
+	database.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
+	database.MustScan(t, "getting n2", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n2-body"), &n2.UUID, &n2.AddedOn, &n2.Dirty)
+	database.MustScan(t, "getting n3", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n3-body"), &n3.UUID, &n3.AddedOn, &n3.Dirty)
+	database.MustScan(t, "getting n6", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n6-body"), &n6.UUID, &n6.AddedOn, &n6.Dirty)
+	database.MustScan(t, "getting n7", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n7-body"), &n7.UUID, &n7.AddedOn, &n7.Dirty)
+	database.MustScan(t, "getting n8", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n8-body"), &n8.UUID, &n8.AddedOn, &n8.Dirty)
+	database.MustScan(t, "getting n10", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n10-body"), &n10.UUID, &n10.AddedOn, &n10.Dirty)
 
 	assert.Equalf(t, noteCount, 7, "note count mismatch")
 
@@ -2419,7 +2419,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 	ctx.APIEndpoint = ts.URL
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -2433,7 +2433,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 
 	// test
 	var n1 database.Note
-	database.MustScan(t, "getting n1", testutils.DB.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
+	database.MustScan(t, "getting n1", db.QueryRow("SELECT uuid, added_on, dirty FROM notes WHERE body = ?", "n1-body"), &n1.UUID, &n1.AddedOn, &n1.Dirty)
 	assert.Equal(t, n1.AddedOn, int64(1541108743), "n1 AddedOn mismatch")
 }
 
@@ -2527,7 +2527,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				database.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 1, "n1 body", 1541108743, false, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2576,7 +2576,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				database.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 2, "n1 body", 1541108743, true, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2625,7 +2625,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 				database.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", 8, "n1 body", 1541108743, false, true)
 
 				// execute
-				tx, err := testutils.DB.Begin()
+				tx, err := db.Begin()
 				if err != nil {
 					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
@@ -2789,7 +2789,7 @@ n1 body edited
 			database.MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?,  ?, ?, ?, ?, ?)", n1UUID, b1UUID, tc.clientUSN, tc.addedOn, tc.clientEditedOn, tc.clientBody, tc.clientDeleted, tc.clientDirty)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -2806,7 +2806,7 @@ n1 body edited
 			}
 			var localNote database.Note
 			database.MustScan(t, fmt.Sprintf("getting localNote for test case %d", idx),
-				testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
+				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
 				&localNote.UUID, &localNote.BookUUID, &localNote.USN, &localNote.AddedOn, &localNote.EditedOn, &localNote.Body, &localNote.Deleted, &localNote.Dirty)
 
 			if err := mergeNote(tx, fragNote, localNote); err != nil {
@@ -2818,23 +2818,23 @@ n1 body edited
 
 			// test
 			var noteCount, bookCount int
-			database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-			database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+			database.MustScan(t, fmt.Sprintf("counting notes for test case %d", idx), db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+			database.MustScan(t, fmt.Sprintf("counting books for test case %d", idx), db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 			assert.Equalf(t, noteCount, 1, fmt.Sprintf("note count mismatch for test case %d", idx))
 			assert.Equalf(t, bookCount, 3, fmt.Sprintf("book count mismatch for test case %d", idx))
 
 			var n1Record database.Note
 			database.MustScan(t, fmt.Sprintf("getting n1Record for test case %d", idx),
-				testutils.DB.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
+				db.QueryRow("SELECT uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty FROM notes WHERE uuid = ?", n1UUID),
 				&n1Record.UUID, &n1Record.BookUUID, &n1Record.USN, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.Body, &n1Record.Deleted, &n1Record.Dirty)
 			var b1Record database.Book
 			database.MustScan(t, "getting b1Record for test case",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
+				db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b1UUID),
 				&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Dirty)
 			var b2Record database.Book
 			database.MustScan(t, "getting b2Record for test case",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
+				db.QueryRow("SELECT uuid, label, usn, dirty FROM books WHERE uuid = ?", b2UUID),
 				&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Dirty)
 
 			assert.Equal(t, b1Record.UUID, b1UUID, fmt.Sprintf("b1Record UUID mismatch for test case %d", idx))
@@ -2874,7 +2874,7 @@ func TestCheckBookPristine(t *testing.T) {
 
 	t.Run("b1", func(t *testing.T) {
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -2892,7 +2892,7 @@ func TestCheckBookPristine(t *testing.T) {
 
 	t.Run("b2", func(t *testing.T) {
 		// execute
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -3082,7 +3082,7 @@ func TestCleanLocalNotes(t *testing.T) {
 	database.MustExec(t, "inserting n10", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n10-uuid", b1UUID, 0, "n10 body", 1541108743, false, false)
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -3096,13 +3096,13 @@ func TestCleanLocalNotes(t *testing.T) {
 
 	// test
 	var noteCount int
-	database.MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 	assert.Equal(t, noteCount, 3, "note count mismatch")
 
 	var n1, n2, n6 database.Note
-	database.MustScan(t, "getting n1", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n1-uuid"), &n1.Dirty)
-	database.MustScan(t, "getting n2", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n2-uuid"), &n2.Dirty)
-	database.MustScan(t, "getting n6", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n6-uuid"), &n6.Dirty)
+	database.MustScan(t, "getting n1", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n1-uuid"), &n1.Dirty)
+	database.MustScan(t, "getting n2", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n2-uuid"), &n2.Dirty)
+	database.MustScan(t, "getting n6", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", "n6-uuid"), &n6.Dirty)
 }
 
 func TestCleanLocalBooks(t *testing.T) {
@@ -3150,7 +3150,7 @@ func TestCleanLocalBooks(t *testing.T) {
 	database.MustExec(t, "inserting b8", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b8-uuid", "b8-label", 0, false, false)
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -3164,11 +3164,11 @@ func TestCleanLocalBooks(t *testing.T) {
 
 	// test
 	var bookCount int
-	database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	assert.Equal(t, bookCount, 3, "note count mismatch")
 
 	var b1, b3, b5 database.Book
-	database.MustScan(t, "getting b1", testutils.DB.QueryRow("SELECT label FROM books WHERE uuid = ?", "b1-uuid"), &b1.Label)
-	database.MustScan(t, "getting b3", testutils.DB.QueryRow("SELECT label FROM books WHERE uuid = ?", "b3-uuid"), &b3.Label)
-	database.MustScan(t, "getting b5", testutils.DB.QueryRow("SELECT label FROM books WHERE uuid = ?", "b5-uuid"), &b5.Label)
+	database.MustScan(t, "getting b1", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "b1-uuid"), &b1.Label)
+	database.MustScan(t, "getting b3", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "b3-uuid"), &b3.Label)
+	database.MustScan(t, "getting b5", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "b5-uuid"), &b5.Label)
 }

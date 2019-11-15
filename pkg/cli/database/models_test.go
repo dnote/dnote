@@ -132,7 +132,7 @@ func TestNoteInsert(t *testing.T) {
 			}
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -150,7 +150,7 @@ func TestNoteInsert(t *testing.T) {
 			var usn int
 			var public, deleted, dirty bool
 			MustScan(t, "getting n1",
-				testutils.DB.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
 				&uuid, &bookUUID, &body, &addedOn, &editedOn, &usn, &public, &deleted, &dirty)
 
 			assert.Equal(t, uuid, tc.uuid, fmt.Sprintf("uuid mismatch for test case %d", idx))
@@ -292,7 +292,7 @@ func TestNoteUpdate(t *testing.T) {
 			MustExec(t, fmt.Sprintf("inserting n2 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Public, n2.Deleted, n2.Dirty)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -315,10 +315,10 @@ func TestNoteUpdate(t *testing.T) {
 			// test
 			var n1Record, n2Record Note
 			MustScan(t, "getting n1",
-				testutils.DB.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
 				&n1Record.UUID, &n1Record.BookUUID, &n1Record.Body, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.USN, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
 			MustScan(t, "getting n2",
-				testutils.DB.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
 				&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
 
 			assert.Equal(t, n1Record.UUID, n1.UUID, fmt.Sprintf("n1 uuid mismatch for test case %d", idx))
@@ -385,7 +385,7 @@ func TestNoteUpdateUUID(t *testing.T) {
 			MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.Body, n2.AddedOn, n2.USN, n2.Deleted, n2.Dirty)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 			}
@@ -399,10 +399,10 @@ func TestNoteUpdateUUID(t *testing.T) {
 			// test
 			var n1Record, n2Record Note
 			MustScan(t, "getting n1",
-				testutils.DB.QueryRow("SELECT uuid, body, usn, deleted, dirty FROM notes WHERE body = ?", "n1-body"),
+				db.QueryRow("SELECT uuid, body, usn, deleted, dirty FROM notes WHERE body = ?", "n1-body"),
 				&n1Record.UUID, &n1Record.Body, &n1Record.USN, &n1Record.Deleted, &n1Record.Dirty)
 			MustScan(t, "getting n2",
-				testutils.DB.QueryRow("SELECT uuid, body, usn, deleted, dirty FROM notes WHERE body = ?", "n2-body"),
+				db.QueryRow("SELECT uuid, body, usn, deleted, dirty FROM notes WHERE body = ?", "n2-body"),
 				&n2Record.UUID, &n2Record.Body, &n2Record.USN, &n2Record.Deleted, &n2Record.Dirty)
 
 			assert.Equal(t, n1.UUID, tc.newUUID, "n1 original reference uuid mismatch")
@@ -444,7 +444,7 @@ func TestNoteExpunge(t *testing.T) {
 	MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Public, n2.Deleted, n2.Dirty)
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -458,13 +458,13 @@ func TestNoteExpunge(t *testing.T) {
 
 	// test
 	var noteCount int
-	MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
 	assert.Equalf(t, noteCount, 1, "note count mismatch")
 
 	var n2Record Note
 	MustScan(t, "getting n2",
-		testutils.DB.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+		db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
 		&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
 
 	assert.Equal(t, n2Record.UUID, n2.UUID, "n2 uuid mismatch")
@@ -553,7 +553,7 @@ func TestBookInsert(t *testing.T) {
 
 			// execute
 
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -570,7 +570,7 @@ func TestBookInsert(t *testing.T) {
 			var usn int
 			var deleted, dirty bool
 			MustScan(t, "getting b1",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", tc.uuid),
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", tc.uuid),
 				&uuid, &label, &usn, &deleted, &dirty)
 
 			assert.Equal(t, uuid, tc.uuid, fmt.Sprintf("uuid mismatch for test case %d", idx))
@@ -643,7 +643,7 @@ func TestBookUpdate(t *testing.T) {
 			MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2.UUID, b2.Label, b2.USN, b2.Deleted, b2.Dirty)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
@@ -663,10 +663,10 @@ func TestBookUpdate(t *testing.T) {
 			// test
 			var b1Record, b2Record Book
 			MustScan(t, "getting b1",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", tc.uuid),
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", tc.uuid),
 				&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Deleted, &b1Record.Dirty)
 			MustScan(t, "getting b2",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", b2.UUID),
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", b2.UUID),
 				&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Deleted, &b2Record.Dirty)
 
 			assert.Equal(t, b1Record.UUID, b1.UUID, fmt.Sprintf("b1 uuid mismatch for test case %d", idx))
@@ -722,7 +722,7 @@ func TestBookUpdateUUID(t *testing.T) {
 			MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2.UUID, b2.Label, b2.USN, b2.Deleted, b2.Dirty)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 			}
@@ -736,10 +736,10 @@ func TestBookUpdateUUID(t *testing.T) {
 			// test
 			var b1Record, b2Record Book
 			MustScan(t, "getting b1",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b1-label"),
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b1-label"),
 				&b1Record.UUID, &b1Record.Label, &b1Record.USN, &b1Record.Deleted, &b1Record.Dirty)
 			MustScan(t, "getting b2",
-				testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b2-label"),
+				db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE label = ?", "b2-label"),
 				&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Deleted, &b2Record.Dirty)
 
 			assert.Equal(t, b1.UUID, tc.newUUID, "b1 original reference uuid mismatch")
@@ -773,7 +773,7 @@ func TestBookExpunge(t *testing.T) {
 	MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2.UUID, b2.Label, b2.USN, b2.Deleted, b2.Dirty)
 
 	// execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -787,13 +787,13 @@ func TestBookExpunge(t *testing.T) {
 
 	// test
 	var bookCount int
-	MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
 
 	assert.Equalf(t, bookCount, 1, "book count mismatch")
 
 	var b2Record Book
 	MustScan(t, "getting b2",
-		testutils.DB.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", "b2-uuid"),
+		db.QueryRow("SELECT uuid, label, usn, deleted, dirty FROM books WHERE uuid = ?", "b2-uuid"),
 		&b2Record.UUID, &b2Record.Label, &b2Record.USN, &b2Record.Deleted, &b2Record.Dirty)
 
 	assert.Equal(t, b2Record.UUID, b2.UUID, "b2 uuid mismatch")
@@ -822,7 +822,7 @@ func TestNoteFTS(t *testing.T) {
 		Dirty:    false,
 	}
 
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -836,16 +836,16 @@ func TestNoteFTS(t *testing.T) {
 
 	// test
 	var noteCount, noteFtsCount, noteSearchCount int
-	MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-	MustScan(t, "counting note_fts", testutils.DB.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
-	MustScan(t, "counting search results", testutils.DB.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "foo"), &noteSearchCount)
+	MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	MustScan(t, "counting note_fts", db.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
+	MustScan(t, "counting search results", db.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "foo"), &noteSearchCount)
 
 	assert.Equal(t, noteCount, 1, "noteCount mismatch")
 	assert.Equal(t, noteFtsCount, 1, "noteFtsCount mismatch")
 	assert.Equal(t, noteSearchCount, 1, "noteSearchCount mismatch")
 
 	// execute - update
-	tx, err = testutils.DB.Begin()
+	tx, err = db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -859,18 +859,18 @@ func TestNoteFTS(t *testing.T) {
 	tx.Commit()
 
 	// test
-	MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-	MustScan(t, "counting note_fts", testutils.DB.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
+	MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	MustScan(t, "counting note_fts", db.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
 	assert.Equal(t, noteCount, 1, "noteCount mismatch")
 	assert.Equal(t, noteFtsCount, 1, "noteFtsCount mismatch")
 
-	MustScan(t, "counting search results", testutils.DB.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "foo"), &noteSearchCount)
+	MustScan(t, "counting search results", db.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "foo"), &noteSearchCount)
 	assert.Equal(t, noteSearchCount, 0, "noteSearchCount for foo mismatch")
-	MustScan(t, "counting search results", testutils.DB.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "baz"), &noteSearchCount)
+	MustScan(t, "counting search results", db.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "baz"), &noteSearchCount)
 	assert.Equal(t, noteSearchCount, 1, "noteSearchCount for baz mismatch")
 
 	// execute - delete
-	tx, err = testutils.DB.Begin()
+	tx, err = db.Begin()
 	if err != nil {
 		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 	}
@@ -883,8 +883,8 @@ func TestNoteFTS(t *testing.T) {
 	tx.Commit()
 
 	// test
-	MustScan(t, "counting notes", testutils.DB.QueryRow("SELECT count(*) FROM notes"), &noteCount)
-	MustScan(t, "counting note_fts", testutils.DB.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
+	MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+	MustScan(t, "counting note_fts", db.QueryRow("SELECT count(*) FROM note_fts"), &noteFtsCount)
 
 	assert.Equal(t, noteCount, 0, "noteCount mismatch")
 	assert.Equal(t, noteFtsCount, 0, "noteFtsCount mismatch")

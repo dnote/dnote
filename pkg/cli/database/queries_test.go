@@ -51,7 +51,7 @@ func TestInsertSystem(t *testing.T) {
 			defer CloseTestDB(t, db)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 			}
@@ -66,7 +66,7 @@ func TestInsertSystem(t *testing.T) {
 			// test
 			var key, val string
 			MustScan(t, "getting the saved record",
-				testutils.DB.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
+				db.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
 
 			assert.Equal(t, key, tc.key, "key mismatch for test case")
 			assert.Equal(t, val, tc.val, "val mismatch for test case")
@@ -101,10 +101,10 @@ func TestUpsertSystem(t *testing.T) {
 			MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "baz", "quz")
 
 			var initialSystemCount int
-			MustScan(t, "counting records", testutils.DB.QueryRow("SELECT count(*) FROM system"), &initialSystemCount)
+			MustScan(t, "counting records", db.QueryRow("SELECT count(*) FROM system"), &initialSystemCount)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 			}
@@ -119,10 +119,10 @@ func TestUpsertSystem(t *testing.T) {
 			// test
 			var key, val string
 			MustScan(t, "getting the saved record",
-				testutils.DB.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
+				db.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
 			var systemCount int
 			MustScan(t, "counting records",
-				testutils.DB.QueryRow("SELECT count(*) FROM system"), &systemCount)
+				db.QueryRow("SELECT count(*) FROM system"), &systemCount)
 
 			assert.Equal(t, key, tc.key, "key mismatch")
 			assert.Equal(t, val, tc.val, "val mismatch")
@@ -140,7 +140,7 @@ func TestGetSystem(t *testing.T) {
 		// execute
 		MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "foo", "bar")
 
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -163,7 +163,7 @@ func TestGetSystem(t *testing.T) {
 		// execute
 		MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "foo", 1234)
 
-		tx, err := testutils.DB.Begin()
+		tx, err := db.Begin()
 		if err != nil {
 			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 		}
@@ -205,10 +205,10 @@ func TestUpdateSystem(t *testing.T) {
 			MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "baz", "quz")
 
 			var initialSystemCount int
-			MustScan(t, "counting records", testutils.DB.QueryRow("SELECT count(*) FROM system"), &initialSystemCount)
+			MustScan(t, "counting records", db.QueryRow("SELECT count(*) FROM system"), &initialSystemCount)
 
 			// execute
-			tx, err := testutils.DB.Begin()
+			tx, err := db.Begin()
 			if err != nil {
 				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
 			}
@@ -223,10 +223,10 @@ func TestUpdateSystem(t *testing.T) {
 			// test
 			var key, val string
 			MustScan(t, "getting the saved record",
-				testutils.DB.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
+				db.QueryRow("SELECT key, value FROM system WHERE key = ?", tc.key), &key, &val)
 			var systemCount int
 			MustScan(t, "counting records",
-				testutils.DB.QueryRow("SELECT count(*) FROM system"), &systemCount)
+				db.QueryRow("SELECT count(*) FROM system"), &systemCount)
 
 			assert.Equal(t, key, tc.key, "key mismatch")
 			assert.Equal(t, val, tc.val, "val mismatch")
@@ -245,7 +245,7 @@ func TestGetActiveNote(t *testing.T) {
 		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, false, true)
 
 		var n1RowID int
-		MustScan(t, "getting rowid", testutils.DB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
+		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
 
 		// execute
 		got, err := GetActiveNote(db, n1RowID)
@@ -275,7 +275,7 @@ func TestGetActiveNote(t *testing.T) {
 		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, true, true)
 
 		var n1RowID int
-		MustScan(t, "getting rowid", testutils.DB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
+		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
 
 		// execute
 		_, err := GetActiveNote(db, n1RowID)
@@ -299,7 +299,7 @@ func TestUpdateNoteContent(t *testing.T) {
 	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, "b1-uuid", "n1 content", 1542058875, 0, 1, false, false, false)
 
 	var rowid int
-	MustScan(t, "getting rowid", testutils.DB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
+	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
 
 	// execute
 	c := clock.NewMock()
@@ -315,7 +315,7 @@ func TestUpdateNoteContent(t *testing.T) {
 	var editedOn int
 	var dirty bool
 
-	MustScan(t, "getting the note record", testutils.DB.QueryRow("SELECT body, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &content, &editedOn, &dirty)
+	MustScan(t, "getting the note record", db.QueryRow("SELECT body, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &content, &editedOn, &dirty)
 
 	assert.Equal(t, content, "n1 content updated", "content mismatch")
 	assert.Equal(t, int64(editedOn), now.UnixNano(), "editedOn mismatch")
@@ -336,7 +336,7 @@ func TestUpdateNoteBook(t *testing.T) {
 	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, b1UUID, "n1 content", 1542058875, 0, 1, false, false, false)
 
 	var rowid int
-	MustScan(t, "getting rowid", testutils.DB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
+	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
 
 	// execute
 	c := clock.NewMock()
@@ -352,7 +352,7 @@ func TestUpdateNoteBook(t *testing.T) {
 	var editedOn int
 	var dirty bool
 
-	MustScan(t, "getting the note record", testutils.DB.QueryRow("SELECT book_uuid, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &bookUUID, &editedOn, &dirty)
+	MustScan(t, "getting the note record", db.QueryRow("SELECT book_uuid, edited_on, dirty FROM notes WHERE rowid = ?", rowid), &bookUUID, &editedOn, &dirty)
 
 	assert.Equal(t, bookUUID, b2UUID, "content mismatch")
 	assert.Equal(t, int64(editedOn), now.UnixNano(), "editedOn mismatch")
@@ -375,7 +375,7 @@ func TestUpdateBookName(t *testing.T) {
 
 	// test
 	var b1 Book
-	MustScan(t, "getting the note record", testutils.DB.QueryRow("SELECT uuid, label, dirty, usn, deleted FROM books WHERE uuid = ?", b1UUID), &b1.UUID, &b1.Label, &b1.Dirty, &b1.USN, &b1.Deleted)
+	MustScan(t, "getting the note record", db.QueryRow("SELECT uuid, label, dirty, usn, deleted FROM books WHERE uuid = ?", b1UUID), &b1.UUID, &b1.Label, &b1.Dirty, &b1.USN, &b1.Deleted)
 	assert.Equal(t, b1.UUID, b1UUID, "UUID mismatch")
 	assert.Equal(t, b1.Label, "b1-label-edited", "Label mismatch")
 	assert.Equal(t, b1.Dirty, true, "Dirty mismatch")

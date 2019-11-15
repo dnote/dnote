@@ -32,10 +32,10 @@ func TestInitSystemKV(t *testing.T) {
 	defer database.CloseTestDB(t, db)
 
 	var originalCount int
-	database.MustScan(t, "counting system configs", testutils.DB.QueryRow("SELECT count(*) FROM system"), &originalCount)
+	database.MustScan(t, "counting system configs", db.QueryRow("SELECT count(*) FROM system"), &originalCount)
 
 	// Execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -49,12 +49,12 @@ func TestInitSystemKV(t *testing.T) {
 
 	// Test
 	var count int
-	database.MustScan(t, "counting system configs", testutils.DB.QueryRow("SELECT count(*) FROM system"), &count)
+	database.MustScan(t, "counting system configs", db.QueryRow("SELECT count(*) FROM system"), &count)
 	assert.Equal(t, count, originalCount+1, "system count mismatch")
 
 	var val string
 	database.MustScan(t, "getting system value",
-		testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", "testKey"), &val)
+		db.QueryRow("SELECT value FROM system WHERE key = ?", "testKey"), &val)
 	assert.Equal(t, val, "testVal", "system value mismatch")
 }
 
@@ -66,10 +66,10 @@ func TestInitSystemKV_existing(t *testing.T) {
 	database.MustExec(t, "inserting a system config", db, "INSERT INTO system (key, value) VALUES (?, ?)", "testKey", "testVal")
 
 	var originalCount int
-	database.MustScan(t, "counting system configs", testutils.DB.QueryRow("SELECT count(*) FROM system"), &originalCount)
+	database.MustScan(t, "counting system configs", db.QueryRow("SELECT count(*) FROM system"), &originalCount)
 
 	// Execute
-	tx, err := testutils.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -83,11 +83,11 @@ func TestInitSystemKV_existing(t *testing.T) {
 
 	// Test
 	var count int
-	database.MustScan(t, "counting system configs", testutils.DB.QueryRow("SELECT count(*) FROM system"), &count)
+	database.MustScan(t, "counting system configs", db.QueryRow("SELECT count(*) FROM system"), &count)
 	assert.Equal(t, count, originalCount, "system count mismatch")
 
 	var val string
 	database.MustScan(t, "getting system value",
-		testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", "testKey"), &val)
+		db.QueryRow("SELECT value FROM system WHERE key = ?", "testKey"), &val)
 	assert.Equal(t, val, "testVal", "system value should not have been updated")
 }
