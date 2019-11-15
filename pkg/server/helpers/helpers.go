@@ -19,8 +19,8 @@
 package helpers
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -29,8 +29,7 @@ const (
 )
 
 // GetDemoUserID returns ID of the demo user
-func GetDemoUserID() (int, error) {
-	db := database.DBConn
+func GetDemoUserID(db *gorm.DB) (int, error) {
 
 	result := struct {
 		UserID int

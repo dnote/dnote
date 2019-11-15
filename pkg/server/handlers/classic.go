@@ -23,11 +23,11 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/crypt"
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
-	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,15 +39,13 @@ func (a *App) classicMigrate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-
 	var account database.Account
-	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
-	if err := db.Model(&account).
+	if err := a.DB.Model(&account).
 		Update(map[string]interface{}{
 			"salt":                 "",
 			"auth_key_hash":        "",
@@ -66,8 +64,6 @@ type PresigninResponse struct {
 }
 
 func (a *App) classicPresignin(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	q := r.URL.Query()
 	email := q.Get("email")
 	if email == "" {
@@ -76,7 +72,7 @@ func (a *App) classicPresignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := db.Where("email = ?", email).First(&account)
+	conn := a.DB.Where("email = ?", email).First(&account)
 	if !conn.RecordNotFound() && conn.Error != nil {
 		HandleError(w, "getting user", conn.Error, http.StatusInternalServerError)
 		return
@@ -106,8 +102,6 @@ type classicSigninPayload struct {
 }
 
 func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	var params classicSigninPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
@@ -120,7 +114,7 @@ func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := db.Where("email = ?", params.Email).First(&account)
+	conn := a.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
@@ -138,7 +132,7 @@ func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := operations.CreateSession(db, account.UserID)
+	session, err := operations.CreateSession(a.DB, account.UserID)
 	if err != nil {
 		HandleError(w, "creating session", nil, http.StatusBadRequest)
 		return
@@ -169,10 +163,8 @@ func (a *App) classicGetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-
 	var account database.Account
-	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
@@ -229,8 +221,6 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-
 	var params classicSetPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
@@ -238,7 +228,7 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "getting user", nil, http.StatusInternalServerError)
 		return
 	}
@@ -249,7 +239,7 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+	if err := a.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
 		http.Error(w, errors.Wrap(err, "updating password").Error(), http.StatusInternalServerError)
 		return
 	}
@@ -265,8 +255,7 @@ func (a *App) classicGetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var notes []database.Note
-	db := database.DBConn
-	if err := db.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
 		HandleError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}

@@ -26,9 +26,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -138,8 +138,7 @@ func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -431,8 +430,7 @@ func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -532,7 +530,7 @@ func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			operations.MarkUnsubscribed(subscription.Customer.ID)
+			operations.MarkUnsubscribed(a.DB, subscription.Customer.ID)
 		}
 	default:
 		{

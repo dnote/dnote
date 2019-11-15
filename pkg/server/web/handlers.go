@@ -24,20 +24,40 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/tmpl"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
 // Context contains contents of web assets
 type Context struct {
+	DB               *gorm.DB
 	IndexHTML        []byte
 	RobotsTxt        []byte
 	ServiceWorkerJs  []byte
 	StaticFileSystem http.FileSystem
 }
 
-// GetRootHandler returns an HTTP handler that serves the app shell
-func GetRootHandler(b []byte) http.HandlerFunc {
-	appShell, err := tmpl.NewAppShell(b)
+// Handlers are a group of web handlers
+type Handlers struct {
+	GetRoot          http.HandlerFunc
+	GetRobots        http.HandlerFunc
+	GetServiceWorker http.HandlerFunc
+	GetStatic        http.Handler
+}
+
+// Init initializes the handlers
+func Init(c Context) Handlers {
+	return Handlers{
+		GetRoot:          getRootHandler(c),
+		GetRobots:        getRobotsHandler(c),
+		GetServiceWorker: getSWHandler(c),
+		GetStatic:        getStaticHandler(c),
+	}
+}
+
+// getRootHandler returns an HTTP handler that serves the app shell
+func getRootHandler(c Context) http.HandlerFunc {
+	appShell, err := tmpl.NewAppShell(c.IndexHTML)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing app shell"))
 	}
@@ -46,7 +66,7 @@ func GetRootHandler(b []byte) http.HandlerFunc {
 		// index.html must not be cached
 		w.Header().Set("Cache-Control", "no-cache")
 
-		buf, err := appShell.Execute(r)
+		buf, err := appShell.Execute(r, c.DB)
 		if err != nil {
 			if errors.Cause(err) == tmpl.ErrNotFound {
 				handlers.RespondNotFound(w)
@@ -60,24 +80,25 @@ func GetRootHandler(b []byte) http.HandlerFunc {
 	}
 }
 
-// GetRobotsHandler returns an HTTP handler that serves robots.txt
-func GetRobotsHandler(b []byte) http.HandlerFunc {
+// getRobotsHandler returns an HTTP handler that serves robots.txt
+func getRobotsHandler(c Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache")
-		w.Write(b)
+		w.Write(c.RobotsTxt)
 	}
 }
 
-// GetSWHandler returns an HTTP handler that serves service worker
-func GetSWHandler(b []byte) http.HandlerFunc {
+// getSWHandler returns an HTTP handler that serves service worker
+func getSWHandler(c Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Content-Type", "application/javascript")
-		w.Write(b)
+		w.Write(c.ServiceWorkerJs)
 	}
 }
 
-// GetStaticHandler returns an HTTP handler that serves static files from a filesystem
-func GetStaticHandler(root http.FileSystem) http.Handler {
+// getStaticHandler returns an HTTP handler that serves static files from a filesystem
+func getStaticHandler(c Context) http.Handler {
+	root := c.StaticFileSystem
 	return http.StripPrefix("/static/", http.FileServer(root))
 }

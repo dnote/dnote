@@ -27,8 +27,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getRuleBookIDs(ruleID int) ([]int, error) {
-	db := database.DBConn
+func getRuleBookIDs(db *gorm.DB, ruleID int) ([]int, error) {
 	var ret []int
 	if err := db.Table("repetition_rule_books").Select("book_id").Where("repetition_rule_id = ?", ruleID).Pluck("book_id", &ret).Error; err != nil {
 		return nil, errors.Wrap(err, "querying book_ids")
@@ -37,11 +36,11 @@ func getRuleBookIDs(ruleID int) ([]int, error) {
 	return ret, nil
 }
 
-func applyBookDomain(noteQuery *gorm.DB, rule database.RepetitionRule) (*gorm.DB, error) {
+func applyBookDomain(db *gorm.DB, noteQuery *gorm.DB, rule database.RepetitionRule) (*gorm.DB, error) {
 	ret := noteQuery
 
 	if rule.BookDomain != database.BookDomainAll {
-		bookIDs, err := getRuleBookIDs(rule.ID)
+		bookIDs, err := getRuleBookIDs(db, rule.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "getting book_ids")
 		}
@@ -58,8 +57,8 @@ func applyBookDomain(noteQuery *gorm.DB, rule database.RepetitionRule) (*gorm.DB
 	return ret, nil
 }
 
-func getNotes(conn *gorm.DB, rule database.RepetitionRule, dst *[]database.Note) error {
-	c, err := applyBookDomain(conn, rule)
+func getNotes(db, conn *gorm.DB, rule database.RepetitionRule, dst *[]database.Note) error {
+	c, err := applyBookDomain(db, conn, rule)
 	if err != nil {
 		return errors.Wrap(err, "building query for book threahold 1")
 	}
@@ -79,16 +78,14 @@ func getBalancedNotes(db *gorm.DB, rule database.RepetitionRule) ([]database.Not
 	t2 := now.AddDate(0, 0, -7).UnixNano()
 
 	// Get notes into three buckets with different threshold values
-	var stage1 []database.Note
-	var stage2 []database.Note
-	var stage3 []database.Note
-	if err := getNotes(db.Where("notes.added_on > ?", t1), rule, &stage1); err != nil {
+	var stage1, stage2, stage3 []database.Note
+	if err := getNotes(db, db.Where("notes.added_on > ?", t1), rule, &stage1); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 1")
 	}
-	if err := getNotes(db.Where("notes.added_on > ? AND notes.added_on < ?", t2, t1), rule, &stage2); err != nil {
+	if err := getNotes(db, db.Where("notes.added_on > ? AND notes.added_on < ?", t2, t1), rule, &stage2); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 2")
 	}
-	if err := getNotes(db.Where("notes.added_on < ?", t2), rule, &stage3); err != nil {
+	if err := getNotes(db, db.Where("notes.added_on < ?", t2), rule, &stage3); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 3")
 	}
 

@@ -27,22 +27,19 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
-func init() {
-	testutils.InitTestDB()
-}
-
 func TestGetRepetitionRule(t *testing.T) {
+	
 	defer testutils.ClearData()
-	db := database.DBConn
 
 	// Setup
 	server := MustNewServer(t, &App{
+		
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -53,7 +50,7 @@ func TestGetRepetitionRule(t *testing.T) {
 		USN:   11,
 		Label: "js",
 	}
-	testutils.MustExec(t, db.Save(&b1), "preparing book1")
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book1")
 
 	r1 := database.RepetitionRule{
 		Title:      "Rule 1",
@@ -66,7 +63,7 @@ func TestGetRepetitionRule(t *testing.T) {
 		Books:      []database.Book{b1},
 		NoteCount:  5,
 	}
-	testutils.MustExec(t, db.Save(&r1), "preparing rule1")
+	testutils.MustExec(t, testutils.DB.Save(&r1), "preparing rule1")
 
 	// Execute
 	req := testutils.MakeReq(server, "GET", fmt.Sprintf("/repetition_rules/%s", r1.UUID), "")
@@ -81,9 +78,9 @@ func TestGetRepetitionRule(t *testing.T) {
 	}
 
 	var r1Record database.RepetitionRule
-	testutils.MustExec(t, db.Where("uuid = ?", r1.UUID).First(&r1Record), "finding r1Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", r1.UUID).First(&r1Record), "finding r1Record")
 	var b1Record database.Book
-	testutils.MustExec(t, db.Where("uuid = ?", b1.UUID).First(&b1Record), "finding b1Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", b1.UUID).First(&b1Record), "finding b1Record")
 
 	expected := presenters.RepetitionRule{
 		UUID:       r1Record.UUID,
@@ -112,11 +109,12 @@ func TestGetRepetitionRule(t *testing.T) {
 }
 
 func TestGetRepetitionRules(t *testing.T) {
+	
 	defer testutils.ClearData()
-	db := database.DBConn
 
 	// Setup
 	server := MustNewServer(t, &App{
+		
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -127,7 +125,7 @@ func TestGetRepetitionRules(t *testing.T) {
 		USN:   11,
 		Label: "js",
 	}
-	testutils.MustExec(t, db.Save(&b1), "preparing book1")
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book1")
 
 	r1 := database.RepetitionRule{
 		Title:      "Rule 1",
@@ -140,7 +138,7 @@ func TestGetRepetitionRules(t *testing.T) {
 		Books:      []database.Book{b1},
 		NoteCount:  5,
 	}
-	testutils.MustExec(t, db.Save(&r1), "preparing rule1")
+	testutils.MustExec(t, testutils.DB.Save(&r1), "preparing rule1")
 
 	r2 := database.RepetitionRule{
 		Title:      "Rule 2",
@@ -153,7 +151,7 @@ func TestGetRepetitionRules(t *testing.T) {
 		Books:      []database.Book{},
 		NoteCount:  5,
 	}
-	testutils.MustExec(t, db.Save(&r2), "preparing rule2")
+	testutils.MustExec(t, testutils.DB.Save(&r2), "preparing rule2")
 
 	// Execute
 	req := testutils.MakeReq(server, "GET", "/repetition_rules", "")
@@ -168,10 +166,10 @@ func TestGetRepetitionRules(t *testing.T) {
 	}
 
 	var r1Record, r2Record database.RepetitionRule
-	testutils.MustExec(t, db.Where("uuid = ?", r1.UUID).First(&r1Record), "finding r1Record")
-	testutils.MustExec(t, db.Where("uuid = ?", r2.UUID).First(&r2Record), "finding r2Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", r1.UUID).First(&r1Record), "finding r1Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", r2.UUID).First(&r2Record), "finding r2Record")
 	var b1Record database.Book
-	testutils.MustExec(t, db.Where("uuid = ?", b1.UUID).First(&b1Record), "finding b1Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", b1.UUID).First(&b1Record), "finding b1Record")
 
 	expected := []presenters.RepetitionRule{
 		{
@@ -217,8 +215,8 @@ func TestGetRepetitionRules(t *testing.T) {
 
 func TestCreateRepetitionRules(t *testing.T) {
 	t.Run("all books", func(t *testing.T) {
+		
 		defer testutils.ClearData()
-		db := database.DBConn
 
 		// Setup
 		c := clock.NewMock()
@@ -226,6 +224,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 		c.SetNow(t0)
 
 		server := MustNewServer(t, &App{
+			
 			Clock: c,
 		})
 		defer server.Close()
@@ -250,11 +249,11 @@ func TestCreateRepetitionRules(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 		var ruleCount int
-		testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+		testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 		assert.Equalf(t, ruleCount, 1, "reperition rule count mismatch")
 
 		var rule database.RepetitionRule
-		testutils.MustExec(t, db.Preload("Books").First(&rule), "finding b1Record")
+		testutils.MustExec(t, testutils.DB.Preload("Books").First(&rule), "finding b1Record")
 
 		assert.NotEqual(t, rule.UUID, "", "rule UUID mismatch")
 		assert.Equal(t, rule.Title, "Rule 1", "rule Title mismatch")
@@ -275,8 +274,8 @@ func TestCreateRepetitionRules(t *testing.T) {
 	}
 	for _, tc := range bookDomainTestCases {
 		t.Run(tc, func(t *testing.T) {
+			
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			// Setup
 			c := clock.NewMock()
@@ -284,6 +283,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 			c.SetNow(t0)
 
 			server := MustNewServer(t, &App{
+				
 				Clock: c,
 			})
 			defer server.Close()
@@ -294,7 +294,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 				UserID: user.ID,
 				Label:  "css",
 			}
-			testutils.MustExec(t, db.Save(&b1), "preparing b1")
+			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 
 			// Execute
 			dat := fmt.Sprintf(`{
@@ -314,14 +314,14 @@ func TestCreateRepetitionRules(t *testing.T) {
 			assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 			var ruleCount int
-			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 			assert.Equalf(t, ruleCount, 1, "reperition rule count mismatch")
 
 			var rule database.RepetitionRule
-			testutils.MustExec(t, db.Preload("Books").First(&rule), "finding b1Record")
+			testutils.MustExec(t, testutils.DB.Preload("Books").First(&rule), "finding b1Record")
 
 			var b1Record database.Book
-			testutils.MustExec(t, db.Where("id = ?", b1.ID).First(&b1Record), "finding b1Record")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1Record")
 
 			assert.NotEqual(t, rule.UUID, "", "rule UUID mismatch")
 			assert.Equal(t, rule.Title, "Rule 1", "rule Title mismatch")
@@ -339,14 +339,15 @@ func TestCreateRepetitionRules(t *testing.T) {
 }
 
 func TestUpdateRepetitionRules(t *testing.T) {
+	
 	defer testutils.ClearData()
-	db := database.DBConn
 
 	// Setup
 	c := clock.NewMock()
 	t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 	c.SetNow(t0)
 	server := MustNewServer(t, &App{
+		
 		Clock: c,
 	})
 	defer server.Close()
@@ -367,13 +368,13 @@ func TestUpdateRepetitionRules(t *testing.T) {
 		Books:      []database.Book{},
 		NoteCount:  20,
 	}
-	testutils.MustExec(t, db.Save(&r1), "preparing r1")
+	testutils.MustExec(t, testutils.DB.Save(&r1), "preparing r1")
 	b1 := database.Book{
 		UserID: user.ID,
 		USN:    11,
 		Label:  "js",
 	}
-	testutils.MustExec(t, db.Save(&b1), "preparing book1")
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book1")
 
 	dat := fmt.Sprintf(`{
 	"title": "Rule 1 - edited",
@@ -393,14 +394,14 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 	var totalRuleCount int
-	testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&totalRuleCount), "counting rules")
+	testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&totalRuleCount), "counting rules")
 	assert.Equalf(t, totalRuleCount, 1, "reperition rule count mismatch")
 
 	var rule database.RepetitionRule
-	testutils.MustExec(t, db.Preload("Books").First(&rule), "finding b1Record")
+	testutils.MustExec(t, testutils.DB.Preload("Books").First(&rule), "finding b1Record")
 
 	var b1Record database.Book
-	testutils.MustExec(t, db.Where("id = ?", b1.ID).First(&b1Record), "finding b1Record")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1Record")
 
 	assert.NotEqual(t, rule.UUID, "", "rule UUID mismatch")
 	assert.Equal(t, rule.Title, "Rule 1 - edited", "rule Title mismatch")
@@ -416,11 +417,12 @@ func TestUpdateRepetitionRules(t *testing.T) {
 }
 
 func TestDeleteRepetitionRules(t *testing.T) {
+	
 	defer testutils.ClearData()
-	db := database.DBConn
 
 	// Setup
 	server := MustNewServer(t, &App{
+		
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -439,7 +441,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 		Books:      []database.Book{},
 		NoteCount:  20,
 	}
-	testutils.MustExec(t, db.Save(&r1), "preparing r1")
+	testutils.MustExec(t, testutils.DB.Save(&r1), "preparing r1")
 
 	r2 := database.RepetitionRule{
 		Title:      "Rule 1",
@@ -452,7 +454,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 		Books:      []database.Book{},
 		NoteCount:  20,
 	}
-	testutils.MustExec(t, db.Save(&r2), "preparing r2")
+	testutils.MustExec(t, testutils.DB.Save(&r2), "preparing r2")
 
 	endpoint := fmt.Sprintf("/repetition_rules/%s", r1.UUID)
 	req := testutils.MakeReq(server, "DELETE", endpoint, "")
@@ -462,11 +464,11 @@ func TestDeleteRepetitionRules(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 	var totalRuleCount int
-	testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&totalRuleCount), "counting rules")
+	testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&totalRuleCount), "counting rules")
 	assert.Equalf(t, totalRuleCount, 1, "reperition rule count mismatch")
 
 	var r2Count int
-	testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Where("id = ?", r2.ID).Count(&r2Count), "counting r2")
+	testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Where("id = ?", r2.ID).Count(&r2Count), "counting r2")
 	assert.Equalf(t, r2Count, 1, "r2 count mismatch")
 }
 
@@ -541,11 +543,12 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case - create %d", idx), func(t *testing.T) {
+			
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			// Setup
 			server := MustNewServer(t, &App{
+				
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -560,13 +563,13 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
 
 			var ruleCount int
-			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 			assert.Equalf(t, ruleCount, 0, "reperition rule count mismatch")
 		})
 
 		t.Run(fmt.Sprintf("test case %d - update", idx), func(t *testing.T) {
+			
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			// Setup
 			user := testutils.SetupUserData()
@@ -581,15 +584,16 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 				Books:      []database.Book{},
 				NoteCount:  20,
 			}
-			testutils.MustExec(t, db.Save(&r1), "preparing r1")
+			testutils.MustExec(t, testutils.DB.Save(&r1), "preparing r1")
 			b1 := database.Book{
 				UserID: user.ID,
 				USN:    11,
 				Label:  "js",
 			}
-			testutils.MustExec(t, db.Save(&b1), "preparing book1")
+			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book1")
 
 			server := MustNewServer(t, &App{
+				
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -602,7 +606,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
 
 			var ruleCount int
-			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 			assert.Equalf(t, ruleCount, 1, "reperition rule count mismatch")
 		})
 	}
@@ -624,11 +628,12 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
+			
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			// Setup
 			server := MustNewServer(t, &App{
+				
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -643,7 +648,7 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 			assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
 
 			var ruleCount int
-			testutils.MustExec(t, db.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
+			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Count(&ruleCount), "counting rules")
 			assert.Equalf(t, ruleCount, 0, "reperition rule count mismatch")
 		})
 	}

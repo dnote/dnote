@@ -23,11 +23,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/presenters"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -38,8 +39,6 @@ type updateProfilePayload struct {
 
 // updateProfile updates user
 func (a *App) updateProfile(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -60,13 +59,13 @@ func (a *App) updateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	err = db.Where("user_id = ?", user.ID).First(&account).Error
+	err = a.DB.Where("user_id = ?", user.ID).First(&account).Error
 	if err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := db.Begin()
+	tx := a.DB.Begin()
 	if err := tx.Save(&user).Error; err != nil {
 		tx.Rollback()
 		HandleError(w, "saving user", err, http.StatusInternalServerError)
@@ -87,7 +86,7 @@ func (a *App) updateProfile(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	respondWithSession(w, user.ID, http.StatusOK)
+	respondWithSession(a.DB, w, user.ID, http.StatusOK)
 }
 
 type updateEmailPayload struct {
@@ -97,9 +96,7 @@ type updateEmailPayload struct {
 	NewAuthKey      string `json:"new_auth_key"`
 }
 
-func respondWithCalendar(w http.ResponseWriter, userID int) {
-	db := database.DBConn
-
+func respondWithCalendar(db *gorm.DB, w http.ResponseWriter, userID int) {
 	rows, err := db.Table("notes").Select("COUNT(id), date(to_timestamp(added_on/1000000000)) AS added_date").
 		Where("user_id = ?", userID).
 		Group("added_date").
@@ -132,22 +129,10 @@ func (a *App) getCalendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithCalendar(w, user.ID)
-}
-
-func (a *App) getDemoCalendar(w http.ResponseWriter, r *http.Request) {
-	userID, err := helpers.GetDemoUserID()
-	if err != nil {
-		HandleError(w, "finding demo user", err, http.StatusInternalServerError)
-		return
-	}
-
-	respondWithCalendar(w, userID)
+	respondWithCalendar(a.DB, w, user.ID)
 }
 
 func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -155,7 +140,7 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	err := db.Where("user_id = ?", user.ID).First(&account).Error
+	err := a.DB.Where("user_id = ?", user.ID).First(&account).Error
 	if err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
@@ -182,7 +167,7 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		Type:   database.TokenTypeEmailVerification,
 	}
 
-	if err := db.Save(&token).Error; err != nil {
+	if err := a.DB.Save(&token).Error; err != nil {
 		HandleError(w, "saving token", err, http.StatusInternalServerError)
 		return
 	}
@@ -212,8 +197,6 @@ type verifyEmailPayload struct {
 }
 
 func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	var params verifyEmailPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
@@ -221,7 +204,7 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var token database.Token
-	if err := db.
+	if err := a.DB.
 		Where("value = ? AND type = ?", params.Token, database.TokenTypeEmailVerification).
 		First(&token).Error; err != nil {
 		http.Error(w, "invalid token", http.StatusBadRequest)
@@ -240,7 +223,7 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := db.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
@@ -249,7 +232,7 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := db.Begin()
+	tx := a.DB.Begin()
 	account.EmailVerified = true
 	if err := tx.Save(&account).Error; err != nil {
 		tx.Rollback()
@@ -264,7 +247,7 @@ func (a *App) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	tx.Commit()
 
 	var user database.User
-	if err := db.Where("id = ?", token.UserID).First(&user).Error; err != nil {
+	if err := a.DB.Where("id = ?", token.UserID).First(&user).Error; err != nil {
 		HandleError(w, "finding user", err, http.StatusInternalServerError)
 		return
 	}
@@ -278,8 +261,6 @@ type updateEmailPreferencePayload struct {
 }
 
 func (a *App) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -293,12 +274,12 @@ func (a *App) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var frequency database.EmailPreference
-	if err := db.Where(database.EmailPreference{UserID: user.ID}).FirstOrCreate(&frequency).Error; err != nil {
+	if err := a.DB.Where(database.EmailPreference{UserID: user.ID}).FirstOrCreate(&frequency).Error; err != nil {
 		HandleError(w, "finding frequency", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	frequency.DigestWeekly = params.DigestWeekly
 	if err := tx.Save(&frequency).Error; err != nil {
@@ -323,8 +304,6 @@ func (a *App) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -332,7 +311,7 @@ func (a *App) getEmailPreference(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pref database.EmailPreference
-	if err := db.Where(database.EmailPreference{UserID: user.ID}).First(&pref).Error; err != nil {
+	if err := a.DB.Where(database.EmailPreference{UserID: user.ID}).First(&pref).Error; err != nil {
 		HandleError(w, "finding pref", err, http.StatusInternalServerError)
 		return
 	}
@@ -347,8 +326,6 @@ type updatePasswordPayload struct {
 }
 
 func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -366,7 +343,7 @@ func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "getting user", nil, http.StatusInternalServerError)
 		return
 	}
@@ -391,7 +368,7 @@ func (a *App) updatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+	if err := a.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
 		http.Error(w, errors.Wrap(err, "updating password").Error(), http.StatusInternalServerError)
 		return
 	}

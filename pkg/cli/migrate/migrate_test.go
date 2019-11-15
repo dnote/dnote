@@ -85,7 +85,7 @@ func TestExecute_bump_schema(t *testing.T) {
 
 			// test
 			var schema int
-			database.MustScan(t, "getting schema", db.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
+			database.MustScan(t, "getting schema", testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
 			assert.Equal(t, schema, 10, "schema was not incremented properly")
 		}()
 	}
@@ -157,16 +157,16 @@ func TestRun_nonfresh(t *testing.T) {
 
 			// test
 			var schema int
-			database.MustScan(t, fmt.Sprintf("getting schema for %s", tc.schemaKey), db.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
+			database.MustScan(t, fmt.Sprintf("getting schema for %s", tc.schemaKey), testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
 			assert.Equal(t, schema, 4, fmt.Sprintf("schema was not updated for %s", tc.schemaKey))
 
 			var testRunCount int
-			database.MustScan(t, "counting test runs", db.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
+			database.MustScan(t, "counting test runs", testutils.DB.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
 			assert.Equal(t, testRunCount, 2, "test run count mismatch")
 
 			var testRun1, testRun2 string
-			database.MustScan(t, "finding test run 1", db.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v3"), &testRun1)
-			database.MustScan(t, "finding test run 2", db.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v4"), &testRun2)
+			database.MustScan(t, "finding test run 1", testutils.DB.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v3"), &testRun1)
+			database.MustScan(t, "finding test run 2", testutils.DB.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v4"), &testRun2)
 		}()
 	}
 }
@@ -230,17 +230,17 @@ func TestRun_fresh(t *testing.T) {
 
 			// test
 			var schema int
-			database.MustScan(t, "getting schema", db.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
+			database.MustScan(t, "getting schema", testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
 			assert.Equal(t, schema, 3, "schema was not updated")
 
 			var testRunCount int
-			database.MustScan(t, "counting test runs", db.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
+			database.MustScan(t, "counting test runs", testutils.DB.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
 			assert.Equal(t, testRunCount, 3, "test run count mismatch")
 
 			var testRun1, testRun2, testRun3 string
-			database.MustScan(t, "finding test run 1", db.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v1"), &testRun1)
-			database.MustScan(t, "finding test run 2", db.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v2"), &testRun2)
-			database.MustScan(t, "finding test run 2", db.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v3"), &testRun3)
+			database.MustScan(t, "finding test run 1", testutils.DB.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v1"), &testRun1)
+			database.MustScan(t, "finding test run 2", testutils.DB.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v2"), &testRun2)
+			database.MustScan(t, "finding test run 2", testutils.DB.QueryRow("SELECT name FROM migrate_run_test WHERE name = ?", "v3"), &testRun3)
 		}()
 	}
 }
@@ -306,11 +306,11 @@ func TestRun_up_to_date(t *testing.T) {
 
 			// test
 			var schema int
-			database.MustScan(t, "getting schema", db.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
+			database.MustScan(t, "getting schema", testutils.DB.QueryRow("SELECT value FROM system WHERE key = ?", tc.schemaKey), &schema)
 			assert.Equal(t, schema, 3, "schema was not updated")
 
 			var testRunCount int
-			database.MustScan(t, "counting test runs", db.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
+			database.MustScan(t, "counting test runs", testutils.DB.QueryRow("SELECT count(*) FROM migrate_run_test"), &testRunCount)
 			assert.Equal(t, testRunCount, 0, "test run count mismatch")
 		}()
 	}
@@ -339,7 +339,7 @@ func TestLocalMigration1(t *testing.T) {
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 1, "edit_note", string(data), 1537829463)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -354,15 +354,15 @@ func TestLocalMigration1(t *testing.T) {
 
 	// Test
 	var actionCount int
-	database.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	database.MustScan(t, "counting actions", testutils.DB.QueryRow("SELECT count(*) FROM actions"), &actionCount)
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
-	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
+	database.MustScan(t, "getting action 1", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
 		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
-	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
+	database.MustScan(t, "getting action 2", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
 		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
-	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
+	database.MustScan(t, "getting action 3", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
 		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
 
 	var a1Data actions.AddBookDataV1
@@ -423,7 +423,7 @@ func TestLocalMigration2(t *testing.T) {
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 2, "edit_note", string(data), 1537829463)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -438,15 +438,15 @@ func TestLocalMigration2(t *testing.T) {
 
 	// Test
 	var actionCount int
-	database.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	database.MustScan(t, "counting actions", testutils.DB.QueryRow("SELECT count(*) FROM actions"), &actionCount)
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
-	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
+	database.MustScan(t, "getting action 1", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
 		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
-	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
+	database.MustScan(t, "getting action 2", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
 		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
-	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
+	database.MustScan(t, "getting action 3", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
 		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
 
 	var a1Data actions.AddNoteDataV2
@@ -502,7 +502,7 @@ func TestLocalMigration3(t *testing.T) {
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a3UUID, 1, "remove_note", string(data), 1537829463)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -517,15 +517,15 @@ func TestLocalMigration3(t *testing.T) {
 
 	// Test
 	var actionCount int
-	database.MustScan(t, "counting actions", db.QueryRow("SELECT count(*) FROM actions"), &actionCount)
+	database.MustScan(t, "counting actions", testutils.DB.QueryRow("SELECT count(*) FROM actions"), &actionCount)
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
-	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
+	database.MustScan(t, "getting action 1", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
 		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
-	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
+	database.MustScan(t, "getting action 2", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
 		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
-	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
+	database.MustScan(t, "getting action 3", testutils.DB.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
 		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
 
 	var a1Data actions.AddNoteDataV2
@@ -567,7 +567,7 @@ func TestLocalMigration4(t *testing.T) {
 	database.MustExec(t, "inserting css note", db, "INSERT INTO notes (uuid, book_uuid, content, added_on) VALUES (?, ?, ?, ?)", n1UUID, b1UUID, "n1 content", time.Now().UnixNano())
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -584,8 +584,8 @@ func TestLocalMigration4(t *testing.T) {
 	var n1Dirty, b1Dirty bool
 	var n1Deleted, b1Deleted bool
 	var n1USN, b1USN int
-	database.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty, deleted, usn FROM notes WHERE uuid = ?", n1UUID), &n1Dirty, &n1Deleted, &n1USN)
-	database.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty, deleted, usn FROM books WHERE uuid = ?", b1UUID), &b1Dirty, &b1Deleted, &b1USN)
+	database.MustScan(t, "scanning the newly added dirty flag of n1", testutils.DB.QueryRow("SELECT dirty, deleted, usn FROM notes WHERE uuid = ?", n1UUID), &n1Dirty, &n1Deleted, &n1USN)
+	database.MustScan(t, "scanning the newly added dirty flag of b1", testutils.DB.QueryRow("SELECT dirty, deleted, usn FROM books WHERE uuid = ?", b1UUID), &b1Dirty, &b1Deleted, &b1USN)
 
 	assert.Equal(t, n1Dirty, false, "n1 dirty flag should be false by default")
 	assert.Equal(t, b1Dirty, false, "b1 dirty flag should be false by default")
@@ -631,7 +631,7 @@ func TestLocalMigration5(t *testing.T) {
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", "a3-uuid", 1, "edit_note", string(data), 1537829463)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -646,11 +646,11 @@ func TestLocalMigration5(t *testing.T) {
 
 	// Test
 	var b1Dirty, b2Dirty, n1Dirty, n2Dirty, n3Dirty bool
-	database.MustScan(t, "scanning the newly added dirty flag of b1", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b1UUID), &b1Dirty)
-	database.MustScan(t, "scanning the newly added dirty flag of b2", db.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b2UUID), &b2Dirty)
-	database.MustScan(t, "scanning the newly added dirty flag of n1", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n1UUID), &n1Dirty)
-	database.MustScan(t, "scanning the newly added dirty flag of n2", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n2UUID), &n2Dirty)
-	database.MustScan(t, "scanning the newly added dirty flag of n3", db.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n3UUID), &n3Dirty)
+	database.MustScan(t, "scanning the newly added dirty flag of b1", testutils.DB.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b1UUID), &b1Dirty)
+	database.MustScan(t, "scanning the newly added dirty flag of b2", testutils.DB.QueryRow("SELECT dirty FROM books WHERE uuid = ?", b2UUID), &b2Dirty)
+	database.MustScan(t, "scanning the newly added dirty flag of n1", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n1UUID), &n1Dirty)
+	database.MustScan(t, "scanning the newly added dirty flag of n2", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n2UUID), &n2Dirty)
+	database.MustScan(t, "scanning the newly added dirty flag of n3", testutils.DB.QueryRow("SELECT dirty FROM notes WHERE uuid = ?", n3UUID), &n3Dirty)
 
 	assert.Equal(t, b1Dirty, false, "b1 dirty flag should be false by default")
 	assert.Equal(t, b2Dirty, true, "b2 dirty flag should be false by default")
@@ -673,7 +673,7 @@ func TestLocalMigration6(t *testing.T) {
 		"INSERT INTO actions (uuid, schema, type, data, timestamp) VALUES (?, ?, ?, ?, ?)", a1UUID, 1, "add_book", string(data), 1537829463)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -688,7 +688,7 @@ func TestLocalMigration6(t *testing.T) {
 
 	// Test
 	var count int
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name = ?;", "actions").Scan(&count)
+	err = testutils.DB.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name = ?;", "actions").Scan(&count)
 	assert.Equal(t, count, 0, "actions table should have been deleted")
 }
 
@@ -704,7 +704,7 @@ func TestLocalMigration7_trash(t *testing.T) {
 	database.MustExec(t, "inserting trash book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "trash")
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -720,7 +720,7 @@ func TestLocalMigration7_trash(t *testing.T) {
 	// Test
 	var b1Label string
 	var b1Dirty bool
-	database.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	database.MustScan(t, "scanning b1 label", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
 	assert.Equal(t, b1Label, "trash (2)", "b1 label was not migrated")
 	assert.Equal(t, b1Dirty, true, "b1 was not marked dirty")
 }
@@ -737,7 +737,7 @@ func TestLocalMigration7_conflicts(t *testing.T) {
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -753,7 +753,7 @@ func TestLocalMigration7_conflicts(t *testing.T) {
 	// Test
 	var b1Label string
 	var b1Dirty bool
-	database.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	database.MustScan(t, "scanning b1 label", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
 	assert.Equal(t, b1Label, "conflicts (2)", "b1 label was not migrated")
 	assert.Equal(t, b1Dirty, true, "b1 was not marked dirty")
 }
@@ -772,7 +772,7 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "conflicts (2)")
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -788,8 +788,8 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 	// Test
 	var b1Label, b2Label string
 	var b1Dirty, b2Dirty bool
-	database.MustScan(t, "scanning b1 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
-	database.MustScan(t, "scanning b2 label", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	database.MustScan(t, "scanning b1 label", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	database.MustScan(t, "scanning b2 label", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
 	assert.Equal(t, b1Label, "conflicts (3)", "b1 label was not migrated")
 	assert.Equal(t, b2Label, "conflicts (2)", "b1 label was not migrated")
 	assert.Equal(t, b1Dirty, true, "b1 was not marked dirty")
@@ -817,7 +817,7 @@ func TestLocalMigration8(t *testing.T) {
 		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 2, n2UUID, b1UUID, "", 3, 4, false, true, 21, true)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -835,13 +835,13 @@ func TestLocalMigration8(t *testing.T) {
 	var n1AddedOn, n1EditedOn int64
 	var n1USN int
 	var n1Public, n1Dirty, n1Deleted bool
-	database.MustScan(t, "scanning n1", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n1UUID), &n1BookUUID, &n1Body, &n1AddedOn, &n1EditedOn, &n1USN, &n1Public, &n1Dirty, &n1Deleted)
+	database.MustScan(t, "scanning n1", testutils.DB.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n1UUID), &n1BookUUID, &n1Body, &n1AddedOn, &n1EditedOn, &n1USN, &n1Public, &n1Dirty, &n1Deleted)
 
 	var n2BookUUID, n2Body string
 	var n2AddedOn, n2EditedOn int64
 	var n2USN int
 	var n2Public, n2Dirty, n2Deleted bool
-	database.MustScan(t, "scanning n2", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n2UUID), &n2BookUUID, &n2Body, &n2AddedOn, &n2EditedOn, &n2USN, &n2Public, &n2Dirty, &n2Deleted)
+	database.MustScan(t, "scanning n2", testutils.DB.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n2UUID), &n2BookUUID, &n2Body, &n2AddedOn, &n2EditedOn, &n2USN, &n2Public, &n2Dirty, &n2Deleted)
 
 	assert.Equal(t, n1BookUUID, b1UUID, "n1 BookUUID mismatch")
 	assert.Equal(t, n1Body, "n1 Body", "n1 Body mismatch")
@@ -883,7 +883,7 @@ func TestLocalMigration9(t *testing.T) {
 		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n2UUID, b1UUID, "n2 Body", 3, 4, false, true, 21, false)
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -900,11 +900,11 @@ func TestLocalMigration9(t *testing.T) {
 
 	// assert that note_fts was populated with correct values
 	var noteFtsCount int
-	database.MustScan(t, "counting note_fts", db.QueryRow("SELECT count(*) FROM note_fts;"), &noteFtsCount)
+	database.MustScan(t, "counting note_fts", testutils.DB.QueryRow("SELECT count(*) FROM note_fts;"), &noteFtsCount)
 	assert.Equal(t, noteFtsCount, 2, "noteFtsCount mismatch")
 
 	var resCount int
-	database.MustScan(t, "counting result", db.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "n1"), &resCount)
+	database.MustScan(t, "counting result", testutils.DB.QueryRow("SELECT count(*) FROM note_fts WHERE note_fts MATCH ?", "n1"), &resCount)
 	assert.Equal(t, resCount, 1, "noteFtsCount mismatch")
 }
 
@@ -934,7 +934,7 @@ func TestLocalMigration10(t *testing.T) {
 	database.MustExec(t, "inserting book 8", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b8UUID, "5")
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -953,14 +953,14 @@ func TestLocalMigration10(t *testing.T) {
 	var b1Label, b2Label, b3Label, b4Label, b5Label, b6Label, b7Label, b8Label string
 	var b1Dirty, b2Dirty, b3Dirty, b4Dirty, b5Dirty, b6Dirty, b7Dirty, b8Dirty bool
 
-	database.MustScan(t, "getting b1", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
-	database.MustScan(t, "getting b2", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
-	database.MustScan(t, "getting b3", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
-	database.MustScan(t, "getting b4", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
-	database.MustScan(t, "getting b5", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
-	database.MustScan(t, "getting b6", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
-	database.MustScan(t, "getting b7", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
-	database.MustScan(t, "getting b8", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
+	database.MustScan(t, "getting b1", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	database.MustScan(t, "getting b2", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	database.MustScan(t, "getting b3", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
+	database.MustScan(t, "getting b4", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
+	database.MustScan(t, "getting b5", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
+	database.MustScan(t, "getting b6", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
+	database.MustScan(t, "getting b7", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
+	database.MustScan(t, "getting b8", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
 
 	assert.Equal(t, b1Label, "123 (2)", "b1Label mismatch")
 	assert.Equal(t, b1Dirty, true, "b1Dirty mismatch")
@@ -1008,7 +1008,7 @@ func TestLocalMigration11(t *testing.T) {
 	database.MustExec(t, "inserting book 9", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b9UUID, "cool_ideas_2")
 
 	// Execute
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -1023,22 +1023,22 @@ func TestLocalMigration11(t *testing.T) {
 
 	// Test
 	var bookCount int
-	database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+	database.MustScan(t, "counting books", testutils.DB.QueryRow("SELECT count(*) FROM books"), &bookCount)
 	assert.Equal(t, bookCount, 9, "bookCount mismatch")
 
 	// assert that note_fts was populated with correct values
 	var b1Label, b2Label, b3Label, b4Label, b5Label, b6Label, b7Label, b8Label, b9Label string
 	var b1Dirty, b2Dirty, b3Dirty, b4Dirty, b5Dirty, b6Dirty, b7Dirty, b8Dirty, b9Dirty bool
 
-	database.MustScan(t, "getting b1", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
-	database.MustScan(t, "getting b2", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
-	database.MustScan(t, "getting b3", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
-	database.MustScan(t, "getting b4", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
-	database.MustScan(t, "getting b5", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
-	database.MustScan(t, "getting b6", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
-	database.MustScan(t, "getting b7", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
-	database.MustScan(t, "getting b8", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
-	database.MustScan(t, "getting b9", db.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b9UUID), &b9Label, &b9Dirty)
+	database.MustScan(t, "getting b1", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b1UUID), &b1Label, &b1Dirty)
+	database.MustScan(t, "getting b2", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b2UUID), &b2Label, &b2Dirty)
+	database.MustScan(t, "getting b3", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b3UUID), &b3Label, &b3Dirty)
+	database.MustScan(t, "getting b4", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b4UUID), &b4Label, &b4Dirty)
+	database.MustScan(t, "getting b5", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b5UUID), &b5Label, &b5Dirty)
+	database.MustScan(t, "getting b6", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b6UUID), &b6Label, &b6Dirty)
+	database.MustScan(t, "getting b7", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b7UUID), &b7Label, &b7Dirty)
+	database.MustScan(t, "getting b8", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b8UUID), &b8Label, &b8Dirty)
+	database.MustScan(t, "getting b9", testutils.DB.QueryRow("SELECT label, dirty FROM books WHERE uuid = ?", b9UUID), &b9Label, &b9Dirty)
 
 	assert.Equal(t, b1Label, "foo", "b1Label mismatch")
 	assert.Equal(t, b1Dirty, false, "b1Dirty mismatch")
@@ -1147,7 +1147,7 @@ func TestRemoteMigration1(t *testing.T) {
 	database.MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, "someSessionKey")
 	database.MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
 
-	tx, err := db.Begin()
+	tx, err := testutils.DB.Begin()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "beginning a transaction"))
 	}
@@ -1162,9 +1162,9 @@ func TestRemoteMigration1(t *testing.T) {
 
 	// test
 	var postJSBookUUID, postCSSBookUUID, postLinuxBookUUID string
-	database.MustScan(t, "getting js book uuid", db.QueryRow("SELECT uuid FROM books WHERE label = ?", "js"), &postJSBookUUID)
-	database.MustScan(t, "getting css book uuid", db.QueryRow("SELECT uuid FROM books WHERE label = ?", "css"), &postCSSBookUUID)
-	database.MustScan(t, "getting linux book uuid", db.QueryRow("SELECT uuid FROM books WHERE label = ?", "linux"), &postLinuxBookUUID)
+	database.MustScan(t, "getting js book uuid", testutils.DB.QueryRow("SELECT uuid FROM books WHERE label = ?", "js"), &postJSBookUUID)
+	database.MustScan(t, "getting css book uuid", testutils.DB.QueryRow("SELECT uuid FROM books WHERE label = ?", "css"), &postCSSBookUUID)
+	database.MustScan(t, "getting linux book uuid", testutils.DB.QueryRow("SELECT uuid FROM books WHERE label = ?", "linux"), &postLinuxBookUUID)
 
 	assert.Equal(t, postJSBookUUID, newJSBookUUID, "js book uuid was not updated correctly")
 	assert.Equal(t, postCSSBookUUID, newCSSBookUUID, "css book uuid was not updated correctly")

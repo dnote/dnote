@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
@@ -30,6 +31,7 @@ import (
 // with the given app paratmers
 func MustNewServer(t *testing.T, app *App) *httptest.Server {
 	app.WebURL = os.Getenv("WebURL")
+	app.DB = testutils.DB
 
 	r, err := NewRouter(app)
 	if err != nil {

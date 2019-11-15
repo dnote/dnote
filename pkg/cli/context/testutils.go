@@ -37,7 +37,8 @@ func InitTestCtx(t *testing.T, dnoteDir string, dbOpts *database.TestDBOptions) 
 		DB:       db,
 		DnoteDir: dnoteDir,
 		// Use a mock clock to test times
-		Clock: clock.NewMock(),
+		DB: db,
+Clock: clock.NewMock(),
 	}
 }
 

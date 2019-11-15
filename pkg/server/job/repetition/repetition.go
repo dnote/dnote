@@ -31,20 +31,29 @@ import (
 	"github.com/pkg/errors"
 )
 
+// BuildEmailParams is the params for building an email
+type BuildEmailParams struct {
+	Now       time.Time
+	User      database.User
+	EmailAddr string
+	Digest    database.Digest
+	Rule      database.RepetitionRule
+}
+
 // BuildEmail builds an email for the spaced repetition
-func BuildEmail(now time.Time, user database.User, emailAddr string, digest database.Digest, rule database.RepetitionRule) (*mailer.Email, error) {
-	date := now.Format("Jan 02 2006")
-	subject := fmt.Sprintf("%s %s", rule.Title, date)
-	tok, err := mailer.GetToken(user, database.TokenTypeRepetition)
+func BuildEmail(db *gorm.DB, p BuildEmailParams) (*mailer.Email, error) {
+	date := p.Now.Format("Jan 02 2006")
+	subject := fmt.Sprintf("%s %s", p.Rule.Title, date)
+	tok, err := mailer.GetToken(db, p.User, database.TokenTypeRepetition)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting email frequency token")
 	}
 
-	t1 := now.AddDate(0, 0, -3).UnixNano()
-	t2 := now.AddDate(0, 0, -7).UnixNano()
+	t1 := p.Now.AddDate(0, 0, -3).UnixNano()
+	t2 := p.Now.AddDate(0, 0, -7).UnixNano()
 
 	noteInfos := []mailer.DigestNoteInfo{}
-	for _, note := range digest.Notes {
+	for _, note := range p.Digest.Notes {
 		var stage int
 		if note.AddedOn > t1 {
 			stage = 1
@@ -60,7 +69,7 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 
 	bookCount := 0
 	bookMap := map[string]bool{}
-	for _, n := range digest.Notes {
+	for _, n := range p.Digest.Notes {
 		if ok := bookMap[n.Book.Label]; !ok {
 			bookCount++
 			bookMap[n.Book.Label] = true
@@ -71,14 +80,14 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 		Subject:           subject,
 		NoteInfo:          noteInfos,
 		ActiveBookCount:   bookCount,
-		ActiveNoteCount:   len(digest.Notes),
+		ActiveNoteCount:   len(p.Digest.Notes),
 		EmailSessionToken: tok.Value,
-		RuleUUID:          rule.UUID,
-		RuleTitle:         rule.Title,
+		RuleUUID:          p.Rule.UUID,
+		RuleTitle:         p.Rule.Title,
 		WebURL:            os.Getenv("WebURL"),
 	}
 
-	email := mailer.NewEmail("noreply@getdnote.com", []string{emailAddr}, subject)
+	email := mailer.NewEmail("noreply@getdnote.com", []string{p.EmailAddr}, subject)
 	if err := email.ParseTemplate(mailer.EmailTypeWeeklyDigest, tmplData); err != nil {
 		return nil, err
 	}
@@ -86,12 +95,11 @@ func BuildEmail(now time.Time, user database.User, emailAddr string, digest data
 	return email, nil
 }
 
-func getEligibleRules(now time.Time) ([]database.RepetitionRule, error) {
+func getEligibleRules(db *gorm.DB, now time.Time) ([]database.RepetitionRule, error) {
 	hour := now.Hour()
 	minute := now.Minute()
 
 	var ret []database.RepetitionRule
-	db := database.DBConn
 	if err := db.
 		Where("users.cloud AND repetition_rules.hour = ? AND repetition_rules.minute = ? AND repetition_rules.enabled", hour, minute).
 		Joins("INNER JOIN users ON users.id = repetition_rules.user_id").
@@ -120,9 +128,7 @@ func build(tx *gorm.DB, rule database.RepetitionRule) (database.Digest, error) {
 	return digest, nil
 }
 
-func notify(now time.Time, user database.User, digest database.Digest, rule database.RepetitionRule) error {
-	db := database.DBConn
-
+func notify(db *gorm.DB, now time.Time, user database.User, digest database.Digest, rule database.RepetitionRule) error {
 	var account database.Account
 	if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		return errors.Wrap(err, "getting account")
@@ -135,7 +141,13 @@ func notify(now time.Time, user database.User, digest database.Digest, rule data
 		return nil
 	}
 
-	email, err := BuildEmail(now, user, account.Email.String, digest, rule)
+	email, err := BuildEmail(db, BuildEmailParams{
+		Now:       now,
+		User:      user,
+		EmailAddr: account.Email.String,
+		Digest:    digest,
+		Rule:      rule,
+	})
 	if err != nil {
 		return errors.Wrap(err, "making email")
 	}
@@ -185,12 +197,11 @@ func touchTimestamp(tx *gorm.DB, rule database.RepetitionRule, now time.Time) er
 	return nil
 }
 
-func process(now time.Time, rule database.RepetitionRule) error {
+func process(db *gorm.DB, now time.Time, rule database.RepetitionRule) error {
 	log.WithFields(log.Fields{
 		"uuid": rule.UUID,
 	}).Info("processing repetition")
 
-	db := database.DBConn
 	tx := db.Begin()
 
 	if !checkCooldown(now, rule) {
@@ -224,7 +235,7 @@ func process(now time.Time, rule database.RepetitionRule) error {
 		return errors.Wrap(err, "committing transaction")
 	}
 
-	if err := notify(now, user, digest, rule); err != nil {
+	if err := notify(db, now, user, digest, rule); err != nil {
 		return errors.Wrap(err, "notifying user")
 	}
 
@@ -236,10 +247,10 @@ func process(now time.Time, rule database.RepetitionRule) error {
 }
 
 // Do creates spaced repetitions and delivers the results based on the rules
-func Do(c clock.Clock) error {
+func Do(db *gorm.DB, c clock.Clock) error {
 	now := c.Now().UTC()
 
-	rules, err := getEligibleRules(now)
+	rules, err := getEligibleRules(db, now)
 	if err != nil {
 		return errors.Wrap(err, "getting eligible repetition rules")
 	}
@@ -251,7 +262,7 @@ func Do(c clock.Clock) error {
 	}).Info("processing rules")
 
 	for _, rule := range rules {
-		if err := process(now, rule); err != nil {
+		if err := process(db, now, rule); err != nil {
 			log.WithFields(log.Fields{
 				"rule uuid": rule.UUID,
 			}).ErrorWrap(err, "Could not process the repetition rule")

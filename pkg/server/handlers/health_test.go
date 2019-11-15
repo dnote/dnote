@@ -25,13 +25,13 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/jinzhu/gorm"
 )
 
 func TestCheckHealth(t *testing.T) {
-	defer testutils.ClearData()
-
 	// Setup
 	server := MustNewServer(t, &App{
+		DB:    &gorm.DB{},
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()

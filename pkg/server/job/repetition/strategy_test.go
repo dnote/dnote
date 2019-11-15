@@ -34,45 +34,43 @@ func init() {
 func TestApplyBookDomain(t *testing.T) {
 	defer testutils.ClearData()
 
-	db := database.DBConn
-
 	user := testutils.SetupUserData()
 	b1 := database.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, db.Save(&b1), "preparing b1")
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 	b2 := database.Book{
 		UserID: user.ID,
 		Label:  "css",
 	}
-	testutils.MustExec(t, db.Save(&b2), "preparing b2")
+	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
 	b3 := database.Book{
 		UserID: user.ID,
 		Label:  "golang",
 	}
-	testutils.MustExec(t, db.Save(&b3), "preparing b3")
+	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
 
 	n1 := database.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 	}
-	testutils.MustExec(t, db.Save(&n1), "preparing n1")
+	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
 	n2 := database.Note{
 		UserID:   user.ID,
 		BookUUID: b2.UUID,
 	}
-	testutils.MustExec(t, db.Save(&n2), "preparing n2")
+	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
 	n3 := database.Note{
 		UserID:   user.ID,
 		BookUUID: b3.UUID,
 	}
-	testutils.MustExec(t, db.Save(&n3), "preparing n3")
+	testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
 
 	var n1Record, n2Record, n3Record database.Note
-	testutils.MustExec(t, db.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1")
-	testutils.MustExec(t, db.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2")
-	testutils.MustExec(t, db.Where("uuid = ?", n3.UUID).First(&n3Record), "finding n3")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n3.UUID).First(&n3Record), "finding n3")
 
 	t.Run("book domain all", func(t *testing.T) {
 		rule := database.RepetitionRule{
@@ -80,7 +78,7 @@ func TestApplyBookDomain(t *testing.T) {
 			BookDomain: database.BookDomainAll,
 		}
 
-		conn, err := applyBookDomain(db, rule)
+		conn, err := applyBookDomain(testutils.DB, testutils.DB, rule)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
@@ -98,9 +96,9 @@ func TestApplyBookDomain(t *testing.T) {
 			BookDomain: database.BookDomainExluding,
 			Books:      []database.Book{b1},
 		}
-		testutils.MustExec(t, db.Save(&rule), "preparing rule")
+		testutils.MustExec(t, testutils.DB.Save(&rule), "preparing rule")
 
-		conn, err := applyBookDomain(db.Debug(), rule)
+		conn, err := applyBookDomain(testutils.DB, testutils.DB, rule)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing").Error())
 		}

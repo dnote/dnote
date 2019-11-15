@@ -24,6 +24,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 )
@@ -45,12 +46,12 @@ func checkEnvironment() error {
 	return nil
 }
 
-func schedule(ch chan error) {
+func schedule(db *gorm.DB, ch chan error) {
 	cl := clock.New()
 
 	// Schedule jobs
 	c := cron.New()
-	scheduleJob(c, "* * * * *", func() { repetition.Do(cl) })
+	scheduleJob(c, "* * * * *", func() { repetition.Do(db, cl) })
 	c.Start()
 
 	ch <- nil
@@ -60,13 +61,13 @@ func schedule(ch chan error) {
 }
 
 // Run starts the background tasks in a separate goroutine that runs forever
-func Run() error {
+func Run(db *gorm.DB) error {
 	if err := checkEnvironment(); err != nil {
 		return errors.Wrap(err, "checking environment variables")
 	}
 
 	ch := make(chan error)
-	go schedule(ch)
+	go schedule(db, ch)
 	if err := <-ch; err != nil {
 		return errors.Wrap(err, "scheduling jobs")
 	}

@@ -29,10 +29,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func init() {
-	testutils.InitTestDB()
-}
-
 func TestAppShellExecute(t *testing.T) {
 	t.Run("home", func(t *testing.T) {
 		a, err := NewAppShell([]byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
@@ -45,7 +41,7 @@ func TestAppShellExecute(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "preparing request"))
 		}
 
-		b, err := a.Execute(r)
+		b, err := a.Execute(r, testutils.DB)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
@@ -55,21 +51,20 @@ func TestAppShellExecute(t *testing.T) {
 
 	t.Run("note", func(t *testing.T) {
 		defer testutils.ClearData()
-		db := database.DBConn
 
 		user := testutils.SetupUserData()
 		b1 := database.Book{
 			UserID: user.ID,
 			Label:  "js",
 		}
-		testutils.MustExec(t, db.Save(&b1), "preparing b1")
+		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 		n1 := database.Note{
 			UserID:   user.ID,
 			BookUUID: b1.UUID,
 			Public:   true,
 			Body:     "n1 content",
 		}
-		testutils.MustExec(t, db.Save(&n1), "preparing note")
+		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing note")
 
 		a, err := NewAppShell([]byte("{{ .MetaTags }}"))
 		if err != nil {
@@ -82,7 +77,7 @@ func TestAppShellExecute(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "preparing request"))
 		}
 
-		b, err := a.Execute(r)
+		b, err := a.Execute(r, testutils.DB)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
