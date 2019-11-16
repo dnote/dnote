@@ -24,11 +24,12 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -69,10 +70,8 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-
 	var bookCount int
-	err = db.Model(database.Book{}).
+	err = a.DB.Model(database.Book{}).
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
@@ -84,7 +83,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := operations.CreateBook(user, a.Clock, params.Name)
+	book, err := operations.CreateBook(a.DB, user, a.Clock, params.Name)
 	if err != nil {
 		HandleError(w, "inserting book", err, http.StatusInternalServerError)
 	}
@@ -100,9 +99,7 @@ func (a *App) BooksOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }
 
-func respondWithBooks(userID int, query url.Values, w http.ResponseWriter) {
-	db := database.DBConn
-
+func respondWithBooks(db *gorm.DB, userID int, query url.Values, w http.ResponseWriter) {
 	var books []database.Book
 	conn := db.Where("user_id = ? AND NOT deleted", userID).Order("label ASC")
 	name := query.Get("name")
@@ -132,19 +129,6 @@ func respondWithBooks(userID int, query url.Values, w http.ResponseWriter) {
 	respondJSON(w, http.StatusOK, presentedBooks)
 }
 
-// GetDemoBooks returns books for demo
-func (a *App) GetDemoBooks(w http.ResponseWriter, r *http.Request) {
-	demoUserID, err := helpers.GetDemoUserID()
-	if err != nil {
-		HandleError(w, "finding demo user", err, http.StatusInternalServerError)
-		return
-	}
-
-	query := r.URL.Query()
-
-	respondWithBooks(demoUserID, query, w)
-}
-
 // GetBooks returns books for the user
 func (a *App) GetBooks(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
@@ -154,7 +138,7 @@ func (a *App) GetBooks(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 
-	respondWithBooks(user.ID, query, w)
+	respondWithBooks(a.DB, user.ID, query, w)
 }
 
 // GetBook returns a book for the user
@@ -164,13 +148,11 @@ func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-
 	vars := mux.Vars(r)
 	bookUUID := vars["bookUUID"]
 
 	var book database.Book
-	conn := db.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
+	conn := a.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
 
 	if conn.RecordNotFound() {
 		w.WriteHeader(http.StatusNotFound)
@@ -204,8 +186,7 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["bookUUID"]
 
-	db := database.DBConn
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
@@ -250,8 +231,7 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["bookUUID"]
 
-	db := database.DBConn
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {

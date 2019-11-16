@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package database
+package dbconn
 
 import (
 	"github.com/dnote/dnote/pkg/assert"
@@ -30,6 +30,17 @@ func TestValidateConfig(t *testing.T) {
 	}{
 		{
 			input: Config{
+				Host:     "mockHost",
+				Port:     "mockPort",
+				Name:     "mockName",
+				User:     "mockUser",
+				Password: "mockPassword",
+			},
+			expected: nil,
+		},
+		{
+			input: Config{
+				SkipSSL:  true,
 				Host:     "mockHost",
 				Port:     "mockPort",
 				Name:     "mockName",

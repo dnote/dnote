@@ -29,10 +29,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func init() {
-	testutils.InitTestDB()
-}
-
 func TestCreateBook(t *testing.T) {
 	testCases := []struct {
 		userUSN     int
@@ -59,17 +55,16 @@ func TestCreateBook(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			user := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			anotherUser := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			c := clock.NewMock()
 
-			book, err := CreateBook(user, c, tc.label)
+			book, err := CreateBook(testutils.DB, user, c, tc.label)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "creating book"))
 			}
@@ -78,13 +73,13 @@ func TestCreateBook(t *testing.T) {
 			var bookRecord database.Book
 			var userRecord database.User
 
-			if err := db.Model(&database.Book{}).Count(&bookCount).Error; err != nil {
+			if err := testutils.DB.Model(&database.Book{}).Count(&bookCount).Error; err != nil {
 				t.Fatal(errors.Wrap(err, "counting books"))
 			}
-			if err := db.First(&bookRecord).Error; err != nil {
+			if err := testutils.DB.First(&bookRecord).Error; err != nil {
 				t.Fatal(errors.Wrap(err, "finding book"))
 			}
-			if err := db.Where("id = ?", user.ID).First(&userRecord).Error; err != nil {
+			if err := testutils.DB.Where("id = ?", user.ID).First(&userRecord).Error; err != nil {
 				t.Fatal(errors.Wrap(err, "finding user"))
 			}
 
@@ -124,18 +119,17 @@ func TestDeleteBook(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			user := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			anotherUser := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			book := database.Book{UserID: user.ID, Label: "js", Deleted: false}
-			testutils.MustExec(t, db.Save(&book), fmt.Sprintf("preparing book for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Save(&book), fmt.Sprintf("preparing book for test case %d", idx))
 
-			tx := db.Begin()
+			tx := testutils.DB.Begin()
 			ret, err := DeleteBook(tx, user, book)
 			if err != nil {
 				tx.Rollback()
@@ -147,9 +141,9 @@ func TestDeleteBook(t *testing.T) {
 			var bookRecord database.Book
 			var userRecord database.User
 
-			testutils.MustExec(t, db.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
-			testutils.MustExec(t, db.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
-			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
 			assert.Equal(t, bookCount, 1, "book count mismatch")
 			assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
@@ -202,20 +196,19 @@ func TestUpdateBook(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			defer testutils.ClearData()
-			db := database.DBConn
 
 			user := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			anotherUser := testutils.SetupUserData()
-			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			c := clock.NewMock()
 
 			b := database.Book{UserID: user.ID, Deleted: false, Label: tc.expectedLabel}
-			testutils.MustExec(t, db.Save(&b), fmt.Sprintf("preparing book for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Save(&b), fmt.Sprintf("preparing book for test case %d", idx))
 
-			tx := db.Begin()
+			tx := testutils.DB.Begin()
 
 			book, err := UpdateBook(tx, c, user, b, tc.payloadLabel)
 			if err != nil {
@@ -228,9 +221,9 @@ func TestUpdateBook(t *testing.T) {
 			var bookCount int
 			var bookRecord database.Book
 			var userRecord database.User
-			testutils.MustExec(t, db.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
-			testutils.MustExec(t, db.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
-			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
 			assert.Equal(t, bookCount, 1, "book count mismatch")
 

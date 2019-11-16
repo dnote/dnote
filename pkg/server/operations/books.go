@@ -20,15 +20,14 @@ package operations
 
 import (
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
 // CreateBook creates a book with the next usn and updates the user's max_usn
-func CreateBook(user database.User, clock clock.Clock, name string) (database.Book, error) {
-	db := database.DBConn
+func CreateBook(db *gorm.DB, user database.User, clock clock.Clock, name string) (database.Book, error) {
 	tx := db.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)

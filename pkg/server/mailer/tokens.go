@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -39,9 +40,7 @@ func generateRandomToken(bits int) (string, error) {
 
 // GetToken returns an token of the given kind for the user
 // by first looking up any unused record and creating one if none exists.
-func GetToken(user database.User, kind string) (database.Token, error) {
-	db := database.DBConn
-
+func GetToken(db *gorm.DB, user database.User, kind string) (database.Token, error) {
 	var tok database.Token
 	conn := db.
 		Where("user_id = ? AND type =? AND used_at IS NULL", user.ID, kind).

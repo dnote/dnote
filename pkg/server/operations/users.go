@@ -104,8 +104,7 @@ func createDefaultRepetitionRule(user database.User, tx *gorm.DB) error {
 }
 
 // CreateUser creates a user
-func CreateUser(email, password string) (database.User, error) {
-	db := database.DBConn
+func CreateUser(db *gorm.DB, email, password string) (database.User, error) {
 	tx := db.Begin()
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

@@ -19,26 +19,27 @@
 package main
 
 import (
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/dbconn"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"os"
 	"time"
 )
 
 func main() {
-	c := database.Config{
+	db, err := dbconn.Open(dbconn.Config{
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
+	})
+	if err != nil {
+		panic(err)
 	}
-	database.Open(c)
 
-	db := database.DBConn
 	tx := db.Begin()
-
-	userID, err := helpers.GetDemoUserID()
+	userID, err := helpers.GetDemoUserID(db)
 	if err != nil {
 		panic(err)
 	}

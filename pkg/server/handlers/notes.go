@@ -86,9 +86,7 @@ func parseSearchQuery(q url.Values) string {
 	return escapeSearchQuery(searchStr)
 }
 
-func getNoteBaseQuery(noteUUID string, search string) *gorm.DB {
-	db := database.DBConn
-
+func getNoteBaseQuery(db *gorm.DB, noteUUID string, search string) *gorm.DB {
 	var conn *gorm.DB
 	if search != "" {
 		conn = selectFTSFields(db, search, &ftsParams{HighlightAll: true})
@@ -102,7 +100,7 @@ func getNoteBaseQuery(noteUUID string, search string) *gorm.DB {
 }
 
 func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
-	user, _, err := AuthWithSession(r, nil)
+	user, _, err := AuthWithSession(a.DB, r, nil)
 	if err != nil {
 		HandleError(w, "authenticating", err, http.StatusInternalServerError)
 		return
@@ -111,7 +109,7 @@ func (a *App) getNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	note, ok, err := operations.GetNote(noteUUID, user)
+	note, ok, err := operations.GetNote(a.DB, noteUUID, user)
 	if !ok {
 		RespondNotFound(w)
 		return
@@ -145,17 +143,17 @@ func (a *App) getNotes(w http.ResponseWriter, r *http.Request) {
 	}
 	query := r.URL.Query()
 
-	respondGetNotes(user.ID, query, w)
+	respondGetNotes(a.DB, user.ID, query, w)
 }
 
-func respondGetNotes(userID int, query url.Values, w http.ResponseWriter) {
+func respondGetNotes(db *gorm.DB, userID int, query url.Values, w http.ResponseWriter) {
 	q, err := parseGetNotesQuery(query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	conn := getNotesBaseQuery(userID, q)
+	conn := getNotesBaseQuery(db, userID, q)
 
 	var total int
 	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
@@ -274,9 +272,7 @@ func getDateBounds(year, month int) (int64, int64) {
 	return lower, upper
 }
 
-func getNotesBaseQuery(userID int, q getNotesQuery) *gorm.DB {
-	db := database.DBConn
-
+func getNotesBaseQuery(db *gorm.DB, userID int, q getNotesQuery) *gorm.DB {
 	conn := db.Where(
 		"notes.user_id = ? AND notes.deleted = ? AND notes.encrypted = ?",
 		userID, false, q.Encrypted,
@@ -317,8 +313,7 @@ func (a *App) legacyGetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var notes []database.Note
-	db := database.DBConn
-	if err := db.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
 		HandleError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}

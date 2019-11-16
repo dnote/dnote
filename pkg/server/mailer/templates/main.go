@@ -25,15 +25,17 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
-func digestHandler(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
+func (c Context) digestHandler(w http.ResponseWriter, r *http.Request) {
+	db := c.DB
 
 	q := r.URL.Query()
 	digestUUID := q.Get("digest_uuid")
@@ -61,7 +63,13 @@ func digestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	email, err := repetition.BuildEmail(now, user, "sung@getdnote.com", digest, rule)
+	email, err := repetition.BuildEmail(db, repetition.BuildEmailParams{
+		Now:       now,
+		User:      user,
+		EmailAddr: "sung@getdnote.com",
+		Digest:    digest,
+		Rule:      rule,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -71,7 +79,7 @@ func digestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
-func emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
+func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Subject string
 		Token   string
@@ -90,7 +98,7 @@ func emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func (c Context) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Email development server is running."))
 }
 
@@ -101,23 +109,29 @@ func init() {
 	}
 }
 
+// Context is a context holding global information
+type Context struct {
+	DB *gorm.DB
+}
+
 func main() {
-	c := database.Config{
+	db := dbconn.Open(dbconn.Config{
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
-	}
-	database.Open(c)
-	defer database.Close()
+	})
+	defer db.Close()
 
 	mailer.InitTemplates(nil)
 
 	log.Println("Email template development server running on http://127.0.0.1:2300")
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/digest", digestHandler)
-	http.HandleFunc("/email-verification", emailVerificationHandler)
+	ctx := Context{DB: db}
+
+	http.HandleFunc("/", ctx.homeHandler)
+	http.HandleFunc("/digest", ctx.digestHandler)
+	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }

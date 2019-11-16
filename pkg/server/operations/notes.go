@@ -29,8 +29,7 @@ import (
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
 // It returns the created note.
-func CreateNote(user database.User, clock clock.Clock, bookUUID, content string, addedOn *int64, editedOn *int64, public bool) (database.Note, error) {
-	db := database.DBConn
+func CreateNote(db *gorm.DB, user database.User, clock clock.Clock, bookUUID, content string, addedOn *int64, editedOn *int64, public bool) (database.Note, error) {
 	tx := db.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
@@ -163,13 +162,11 @@ func DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.N
 }
 
 // GetNote retrieves a note for the given user
-func GetNote(uuid string, user database.User) (database.Note, bool, error) {
+func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool, error) {
 	zeroNote := database.Note{}
 	if !helpers.ValidateUUID(uuid) {
 		return zeroNote, false, nil
 	}
-
-	db := database.DBConn
 
 	conn := db.Where("notes.uuid = ? AND deleted = ?", uuid, false)
 	conn = database.PreloadNote(conn)

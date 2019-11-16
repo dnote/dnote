@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -42,31 +43,67 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// DB is the database connection to a test database
+var DB *gorm.DB
+
 // InitTestDB establishes connection pool with the test database specified by
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() {
-	c := database.Config{
+	db := dbconn.Open(dbconn.Config{
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
+	})
+	database.InitSchema(db)
+
+	DB = db
+}
+
+// ClearData deletes all records from the database
+func ClearData() {
+	if err := DB.Delete(&database.Book{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear books"))
 	}
-	database.Open(c)
-	database.InitSchema()
+	if err := DB.Delete(&database.Note{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear notes"))
+	}
+	if err := DB.Delete(&database.Notification{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear notifications"))
+	}
+	if err := DB.Delete(&database.User{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear users"))
+	}
+	if err := DB.Delete(&database.Account{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear accounts"))
+	}
+	if err := DB.Delete(&database.Token{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+	}
+	if err := DB.Delete(&database.EmailPreference{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+	}
+	if err := DB.Delete(&database.Session{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear sessions"))
+	}
+	if err := DB.Delete(&database.Digest{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear digests"))
+	}
+	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear digests"))
+	}
 }
 
 // SetupUserData creates and returns a new user for testing purposes
 func SetupUserData() database.User {
-	db := database.DBConn
-
 	user := database.User{
 		APIKey: "test-api-key",
 		Name:   "user-name",
 		Cloud:  true,
 	}
 
-	if err := db.Save(&user).Error; err != nil {
+	if err := DB.Save(&user).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare user"))
 	}
 
@@ -75,8 +112,6 @@ func SetupUserData() database.User {
 
 // SetupAccountData creates and returns a new account for the user
 func SetupAccountData(user database.User, email, password string) database.Account {
-	db := database.DBConn
-
 	account := database.Account{
 		UserID: user.ID,
 	}
@@ -90,7 +125,7 @@ func SetupAccountData(user database.User, email, password string) database.Accou
 	}
 	account.Password = database.ToNullString(string(hashedPassword))
 
-	if err := db.Save(&account).Error; err != nil {
+	if err := DB.Save(&account).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare account"))
 	}
 
@@ -99,8 +134,6 @@ func SetupAccountData(user database.User, email, password string) database.Accou
 
 // SetupClassicAccountData creates and returns a new account for the user
 func SetupClassicAccountData(user database.User, email string) database.Account {
-	db := database.DBConn
-
 	// email: alice@example.com
 	// password: pass1234
 	// masterKey: WbUvagj9O6o1Z+4+7COjo7Uqm4MD2QE9EWFXne8+U+8=
@@ -117,7 +150,7 @@ func SetupClassicAccountData(user database.User, email string) database.Account 
 		account.Email = database.ToNullString(email)
 	}
 
-	if err := db.Save(&account).Error; err != nil {
+	if err := DB.Save(&account).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare account"))
 	}
 
@@ -126,14 +159,12 @@ func SetupClassicAccountData(user database.User, email string) database.Account 
 
 // SetupSession creates and returns a new user session
 func SetupSession(t *testing.T, user database.User) database.Session {
-	db := database.DBConn
-
 	session := database.Session{
 		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	if err := db.Save(&session).Error; err != nil {
+	if err := DB.Save(&session).Error; err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to prepare user"))
 	}
 
@@ -142,54 +173,16 @@ func SetupSession(t *testing.T, user database.User) database.Session {
 
 // SetupEmailPreferenceData creates and returns a new email frequency for a user
 func SetupEmailPreferenceData(user database.User, digestWeekly bool) database.EmailPreference {
-	db := database.DBConn
-
 	frequency := database.EmailPreference{
 		UserID:       user.ID,
 		DigestWeekly: digestWeekly,
 	}
 
-	if err := db.Save(&frequency).Error; err != nil {
+	if err := DB.Save(&frequency).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare email frequency"))
 	}
 
 	return frequency
-}
-
-// ClearData deletes all records from the database
-func ClearData() {
-	db := database.DBConn
-
-	if err := db.Delete(&database.Book{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear books"))
-	}
-	if err := db.Delete(&database.Note{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notes"))
-	}
-	if err := db.Delete(&database.Notification{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notifications"))
-	}
-	if err := db.Delete(&database.User{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear users"))
-	}
-	if err := db.Delete(&database.Account{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear accounts"))
-	}
-	if err := db.Delete(&database.Token{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
-	}
-	if err := db.Delete(&database.EmailPreference{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
-	}
-	if err := db.Delete(&database.Session{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear sessions"))
-	}
-	if err := db.Delete(&database.Digest{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
-	if err := db.Delete(&database.RepetitionRule{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
 }
 
 // HTTPDo makes an HTTP request and returns a response
@@ -213,8 +206,6 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 
 // HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
 func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
-	db := database.DBConn
-
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		t.Fatal(errors.Wrap(err, "reading random bits"))
@@ -225,7 +216,7 @@ func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Respo
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
 	}
-	if err := db.Save(&session).Error; err != nil {
+	if err := DB.Save(&session).Error; err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to prepare user"))
 	}
 

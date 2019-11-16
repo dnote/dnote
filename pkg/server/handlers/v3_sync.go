@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
@@ -121,14 +121,12 @@ func (e *queryParamError) Error() string {
 }
 
 func (a *App) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment, error) {
-	db := database.DBConn
-
 	var notes []database.Note
-	if err := db.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&notes).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&notes).Error; err != nil {
 		return SyncFragment{}, nil
 	}
 	var books []database.Book
-	if err := db.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&books).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&books).Error; err != nil {
 		return SyncFragment{}, nil
 	}
 

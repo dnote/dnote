@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -58,8 +59,8 @@ func NewAppShell(content []byte) (AppShell, error) {
 }
 
 // Execute executes the index template
-func (a AppShell) Execute(r *http.Request) ([]byte, error) {
-	data, err := a.getData(r)
+func (a AppShell) Execute(r *http.Request, db *gorm.DB) ([]byte, error) {
+	data, err := a.getData(db, r)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting data")
 	}
@@ -72,11 +73,11 @@ func (a AppShell) Execute(r *http.Request) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (a AppShell) getData(r *http.Request) (tmplData, error) {
+func (a AppShell) getData(db *gorm.DB, r *http.Request) (tmplData, error) {
 	path := r.URL.Path
 
 	if ok, params := matchPath(path, notesPathRegex); ok {
-		p, err := a.newNotePage(r, params[0])
+		p, err := a.newNotePage(db, r, params[0])
 		if err != nil {
 			return tmplData{}, errors.Wrap(err, "instantiating note page")
 		}

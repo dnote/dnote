@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -45,9 +45,8 @@ func (a *App) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
 	var repetitionRule database.RepetitionRule
-	if err := db.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").Find(&repetitionRule).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").Find(&repetitionRule).Error; err != nil {
 		HandleError(w, "getting repetition rules", err, http.StatusInternalServerError)
 		return
 	}
@@ -63,9 +62,8 @@ func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
 	var repetitionRules []database.RepetitionRule
-	if err := db.Where("user_id = ?", user.ID).Preload("Books").Order("last_active DESC").Find(&repetitionRules).Error; err != nil {
+	if err := a.DB.Where("user_id = ?", user.ID).Preload("Books").Order("last_active DESC").Find(&repetitionRules).Error; err != nil {
 		HandleError(w, "getting repetition rules", err, http.StatusInternalServerError)
 		return
 	}
@@ -288,9 +286,8 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
 	var books []database.Book
-	if err := db.Where("user_id = ? AND uuid IN (?)", user.ID, params.GetBookUUIDs()).Find(&books).Error; err != nil {
+	if err := a.DB.Where("user_id = ? AND uuid IN (?)", user.ID, params.GetBookUUIDs()).Find(&books).Error; err != nil {
 		HandleError(w, "finding books", nil, http.StatusInternalServerError)
 		return
 	}
@@ -313,7 +310,7 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		NoteCount:  params.GetNoteCount(),
 		Enabled:    params.GetEnabled(),
 	}
-	if err := db.Create(&record).Error; err != nil {
+	if err := a.DB.Create(&record).Error; err != nil {
 		HandleError(w, "creating a repetition rule", err, http.StatusInternalServerError)
 		return
 	}
@@ -346,10 +343,8 @@ func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	repetitionRuleUUID := vars["repetitionRuleUUID"]
 
-	db := database.DBConn
-
 	var rule database.RepetitionRule
-	conn := db.Where("uuid = ? AND user_id = ?", repetitionRuleUUID, user.ID).First(&rule)
+	conn := a.DB.Where("uuid = ? AND user_id = ?", repetitionRuleUUID, user.ID).First(&rule)
 
 	if conn.RecordNotFound() {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -359,7 +354,7 @@ func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := db.Exec("DELETE from repetition_rules WHERE uuid = ?", rule.UUID).Error; err != nil {
+	if err := a.DB.Exec("DELETE from repetition_rules WHERE uuid = ?", rule.UUID).Error; err != nil {
 		HandleError(w, "deleting the repetition rule", err, http.StatusInternalServerError)
 	}
 
@@ -382,8 +377,7 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := database.DBConn
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	var repetitionRule database.RepetitionRule
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").First(&repetitionRule).Error; err != nil {

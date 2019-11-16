@@ -22,26 +22,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
-func init() {
-	testutils.InitTestDB()
-
-	templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-	mailer.InitTemplates(&templatePath)
-}
-
 func TestClassicPresignin(t *testing.T) {
-	db := database.DBConn
 	defer testutils.ClearData()
 
 	alice := database.Account{
@@ -52,8 +42,8 @@ func TestClassicPresignin(t *testing.T) {
 		Email:              database.ToNullString("bob@example.com"),
 		ClientKDFIteration: 200000,
 	}
-	testutils.MustExec(t, db.Save(&alice), "saving alice")
-	testutils.MustExec(t, db.Save(&bob), "saving bob")
+	testutils.MustExec(t, testutils.DB.Save(&alice), "saving alice")
+	testutils.MustExec(t, testutils.DB.Save(&bob), "saving bob")
 
 	testCases := []struct {
 		email             string
@@ -121,12 +111,11 @@ func TestClassicPresignin_MissingParams(t *testing.T) {
 }
 
 func TestClassicSignin(t *testing.T) {
-	db := database.DBConn
 	defer testutils.ClearData()
 
 	user := testutils.SetupUserData()
 	alice := testutils.SetupClassicAccountData(user, "alice@example.com")
-	testutils.MustExec(t, db.Save(&alice), "saving alice")
+	testutils.MustExec(t, testutils.DB.Save(&alice), "saving alice")
 
 	// Setup
 	server := MustNewServer(t, &App{
@@ -145,8 +134,8 @@ func TestClassicSignin(t *testing.T) {
 
 	var sessionCount int
 	var session database.Session
-	testutils.MustExec(t, db.Model(&database.Session{}).Count(&sessionCount), "counting session")
-	testutils.MustExec(t, db.First(&session), "getting session")
+	testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+	testutils.MustExec(t, testutils.DB.First(&session), "getting session")
 
 	var got SessionResponse
 	if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
@@ -165,7 +154,7 @@ func TestClassicSignin(t *testing.T) {
 }
 
 func TestClassicSignin_Failure(t *testing.T) {
-	db := database.DBConn
+
 	defer testutils.ClearData()
 
 	//password: correctbattery
@@ -183,8 +172,8 @@ func TestClassicSignin_Failure(t *testing.T) {
 		// plain authKey: DN4d/teaq1I2bVYZ7QWaah4Fu7q2y2N4yJNZk76hFHw=
 		AuthKeyHash: "fGOMHHAw9G7CH4Gv2EM1ZcZZklC1a55fS3QJ0qQVp4k=",
 	}
-	testutils.MustExec(t, db.Save(&alice), "saving alice")
-	testutils.MustExec(t, db.Save(&bob), "saving bob")
+	testutils.MustExec(t, testutils.DB.Save(&alice), "saving alice")
+	testutils.MustExec(t, testutils.DB.Save(&bob), "saving bob")
 
 	testCases := []struct {
 		email   string

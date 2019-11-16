@@ -27,10 +27,12 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/web"
+	"github.com/jinzhu/gorm"
 
 	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
@@ -64,49 +66,70 @@ func initContext() web.Context {
 	}
 }
 
-func initServer() (*http.ServeMux, error) {
-	apiRouter, err := handlers.NewRouter(&handlers.App{
-		Clock:            clock.New(),
-		StripeAPIBackend: nil,
-		WebURL:           os.Getenv("WebURL"),
-	})
+func initServer(app handlers.App) (*http.ServeMux, error) {
+	apiRouter, err := handlers.NewRouter(&app)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	ctx := initContext()
+	webCtx := initContext()
+	webHandlers := web.Init(webCtx)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", apiRouter))
-	mux.Handle("/static/", web.GetStaticHandler(ctx.StaticFileSystem))
-	mux.HandleFunc("/service-worker.js", web.GetSWHandler(ctx.ServiceWorkerJs))
-	mux.HandleFunc("/robots.txt", web.GetRobotsHandler(ctx.RobotsTxt))
-	mux.HandleFunc("/", web.GetRootHandler(ctx.IndexHTML))
+	mux.Handle("/static/", webHandlers.GetStatic)
+	mux.HandleFunc("/service-worker.js", webHandlers.GetServiceWorker)
+	mux.HandleFunc("/robots.txt", webHandlers.GetRobots)
+	mux.HandleFunc("/", webHandlers.GetRoot)
 
 	return mux, nil
 }
 
-func startCmd() {
-	mailer.InitTemplates(nil)
+func initDB() *gorm.DB {
+	var skipSSL bool
+	if os.Getenv("GO_ENV") != "PRODUCTION" || os.Getenv("DB_NOSSL") != "" {
+		skipSSL = true
+	} else {
+		skipSSL = false
+	}
 
-	database.Open(database.Config{
+	db := dbconn.Open(dbconn.Config{
+		SkipSSL:  skipSSL,
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
 		User:     os.Getenv("DBUser"),
 		Password: os.Getenv("DBPassword"),
 	})
-	database.InitSchema()
-	defer database.Close()
+	database.InitSchema(db)
 
-	if err := database.Migrate(); err != nil {
+	return db
+}
+
+func initApp(db *gorm.DB) handlers.App {
+	return handlers.App{
+		DB:               db,
+		Clock:            clock.New(),
+		StripeAPIBackend: nil,
+		WebURL:           os.Getenv("WebURL"),
+	}
+}
+
+func startCmd() {
+	db := initDB()
+	defer db.Close()
+
+	app := initApp(db)
+	mailer.InitTemplates(nil)
+
+	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
-	if err := job.Run(); err != nil {
+	if err := job.Run(db); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	srv, err := initServer()
+	srv, err := initServer(app)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing server"))
 	}

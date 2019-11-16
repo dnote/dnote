@@ -23,8 +23,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/operations"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -63,9 +64,7 @@ func unsetSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &cookie)
 }
 
-func touchLastLoginAt(user database.User) error {
-	db := database.DBConn
-
+func touchLastLoginAt(db *gorm.DB, user database.User) error {
 	t := time.Now()
 	if err := db.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
@@ -80,8 +79,6 @@ type signinPayload struct {
 }
 
 func (a *App) signin(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	var params signinPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
@@ -94,7 +91,7 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := db.Where("email = ?", params.Email).First(&account)
+	conn := a.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
@@ -111,19 +108,19 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user database.User
-	err = db.Where("id = ?", account.UserID).First(&user).Error
+	err = a.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
 		HandleError(w, "finding user", err, http.StatusInternalServerError)
 		return
 	}
 
-	err = operations.TouchLastLoginAt(user, db)
+	err = operations.TouchLastLoginAt(user, a.DB)
 	if err != nil {
 		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(w, account.UserID, http.StatusOK)
+	respondWithSession(a.DB, w, account.UserID, http.StatusOK)
 }
 
 func (a *App) signoutOptions(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +140,7 @@ func (a *App) signout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = operations.DeleteSession(database.DBConn, key)
+	err = operations.DeleteSession(a.DB, key)
 	if err != nil {
 		HandleError(w, "deleting session", nil, http.StatusInternalServerError)
 		return
@@ -182,8 +179,6 @@ func parseRegisterPaylaod(r *http.Request) (registerPayload, bool) {
 }
 
 func (a *App) register(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	params, ok := parseRegisterPaylaod(r)
 	if !ok {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
@@ -191,7 +186,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var count int
-	if err := db.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
+	if err := a.DB.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
 		HandleError(w, "checking duplicate user", err, http.StatusInternalServerError)
 		return
 	}
@@ -200,20 +195,18 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := operations.CreateUser(params.Email, params.Password)
+	user, err := operations.CreateUser(a.DB, params.Email, params.Password)
 	if err != nil {
 		HandleError(w, "creating user", err, http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(w, user.ID, http.StatusCreated)
+	respondWithSession(a.DB, w, user.ID, http.StatusCreated)
 }
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.
 // It sets the HTTP-Only cookie for browser clients and also sends a JSON response for non-browser clients.
-func respondWithSession(w http.ResponseWriter, userID int, statusCode int) {
-	db := database.DBConn
-
+func respondWithSession(db *gorm.DB, w http.ResponseWriter, userID int, statusCode int) {
 	session, err := operations.CreateSession(db, userID)
 	if err != nil {
 		HandleError(w, "creating session", nil, http.StatusBadRequest)

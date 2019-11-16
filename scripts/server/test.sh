@@ -13,6 +13,7 @@ if [ "${WATCH-false}" == true ]; then
   while inotifywait --exclude .swp -e modify -r .; do go test ./... -cover -p 1; done;
   set -e
 else
+  # go test ./... -cover -p 1
   go test ./... -cover -p 1
 fi
 

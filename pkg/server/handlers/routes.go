@@ -31,6 +31,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
 )
@@ -61,28 +62,6 @@ func parseAuthHeader(h string) (authHeader, error) {
 	}
 
 	return parsed, nil
-}
-
-func legacyAuth(next http.HandlerFunc) http.HandlerFunc {
-	db := database.DBConn
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("api_key")
-		if err != nil {
-			http.Error(w, "Invalid API key", http.StatusUnauthorized)
-			return
-		}
-
-		apiKey := c.Value
-		var user database.User
-		if db.Where("api_key = ?", apiKey).First(&user).RecordNotFound() {
-			http.Error(w, "Invalid API key", http.StatusUnauthorized)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), helpers.KeyUser, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
 }
 
 // getSessionKeyFromCookie reads and returns a session key from the cookie sent by the
@@ -138,8 +117,7 @@ func getCredential(r *http.Request) (string, error) {
 }
 
 // AuthWithSession performs user authentication with session
-func AuthWithSession(r *http.Request, p *AuthMiddlewareParams) (database.User, bool, error) {
-	db := database.DBConn
+func AuthWithSession(db *gorm.DB, r *http.Request, p *AuthMiddlewareParams) (database.User, bool, error) {
 	var user database.User
 
 	sessionKey, err := getCredential(r)
@@ -174,8 +152,7 @@ func AuthWithSession(r *http.Request, p *AuthMiddlewareParams) (database.User, b
 	return user, true, nil
 }
 
-func authWithToken(r *http.Request, tokenType string, p *AuthMiddlewareParams) (database.User, database.Token, bool, error) {
-	db := database.DBConn
+func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthMiddlewareParams) (database.User, database.Token, bool, error) {
 	var user database.User
 	var token database.Token
 
@@ -208,9 +185,9 @@ type AuthMiddlewareParams struct {
 	ProOnly bool
 }
 
-func auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
+func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok, err := AuthWithSession(r, p)
+		user, ok, err := AuthWithSession(a.DB, r, p)
 		if !ok {
 			respondUnauthorized(w)
 			return
@@ -231,9 +208,9 @@ func auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
 	})
 }
 
-func tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewareParams) http.HandlerFunc {
+func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, token, ok, err := authWithToken(r, tokenType, p)
+		user, token, ok, err := authWithToken(a.DB, r, tokenType, p)
 		if err != nil {
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with token")
@@ -245,7 +222,7 @@ func tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewareParams)
 			ctx = context.WithValue(ctx, helpers.KeyToken, token)
 		} else {
 			// If token-based auth fails, fall back to session-based auth
-			user, ok, err = AuthWithSession(r, p)
+			user, ok, err = AuthWithSession(a.DB, r, p)
 			if err != nil {
 				HandleError(w, "authenticating with session", err, http.StatusInternalServerError)
 				return
@@ -325,6 +302,7 @@ func applyMiddleware(h http.HandlerFunc, rateLimit bool) http.Handler {
 
 // App is an application configuration
 type App struct {
+	DB               *gorm.DB
 	Clock            clock.Clock
 	StripeAPIBackend stripe.Backend
 	WebURL           string
@@ -333,6 +311,9 @@ type App struct {
 func (a *App) validate() error {
 	if a.WebURL == "" {
 		return errors.New("WebURL is empty")
+	}
+	if a.DB == nil {
+		return errors.New("DB is empty")
 	}
 
 	return nil
@@ -364,51 +345,50 @@ func NewRouter(app *App) (*mux.Router, error) {
 	var routes = []Route{
 		// internal
 		{"GET", "/health", app.checkHealth, false},
-		{"GET", "/me", auth(app.getMe, nil), true},
-		{"POST", "/verification-token", auth(app.createVerificationToken, nil), true},
+		{"GET", "/me", app.auth(app.getMe, nil), true},
+		{"POST", "/verification-token", app.auth(app.createVerificationToken, nil), true},
 		{"PATCH", "/verify-email", app.verifyEmail, true},
 		{"POST", "/reset-token", app.createResetToken, true},
 		{"PATCH", "/reset-password", app.resetPassword, true},
-		{"PATCH", "/account/profile", auth(app.updateProfile, nil), true},
-		{"PATCH", "/account/password", auth(app.updatePassword, nil), true},
-		{"GET", "/account/email-preference", tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference, nil), true},
-		{"PATCH", "/account/email-preference", tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference, nil), true},
-		{"POST", "/subscriptions", auth(app.createSub, nil), true},
-		{"PATCH", "/subscriptions", auth(app.updateSub, nil), true},
+		{"PATCH", "/account/profile", app.auth(app.updateProfile, nil), true},
+		{"PATCH", "/account/password", app.auth(app.updatePassword, nil), true},
+		{"GET", "/account/email-preference", app.tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference, nil), true},
+		{"PATCH", "/account/email-preference", app.tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference, nil), true},
+		{"POST", "/subscriptions", app.auth(app.createSub, nil), true},
+		{"PATCH", "/subscriptions", app.auth(app.updateSub, nil), true},
 		{"POST", "/webhooks/stripe", app.stripeWebhook, true},
-		{"GET", "/subscriptions", auth(app.getSub, nil), true},
-		{"GET", "/stripe_source", auth(app.getStripeSource, nil), true},
-		{"PATCH", "/stripe_source", auth(app.updateStripeSource, nil), true},
-		{"GET", "/notes", auth(app.getNotes, &proOnly), false},
+		{"GET", "/subscriptions", app.auth(app.getSub, nil), true},
+		{"GET", "/stripe_source", app.auth(app.getStripeSource, nil), true},
+		{"PATCH", "/stripe_source", app.auth(app.updateStripeSource, nil), true},
+		{"GET", "/notes", app.auth(app.getNotes, &proOnly), false},
 		{"GET", "/notes/{noteUUID}", app.getNote, true},
-		{"GET", "/calendar", auth(app.getCalendar, &proOnly), true},
-		{"GET", "/repetition_rules", auth(app.getRepetitionRules, &proOnly), true},
-		{"GET", "/repetition_rules/{repetitionRuleUUID}", tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"POST", "/repetition_rules", auth(app.createRepetitionRule, &proOnly), true},
-		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", tokenAuth(app.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", auth(app.deleteRepetitionRule, &proOnly), true},
+		{"GET", "/calendar", app.auth(app.getCalendar, &proOnly), true},
+		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, &proOnly), true},
+		{"GET", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
+		{"POST", "/repetition_rules", app.auth(app.createRepetitionRule, &proOnly), true},
+		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
+		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", app.auth(app.deleteRepetitionRule, &proOnly), true},
 
 		// migration of classic users
 		{"GET", "/classic/presignin", cors(app.classicPresignin), true},
 		{"POST", "/classic/signin", cors(app.classicSignin), true},
-		{"PATCH", "/classic/migrate", auth(app.classicMigrate, &proOnly), true},
-		{"GET", "/classic/notes", auth(app.classicGetNotes, nil), true},
-		{"PATCH", "/classic/set-password", auth(app.classicSetPassword, nil), true},
+		{"PATCH", "/classic/migrate", app.auth(app.classicMigrate, &proOnly), true},
+		{"GET", "/classic/notes", app.auth(app.classicGetNotes, nil), true},
+		{"PATCH", "/classic/set-password", app.auth(app.classicSetPassword, nil), true},
 
 		// v3
-		{"GET", "/v3/sync/fragment", cors(auth(app.GetSyncFragment, &proOnly)), true},
-		{"GET", "/v3/sync/state", cors(auth(app.GetSyncState, &proOnly)), true},
+		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, &proOnly)), true},
+		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, &proOnly)), true},
 		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
-		{"GET", "/v3/books", cors(auth(app.GetBooks, &proOnly)), true},
-		{"GET", "/v3/books/{bookUUID}", cors(auth(app.GetBook, &proOnly)), true},
-		{"POST", "/v3/books", cors(auth(app.CreateBook, &proOnly)), true},
-		{"PATCH", "/v3/books/{bookUUID}", cors(auth(app.UpdateBook, &proOnly)), false},
-		{"DELETE", "/v3/books/{bookUUID}", cors(auth(app.DeleteBook, &proOnly)), false},
-		{"GET", "/v3/demo/books", app.GetDemoBooks, true},
+		{"GET", "/v3/books", cors(app.auth(app.GetBooks, &proOnly)), true},
+		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, &proOnly)), true},
+		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &proOnly)), true},
+		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, &proOnly)), false},
+		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, &proOnly)), false},
 		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},
-		{"POST", "/v3/notes", cors(auth(app.CreateNote, &proOnly)), true},
-		{"PATCH", "/v3/notes/{noteUUID}", auth(app.UpdateNote, &proOnly), false},
-		{"DELETE", "/v3/notes/{noteUUID}", auth(app.DeleteNote, &proOnly), false},
+		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, &proOnly)), true},
+		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, &proOnly), false},
+		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, &proOnly), false},
 		{"POST", "/v3/signin", cors(app.signin), true},
 		{"OPTIONS", "/v3/signout", cors(app.signoutOptions), true},
 		{"POST", "/v3/signout", cors(app.signout), true},

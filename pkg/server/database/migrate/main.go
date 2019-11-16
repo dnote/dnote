@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
 	"github.com/rubenv/sql-migrate"
@@ -43,20 +43,18 @@ func init() {
 		}
 	}
 
-	c := database.Config{
-		Host:     os.Getenv("DBHost"),
-		Port:     os.Getenv("DBPort"),
-		Name:     os.Getenv("DBName"),
-		User:     os.Getenv("DBUser"),
-		Password: os.Getenv("DBPassword"),
-	}
-	database.Open(c)
 }
 
 func main() {
 	flag.Parse()
 
-	db := database.DBConn
+	db := dbconn.Open(dbconn.Config{
+		Host:     os.Getenv("DBHost"),
+		Port:     os.Getenv("DBPort"),
+		Name:     os.Getenv("DBName"),
+		User:     os.Getenv("DBUser"),
+		Password: os.Getenv("DBPassword"),
+	})
 
 	migrations := &migrate.FileMigrationSource{
 		Dir: *migrationDir,

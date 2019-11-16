@@ -23,10 +23,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -48,7 +48,6 @@ func validateUpdateNotePayload(p updateNotePayload) bool {
 
 // UpdateNote updates note
 func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
@@ -71,12 +70,12 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var note database.Note
-	if err := db.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
+	if err := a.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	note, err = operations.UpdateNote(tx, user, a.Clock, note, &operations.UpdateNoteParams{
 		BookUUID: params.BookUUID,
@@ -116,8 +115,6 @@ type deleteNoteResp struct {
 
 // DeleteNote removes note
 func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
-	db := database.DBConn
-
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
@@ -128,12 +125,12 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var note database.Note
-	if err := db.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
+	if err := a.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := db.Begin()
+	tx := a.DB.Begin()
 
 	n, err := operations.DeleteNote(tx, user, note)
 	if err != nil {
@@ -193,13 +190,12 @@ func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var book database.Book
-	db := database.DBConn
-	if err := db.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
+	if err := a.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
 		HandleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
-	note, err := operations.CreateNote(user, a.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
+	note, err := operations.CreateNote(a.DB, user, a.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
 	if err != nil {
 		HandleError(w, "creating note", err, http.StatusInternalServerError)
 		return
