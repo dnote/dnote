@@ -166,22 +166,23 @@ func validateRegisterPayload(p registerPayload) error {
 	return nil
 }
 
-func parseRegisterPaylaod(r *http.Request) (registerPayload, bool) {
+func parseRegisterPaylaod(r *http.Request) (registerPayload, error) {
 	var ret registerPayload
 	if err := json.NewDecoder(r.Body).Decode(&ret); err != nil {
-		return ret, false
-	}
-	if err := validateRegisterPayload(ret); err != nil {
-		return ret, false
+		return ret, errors.Wrap(err, "decoding json")
 	}
 
-	return ret, true
+	return ret, nil
 }
 
 func (a *App) register(w http.ResponseWriter, r *http.Request) {
-	params, ok := parseRegisterPaylaod(r)
-	if !ok {
+	params, err := parseRegisterPaylaod(r)
+	if err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+	if err := validateRegisterPayload(params); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
