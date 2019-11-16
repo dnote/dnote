@@ -153,6 +153,9 @@ endif
 
 	@echo "==> releasing server"
 	@${currentDir}/scripts/release.sh server $(version) ${serverOutputDir}
+
+	@echo "==> releasing docker image"
+	@${currentDir}/host/docker/release.sh $(version)
 .PHONY: release-server
 
 # migrations
