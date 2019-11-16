@@ -135,7 +135,7 @@ func startCmd() {
 	}
 
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
-	log.Fatalln(http.ListenAndServe(""+*port, srv))
+	log.Fatalln(http.ListenAndServe(":"+*port, srv))
 }
 
 func versionCmd() {
