@@ -50,6 +50,7 @@ var DB *gorm.DB
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() {
 	db := dbconn.Open(dbconn.Config{
+		SkipSSL:  true,
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),
