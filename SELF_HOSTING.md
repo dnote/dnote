@@ -1,10 +1,14 @@
-# Hosting Dnote On Your Machine
+# Installing Dnote Server
 
-This guide documents the steps for installing the Dnote server on your own machine.
+This guide documents the steps for installing the Dnote server on your own machine. If you prefer Docker, please see [the Docker guide](https://github.com/dnote/dnote/blob/master/host/docker/README.md).
+
+## Overview
+
+Dnote server comes as a single binary file that you can simply download and run. It uses Postgres as the database.
 
 ## Installation
 
-1. Install Postgres 10+.
+1. Install Postgres 11+.
 2. Create a `dnote` database by running `createdb dnote`
 3. Download the official Dnote server release from the [release page](https://github.com/dnote/dnote/releases).
 4. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
@@ -23,13 +27,19 @@ DBPort=5432 \
 DBName=dnote \
 DBUser=$user \
 DBPassword=$password \
-WebURL=$webURL
+WebURL=$webURL \
+SmtpHost=$SmtpHost \
+SmtpPort=$SmtpPort \
+SmtpUsername=$SmtpUsername \
+SmtpPassword=$SmtpPassword \
   dnote-server start
 ```
 
 Replace `$user`, `$password` with the credentials of the Postgres user that owns the `dnote` database.
 
 Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
+
+Replace `$SmtpHost`, `SmtpPort`, `$SmtpUsername`, `$SmtpPassword` with actual values, if you would like to receive spaced repetition through email.
 
 By default, dnote server will run on the port 3000.
 

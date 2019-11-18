@@ -87,7 +87,7 @@ func initServer(app handlers.App) (*http.ServeMux, error) {
 
 func initDB() *gorm.DB {
 	var skipSSL bool
-	if os.Getenv("GO_ENV") != "PRODUCTION" || os.Getenv("DB_NOSSL") != "" {
+	if os.Getenv("GO_ENV") != "PRODUCTION" || os.Getenv("DB_NOSSL") != "" || os.Getenv("DBSkipSSL") == "true" {
 		skipSSL = true
 	} else {
 		skipSSL = false

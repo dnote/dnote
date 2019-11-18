@@ -9,7 +9,7 @@ Dnote is a simple personal knowledge base.
 
 Dnote is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
 
-It also offers a seamless **multi device sync**, and **automated spaced repetition** to retain your memory in case you are building a personal knowledge base.
+It also offers a seamless **multi device sync**, and **automated spaced repetition** to retain your memory.
 
 For more details, see the [download page](https://www.getdnote.com/download) and [features](https://www.getdnote.com/pricing).
 
