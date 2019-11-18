@@ -4,4 +4,5 @@ set -eu
 version=$1
 
 docker login
-docker push dnote/dnote:"$version"
+docker tag dnote-test dnote/test:"$version"
+docker push dnote/test:"$version"

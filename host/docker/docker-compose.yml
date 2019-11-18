@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:11.5
+    env_file:
+      - .env
+    volumes:
+      - dnote_data:/var/lib/postgresql/data
+    restart: always
+
+  dnote:
+    build: .
+    image: dnote/test:testing
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  dnote_data:

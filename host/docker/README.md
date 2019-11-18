@@ -1,9 +1,9 @@
 # Dnote Docker Image
 
-This is a Docker image to preview Dnote with one command.
+The official Dnote docker image.
 
 ## Use
 
 ```
-docker run -d --name=dnote --volume=./.dnote/data:/var/lib/postgresql/data --publish 3000:3000 dnote/dnote
+docker run -d --name=dnote --publish 3000:3000 dnote/dnote
 ```
