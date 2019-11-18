@@ -2,23 +2,28 @@ version: "3"
 
 services:
   postgres:
-    image: postgres:11.5
-    env_file:
-      - .env
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_USER: dnote
+      POSTGRES_PASSWORD: dnote
+      POSTGRES_DB: dnote
     volumes:
-      - dnote_data:/var/lib/postgresql/data
+      - ./dnote_data:/var/lib/postgresql/data
     restart: always
 
   dnote:
-    build: .
     image: dnote/test:testing
-    env_file:
-      - .env
+    environment:
+      GO_ENV: PRODUCTION
+      DBSkipSSL: "true"
+      DBHost: postgres
+      DBPort: 5432
+      DBName: dnote
+      DBUser: dnote
+      DBPassword: dnote
+      WebURL: localhost:3000
     ports:
       - 3000:3000
     depends_on:
       - postgres
     restart: always
-
-volumes:
-  dnote_data:

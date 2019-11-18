@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 version=$1
 
 docker login
-docker tag dnote-test dnote/test:"$version"
-docker push dnote/test:"$version"
+
+# tag the release
+docker tag dnote/dnote:"$version" dnote/dnote:latest
+
+# publish
+docker push dnote/dnote:"$version"
+docker push dnote/dnote:latest
