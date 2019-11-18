@@ -22,6 +22,10 @@ services:
       DBUser: dnote
       DBPassword: dnote
       WebURL: localhost:3000
+      SmtpHost:
+      SmtpPort:
+      SmtpUsername:
+      SmtpPassword:
     ports:
       - 3000:3000
     depends_on:
