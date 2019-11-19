@@ -279,7 +279,7 @@ func logging(inner http.Handler) http.HandlerFunc {
 		inner.ServeHTTP(&lw, r)
 
 		log.WithFields(log.Fields{
-			"remoteAddr": LookupIP(r),
+			"remoteAddr": lookupIP(r),
 			"uri":        r.RequestURI,
 			"statusCode": lw.statusCode,
 			"method":     r.Method,
