@@ -4,7 +4,7 @@ The official Dnote docker image.
 
 ## Installing Dnote Server Using Docker
 
-*Installing Dnote through Docker is currently in beta.* For the an alternative installation guide, please see [the installation guide](https://github.com/dnote/dnote/blob/master/SELF_HOST.md).
+*Installing Dnote through Docker is currently in beta.* For the an alternative installation guide, please see [the installation guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).
 
 ### Steps
 
