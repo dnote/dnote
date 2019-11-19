@@ -88,8 +88,8 @@ func cleanupVisitors() {
 	}
 }
 
-// lookupIP returns the request's IP
-func lookupIP(r *http.Request) string {
+// LookupIP returns the request's IP
+func LookupIP(r *http.Request) string {
 	realIP := r.Header.Get("X-Real-IP")
 	forwardedFor := r.Header.Get("X-Forwarded-For")
 
@@ -108,7 +108,7 @@ func lookupIP(r *http.Request) string {
 // limit is a middleware to rate limit the handler
 func limit(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		identifier := lookupIP(r)
+		identifier := LookupIP(r)
 		limiter := getVisitor(identifier)
 
 		if !limiter.Allow() {
