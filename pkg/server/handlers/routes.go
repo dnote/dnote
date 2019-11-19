@@ -279,7 +279,7 @@ func logging(inner http.Handler) http.HandlerFunc {
 		inner.ServeHTTP(&lw, r)
 
 		log.WithFields(log.Fields{
-			"remoteAddr": r.RemoteAddr,
+			"remoteAddr": lookupIP(r),
 			"uri":        r.RequestURI,
 			"statusCode": lw.statusCode,
 			"method":     r.Method,
@@ -377,16 +377,16 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"PATCH", "/classic/set-password", app.auth(app.classicSetPassword, nil), true},
 
 		// v3
-		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, &proOnly)), true},
-		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, &proOnly)), true},
+		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, &proOnly)), false},
+		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, &proOnly)), false},
 		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
 		{"GET", "/v3/books", cors(app.auth(app.GetBooks, &proOnly)), true},
 		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, &proOnly)), true},
-		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &proOnly)), true},
+		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &proOnly)), false},
 		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, &proOnly)), false},
 		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, &proOnly)), false},
 		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},
-		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, &proOnly)), true},
+		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, &proOnly)), false},
 		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, &proOnly), false},
 		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, &proOnly), false},
 		{"POST", "/v3/signin", cors(app.signin), true},
