@@ -12,6 +12,10 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
+N/A
+
+### 0.3.2 - 2019-11-20
+
 #### Fixed
 
 - Fix server crash upon landing on a note page (#324).

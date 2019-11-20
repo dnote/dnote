@@ -111,7 +111,11 @@ const Login: React.FunctionComponent<Props> = ({ location }) => {
 
           <div className={authStyles.footer}>
             <div className={authStyles.callout}>Don&#39;t have an account?</div>
-            <Link to="/join" className={authStyles.cta}>
+            <Link
+              id="T-create-account-button"
+              to="/join"
+              className={authStyles.cta}
+            >
               Create account
             </Link>
           </div>
