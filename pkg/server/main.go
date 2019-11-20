@@ -55,10 +55,11 @@ func mustFind(box *packr.Box, path string) []byte {
 	return b
 }
 
-func initContext() web.Context {
+func initContext(db *gorm.DB) web.Context {
 	staticBox := packr.New("static", "../../web/public/static")
 
 	return web.Context{
+		DB:               db,
 		IndexHTML:        mustFind(rootBox, "index.html"),
 		RobotsTxt:        mustFind(rootBox, "robots.txt"),
 		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
@@ -72,7 +73,7 @@ func initServer(app handlers.App) (*http.ServeMux, error) {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	webCtx := initContext()
+	webCtx := initContext(app.DB)
 	webHandlers := web.Init(webCtx)
 
 	mux := http.NewServeMux()
