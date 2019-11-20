@@ -28,6 +28,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	// ErrEmptyDB is an error for missing database connection in the context
+	ErrEmptyDB = errors.New("No database connection was provided")
+	// ErrEmptyIndexHTML is an error for missing index.html content in the context
+	ErrEmptyIndexHTML = errors.New("No index.html content was provided")
+	// ErrEmptyRobotsTxt is an error for missing robots.txt content in the context
+	ErrEmptyRobotsTxt = errors.New("No robots.txt content was provided")
+	// ErrEmptyServiceWorkerJS is an error for missing service worker content in the context
+	ErrEmptyServiceWorkerJS = errors.New("No service-worker.js content was provided")
+	// ErrEmptyStaticFileSystem is an error for missing static filesystem in the context
+	ErrEmptyStaticFileSystem = errors.New("No static filesystem was provided")
+)
+
 // Context contains contents of web assets
 type Context struct {
 	DB               *gorm.DB
@@ -45,14 +58,38 @@ type Handlers struct {
 	GetStatic        http.Handler
 }
 
+func validateContext(c Context) error {
+	if c.DB == nil {
+		return ErrEmptyDB
+	}
+	if c.IndexHTML == nil {
+		return ErrEmptyIndexHTML
+	}
+	if c.RobotsTxt == nil {
+		return ErrEmptyRobotsTxt
+	}
+	if c.ServiceWorkerJs == nil {
+		return ErrEmptyServiceWorkerJS
+	}
+	if c.StaticFileSystem == nil {
+		return ErrEmptyStaticFileSystem
+	}
+
+	return nil
+}
+
 // Init initializes the handlers
-func Init(c Context) Handlers {
+func Init(c Context) (Handlers, error) {
+	if err := validateContext(c); err != nil {
+		return Handlers{}, errors.Wrap(err, "validating context")
+	}
+
 	return Handlers{
 		GetRoot:          getRootHandler(c),
 		GetRobots:        getRobotsHandler(c),
 		GetServiceWorker: getSWHandler(c),
 		GetStatic:        getStaticHandler(c),
-	}
+	}, nil
 }
 
 // getRootHandler returns an HTTP handler that serves the app shell
