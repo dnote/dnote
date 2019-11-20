@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 version=$1
 
-# copy over the build artifact to the Docker build context
 dir=$(dirname "${BASH_SOURCE[0]}")
 projectDir="$dir/../.."
-cp "$projectDir/build/server/dnote_server_${version}_linux_amd64.tar.gz" "$dir"
+tarballName="dnote_server_${version}_linux_amd64.tar.gz"
 
-docker build -t dnote/dnote:"$version" --build-arg version="$version" .
+# copy over the build artifact to the Docker build context
+cp "$projectDir/build/server/$tarballName" "$dir"
+
+docker build -t dnote/dnote:"$version" --build-arg tarballName="$tarballName" .

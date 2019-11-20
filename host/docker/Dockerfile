@@ -1,7 +1,7 @@
 FROM alpine:latest
 
-ARG version
-RUN test -n "$version"
+ARG tarballName
+RUN test -n "$tarballName"
 
 # add dependency to execute a golang binary with dynamical linking.
 RUN apk add --no-cache \
@@ -9,8 +9,8 @@ RUN apk add --no-cache \
 
 WORKDIR dnote
 
-COPY dnote_server_"$version"_linux_amd64.tar.gz .
-RUN tar -xvzf dnote_server_"$version"_linux_amd64.tar.gz
+COPY "$tarballName" .
+RUN tar -xvzf "$tarballName"
 
 COPY entrypoint.sh .
 ENTRYPOINT ["./entrypoint.sh"]
