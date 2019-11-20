@@ -10,6 +10,13 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
+### Unreleased
+
+#### Fixed
+
+- Fix server crash upon landing on a note page (#324).
+- Allow to synchronize a large number of records (#321)
+
 ### 0.3.1 - 2019-11-12
 
 #### Fixed
