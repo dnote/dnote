@@ -74,7 +74,10 @@ func initServer(app handlers.App) (*http.ServeMux, error) {
 	}
 
 	webCtx := initContext(app.DB)
-	webHandlers := web.Init(webCtx)
+	webHandlers, err := web.Init(webCtx)
+	if err != nil {
+		return nil, errors.Wrap(err, "initializing web handlers")
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", apiRouter))
