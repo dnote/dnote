@@ -22,7 +22,7 @@ require (
 	github.com/lib/pq v1.1.1
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
-	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/mattn/go-sqlite3 v1.13.0
 	github.com/pkg/errors v0.8.1
 	github.com/radovskyb/watcher v1.0.7
 	github.com/robfig/cron v1.2.0
