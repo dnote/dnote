@@ -19,7 +19,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
 	github.com/justincampbell/timeago v0.0.0-20160528003754-027f40306f1d
-	github.com/lib/pq v1.1.1
+	github.com/lib/pq v1.2.0
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0
