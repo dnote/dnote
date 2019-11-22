@@ -1,0 +1,20 @@
+version: 1
+
+update_configs:
+  - package_manager: "javascript"
+    directory: "web"
+    update_schedule: "live"
+    allowed_updates:
+      - match:
+          update_type: "all"
+
+  - package_manager: "javascript"
+    directory: "jslib"
+    update_schedule: "live"
+    allowed_updates:
+      - match:
+          update_type: "all"
+
+  - package_manager: "go:modules"
+    directory: "/"
+    update_schedule: "weekly"
