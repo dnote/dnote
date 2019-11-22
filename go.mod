@@ -14,7 +14,7 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/css v1.0.0 // indirect
-	github.com/gorilla/mux v1.7.2
+	github.com/gorilla/mux v1.7.3
 	github.com/jinzhu/gorm v1.9.9
 	github.com/joho/godotenv v1.3.0
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
