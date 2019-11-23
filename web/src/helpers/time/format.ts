@@ -16,20 +16,11 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-  getMonthName,
-  getUTCOffset,
-  pad,
-  nanosecToMillisec,
-  DAY,
-  timeAgo,
-  getDayName
-} from './index';
-import { addOrdinalSuffix } from '../..//libs/string';
+import { getMonthName, getUTCOffset, pad, getDayName } from './index';
+import { addOrdinalSuffix } from '../../libs/string';
 
 // format verbs
 const YYYY = '%YYYY';
-const YYY = '%YYY';
 const YY = '%YY';
 const MMMM = '%MMMM';
 const MMM = '%MMM';
@@ -49,10 +40,10 @@ const dddd = '%dddd';
 
 // getPeriod returns the period for the time for the given date
 function getPeriod(date: Date) {
-  const h = date.getHours();
+  const hour = date.getHours();
 
   let ret;
-  if (h > 12) {
+  if (hour > 12) {
     ret = 'PM';
   } else {
     ret = 'AM';
@@ -110,14 +101,14 @@ export default function formatTime(date: Date, format: string): string {
   }
 
   if (ret.indexOf(hh) > -1) {
-    const h = date.getHours();
+    const hour = date.getHours();
 
-    ret = ret.replace(new RegExp(hh, 'g'), pad(h));
+    ret = ret.replace(new RegExp(hh, 'g'), pad(hour));
   }
   if (ret.indexOf(h) > -1) {
     let hour = date.getHours();
     if (hour > 12) {
-      hour = hour - 12;
+      hour -= 12;
     }
 
     ret = ret.replace(new RegExp(h, 'g'), hour.toString());

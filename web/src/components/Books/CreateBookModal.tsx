@@ -20,12 +20,12 @@ import React, { useState } from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
+import { checkDuplicate, validateBookName } from 'jslib/helpers/books';
 import Modal, { Header, Body } from '../Common/Modal';
 import { createBook } from '../../store/books';
 import { useSelector, useDispatch } from '../../store';
 import Button from '../Common/Button';
 import Flash from '../Common/Flash';
-import { checkDuplicate, validateBookName } from 'jslib/helpers/books';
 
 import styles from './CreateBookModal.scss';
 

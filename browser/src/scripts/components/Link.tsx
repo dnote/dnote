@@ -16,9 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable react/jsx-props-no-spreading */
+
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
 import { useDispatch } from '../store/hooks';
 import { navigate } from '../store/location/actions';

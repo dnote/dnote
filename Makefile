@@ -39,6 +39,12 @@ else
 endif
 .PHONY: install-js
 
+lint:
+	@(cd ${currentDir}/web && npm run lint)
+	@(cd ${currentDir}/jslib && npm run lint)
+	@(cd ${currentDir}/browser && npm run lint)
+.PHONY: lint
+
 ## test
 test: test-cli test-api test-web test-jslib
 .PHONY: test

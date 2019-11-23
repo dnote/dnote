@@ -170,7 +170,7 @@ export function useFocus() {
     if (currentEl) {
       currentEl.focus();
     }
-  }, [elRef.current]);
+  }, []);
 
   return [setFocus, elRef] as const;
 }

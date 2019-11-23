@@ -16,17 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { Fragment, useState, useRef } from 'react';
-import classnames from 'classnames';
-
-import Overlay from './Overlay';
+import React, { useRef, useState } from 'react';
 import { Alignment, Direction } from '../Popover/types';
-import { isMobileWidth } from 'web/libs/dom';
-import {
-  KEYCODE_ESC,
-  KEYCODE_ENTER,
-  KEYCODE_SPACE
-} from 'jslib/helpers/keyboard';
+import Overlay from './Overlay';
 
 interface Props {
   id: string;
@@ -51,7 +43,6 @@ const Tooltip: React.FunctionComponent<Props> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef(null);
-  const touchingRef = useRef(false);
 
   function show() {
     setIsOpen(true);

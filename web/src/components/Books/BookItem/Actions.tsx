@@ -16,11 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useRef } from 'react';
 import classnames from 'classnames';
-
+import React, { useRef, useState } from 'react';
 import ItemActions from '../../Common/ItemActions';
-import DotsIcon from '../../Icons/Dots';
 import ItemActionsStyles from '../../Common/ItemActions/ItemActions.scss';
 import styles from './Actions.scss';
 

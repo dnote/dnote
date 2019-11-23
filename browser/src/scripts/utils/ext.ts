@@ -18,7 +18,7 @@
 
 // module ext provides a cross-browser interface to access extension APIs
 // by using WebExtensions API if available, and using Chrome as a fallback.
-let ext: any = {};
+const ext: any = {};
 
 const apis = ['tabs', 'storage', 'runtime'];
 
@@ -40,9 +40,9 @@ for (let i = 0; i < apis.length; i++) {
         const fn = ext[api].create;
 
         // Promisify chrome.tabs.create
-        ext[api].create = function(obj) {
+        ext[api].create = obj => {
           return new Promise(resolve => {
-            fn(obj, function(tab) {
+            fn(obj, tab => {
               resolve(tab);
             });
           });

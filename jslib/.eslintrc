@@ -1,14 +1,17 @@
-{ "extends": ["eslint-config-airbnb", "prettier"],
+{ "extends": ["prettier"],
   "env": {
     "browser": true,
     "node": true,
     "jest": true
   },
   "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
   "rules": {
     "camelcase": 0,
     "strict": 0,
-    "react/no-multi-comp": 0,
     "import/default": 0,
     "import/no-duplicates": 0,
     "import/named": 0,
@@ -21,43 +24,23 @@
     "no-console": 0,
     "no-alert": 0,
     "arrow-body-style": 0,
-    "react/prop-types": 0,
-    "react/jsx-filename-extension": 0,
-    "react/prefer-stateless-function": 0,
-    "jsx-a11y/anchor-is-valid": 0,
-    "jsx-a11y/tabindex-no-positive": 0,
     "no-mixed-operators": 0,
     "no-plusplus": 0,
     "no-underscore-dangle": 0,
     "prettier/prettier": "error",
-    "jsx-a11y/no-autofocus": 0,
-    "jsx-a11y/label-has-for": 0,
     "prefer-destructuring": 0,
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn",
-    "react/jsx-wrap-multilines": ["error", {"declaration": false, "assignment": false}],
-    "react/jsx-one-expression-per-line": 0,
     "@typescript-eslint/no-unused-vars": 1,
     "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*_test.ts"]}],
     "lines-between-class-members": 0,
-    "react/jsx-fragments": 0,
-    "jsx-a11y/label-has-associated-control": 0,
-    "no-empty": 0
   },
   "plugins": [
-    "react", "react-hooks", "import", "prettier", "@typescript-eslint"
+    "import", "prettier", "@typescript-eslint"
   ],
   "settings": {
-    "import/parser": "babel-eslint",
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
     }
   },
   "globals": {
-    "browser": true,
-    "chrome": true,
-    __WEB_URL__: true,
-    __API_ENDPOINT__: true,
-    __VERSION__: true
   }
 }
