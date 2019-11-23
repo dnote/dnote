@@ -16,6 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+export const a = 1;
+
 export interface MessageData {
   content: string;
   kind: string;

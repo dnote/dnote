@@ -29,10 +29,12 @@ endif
 	@echo "==> installing js dependencies"
 
 ifeq ($(CI), true)
+	@(cd ${currentDir} && npm install --unsafe-perm=true)
 	@(cd ${currentDir}/web && npm install --unsafe-perm=true)
 	@(cd ${currentDir}/browser && npm install --unsafe-perm=true)
 	@(cd ${currentDir}/jslib && npm install --unsafe-perm=true)
 else
+	@(cd ${currentDir} && npm install)
 	@(cd ${currentDir}/web && npm install)
 	@(cd ${currentDir}/browser && npm install)
 	@(cd ${currentDir}/jslib && npm install)

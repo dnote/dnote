@@ -56,7 +56,8 @@
     "webpack-dev-middleware": "^3.7.2",
     "webpack-dev-server": "^3.9.0",
     "webpack-hot-middleware": "^2.25.0",
-    "webpack-manifest-plugin": "^2.2.0"
+    "webpack-manifest-plugin": "^2.2.0",
+    "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.7.0",
