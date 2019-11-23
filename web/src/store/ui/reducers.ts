@@ -16,8 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { removeKey } from 'jslib/helpers/obj';
-import { SET_MESSAGE, UNSET_MESSAGE, UIState, UIActionType, a } from './type';
+import { SET_MESSAGE, UNSET_MESSAGE, UIState, UIActionType } from './type';
 
 export const initialState: UIState = {
   message: {}

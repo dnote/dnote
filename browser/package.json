@@ -1,5 +1,6 @@
 {
   "name": "dnote-extension",
+  "repository": "https://github.com/dnote/dnote",
   "description": "Dnote browser extension for Chrome and Firefox",
   "scripts": {
     "clean": "TARGET=firefox gulp clean && TARGET=chrome gulp clean",
@@ -9,7 +10,7 @@
     "package:firefox": "TARGET=firefox NODE_ENV=production gulp package",
     "watch:chrome": "TARGET=chrome NODE_ENV=development concurrently \"webpack --watch\" \"gulp watch\"  ",
     "watch:firefox": "TARGET=firefox NODE_ENV=development concurrently \"webpack --watch\" \"gulp watch\"  ",
-    "lint": "eslint ./src --ext .ts,.tsx,.js"
+    "lint": "../node_modules/.bin/eslint ./src --ext .ts,.tsx,.js"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "GPL-3.0-or-later",
@@ -27,22 +28,12 @@
     "redux-thunk": "^2.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.3",
-    "@typescript-eslint/eslint-plugin": "^2.6.0",
-    "@typescript-eslint/parser": "^2.6.0",
-    "babel-eslint": "^10.0.3",
     "concurrently": "^5.0.0",
     "del": "^5.0.0",
-    "eslint": "^6.7.0",
-    "eslint-config-airbnb": "^18.0.1",
-    "eslint-config-prettier": "^6.7.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-prettier": "^3.1.1",
-    "eslint-plugin-react": "^7.16.0",
-    "eslint-plugin-react-hooks": "^2.2.0",
     "gulp": "^4.0.0",
     "gulp-if": "^3.0.0",
     "gulp-imagemin": "^6.1.1",
