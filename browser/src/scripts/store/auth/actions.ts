@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { LOGIN, LOGOUT, LogoutAction } from './types';
+import { LOGIN, LOGOUT, LogoutAction, LoginAction } from './types';
 import { ThunkAction } from '../types';
 import initServices from '../../utils/services';
 

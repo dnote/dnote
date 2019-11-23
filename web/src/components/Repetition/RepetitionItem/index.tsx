@@ -16,18 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import classnames from 'classnames';
-import { RepetitionRuleData } from 'jslib/operations/types';
 import React, { useState } from 'react';
+import classnames from 'classnames';
+
+import { RepetitionRuleData } from 'jslib/operations/types';
 import {
   msToDuration,
   msToHTMLTimeDuration,
-  relativeTimeDiff,
-  timeAgo
+  timeAgo,
+  relativeTimeDiff
 } from 'web/helpers/time';
-import Time from '../../Common/Time';
+import formatTime from 'web/helpers/time/format';
 import Actions from './Actions';
 import BookMeta from './BookMeta';
+import Time from '../../Common/Time';
 import styles from './RepetitionItem.scss';
 
 interface Props {

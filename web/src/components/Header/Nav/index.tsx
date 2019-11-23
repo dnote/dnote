@@ -19,9 +19,9 @@
 import React from 'react';
 import classnames from 'classnames';
 
+import Item from './Item';
 import { getNewPath, getBooksPath, getRepetitionsPath } from 'web/libs/paths';
 import { Filters, toSearchObj } from 'jslib/helpers/filters';
-import Item from './Item';
 import styles from './Nav.scss';
 
 interface Props {

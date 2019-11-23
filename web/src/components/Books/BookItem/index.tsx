@@ -21,8 +21,8 @@ import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
 import { getHomePath } from 'web/libs/paths';
-import { BookData } from 'jslib/operations/types';
 import Actions from './Actions';
+import { BookData } from 'jslib/operations/types';
 
 import styles from './BookItem.scss';
 

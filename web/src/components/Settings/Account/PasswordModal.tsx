@@ -16,12 +16,13 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
-import services from 'web/libs/services';
+import React, { useState, useEffect } from 'react';
 
+import services from 'web/libs/services';
 import Button from '../../Common/Button';
+import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
-import Modal, { Body, Header } from '../../Common/Modal';
+import settingsStyles from '../Settings.scss';
 import modalStyles from '../../Common/Modal/Modal.scss';
 
 interface Props {
@@ -31,10 +32,7 @@ interface Props {
 
 const labelId = 'password-modal';
 
-const PasswordModal: React.FunctionComponent<Props> = ({
-  isOpen,
-  onDismiss
-}) => {
+const PasswordModal: React.FunctionComponent<Props> = ({ isOpen, onDismiss }) => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirmation, setNewPasswordConfirmation] = useState('');

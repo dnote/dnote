@@ -196,5 +196,8 @@ const mapDispatchToProps = {
 };
 
 export default withRouter(
-  connect(mapStateToProps, mapDispatchToProps)(SettingsSidebar)
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(SettingsSidebar)
 );

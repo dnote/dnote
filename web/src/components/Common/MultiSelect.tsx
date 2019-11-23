@@ -16,14 +16,16 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 
+import { booksToOptions, filterOptions, Option } from 'jslib/helpers/select';
 import { KEYCODE_BACKSPACE } from 'jslib/helpers/keyboard';
-import { filterOptions, Option } from 'jslib/helpers/select';
-import { useScrollToFocused, useSearchMenuKeydown } from 'web/libs/hooks/dom';
+import { useSearchMenuKeydown, useScrollToFocused } from 'web/libs/hooks/dom';
+import { useSelector } from '../../store';
 import PopoverContent from '../Common/Popover/PopoverContent';
 import CloseIcon from '../Icons/Close';
+import { usePrevious } from 'web/libs/hooks';
 import styles from './MultiSelect.scss';
 
 function getTextInputWidth(term: string, active: boolean) {
@@ -138,8 +140,6 @@ const MultiSelect: React.FunctionComponent<Props> = ({
         'form-select-disabled': disabled
       })}
       ref={wrapperRef}
-      tabIndex={-1}
-      role="listbox"
       onClick={() => {
         if (inputRef.current) {
           inputRef.current.focus();
@@ -147,7 +147,6 @@ const MultiSelect: React.FunctionComponent<Props> = ({
 
         // setIsOpen(!isOpen);
       }}
-      onKeyDown={() => {}}
     >
       <ul className={styles['current-options']}>
         <span
@@ -186,11 +185,9 @@ const MultiSelect: React.FunctionComponent<Props> = ({
             type="text"
             id={textInputId}
             ref={el => {
-              // eslint-disable-next-line no-param-reassign
               inputRef.current = el;
 
               if (inputInnerRef) {
-                // eslint-disable-next-line no-param-reassign
                 inputInnerRef.current = el;
               }
             }}
@@ -240,7 +237,7 @@ const MultiSelect: React.FunctionComponent<Props> = ({
         closeOnEscapeKeydown
       >
         <ul
-          className={classnames(styles.suggestion, 'list-unstyled')}
+          className={classnames(styles['suggestion'], 'list-unstyled')}
           ref={listRef}
         >
           {filteredOptions.map((o, idx) => {

@@ -43,14 +43,14 @@ function initState(s: AppState | undefined): AppState {
     return undefined;
   }
 
-  const { settings: settingsState } = s;
+  const { settings } = s;
 
   return {
     ...s,
     settings: {
-      ...settingsState,
-      apiUrl: settingsState.apiUrl || config.defaultApiEndpoint,
-      webUrl: settingsState.webUrl || config.defaultWebUrl
+      ...settings,
+      apiUrl: settings.apiUrl || config.defaultApiEndpoint,
+      webUrl: settings.webUrl || config.defaultWebUrl
     }
   };
 }

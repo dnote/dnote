@@ -16,8 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable jsx-a11y/control-has-associated-label */
-
 import React from 'react';
 import classnames from 'classnames';
 

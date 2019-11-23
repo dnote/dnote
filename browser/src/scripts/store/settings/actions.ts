@@ -17,6 +17,8 @@
  */
 
 import { UPDATE, RESET, UpdateAction, ResetAction } from './types';
+import { ThunkAction } from '../types';
+import initServices from '../../utils/services';
 
 export function updateSettings(settings): UpdateAction {
   return {

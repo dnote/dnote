@@ -16,20 +16,21 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useState, useReducer, useRef, useEffect } from 'react';
 import classnames from 'classnames';
-import { booksToOptions, Option } from 'jslib/helpers/select';
+import { Link } from 'react-router-dom';
 
+import { getRepetitionsPath } from 'web/libs/paths';
+import { Option, booksToOptions } from 'jslib/helpers/select';
 import { BookDomain } from 'jslib/operations/types';
 import { CreateParams } from 'jslib/services/repetitionRules';
-import { Link } from 'react-router-dom';
-import { getRepetitionsPath } from 'web/libs/paths';
-import { daysToMs } from '../../../helpers/time';
+import Modal, { Header, Body } from '../../Common/Modal';
 import { useSelector } from '../../../store';
+import { daysToMs } from '../../../helpers/time';
 import Button from '../../Common/Button';
-import modalStyles from '../../Common/Modal/Modal.scss';
 import MultiSelect from '../../Common/MultiSelect';
 import styles from './Form.scss';
+import modalStyles from '../../Common/Modal/Modal.scss';
 
 export interface FormState {
   title: string;
@@ -71,8 +72,6 @@ interface Props {
   cancelPath?: string;
   initialState?: FormState;
   isEditing?: boolean;
-  // TODO: implement inProgress
-  inProgress?: boolean;
 }
 
 enum Action {
@@ -163,9 +162,9 @@ const Form: React.FunctionComponent<Props> = ({
   setErrMsg,
   cancelPath = getRepetitionsPath(),
   initialState = formInitialState,
-  isEditing = false,
-  inProgress = false
+  isEditing = false
 }) => {
+  const [inProgress, setInProgress] = useState(false);
   const bookSelectorInputRef = useRef(null);
   const [formState, formDispatch] = useReducer(formReducer, initialState);
   const { books } = useSelector(state => {
@@ -201,8 +200,10 @@ const Form: React.FunctionComponent<Props> = ({
       if (bookSelectorInputRef.current) {
         bookSelectorInputRef.current.blur();
       }
-    } else if (bookSelectorInputRef.current) {
-      bookSelectorInputRef.current.focus();
+    } else {
+      if (bookSelectorInputRef.current) {
+        bookSelectorInputRef.current.focus();
+      }
     }
   }, [formState.bookDomain, isEditing]);
 
@@ -355,7 +356,7 @@ const Form: React.FunctionComponent<Props> = ({
 
                 formDispatch({
                   type: Action.setFrequency,
-                  data: Number.parseInt(value, 10)
+                  data: Number.parseInt(value)
                 });
               }}
             >
@@ -392,7 +393,6 @@ const Form: React.FunctionComponent<Props> = ({
             >
               {[...Array(24)].map((_, i) => {
                 return (
-                  // eslint-disable-next-line react/no-array-index-key
                   <option key={i} value={i}>
                     {i}
                   </option>
@@ -421,7 +421,6 @@ const Form: React.FunctionComponent<Props> = ({
             >
               {[...Array(60)].map((_, i) => {
                 return (
-                  // eslint-disable-next-line react/no-array-index-key
                   <option key={i} value={i}>
                     {i}
                   </option>
@@ -455,7 +454,7 @@ const Form: React.FunctionComponent<Props> = ({
             if (value === '') {
               data = '';
             } else {
-              data = Number.parseInt(value, 10);
+              data = Number.parseInt(value);
             }
 
             formDispatch({
@@ -503,6 +502,7 @@ const Form: React.FunctionComponent<Props> = ({
             const ok = window.confirm('Are you sure?');
             if (!ok) {
               e.preventDefault();
+              return;
             }
           }}
           className="button button-second button-normal"

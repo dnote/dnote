@@ -20,11 +20,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 
 import { booksToOptions, filterOptions, Option } from 'jslib/helpers/select';
-import { usePrevious } from 'web/libs/hooks';
-import { useScrollToFocused, useSearchMenuKeydown } from 'web/libs/hooks/dom';
 import { useSelector } from '../../../../store';
 import PopoverContent from '../../../Common/Popover/PopoverContent';
+import { usePrevious } from 'web/libs/hooks';
 import styles from './AdvancedPanel.scss';
+
+import {
+  useScrollToFocused,
+  useSearchMenuKeydown
+} from 'web/libs/hooks/dom';
 
 interface Props {
   value: string;
@@ -113,11 +117,7 @@ function useSetSuggestionVisibility(
   }, [setIsOpen, triggerRef, inputValue, prevInputValue]);
 }
 
-const BookSearch: React.FunctionComponent<Props> = ({
-  value,
-  setValue,
-  disabled
-}) => {
+const BookSearch: React.FunctionComponent<Props> = ({ value, setValue, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIdx, setFocusedIdx] = useState(0);
   const [focusedOptEl, setFocusedOptEl] = useState(null);

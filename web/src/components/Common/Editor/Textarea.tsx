@@ -16,13 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import classnames from 'classnames';
-import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
 import React, { useState } from 'react';
-import { useDispatch } from '../../../store';
+import classnames from 'classnames';
+
+import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
 import { flushContent } from '../../../store/editor';
-import editorStyles from './Editor.scss';
+import { AppState, useDispatch } from '../../../store';
 import styles from './Textarea.scss';
+import editorStyles from './Editor.scss';
 
 interface Props {
   sessionKey: string;

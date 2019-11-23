@@ -16,15 +16,17 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { RepetitionRuleData } from 'jslib/operations/types';
-import React, { useEffect, useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import classnames from 'classnames';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
+
 import services from 'web/libs/services';
-import { useDispatch, useSelector } from '../../store';
-import { removeRepetitionRule } from '../../store/repetitionRules';
-import Button from '../Common/Button';
+import { RepetitionRuleData } from 'jslib/operations/types';
+import Modal, { Header, Body } from '../Common/Modal';
 import Flash from '../Common/Flash';
-import Modal, { Body, Header } from '../Common/Modal';
+import { removeRepetitionRule } from '../../store/repetitionRules';
+import { useSelector, useDispatch } from '../../store';
+import Button from '../Common/Button';
 import styles from './DeleteRepetitionRuleModal.scss';
 
 function getRepetitionRuleByUUID(
@@ -71,6 +73,7 @@ const DeleteRepetitionModal: React.FunctionComponent<Props> = ({
   );
 
   const labelId = 'delete-rule-modal-label';
+  const nameInputId = 'delete-rule-modal-name-input';
   const descId = 'delete-rule-modal-desc';
 
   useEffect(() => {

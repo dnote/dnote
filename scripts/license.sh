@@ -56,9 +56,9 @@ agpl="/* Copyright (C) 2019 Monomax Software Pty Ltd
  */"
 
 dir=$(dirname "${BASH_SOURCE[0]}")
-pkgPath="$dir/../pkg"
-serverPath="$dir/../pkg/server"
-browserPath="$dir/../browser"
+pkgPath="$dir/pkg"
+serverPath="$dir/pkg/server"
+browserPath="$dir/browser"
 
 gplFiles=$(find "$pkgPath" "$browserPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "$serverPath/*")
 

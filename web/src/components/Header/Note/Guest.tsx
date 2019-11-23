@@ -19,8 +19,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { getHomePath } from 'web/libs/paths';
 import LogoWithText from '../../Icons/LogoWithText';
+import Logo from '../../Icons/Logo';
+import { getHomePath } from 'web/libs/paths';
 import styles from './Guest.scss';
 
 const UserNoteHeader: React.FunctionComponent = () => {

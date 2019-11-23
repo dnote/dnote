@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState, Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import {
   KEYCODE_ENTER,
@@ -25,6 +25,7 @@ import {
 } from 'jslib/helpers/keyboard';
 import Flash from './Flash';
 import ext from '../utils/ext';
+import config from '../utils/config';
 import BookIcon from './BookIcon';
 import { navigate } from '../store/location/actions';
 import { useSelector, useDispatch } from '../store/hooks';
@@ -33,41 +34,43 @@ const Success: React.FunctionComponent = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const dispatch = useDispatch();
-  const { location, settings } = useSelector(state => ({
-    location: state.location,
-    settings: state.settings
-  }));
+  const { location, settings } = useSelector(state => {
+    return {
+      location: state.location,
+      settings: state.settings
+    };
+  });
 
   const { bookName, noteUUID } = location.state;
 
+  const handleKeydown = e => {
+    e.preventDefault();
+
+    if (e.keyCode === KEYCODE_ENTER) {
+      dispatch(navigate('/'));
+    } else if (e.keyCode === KEYCODE_ESC) {
+      window.close();
+    } else if (e.keyCode === KEYCODE_LOWERCASE_B) {
+      const url = `${settings.webUrl}/notes/${noteUUID}`;
+
+      ext.tabs
+        .create({ url })
+        .then(() => {
+          window.close();
+        })
+        .catch(err => {
+          setErrorMsg(err.message);
+        });
+    }
+  };
+
   useEffect(() => {
-    const handleKeydown = e => {
-      e.preventDefault();
-
-      if (e.keyCode === KEYCODE_ENTER) {
-        dispatch(navigate('/'));
-      } else if (e.keyCode === KEYCODE_ESC) {
-        window.close();
-      } else if (e.keyCode === KEYCODE_LOWERCASE_B) {
-        const url = `${settings.webUrl}/notes/${noteUUID}`;
-
-        ext.tabs
-          .create({ url })
-          .then(() => {
-            window.close();
-          })
-          .catch(err => {
-            setErrorMsg(err.message);
-          });
-      }
-    };
-
     window.addEventListener('keydown', handleKeydown);
 
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
-  }, [dispatch, noteUUID, settings.webUrl]);
+  }, []);
 
   return (
     <Fragment>
@@ -77,10 +80,7 @@ const Success: React.FunctionComponent = () => {
         <div>
           <BookIcon width={20} height={20} className="book-icon" />
 
-          <h1 className="heading">
-            Saved to
-            {bookName}
-          </h1>
+          <h1 className="heading">Saved to {bookName}</h1>
         </div>
 
         <ul className="key-list">
@@ -93,8 +93,7 @@ const Success: React.FunctionComponent = () => {
             <div className="key-desc">Open in browser</div>
           </li>
           <li className="key-item">
-            <kbd className="key">ESC</kbd>
-            <div className="key-desc">Close</div>
+            <kbd className="key">ESC</kbd> <div className="key-desc">Close</div>
           </li>
         </ul>
       </div>

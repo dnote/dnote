@@ -17,11 +17,16 @@
  */
 
 import React from 'react';
-import { msToHTMLTimeDuration } from '../../helpers/time';
+
+import {
+  msToHTMLTimeDuration,
+  getMonthName,
+  getUTCOffset
+} from '../../helpers/time';
 import formatTime from '../../helpers/time/format';
+import Tooltip from './Tooltip';
 import { Alignment, Direction } from '../Common/Popover/types';
 import styles from './Time.scss';
-import Tooltip from './Tooltip';
 
 interface ContentProps {
   text: string;

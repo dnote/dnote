@@ -44,9 +44,7 @@ function receiveRepetitionRules(
   };
 }
 
-function receiveRepetitionRulesError(
-  err: string
-): ReceiveRepetitionRulesErrorAction {
+function receiveRepetitionRulesError(err: string): ReceiveRepetitionRulesErrorAction {
   return {
     type: RECEIVE_ERROR,
     data: { err }
@@ -82,9 +80,7 @@ export const getRepetitionRules = (): ThunkAction<void> => {
   };
 };
 
-export function addRepetitionRule(
-  repetitionRule: RepetitionRuleData
-): AddRepetitionRuleAction {
+export function addRepetitionRule(repetitionRule: RepetitionRuleData): AddRepetitionRuleAction {
   return {
     type: ADD,
     data: { repetitionRule }

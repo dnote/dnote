@@ -8,8 +8,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "jest --coverage",
-    "test:watch": "jest --watch",
-    "lint": "eslint ./src --ext .ts,.tsx,.js"
+    "test:watch": "jest --watch"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "AGPL-3.0-or-later",
@@ -21,7 +20,9 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
+    "@types/mocha": "^5.2.7",
     "jest": "^24.9.0",
+    "prettier": "^1.19.1",
     "ts-jest": "^24.1.0",
     "typescript": "^3.7.2"
   }

@@ -20,8 +20,8 @@ import React, { Fragment } from 'react';
 import classnames from 'classnames';
 import { Link } from 'react-router-dom';
 
-import { getSubscriptionPath } from 'web/libs/paths';
 import LockIcon from '../Icons/Lock';
+import { getSubscriptionPath } from 'web/libs/paths';
 import { useSelector } from '../../store';
 
 import styles from './PayWall.scss';

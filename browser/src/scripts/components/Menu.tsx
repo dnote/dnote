@@ -53,11 +53,6 @@ export default ({ toggleMenu, loggedIn, onLogout }) => (
       )}
     </ul>
 
-    <div
-      className="menu-overlay"
-      onClick={toggleMenu}
-      onKeyDown={() => {}}
-      role="none"
-    />
+    <div className="menu-overlay" onClick={toggleMenu} />
   </Fragment>
 );

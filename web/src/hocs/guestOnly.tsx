@@ -20,6 +20,8 @@ import React from 'react';
 import { Redirect, RouteComponentProps } from 'react-router-dom';
 
 import { getReferrer } from 'jslib//helpers/url';
+import { RemoteData } from '../store';
+import { UserData } from '../store/auth';
 import { useSelector } from '../store';
 
 function renderFallback(referrer?: string) {
@@ -54,7 +56,6 @@ export default function(Component: React.ComponentType): React.ComponentType {
       return renderFallback(referrer);
     }
 
-    // eslint-disable-next-line react/jsx-props-no-spreading
     return <Component {...props} />;
   };
 
