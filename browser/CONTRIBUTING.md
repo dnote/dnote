@@ -4,7 +4,7 @@ Use the following commands to set up, build, and release.
 
 ## Set up
 
-* `npm install` to install dependencies.
+* Run `npm install-js` from the monorepo root.
 
 ## Developing locally
 

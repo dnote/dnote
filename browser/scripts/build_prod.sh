@@ -4,11 +4,11 @@
 set -eux
 
 # clean
-npm run clean
+yarn clean
 
 # chrome
-npm run build:chrome
-npm run package:chrome
+yarn build:chrome
+yarn package:chrome
 # firefox
-npm run build:firefox
-npm run package:firefox
+yarn build:firefox
+yarn package:firefox
