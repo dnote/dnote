@@ -27,11 +27,7 @@ interface Props {
   disabled: boolean;
 }
 
-const WordsSearch: React.FunctionComponent<Props> = ({
-  words,
-  setWords,
-  disabled
-}) => {
+const WordsSearch: React.FunctionComponent<Props> = ({ words, setWords, disabled }) => {
   return (
     <section className={styles.section}>
       <label htmlFor="has-words" className={styles.label}>

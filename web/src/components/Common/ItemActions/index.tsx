@@ -16,8 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import React, { useState, useRef } from 'react';
 import classnames from 'classnames';
-import React from 'react';
+
 import Menu, { MenuOption } from '../../Common/Menu';
 import DotsIcon from '../../Icons/Dots';
 import styles from './ItemActions.scss';
@@ -58,8 +59,8 @@ const ItemActions: React.FunctionComponent<Props> = ({
         menuId={id}
         triggerId={triggerId}
         triggerContent={<DotsIcon width={12} height={12} />}
-        triggerClassName={styles.trigger}
-        contentClassName={styles.content}
+        triggerClassName={styles['trigger']}
+        contentClassName={styles['content']}
         alignment="right"
         direction="bottom"
       />

@@ -20,6 +20,7 @@ import { removeKey } from 'jslib/helpers/obj';
 import { getEditorSessionkey } from 'web/libs/editor';
 import {
   EditorState,
+  EditorSession,
   EditorActionType,
   FLUSH_CONTENT,
   UPDATE_BOOK,
@@ -27,6 +28,16 @@ import {
   CREATE_SESSION,
   MARK_PERSISTED
 } from './type';
+
+function makeSession(key: string): EditorSession {
+  return {
+    sessionKey: key,
+    noteUUID: null,
+    bookUUID: null,
+    bookLabel: null,
+    content: ''
+  };
+}
 
 const initialState: EditorState = {
   persisted: false,

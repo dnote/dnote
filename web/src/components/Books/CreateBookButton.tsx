@@ -16,8 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import React, { Fragment, useState, useEffect, useRef } from 'react';
 import classnames from 'classnames';
-import React from 'react';
 import BookPlusIcon from '../Icons/BookPlus';
 import styles from './CreateBookButton.scss';
 

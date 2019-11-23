@@ -20,14 +20,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
+import Result from './Result';
+import { makeOptionId, getOptIdxByValue } from '../../../helpers/accessibility';
 import { Option, filterOptions } from 'jslib/helpers/select';
 import {
   useScrollToFocused,
   useScrollToSelected,
   useSearchMenuKeydown
 } from 'web/libs/hooks/dom';
-import Result from './Result';
-import { makeOptionId, getOptIdxByValue } from '../../../helpers/accessibility';
 import styles from './SearchableMenu.scss';
 
 function useFocusedIdx(options: Option[], currentValue) {

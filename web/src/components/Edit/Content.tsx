@@ -16,17 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import React, { useState, useRef } from 'react';
+import { Prompt, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
-import React, { useRef, useState } from 'react';
-import { Prompt, RouteComponentProps, withRouter } from 'react-router-dom';
-import { useFocusTextarea } from 'web/libs/hooks/editor';
+import { withRouter } from 'react-router-dom';
+
 import operations from 'web/libs/operations';
+import { getEditorSessionkey } from 'web/libs/editor';
 import { getNotePath, notePathDef } from 'web/libs/paths';
-import { useDispatch, useSelector } from '../../store';
-import { createBook } from '../../store/books';
-import { EditorSession, resetEditor } from '../../store/editor';
-import { setMessage } from '../../store/ui';
+import { useFocusTextarea } from 'web/libs/hooks/editor';
 import Editor from '../Common/Editor';
+import { useDispatch, useSelector } from '../../store';
+import { resetEditor, EditorSession } from '../../store/editor';
+import { createBook } from '../../store/books';
+import { setMessage } from '../../store/ui';
 import styles from '../New/New.scss';
 
 interface Props extends RouteComponentProps {

@@ -19,9 +19,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { getPasswordResetRequestPath } from 'web/libs/paths';
 import styles from '../Common/Auth.scss';
 import Button from '../Common/Button';
+import { getPasswordResetRequestPath } from 'web/libs/paths';
 
 interface Props {
   email: string;

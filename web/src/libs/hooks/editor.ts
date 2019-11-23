@@ -19,6 +19,8 @@
 import { useEffect } from 'react';
 
 import { focusTextarea } from 'web/libs/dom';
+import { resetEditor } from '../../store/editor';
+import { useDispatch } from '../../store';
 
 // useFocusTextarea is a hook that, when the given textareaEl becomes
 // defined, focuses on it.

@@ -20,17 +20,17 @@ import React from 'react';
 import { Switch, Route } from 'react-router';
 import { Redirect } from 'react-router-dom';
 
+import { useDispatch, useSelector } from '../../store';
+import ClassicLogin from './Login';
+import { setMessage } from '../../store/ui';
+import ClassicSetPassword from './SetPassword';
+import ClassicDecrypt from './Decrypt';
 import {
   ClassicMigrationSteps,
   getClassicMigrationPath,
   getHomePath,
   homePathDef
 } from 'web/libs/paths';
-import { useDispatch, useSelector } from '../../store';
-import ClassicLogin from './Login';
-import { setMessage } from '../../store/ui';
-import ClassicSetPassword from './SetPassword';
-import ClassicDecrypt from './Decrypt';
 
 interface Props {}
 

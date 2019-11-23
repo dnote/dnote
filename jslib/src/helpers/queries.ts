@@ -16,6 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Location } from 'history';
+
+import { parseSearchString } from './url';
+import { removeKey } from './obj';
 import * as searchLib from './search';
 
 export interface Queries {

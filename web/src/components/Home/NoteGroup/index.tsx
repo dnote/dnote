@@ -37,11 +37,7 @@ interface Props {
   filters: Filters;
 }
 
-const NoteGroup: React.FunctionComponent<Props> = ({
-  group,
-  isFirst,
-  filters
-}) => {
+const NoteGroup: React.FunctionComponent<Props> = ({ group, isFirst, filters }) => {
   const { year, month } = group;
 
   return (

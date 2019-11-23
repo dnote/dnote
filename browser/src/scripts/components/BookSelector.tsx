@@ -16,11 +16,13 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import cloneDeep from 'lodash/cloneDeep';
 import { useSelector, useDispatch } from '../store/hooks';
 import { updateBook, resetBook } from '../store/composer/actions';
+
+import BookIcon from './BookIcon';
 
 interface Props {
   selectorRef: React.Dispatch<any>;
@@ -28,7 +30,9 @@ interface Props {
 }
 
 function useCurrentOptions(options) {
-  const currentValue = useSelector(state => state.composer.bookUUID);
+  const currentValue = useSelector(state => {
+    return state.composer.bookUUID;
+  });
 
   for (let i = 0; i < options.length; i++) {
     const option = options[i];
@@ -42,15 +46,19 @@ function useCurrentOptions(options) {
 }
 
 function useOptions() {
-  const { books, composer } = useSelector(state => ({
-    books: state.books,
-    composer: state.composer
-  }));
+  const { books, composer } = useSelector(state => {
+    return {
+      books: state.books,
+      composer: state.composer
+    };
+  });
 
-  const opts = books.items.map(book => ({
-    label: book.label,
-    value: book.uuid
-  }));
+  const opts = books.items.map(book => {
+    return {
+      label: book.label,
+      value: book.uuid
+    };
+  });
 
   if (composer.bookLabel !== '' && composer.bookUUID === '') {
     opts.push({
@@ -69,9 +77,12 @@ const BookSelector: React.FunctionComponent<Props> = ({
   onAfterChange
 }) => {
   const dispatch = useDispatch();
-  const { books } = useSelector(state => ({
-    books: state.books
-  }));
+  const { books, composer } = useSelector(state => {
+    return {
+      books: state.books,
+      composer: state.composer
+    };
+  });
   const options = useOptions();
   const currentOption = useCurrentOptions(options);
 

@@ -16,17 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import classnames from 'classnames';
-import { RepetitionRuleData } from 'jslib/operations/types';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
-import { Link, RouteComponentProps } from 'react-router-dom';
-import { getRepetitionsPath } from 'web/libs/paths';
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
+import classnames from 'classnames';
+
+import { getRepetitionsPath, repetitionsPathDef } from 'web/libs/paths';
+import { BookDomain, RepetitionRuleData } from 'jslib/operations/types';
 import services from 'web/libs/services';
+import { createRepetitionRule } from '../../../store/repetitionRules';
 import { useDispatch } from '../../../store';
 import Flash from '../../Common/Flash';
-import repetitionStyles from '../Repetition.scss';
+import { setMessage } from '../../../store/ui';
 import Content from './Content';
+import repetitionStyles from '../Repetition.scss';
 
 interface Match {
   repetitionUUID: string;
@@ -34,7 +37,7 @@ interface Match {
 
 interface Props extends RouteComponentProps<Match> {}
 
-const EditRepetition: React.FunctionComponent<Props> = ({ match }) => {
+const EditRepetition: React.FunctionComponent<Props> = ({ history, match }) => {
   const dispatch = useDispatch();
   const [errMsg, setErrMsg] = useState('');
   const [data, setData] = useState<RepetitionRuleData | null>(null);

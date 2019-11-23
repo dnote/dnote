@@ -55,7 +55,7 @@ export const getNote = (
   noteUUID: string,
   params: GetNoteFacets
 ): ThunkAction<NoteData | void> => {
-  return dispatch => {
+  return (dispatch, getState) => {
     dispatch(startFetchingNote());
 
     return operations.notes

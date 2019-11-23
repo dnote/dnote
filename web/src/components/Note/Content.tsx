@@ -27,7 +27,7 @@ import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import BookIcon from '../Icons/Book';
 import GlobeIcon from '../Icons/Globe';
 import { parseMarkdown } from '../../helpers/markdown';
-import { nanosecToMillisec } from '../../helpers/time';
+import { nanosecToMillisec, getMonthName } from '../../helpers/time';
 import formatTime from '../../helpers/time/format';
 import { useSelector } from '../../store';
 import Time from '../Common/Time';

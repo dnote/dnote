@@ -60,7 +60,7 @@ const Content: React.FunctionComponent<Props> = ({
 
   return (
     <div>
-      <p>Toggle the repetition for &#34;{data.title}&#34;</p>
+      <p>Toggle the repetition for "{data.title}"</p>
 
       <form id="T-pref-repetition-form" onSubmit={handleSubmit}>
         <div>
@@ -72,7 +72,8 @@ const Content: React.FunctionComponent<Props> = ({
                 name="repetition"
                 value="off"
                 checked={!isEnabled}
-                onChange={() => {
+                onChange={e => {
+                  const val = e.target.value;
                   setIsEnabled(false);
                 }}
               />
@@ -88,7 +89,8 @@ const Content: React.FunctionComponent<Props> = ({
                 name="repetition"
                 value="on"
                 checked={isEnabled}
-                onChange={() => {
+                onChange={e => {
+                  const val = e.target.value;
                   setIsEnabled(true);
                 }}
               />

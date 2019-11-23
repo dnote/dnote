@@ -40,7 +40,7 @@ describe('editor.ts', () => {
 
       test(`generates a session key for input: ${tc.noteUUID}`, () => {
         const result = getEditorSessionkey(tc.noteUUID);
-        expect(result).toBe(tc.expected);
+        expect(result).toBe;
       });
     }
   });

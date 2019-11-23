@@ -28,11 +28,7 @@ interface Props {
   onDismiss: () => void;
 }
 
-const Header: React.FunctionComponent<Props> = ({
-  labelId,
-  heading,
-  onDismiss
-}) => {
+const Header: React.FunctionComponent<Props> = ({ labelId, heading, onDismiss }) => {
   return (
     <div className={styles.wrapper}>
       <strong id={labelId}>{heading}</strong>

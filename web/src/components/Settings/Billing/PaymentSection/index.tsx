@@ -17,9 +17,13 @@
  */
 
 import React, { Fragment } from 'react';
-import { SourceData } from '../../../../store/auth/type';
+import classnames from 'classnames';
+
 import PaymentMethodRow from './PaymentMethodRow';
+import settingsStyles from '../../Settings.scss';
+import { SourceData } from '../../../../store/auth/type';
 import Placeholder from './Placeholder';
+import styles from './Placeholder.scss';
 
 interface Props {
   source: SourceData;

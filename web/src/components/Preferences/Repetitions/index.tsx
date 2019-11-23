@@ -16,15 +16,18 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
-import { parseSearchString } from 'jslib/helpers/url';
-import React, { useEffect, useState } from 'react';
+import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
-import { Link, RouteComponentProps, withRouter } from 'react-router-dom';
-import { getLoginPath } from 'web/libs/paths';
+
 import services from 'web/libs/services';
-import Flash from '../../Common/Flash';
 import Logo from '../../Icons/Logo';
+import Flash from '../../Common/Flash';
+import { parseSearchString } from 'jslib/helpers/url';
+import { getEmailPreference } from '../../../store/auth';
+import { getLoginPath } from 'web/libs/paths';
+import { useSelector, useDispatch } from '../../../store';
 import Content from './Content';
 import styles from './EmailPreferenceRepetition.scss';
 
@@ -33,10 +36,7 @@ interface Match {
 }
 interface Props extends RouteComponentProps<Match> {}
 
-const EmailPreferenceRepetition: React.FunctionComponent<Props> = ({
-  location,
-  match
-}) => {
+const EmailPreferenceRepetition: React.FunctionComponent<Props> = ({ location, match }) => {
   const [data, setData] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -67,7 +67,7 @@ const EmailPreferenceRepetition: React.FunctionComponent<Props> = ({
 
         setIsFetching(false);
       });
-  }, [data, repetitionUUID, setData, setFailureMsg, setIsFetching, token]);
+  }, [data, setData, setFailureMsg, setIsFetching]);
 
   const isFetched = data !== null;
 

@@ -18,9 +18,12 @@
 
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 
 import { getPathFromLocation } from 'jslib//helpers/url';
+import { AppState, RemoteData } from '../store';
+import { UserData } from '../store/auth';
 import { useSelector } from '../store';
 
 // userOnly returns a HOC that redirects to Login page if user is not logged in
@@ -48,7 +51,6 @@ export default function(
       return <Redirect to={dest} />;
     }
 
-    // eslint-disable-next-line react/jsx-props-no-spreading
     return <Component {...props} />;
   };
 

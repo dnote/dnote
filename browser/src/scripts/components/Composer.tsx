@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import classnames from 'classnames';
 
 import { KEYCODE_ENTER } from 'jslib/helpers/keyboard';
@@ -34,20 +34,20 @@ interface Props {}
 // It needs to traverse the tree returned by the ref API of the 'react-select' library,
 // and to guard against possible breaking changes, if the path does not exist, it noops.
 function focusBookSelectorInput(bookSelectorRef) {
-  return (
-    bookSelectorRef.select &&
+  bookSelectorRef.select &&
     bookSelectorRef.select.select &&
     bookSelectorRef.select.select.inputRef &&
-    bookSelectorRef.select.select.inputRef.focus()
-  );
+    bookSelectorRef.select.select.inputRef.focus();
 }
 
 function useFetchData() {
   const dispatch = useDispatch();
 
-  const { books } = useSelector(state => ({
-    books: state.books
-  }));
+  const { books } = useSelector(state => {
+    return {
+      books: state.books
+    };
+  });
 
   useEffect(() => {
     if (!books.isFetched) {
@@ -57,10 +57,12 @@ function useFetchData() {
 }
 
 function useInitFocus(contentRef, bookSelectorRef) {
-  const { composer, books } = useSelector(state => ({
-    composer: state.composer,
-    books: state.books
-  }));
+  const { composer, books } = useSelector(state => {
+    return {
+      composer: state.composer,
+      books: state.books
+    };
+  });
 
   useEffect(() => {
     if (!books.isFetched) {
@@ -74,9 +76,7 @@ function useInitFocus(contentRef, bookSelectorRef) {
         contentRef.focus();
       }
     }
-
-    return () => null;
-  }, [contentRef, bookSelectorRef, books.isFetched, composer.bookLabel]);
+  }, [contentRef, bookSelectorRef, books.isFetched]);
 }
 
 const Composer: React.FunctionComponent<Props> = () => {
@@ -88,43 +88,27 @@ const Composer: React.FunctionComponent<Props> = () => {
   const [contentRef, setContentEl] = useState(null);
   const [bookSelectorRef, setBookSelectorEl] = useState(null);
 
-  const { composer, settings, auth } = useSelector(state => ({
-    composer: state.composer,
-    settings: state.settings,
-    auth: state.auth
-  }));
+  const { composer, settings, auth } = useSelector(state => {
+    return {
+      composer: state.composer,
+      settings: state.settings,
+      auth: state.auth
+    };
+  });
 
-  const handleSubmit = useCallback(
-    async e => {
-      e.preventDefault();
+  const handleSubmit = async e => {
+    e.preventDefault();
 
-      const services = initServices(settings.apiUrl);
+    const services = initServices(settings.apiUrl);
 
-      setSubmitting(true);
+    setSubmitting(true);
 
-      try {
-        let bookUUID;
-        if (composer.bookUUID === '') {
-          const resp = await services.books.create(
-            {
-              name: composer.bookLabel
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${auth.sessionKey}`
-              }
-            }
-          );
-
-          bookUUID = resp.book.uuid;
-        } else {
-          bookUUID = composer.bookUUID;
-        }
-
-        const resp = await services.notes.create(
+    try {
+      let bookUUID;
+      if (composer.bookUUID === '') {
+        const resp = await services.books.create(
           {
-            book_uuid: bookUUID,
-            content: composer.content
+            name: composer.bookLabel
           },
           {
             headers: {
@@ -133,48 +117,56 @@ const Composer: React.FunctionComponent<Props> = () => {
           }
         );
 
-        // clear the composer state
-        setErrMsg('');
-        setSubmitting(false);
-
-        dispatch(resetComposer());
-
-        // navigate
-        dispatch(
-          navigate('/success', {
-            bookName: composer.bookLabel,
-            noteUUID: resp.result.uuid
-          })
-        );
-      } catch (err) {
-        setErrMsg(err.message);
-        setSubmitting(false);
+        bookUUID = resp.book.uuid;
+      } else {
+        bookUUID = composer.bookUUID;
       }
-    },
-    [
-      settings.apiUrl,
-      composer.bookUUID,
-      composer.content,
-      composer.bookLabel,
-      auth.sessionKey,
-      dispatch
-    ]
-  );
+
+      const resp = await services.notes.create(
+        {
+          book_uuid: bookUUID,
+          content: composer.content
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.sessionKey}`
+          }
+        }
+      );
+
+      // clear the composer state
+      setErrMsg('');
+      setSubmitting(false);
+
+      dispatch(resetComposer());
+
+      // navigate
+      dispatch(
+        navigate('/success', {
+          bookName: composer.bookLabel,
+          noteUUID: resp.result.uuid
+        })
+      );
+    } catch (e) {
+      setErrMsg(e.message);
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitShortcut = e => {
+    // Shift + Enter
+    if (e.shiftKey && e.keyCode === KEYCODE_ENTER) {
+      handleSubmit(e);
+    }
+  };
 
   useEffect(() => {
-    const handleSubmitShortcut = e => {
-      // Shift + Enter
-      if (e.shiftKey && e.keyCode === KEYCODE_ENTER) {
-        handleSubmit(e);
-      }
-    };
-
     window.addEventListener('keydown', handleSubmitShortcut);
 
     return () => {
       window.removeEventListener('keydown', handleSubmitShortcut);
     };
-  }, [composer, handleSubmit]);
+  }, [composer]);
 
   let submitBtnText: string;
   if (submitting) {
