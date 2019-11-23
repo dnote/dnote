@@ -1,10 +1,15 @@
 {
   "private": true,
-  "workspaces": [
-    "jslib",
-    "web",
-    "browser"
-  ],
+  "workspaces": {
+    "packages": [
+      "jslib",
+      "web",
+      "browser"
+    ],
+    "nohoist": [
+        "**"
+    ]
+  },
   "devDependencies": {
     "prettier": "^1.19.1",
     "eslint": "^6.7.0",
