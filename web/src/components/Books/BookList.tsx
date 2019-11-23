@@ -19,9 +19,9 @@
 import React, { Fragment } from 'react';
 import classnames from 'classnames';
 
+import { BookData } from 'jslib/operations/types';
 import BookItem from './BookItem';
 import BookHolder from './BookHolder';
-import { BookData } from 'jslib/operations/types';
 import styles from './BookList.scss';
 
 function Placeholder() {

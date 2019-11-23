@@ -60,7 +60,7 @@ const fullDayNames = [
   'Saturday'
 ];
 
-/******* durations in milliseconds */
+/** ***** durations in milliseconds */
 export const SECOND = 1000;
 export const MINUTE = 60 * SECOND;
 export const HOUR = 60 * MINUTE;
@@ -92,6 +92,16 @@ export function getDayName(date: Date, short: boolean = false) {
   return fullDayNames[day];
 }
 
+// monthNumToFullName returns a full month name based on the number denoting the month,
+// ranging from 1 to 12 corresponding to each month of a year.
+export function monthNumToFullName(num: number): string {
+  if (num > 12 || num < 1) {
+    throw new Error(`invalid month number ${num}`);
+  }
+
+  return fullMonthNames[num - 1];
+}
+
 // getMonthName returns the shortened month name of the given date
 export function getMonthName(date: Date, short: boolean = false) {
   const month = date.getMonth();
@@ -101,16 +111,6 @@ export function getMonthName(date: Date, short: boolean = false) {
   }
 
   return monthNumToFullName(month + 1);
-}
-
-// monthNumToFullName returns a full month name based on the number denoting the month,
-// ranging from 1 to 12 corresponding to each month of a year.
-export function monthNumToFullName(num: number): string {
-  if (num > 12 || num < 1) {
-    throw new Error(`invalid month number ${num}`);
-  }
-
-  return fullMonthNames[num - 1];
 }
 
 export function pad(value: number): string {
@@ -191,7 +191,7 @@ export function msToHTMLTimeDuration(ms: number): string {
 
 // msToDuration translates the given time in seconds into a human-readable duration
 export function msToDuration(ms: number): string {
-  const { weeks, days, hours, minutes, seconds } = parseMs(ms);
+  const { weeks, days, hours, minutes } = parseMs(ms);
 
   let ret = '';
 
@@ -233,7 +233,6 @@ export function relativeTimeDiff(t1: number, t2: number): TimeDiff {
     tense = 'future';
   }
 
-  let text = '';
   let interval = Math.floor(ts / (52 * WEEK));
   if (interval > 1) {
     return {
@@ -287,15 +286,7 @@ export function relativeTimeDiff(t1: number, t2: number): TimeDiff {
   };
 }
 
-export function timeAgo(ms: number, simple: boolean = false): string {
-  function getStr(interval: number, noun: string, isPast: boolean): string {
-    let measure = `${interval} ${pluralize(noun, interval)}`;
-
-    if (isPast) {
-      return `${measure} ago`;
-    }
-  }
-
+export function timeAgo(ms: number): string {
   const now = new Date().getTime();
   const diff = relativeTimeDiff(now, ms);
 

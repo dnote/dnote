@@ -7,7 +7,7 @@
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "lint": "eslint ./src/**/*.ts ./src/**/*.tsx"
+    "lint": "eslint ./src --ext .ts,.tsx,.js"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "AGPL-3.0-or-later",

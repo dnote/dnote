@@ -17,15 +17,12 @@
  */
 
 import React, { Fragment } from 'react';
-import classnames from 'classnames';
 
 import PlanRow from './PlanRow';
 import CancelRow from './CancelRow';
 import ReactivateRow from './ReactivateRow';
-import settingsStyles from '../../Settings.scss';
 import { SubscriptionData } from '../../../../store/auth/type';
 import Placeholder from './Placeholder';
-import styles from './Placeholder.scss';
 
 interface Props {
   subscription: SubscriptionData;

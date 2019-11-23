@@ -16,20 +16,18 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
 import classnames from 'classnames';
-
-import { homePathDef, getHomePath, getNotePath } from 'web/libs/paths';
-import { copyToClipboard, selectTextInputValue } from 'web/libs/dom';
 import { NoteData } from 'jslib/operations/types';
+import React, { useState } from 'react';
+import { copyToClipboard, selectTextInputValue } from 'web/libs/dom';
 import operations from 'web/libs/operations';
-import Modal, { Header, Body } from '../../Common/Modal';
-import Flash from '../../Common/Flash';
-import { setMessage } from '../../../store/ui';
+import { getNotePath } from 'web/libs/paths';
 import { useDispatch } from '../../../store';
-import Button from '../../Common/Button';
-import Toggle from '../../Common/Toggle';
 import { receiveNote } from '../../../store/note';
+import Button from '../../Common/Button';
+import Flash from '../../Common/Flash';
+import Modal, { Body, Header } from '../../Common/Modal';
+import Toggle from '../../Common/Toggle';
 import CopyButton from './CopyButton';
 import styles from './ShareModal.scss';
 

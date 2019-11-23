@@ -16,9 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
 import classnames from 'classnames';
-
+import React from 'react';
 import styles from './Toggle.scss';
 
 interface Props {
@@ -56,7 +55,7 @@ const Toggle: React.FunctionComponent<Props> = ({
         />
 
         <div className={classnames(styles.toggle, {})}>
-          <div className={styles.indicator}></div>
+          <div className={styles.indicator} />
         </div>
 
         {label}

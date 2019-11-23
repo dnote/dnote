@@ -16,6 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// TODO: refactor to enforce the following rule
+/* eslint-disable react/jsx-props-no-spreading */
+
 import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 

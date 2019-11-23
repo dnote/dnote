@@ -24,6 +24,7 @@ install:
   - make install
 
 script:
+  - make lint
   - make test-cli
   - make test-api
   - make test-web

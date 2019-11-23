@@ -16,23 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useRef, useEffect, Fragment } from 'react';
-import { Prompt, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import Helmet from 'react-helmet';
-import { withRouter } from 'react-router-dom';
-
+import { Prompt, RouteComponentProps, withRouter } from 'react-router-dom';
 import { focusTextarea } from 'web/libs/dom';
-import { getEditorSessionkey } from 'web/libs/editor';
+import { useFocus } from 'web/libs/hooks/dom';
 import operations from 'web/libs/operations';
 import { getNotePath, notePathDef } from 'web/libs/paths';
-import { useFocus } from 'web/libs/hooks/dom';
+import { useDispatch } from '../../store';
+import { createBook } from '../../store/books';
+import { EditorSession, resetEditor } from '../../store/editor';
+import { setMessage } from '../../store/ui';
 import Editor from '../Common/Editor';
 import Flash from '../Common/Flash';
-import { useDispatch, useSelector } from '../../store';
-import { resetEditor, createSession, EditorSession } from '../../store/editor';
-import { createBook } from '../../store/books';
-import { setMessage } from '../../store/ui';
 import PayWall from '../Common/PayWall';
 import styles from './New.scss';
 
@@ -54,10 +51,14 @@ function useInitFocus({ bookLabel, content, textareaRef, setTriggerFocus }) {
         focusTextarea(textareaEl);
       }
     }
-  }, [setTriggerFocus, bookLabel, textareaRef]);
+  }, [setTriggerFocus, bookLabel, textareaRef, content]);
 }
 
-const New: React.FunctionComponent<Props> = ({ editor, persisted, history }) => {
+const New: React.FunctionComponent<Props> = ({
+  editor,
+  persisted,
+  history
+}) => {
   const dispatch = useDispatch();
   const [errMessage, setErrMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);

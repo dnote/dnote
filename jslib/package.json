@@ -8,7 +8,8 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "lint": "eslint ./src --ext .ts,.tsx,.js"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "AGPL-3.0-or-later",
@@ -20,7 +21,12 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
-    "@types/mocha": "^5.2.7",
+    "@typescript-eslint/eslint-plugin": "^2.8.0",
+    "@typescript-eslint/parser": "^2.8.0",
+    "eslint": "^6.7.0",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.1",
     "jest": "^24.9.0",
     "prettier": "^1.19.1",
     "ts-jest": "^24.1.0",

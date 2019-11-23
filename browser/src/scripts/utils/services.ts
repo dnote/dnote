@@ -17,13 +17,11 @@
  */
 
 import init from 'jslib/services';
-import config from './config';
 
-const initServices = (baseUrl: string) => {
-  return init({
-    baseUrl: baseUrl,
+const initServices = (baseUrl: string) =>
+  init({
+    baseUrl,
     pathPrefix: ''
   });
-};
 
 export default initServices;

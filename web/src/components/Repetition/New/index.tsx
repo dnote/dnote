@@ -22,7 +22,6 @@ import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
 import { getRepetitionsPath, repetitionsPathDef } from 'web/libs/paths';
-import { BookDomain } from 'jslib/operations/types';
 import {
   getRepetitionRules,
   createRepetitionRule

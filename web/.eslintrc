@@ -2,7 +2,7 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true
+    "jest": true
   },
   "parser": "@typescript-eslint/parser",
   "rules": {
@@ -40,7 +40,8 @@
     "@typescript-eslint/no-unused-vars": 1,
     "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*_test.ts", "**/webpack/**/*"]}],
     "lines-between-class-members": 0,
-    "react/jsx-fragments": 0
+    "react/jsx-fragments": 0,
+    "jsx-a11y/label-has-associated-control": 0
   },
   "plugins": [
     "react", "react-hooks", "import", "prettier", "@typescript-eslint"
@@ -62,6 +63,7 @@
     "__STRIPE_PUBLIC_KEY__": true,
     "__ROOT_URL__": true,
     "__CDN_URL__": true,
+    "__VERSION__": true,
     "socket": true,
     "webpackIsomorphicTools": true,
     "StripeCheckout": true

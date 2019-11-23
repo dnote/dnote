@@ -18,7 +18,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
-import classnames from 'classnames';
 
 import { useScript } from 'web/libs/hooks';
 import { useSelector, useDispatch } from '../../../store';
@@ -31,7 +30,6 @@ import {
   getSource,
   clearSource
 } from '../../../store/auth';
-import SettingRow from '../SettingRow';
 import PlanSection from './PlanSection';
 import PaymentSection from './PaymentSection';
 import styles from '../Settings.scss';
@@ -64,7 +62,6 @@ const Billing: React.FunctionComponent = () => {
   });
 
   const subscription = subscriptionData.data;
-  const source = sourceData.data;
 
   const key = `${__STRIPE_PUBLIC_KEY__}`;
 
