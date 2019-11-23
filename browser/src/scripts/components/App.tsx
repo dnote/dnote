@@ -17,7 +17,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import classnames from 'classnames';
 
 import initServices from '../utils/services';
 import { logout } from '../store/auth/actions';
@@ -69,13 +68,11 @@ const App: React.FunctionComponent<Props> = () => {
   const [errMsg, setErrMsg] = useState('');
 
   const dispatch = useDispatch();
-  const { path, auth, settings } = useSelector(state => {
-    return {
-      path: state.location.path,
-      auth: state.auth,
-      settings: state.settings
-    };
-  });
+  const { path, auth, settings } = useSelector(state => ({
+    path: state.location.path,
+    auth: state.auth,
+    settings: state.settings
+  }));
 
   useCheckSessionValid(auth);
 

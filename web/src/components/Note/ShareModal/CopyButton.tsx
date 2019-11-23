@@ -17,10 +17,7 @@
  */
 
 import React from 'react';
-import classnames from 'classnames';
-
 import Button from '../../Common/Button';
-import styles from './ShareModal.scss';
 
 interface Props {
   kind: string;

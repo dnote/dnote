@@ -19,7 +19,6 @@
 import React, { useEffect, useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
-import { notePathDef } from 'web/libs/paths';
 import { parseSearchString } from 'jslib/helpers/url';
 import Content from './Content';
 import Flash from '../Common/Flash';

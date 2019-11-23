@@ -34,10 +34,8 @@ import CreateBookModal from './CreateBookModal';
 import BookList from './BookList';
 import EmptyList from './EmptyList';
 import SearchInput from '../Common/SearchInput';
-import Button from '../Common/Button';
 import DeleteBookModal from './DeleteBookModal';
 import { usePrevious } from '../../libs/hooks';
-import BookPlusIcon from '../Icons/BookPlus';
 import CreateBookButton from './CreateBookButton';
 import styles from './Content.scss';
 
@@ -91,14 +89,17 @@ function useFocusInputOnReset(
         inputRef.current.focus();
       }
     }
-  }, [searchValue, inputRef]);
+  }, [searchValue, inputRef, prevSearchValue]);
 }
 
 interface Props extends RouteComponentProps {
   setSuccessMessage: (string) => void;
 }
 
-const Content: React.FunctionComponent<Props> = ({ history, setSuccessMessage }) => {
+const Content: React.FunctionComponent<Props> = ({
+  history,
+  setSuccessMessage
+}) => {
   const { books } = useSelector(state => {
     return {
       books: state.books

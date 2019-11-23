@@ -19,8 +19,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { createStore, applyMiddleware, compose } from 'redux';
-import thunkMiddleware from 'redux-thunk';
 
 import { debounce } from 'jslib/helpers/perf';
 import configureStore from './store';

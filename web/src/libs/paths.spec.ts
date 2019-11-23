@@ -16,6 +16,8 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable no-loop-func */
+
 import { populateParams } from './paths';
 
 describe('paths.ts', () => {

@@ -33,5 +33,5 @@ export {
   QueriesHelpers,
   SearchHelpers,
   SelectHelpers,
-  UrlHelpers,
-}
+  UrlHelpers
+};

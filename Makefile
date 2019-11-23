@@ -1,5 +1,5 @@
 PACKR2 := $(shell command -v packr2 2> /dev/null)
-NPM := $(shell command -v npm 2> /dev/null)
+YARN := $(shell command -v yarn 2> /dev/null)
 HUB := $(shell command -v hub 2> /dev/null)
 
 currentDir = $(shell pwd)
@@ -22,22 +22,24 @@ endif
 .PHONY: install-go
 
 install-js:
-ifndef NPM
-	$(error npm is not installed)
+ifndef YARN
+	$(error yarn is not installed)
 endif
 
 	@echo "==> installing js dependencies"
 
 ifeq ($(CI), true)
-	@(cd ${currentDir}/web && npm install --unsafe-perm=true)
-	@(cd ${currentDir}/browser && npm install --unsafe-perm=true)
-	@(cd ${currentDir}/jslib && npm install --unsafe-perm=true)
+	@(cd ${currentDir} && yarn --unsafe-perm=true)
 else
-	@(cd ${currentDir}/web && npm install)
-	@(cd ${currentDir}/browser && npm install)
-	@(cd ${currentDir}/jslib && npm install)
+	@(cd ${currentDir} && yarn)
 endif
 .PHONY: install-js
+
+lint:
+	@(cd ${currentDir}/web && yarn lint)
+	@(cd ${currentDir}/jslib && yarn lint)
+	@(cd ${currentDir}/browser && yarn lint)
+.PHONY: lint
 
 ## test
 test: test-cli test-api test-web test-jslib
@@ -57,9 +59,9 @@ test-web:
 	@echo "==> running web test"
 
 ifeq ($(WATCH), true)
-	@(cd ${currentDir}/web && npm run test:watch)
+	@(cd ${currentDir}/web && yarn test:watch)
 else 
-	@(cd ${currentDir}/web && npm run test)
+	@(cd ${currentDir}/web && yarn test)
 endif
 .PHONY: test-web
 
@@ -67,9 +69,9 @@ test-jslib:
 	@echo "==> running jslib test"
 
 ifeq ($(WATCH), true)
-	@(cd ${currentDir}/jslib && npm run test:watch)
+	@(cd ${currentDir}/jslib && yarn test:watch)
 else
-	@(cd ${currentDir}/jslib && npm run test)
+	@(cd ${currentDir}/jslib && yarn test)
 endif
 .PHONY: test-jslib
 

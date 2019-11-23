@@ -16,14 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import Helmet from 'react-helmet';
-import classnames from 'classnames';
-
+import config from '../../../libs/config';
+import { useSelector } from '../../../store';
 import SettingRow from '../SettingRow';
 import styles from '../Settings.scss';
-import { useSelector } from '../../../store';
-import config from '../../../libs/config';
 
 interface Props {}
 

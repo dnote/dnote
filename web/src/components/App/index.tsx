@@ -16,42 +16,41 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect, Fragment } from 'react';
 import classnames from 'classnames';
-import { hot } from 'react-hot-loader/root';
-import { Switch, Route } from 'react-router';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Location } from 'history';
 
+import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
+import { hot } from 'react-hot-loader/root';
+import { Route, Switch } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { usePrevious } from 'web/libs/hooks';
 import {
-  homePathDef,
-  notePathDef,
-  noHeaderPaths,
-  subscriptionPaths,
-  noFooterPaths,
+  checkCurrentPath,
   checkCurrentPathIn,
-  checkCurrentPath
+  homePathDef,
+  noFooterPaths,
+  noHeaderPaths,
+  notePathDef,
+  subscriptionPaths
 } from 'web/libs/paths';
-import { getFiltersFromSearchStr } from 'jslib/helpers/filters';
-import Splash from '../Splash';
+import render from '../../routes';
+import { useDispatch, useSelector } from '../../store';
 import { getCurrentUser } from '../../store/auth';
 import { getBooks } from '../../store/books';
+import { updatePage, updateQuery } from '../../store/filters';
 import { setPrevLocation } from '../../store/route';
 import { unsetMessage } from '../../store/ui';
-import { useDispatch, useSelector } from '../../store';
-import HeaderData from './HeaderData';
-import render from '../../routes';
-import NoteHeader from '../Header/Note';
-import NormalHeader from '../Header/Normal';
-import SubscriptionHeader from '../Header/SubscriptionHeader';
-import TabBar from '../TabBar';
-import SystemMessage from '../Common/SystemMessage';
 import MobileMenu from '../Common/MobileMenu';
-import styles from './App.scss';
-import { updateQuery, updatePage } from '../../store/filters';
-
+import SystemMessage from '../Common/SystemMessage';
+import NormalHeader from '../Header/Normal';
+import NoteHeader from '../Header/Note';
+import SubscriptionHeader from '../Header/SubscriptionHeader';
+import Splash from '../Splash';
+import TabBar from '../TabBar';
 import './App.global.scss';
+import styles from './App.scss';
+import HeaderData from './HeaderData';
 
 interface Props extends RouteComponentProps<any> {}
 
@@ -198,7 +197,7 @@ const App: React.FunctionComponent<Props> = ({ location }) => {
         <Route path={noFooterPaths} exact component={null} />
         <Route
           path="/"
-          render={({ location }) => {
+          render={() => {
             if (noFooter) {
               return null;
             }

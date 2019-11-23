@@ -2,7 +2,7 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true
+    "jest": true
   },
   "parser": "@typescript-eslint/parser",
   "rules": {
@@ -20,6 +20,7 @@
     "indent": [2, 2, {"SwitchCase": 1}],
     "no-console": 0,
     "no-alert": 0,
+    "no-shadow": 2,
     "arrow-body-style": 0,
     "react/prop-types": 0,
     "react/jsx-filename-extension": 0,
@@ -40,18 +41,15 @@
     "@typescript-eslint/no-unused-vars": 1,
     "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*_test.ts"]}],
     "lines-between-class-members": 0,
-    "react/jsx-fragments": 0
+    "react/jsx-fragments": 0,
+    "jsx-a11y/label-has-associated-control": 0,
+    "no-empty": 0
   },
   "plugins": [
     "react", "react-hooks", "import", "prettier", "@typescript-eslint"
   ],
-  "settings": {
-    "import/parser": "babel-eslint",
-    "import/resolve": {
-      "moduleDirectory": ["node_modules", "src"]
-    }
-  },
   "globals": {
+    // web
     "__DEVELOPMENT__": true,
     "__PRODUCTION__": true,
     "__DISABLE_SSR__": true,
@@ -64,6 +62,13 @@
     "__CDN_URL__": true,
     "socket": true,
     "webpackIsomorphicTools": true,
-    "StripeCheckout": true
+    "StripeCheckout": true,
+
+    // browser
+    "browser": true,
+    "chrome": true,
+    __WEB_URL__: true,
+    __API_ENDPOINT__: true,
+    __VERSION__: true
   }
 }

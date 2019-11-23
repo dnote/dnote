@@ -21,9 +21,9 @@ import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 
 import { getPlanLabel } from 'web/libs/subscription';
-import LogoIcon from '../../../Icons/Logo';
 import { SECOND } from 'web/helpers/time';
 import formatDate from 'web/helpers/time/format';
+import LogoIcon from '../../../Icons/Logo';
 import styles from './PlanRow.scss';
 import settingRowStyles from '../../SettingRow.scss';
 

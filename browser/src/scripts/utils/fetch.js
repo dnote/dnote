@@ -22,7 +22,7 @@ function checkStatus(response) {
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
-  return response.text().then((body) => {
+  return response.text().then(body => {
     const error = new Error(body);
     error.response = response;
 
@@ -48,7 +48,7 @@ export function post(url, data, options = {}) {
   return request(url, {
     method: 'POST',
     body: JSON.stringify(data),
-    ...options,
+    ...options
   });
 }
 
@@ -61,6 +61,6 @@ export function get(url, options = {}) {
 
   return request(endpoint, {
     method: 'GET',
-    ...options,
+    ...options
   });
 }
