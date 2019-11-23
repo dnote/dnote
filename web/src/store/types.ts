@@ -17,7 +17,7 @@
  */
 
 import { Action, Store } from 'redux';
-import { ThunkDispatch, ThunkAction } from 'redux-thunk';
+import { ThunkDispatch, ThunkAction as ReduxThunkAction } from 'redux-thunk';
 
 import { AuthState } from './auth/type';
 import { FormState } from './form/type';
@@ -54,7 +54,7 @@ export interface AppState {
 }
 
 // ThunkAction is a thunk action type
-export type ThunkAction<T = void> = ThunkAction<
+export type ThunkAction<T = void> = ReduxThunkAction<
   Promise<T>,
   AppState,
   void,
