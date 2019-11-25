@@ -19,6 +19,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/exec"
@@ -55,13 +56,26 @@ func execCmd(task string, watchDir string) *exec.Cmd {
 	return command(parts[0], parts[1:], watchDir)
 }
 
+var task, context string
+
+func init() {
+	flag.StringVar(&task, "task", "", "the command to execute")
+	flag.StringVar(&context, "context", ".", "the directory from which to execute the task")
+
+	flag.Parse()
+
+	if task == "" {
+		log.Println("task was not provided. Exiting the watcher...")
+		os.Exit(1)
+	}
+}
+
 func main() {
 	w := watcher.New()
 	w.IgnoreHiddenFiles(true)
 	w.SetMaxEvents(1)
 
-	watchDir := os.Args[1]
-	task := os.Args[2]
+	targets := flag.Args()
 
 	var e *exec.Cmd
 
@@ -81,7 +95,7 @@ func main() {
 				}
 
 				// Starting it again here or starting for the first time.
-				e = execCmd(task, watchDir)
+				e = execCmd(task, context)
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -90,11 +104,13 @@ func main() {
 		}
 	}()
 
-	if err := w.AddRecursive(watchDir); err != nil {
-		log.Fatalln(errors.Wrap(err, "watching the given pattern"))
+	for _, target := range targets {
+		if err := w.AddRecursive(target); err != nil {
+			log.Fatalln(errors.Wrap(err, "watching the given pattern"))
+		}
 	}
 
-	e = execCmd(task, watchDir)
+	e = execCmd(task, context)
 
 	log.Printf("watching %d files", len(w.WatchedFiles()))
 	if err := w.Start(time.Millisecond * 1000); err != nil {
