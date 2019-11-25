@@ -16,16 +16,15 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-
-import services from 'web/libs/services';
-import { BookDomain, RepetitionRuleData } from 'jslib/operations/types';
 import { booksToOptions } from 'jslib/helpers/select';
+import { RepetitionRuleData } from 'jslib/operations/types';
+import React from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { getRepetitionsPath, repetitionsPathDef } from 'web/libs/paths';
-import Form, { FormState, serializeFormState } from '../Form';
+import services from 'web/libs/services';
 import { useDispatch } from '../../../store';
 import { setMessage } from '../../../store/ui';
+import Form, { FormState, serializeFormState } from '../Form';
 
 interface Props extends RouteComponentProps {
   setErrMsg: (string) => void;

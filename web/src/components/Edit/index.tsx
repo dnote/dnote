@@ -16,19 +16,17 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
 import classnames from 'classnames';
-import { Prompt, RouteComponentProps } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
-import { withRouter } from 'react-router-dom';
-
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { getEditorSessionkey } from 'web/libs/editor';
 import operations from 'web/libs/operations';
-import Flash from '../Common/Flash';
 import { useDispatch, useSelector } from '../../store';
 import { createSession } from '../../store/editor';
-import Content from './Content';
+import Flash from '../Common/Flash';
 import styles from '../New/New.scss';
+import Content from './Content';
 
 interface Match {
   noteUUID: string;

@@ -20,8 +20,8 @@ import React from 'react';
 import classnames from 'classnames';
 
 import { Link } from 'react-router-dom';
-import { useFilters, useSelector } from '../../../store';
 import { getHomePath } from 'web/libs/paths';
+import { useFilters, useSelector } from '../../../store';
 import CaretIcon from '../../Icons/Caret';
 import styles from './Paginator.scss';
 

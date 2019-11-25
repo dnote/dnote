@@ -16,17 +16,15 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-
 import services from 'web/libs/services';
-import { getCurrentUser } from '../../../store/auth';
 import { useDispatch } from '../../../store';
+import { getCurrentUser } from '../../../store/auth';
 import Button from '../../Common/Button';
-import Modal, { Header, Body } from '../../Common/Modal';
 import Flash from '../../Common/Flash';
+import Modal, { Body, Header } from '../../Common/Modal';
 import modalStyles from '../../Common/Modal/Modal.scss';
-import settingsStyles from '../Settings.scss';
 
 interface Props {
   currentEmail: string;
@@ -34,7 +32,11 @@ interface Props {
   onDismiss: () => void;
 }
 
-const EmailModal: React.FunctionComponent<Props> = ({ currentEmail, isOpen, onDismiss }) => {
+const EmailModal: React.FunctionComponent<Props> = ({
+  currentEmail,
+  isOpen,
+  onDismiss
+}) => {
   const [passwordVal, setPasswordVal] = useState('');
   const [emailVal, setEmailVal] = useState('');
   const [inProgress, setInProgress] = useState(false);
@@ -183,7 +185,4 @@ const mapDispatchToProps = {
   doGetCurrentUser: getCurrentUser
 };
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(EmailModal);
+export default connect(null, mapDispatchToProps)(EmailModal);

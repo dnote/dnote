@@ -17,5 +17,5 @@
  */
 
 // browser.d.ts
-declare var browser: any;
-declare var chrome: any;
+declare let browser: any;
+declare let chrome: any;

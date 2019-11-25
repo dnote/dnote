@@ -17,23 +17,18 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import { findDOMNode } from 'react-dom';
 
-import Link from './Link';
 import Flash from './Flash';
-import config from '../utils/config';
 import { updateSettings, resetSettings } from '../store/settings/actions';
 import { useDispatch, useSelector, useStore } from '../store/hooks';
-import services from '../utils/services';
 
 interface Props {}
 
 // isValidURL checks if the given string is a valid URL
 function isValidURL(url: string): boolean {
-  var a = document.createElement('a');
+  const a = document.createElement('a');
   a.href = url;
-  return a.host && a.host != window.location.host;
+  return a.host && a.host !== window.location.host;
 }
 
 // validateFormState validates the given form state. If any input is
@@ -49,11 +44,9 @@ function validateFormState({ apiUrl, webUrl }) {
 }
 
 const Settings: React.FunctionComponent<Props> = () => {
-  const { settings } = useSelector(state => {
-    return {
-      settings: state.settings
-    };
-  });
+  const { settings } = useSelector(state => ({
+    settings: state.settings
+  }));
   const store = useStore();
 
   const [apiUrl, setAPIUrl] = useState(settings.apiUrl);
@@ -66,10 +59,10 @@ const Settings: React.FunctionComponent<Props> = () => {
     dispatch(resetSettings());
     setSuccessMsg('Restored the default settings');
 
-    const { settings } = store.getState();
+    const { settings: settingsState } = store.getState();
 
-    setAPIUrl(settings.apiUrl);
-    setWebUrl(settings.webUrl);
+    setAPIUrl(settingsState.apiUrl);
+    setWebUrl(settingsState.webUrl);
   }
 
   function handleSubmit(e) {

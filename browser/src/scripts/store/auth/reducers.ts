@@ -17,7 +17,6 @@
  */
 
 import { LOGIN, LOGOUT, AuthState, AuthActionType } from './types';
-import config from '../../utils/config';
 
 const initialState: AuthState = {
   sessionKey: '',
@@ -34,8 +33,8 @@ export default function(
 
       return {
         ...state,
-        sessionKey: sessionKey,
-        sessionKeyExpiry: sessionKeyExpiry
+        sessionKey,
+        sessionKeyExpiry
       };
     }
     case LOGOUT:

@@ -1,7 +1,5 @@
 import React, { Fragment, useState, useEffect } from 'react';
 
-import { getRepetitionRules } from '../../store/repetitionRules';
-import { useDispatch, useSelector } from '../../store';
 import classnames from 'classnames';
 import {
   getNewRepetitionPath,
@@ -10,6 +8,8 @@ import {
   repetitionsPathDef
 } from 'web/libs/paths';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from '../../store';
+import { getRepetitionRules } from '../../store/repetitionRules';
 import RepetitionList from './RepetitionList';
 import DeleteRepetitionRuleModal from './DeleteRepetitionRuleModal';
 import Flash from '../Common/Flash';

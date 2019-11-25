@@ -17,15 +17,9 @@
  */
 
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import { findDOMNode } from 'react-dom';
 
-import Link from './Link';
-import config from '../utils/config';
 import { login } from '../store/auth/actions';
-import { updateSettings } from '../store/settings/actions';
 import { useDispatch } from '../store/hooks';
-import services from '../utils/services';
 import Flash from '../components/Flash';
 
 interface Props {}
@@ -45,8 +39,8 @@ const Home: React.FunctionComponent<Props> = () => {
 
     try {
       await dispatch(login({ email, password }));
-    } catch (e) {
-      console.log('error while logging in', e);
+    } catch (err) {
+      console.log('error while logging in', err);
 
       setErrMsg(e.message);
       setLoggingIn(false);
@@ -97,10 +91,11 @@ const Home: React.FunctionComponent<Props> = () => {
       </form>
 
       <div className="actions">
-        Don't have an account?{' '}
+        Don&#39;t have an account?{' '}
         <a
           href="https://app.getdnote.com/join"
           target="_blank"
+          rel="noopener noreferrer"
           className="signup"
         >
           Sign Up

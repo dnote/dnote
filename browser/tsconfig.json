@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "sourceMap": true,
-        "esModuleInterop": true,
         "noImplicitAny": false,
-        "module": "es6",
+        "module": "commonjs",
         "moduleResolution": "node",
+        "target": "es6",
         "jsx": "react",
+        "esModuleInterop": true,
         "allowJs": true,
-        "target": "es5",
         "baseUrl": ".",
         "paths": {
             "jslib/*": [
