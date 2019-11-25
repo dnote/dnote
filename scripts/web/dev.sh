@@ -37,4 +37,4 @@ set +a
 devServerPID=$!
 
 # run server
-(cd "$serverPath/watcher" && go run main.go)
+(cd "$serverPath/watcher" && go run main.go "$serverPath" "go run main.go start -port 3000")

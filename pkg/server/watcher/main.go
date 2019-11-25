@@ -22,9 +22,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 )
 
@@ -47,14 +49,19 @@ func command(binary string, args []string, entryPoint string) *exec.Cmd {
 	return cmd
 }
 
-func execCmd() *exec.Cmd {
-	return command("go", []string{"run", "main.go", "start", "-port", "3000"}, "..")
+func execCmd(task string, watchDir string) *exec.Cmd {
+	parts := strings.Fields(task)
+
+	return command(parts[0], parts[1:], watchDir)
 }
 
 func main() {
 	w := watcher.New()
 	w.IgnoreHiddenFiles(true)
 	w.SetMaxEvents(1)
+
+	watchDir := os.Args[1]
+	task := os.Args[2]
 
 	var e *exec.Cmd
 
@@ -74,7 +81,7 @@ func main() {
 				}
 
 				// Starting it again here or starting for the first time.
-				e = execCmd()
+				e = execCmd(task, watchDir)
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -83,14 +90,14 @@ func main() {
 		}
 	}()
 
-	if err := w.AddRecursive(".."); err != nil {
-		log.Fatalln(err)
+	if err := w.AddRecursive(watchDir); err != nil {
+		log.Fatalln(errors.Wrap(err, "watching the given pattern"))
 	}
 
-	e = execCmd()
+	e = execCmd(task, watchDir)
 
 	log.Printf("watching %d files", len(w.WatchedFiles()))
 	if err := w.Start(time.Millisecond * 1000); err != nil {
-		log.Fatalln(err)
+		log.Fatalln(errors.Wrap(err, "starting watcher"))
 	}
 }
