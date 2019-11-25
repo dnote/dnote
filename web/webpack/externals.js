@@ -16,11 +16,4 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-const path = require('path');
-const nodeExternals = require('webpack-node-externals');
-
-module.exports = [
-  nodeExternals({
-    modulesDir: path.resolve(__dirname, '../../node_modules')
-  })
-];
+module.exports = {};
