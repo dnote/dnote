@@ -17,7 +17,6 @@
  */
 
 import React from 'react';
-import classnames from 'classnames';
 
 import { Filters } from 'jslib/helpers/filters';
 import { NotesGroupData } from 'web/libs/notes';
@@ -59,18 +58,16 @@ function renderResult({
 interface Props {
   isFetched: boolean;
   groups: NotesGroupData[];
-  pro: boolean;
   filters: Filters;
 }
 
 const NoteGroupList: React.FunctionComponent<Props> = ({
   groups,
-  pro,
   filters,
   isFetched
 }) => {
   return (
-    <div className={classnames(styles.wrapper, { [styles.nopro]: !pro })}>
+    <div className={styles.wrapper}>
       {renderResult({ groups, isFetched, filters })}
     </div>
   );

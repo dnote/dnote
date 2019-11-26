@@ -30,7 +30,6 @@ import { EditorSession, resetEditor } from '../../store/editor';
 import { setMessage } from '../../store/ui';
 import Editor from '../Common/Editor';
 import Flash from '../Common/Flash';
-import PayWall from '../Common/PayWall';
 import styles from './New.scss';
 
 interface Props extends RouteComponentProps {
@@ -78,72 +77,70 @@ const New: React.FunctionComponent<Props> = ({
         <title>New</title>
       </Helmet>
 
-      <PayWall>
-        <div
-          className={classnames(
-            'page page-mobile-full container mobile-nopadding',
-            styles.container
-          )}
-        >
-          <Flash kind="danger" when={Boolean(errMessage)}>
-            Error: {errMessage}
-          </Flash>
+      <div
+        className={classnames(
+          'page page-mobile-full container mobile-nopadding',
+          styles.container
+        )}
+      >
+        <Flash kind="danger" when={Boolean(errMessage)}>
+          Error: {errMessage}
+        </Flash>
 
-          <div className={styles.wrapper}>
-            <div className={styles.header}>
-              <h2 className={styles.heading}>New notes</h2>
-            </div>
-
-            <Editor
-              isNew
-              editor={editor}
-              isBusy={submitting}
-              textareaRef={textareaRef}
-              bookSelectorTriggerRef={triggerRef}
-              onSubmit={async ({ draftContent, draftBookUUID }) => {
-                setSubmitting(true);
-
-                try {
-                  let bookUUID;
-
-                  if (!draftBookUUID) {
-                    const book = await dispatch(createBook(editor.bookLabel));
-                    bookUUID = book.uuid;
-                  } else {
-                    bookUUID = draftBookUUID;
-                  }
-
-                  const res = await operations.notes.create({
-                    bookUUID,
-                    content: draftContent
-                  });
-
-                  dispatch(resetEditor(editor.sessionKey));
-
-                  const dest = getNotePath(res.result.uuid);
-                  history.push(dest);
-
-                  dispatch(
-                    setMessage({
-                      message: 'Created a note',
-                      kind: 'info',
-                      path: notePathDef
-                    })
-                  );
-                } catch (err) {
-                  setErrMessage(err.message);
-                  setSubmitting(false);
-                }
-              }}
-            />
+        <div className={styles.wrapper}>
+          <div className={styles.header}>
+            <h2 className={styles.heading}>New notes</h2>
           </div>
 
-          <Prompt
-            message="You have unsaved changes. Continue?"
-            when={!persisted}
+          <Editor
+            isNew
+            editor={editor}
+            isBusy={submitting}
+            textareaRef={textareaRef}
+            bookSelectorTriggerRef={triggerRef}
+            onSubmit={async ({ draftContent, draftBookUUID }) => {
+              setSubmitting(true);
+
+              try {
+                let bookUUID;
+
+                if (!draftBookUUID) {
+                  const book = await dispatch(createBook(editor.bookLabel));
+                  bookUUID = book.uuid;
+                } else {
+                  bookUUID = draftBookUUID;
+                }
+
+                const res = await operations.notes.create({
+                  bookUUID,
+                  content: draftContent
+                });
+
+                dispatch(resetEditor(editor.sessionKey));
+
+                const dest = getNotePath(res.result.uuid);
+                history.push(dest);
+
+                dispatch(
+                  setMessage({
+                    message: 'Created a note',
+                    kind: 'info',
+                    path: notePathDef
+                  })
+                );
+              } catch (err) {
+                setErrMessage(err.message);
+                setSubmitting(false);
+              }
+            }}
           />
         </div>
-      </PayWall>
+
+        <Prompt
+          message="You have unsaved changes. Continue?"
+          when={!persisted}
+        />
+      </div>
     </Fragment>
   );
 };

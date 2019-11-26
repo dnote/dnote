@@ -24,14 +24,6 @@
 .wrapper {
   flex-grow: 1;
 
-  &.nopro {
-    display: none;
-
-    @include breakpoint(lg) {
-      display: block;
-    }
-  }
-
   @include breakpoint(lg) {
     margin-top: rem(16px);
   }

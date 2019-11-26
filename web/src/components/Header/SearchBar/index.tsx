@@ -49,10 +49,6 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
 
   const handleSearch = useCallback(
     (queryText: string) => {
-      if (!user.pro) {
-        return;
-      }
-
       const queries = queriesLib.parse(queryText);
       const dest = getSearchDest(location, queries);
       history.push(dest);
@@ -76,8 +72,6 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
     setExpanded(false);
   };
 
-  const disabled = !user.pro;
-
   return (
     <div className={styles.wrapper}>
       <form
@@ -93,7 +87,6 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
           wrapperClassName={styles['input-wrapper']}
           inputClassName={classnames(styles.input, ' text-input-small')}
           value={value}
-          disabled={disabled}
           onChange={e => {
             const val = e.target.value;
             setValue(val);
@@ -120,7 +113,7 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
         </button>
       </form>
 
-      {expanded && <AdvancedPanel onDismiss={onDismiss} disabled={disabled} />}
+      {expanded && <AdvancedPanel onDismiss={onDismiss} />}
     </div>
   );
 };

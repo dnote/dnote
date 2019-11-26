@@ -24,14 +24,9 @@ import styles from './AdvancedPanel.scss';
 interface Props {
   words: string;
   setWords: (string) => void;
-  disabled: boolean;
 }
 
-const WordsSearch: React.FunctionComponent<Props> = ({
-  words,
-  setWords,
-  disabled
-}) => {
+const WordsSearch: React.FunctionComponent<Props> = ({ words, setWords }) => {
   return (
     <section className={styles.section}>
       <label htmlFor="has-words" className={styles.label}>
@@ -44,7 +39,6 @@ const WordsSearch: React.FunctionComponent<Props> = ({
             styles.input
           )}
           value={words}
-          disabled={disabled}
           onChange={e => {
             const val = e.target.value;
             setWords(val);
