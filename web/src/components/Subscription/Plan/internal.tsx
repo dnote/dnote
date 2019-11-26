@@ -19,9 +19,25 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import styles from './Plan.module.scss';
+import styles from './Plan.scss';
 
-function Plan({
+interface Perk {
+  id: string;
+  icon: JSX.Element;
+  value: string;
+}
+
+interface Props {
+  name: string;
+  price: string;
+  bottomContent: string;
+  ctaContent: React.ReactElement;
+  interval?: string;
+  perks: Perk[];
+  wrapperClassName: string;
+}
+
+const Plan: React.FunctionComponent<Props> = ({
   name,
   price,
   bottomContent,
@@ -29,7 +45,7 @@ function Plan({
   interval,
   perks,
   wrapperClassName
-}) {
+}) => {
   return (
     <div className={classnames(styles.wrapper, wrapperClassName)}>
       <div
@@ -63,6 +79,6 @@ function Plan({
       {bottomContent}
     </div>
   );
-}
+};
 
 export default Plan;

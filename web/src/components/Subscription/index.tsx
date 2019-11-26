@@ -36,11 +36,7 @@ const proFeatures = [
   },
   {
     id: 'host',
-    label: <div>Hosting</div>
-  },
-  {
-    id: 'auto',
-    label: <div>Automatic update and migration</div>
+    label: <div>Automated Spaced Repetition</div>
   },
   {
     id: 'email-support',
@@ -50,6 +46,10 @@ const proFeatures = [
 
 const baseFeatures = [
   {
+    id: 'oss',
+    label: <div>Open source</div>
+  },
+  {
     id: 'sync',
     label: <div>Multi-device sync</div>
   },
@@ -58,24 +58,12 @@ const baseFeatures = [
     label: <div>Command line interface</div>
   },
   {
-    id: 'atom',
-    label: <div>Atom plugin</div>
-  },
-  {
     id: 'web',
-    label: <div>Web client</div>
-  },
-  {
-    id: 'digest',
-    label: <div>Automated email digest</div>
+    label: <div>Web application</div>
   },
   {
     id: 'ext',
-    label: <div>Firefox/Chrome extension</div>
-  },
-  {
-    id: 'foss',
-    label: <div>Free and open source</div>
+    label: <div>Chrome/Firefox extension</div>
   },
   {
     id: 'forum-support',
@@ -130,7 +118,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
       <div className={styles.hero}>
         <div className="container">
           <h1 className={styles.heading}>
-            You can self-host or sign up for the hosted version.
+            Dnote has simple plans for everyone.
           </h1>
         </div>
       </div>

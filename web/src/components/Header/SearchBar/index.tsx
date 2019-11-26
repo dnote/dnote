@@ -24,7 +24,7 @@ import * as filtersLib from 'jslib/helpers/filters';
 import * as queriesLib from 'jslib/helpers/queries';
 import { getSearchDest } from 'web/libs/search';
 import { usePrevious } from 'web/libs/hooks';
-import { useFilters, useSelector } from '../../../store';
+import { useFilters } from '../../../store';
 import SearchInput from '../../Common/SearchInput';
 import AdvancedPanel from './AdvancedPanel';
 import styles from './SearchBar.scss';
@@ -41,19 +41,13 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
   const [value, setValue] = useState(initialValue);
   const [expanded, setExpanded] = useState(false);
 
-  const { user } = useSelector(state => {
-    return {
-      user: state.auth.user.data
-    };
-  });
-
   const handleSearch = useCallback(
     (queryText: string) => {
       const queries = queriesLib.parse(queryText);
       const dest = getSearchDest(location, queries);
       history.push(dest);
     },
-    [history, location, user]
+    [history, location]
   );
 
   const prevFilters = usePrevious(filters);

@@ -18,14 +18,14 @@
 
 import React from 'react';
 
-import BoxIcon from '../../Icons/Box';
+import BookIcon from '../../Icons/Book';
 import Plan from './internal';
 
 const selfHostedPerks = [
   {
     id: 'own-machine',
-    icon: <BoxIcon width="16" height="16" fill="#6e6e6e" />,
-    value: 'Host on your own machine'
+    icon: <BookIcon width={16} height={16} fill="#6e6e6e" className="" />,
+    value: 'Ideal for occasional note taking'
   }
 ];
 
