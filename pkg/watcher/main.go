@@ -19,12 +19,15 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 )
 
@@ -47,14 +50,33 @@ func command(binary string, args []string, entryPoint string) *exec.Cmd {
 	return cmd
 }
 
-func execCmd() *exec.Cmd {
-	return command("go", []string{"run", "main.go", "start", "-port", "3000"}, "..")
+func execCmd(task string, watchDir string) *exec.Cmd {
+	parts := strings.Fields(task)
+
+	return command(parts[0], parts[1:], watchDir)
+}
+
+var task, context, ignore string
+
+func init() {
+	flag.StringVar(&task, "task", "", "the command to execute")
+	flag.StringVar(&context, "context", ".", "the file or directory from which to execute the task")
+	flag.StringVar(&ignore, "ignore", ".", "the file or directory to ignore")
+
+	flag.Parse()
+
+	if task == "" {
+		log.Println("task was not provided. Exiting the watcher...")
+		os.Exit(1)
+	}
 }
 
 func main() {
 	w := watcher.New()
 	w.IgnoreHiddenFiles(true)
 	w.SetMaxEvents(1)
+
+	targets := flag.Args()
 
 	var e *exec.Cmd
 
@@ -74,7 +96,7 @@ func main() {
 				}
 
 				// Starting it again here or starting for the first time.
-				e = execCmd()
+				e = execCmd(task, context)
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -83,14 +105,22 @@ func main() {
 		}
 	}()
 
-	if err := w.AddRecursive(".."); err != nil {
-		log.Fatalln(err)
+	if ignore != "" {
+		if err := w.Ignore(ignore); err != nil {
+			log.Fatalln(errors.Wrapf(err, "ignoring %s", ignore))
+		}
 	}
 
-	e = execCmd()
+	for _, target := range targets {
+		if err := w.AddRecursive(target); err != nil {
+			log.Fatalln(errors.Wrap(err, "watching the given pattern"))
+		}
+	}
+
+	e = execCmd(task, context)
 
 	log.Printf("watching %d files", len(w.WatchedFiles()))
 	if err := w.Start(time.Millisecond * 1000); err != nil {
-		log.Fatalln(err)
+		log.Fatalln(errors.Wrap(err, "starting watcher"))
 	}
 }
