@@ -56,11 +56,12 @@ func execCmd(task string, watchDir string) *exec.Cmd {
 	return command(parts[0], parts[1:], watchDir)
 }
 
-var task, context string
+var task, context, ignore string
 
 func init() {
 	flag.StringVar(&task, "task", "", "the command to execute")
-	flag.StringVar(&context, "context", ".", "the directory from which to execute the task")
+	flag.StringVar(&context, "context", ".", "the file or directory from which to execute the task")
+	flag.StringVar(&ignore, "ignore", ".", "the file or directory to ignore")
 
 	flag.Parse()
 
@@ -103,6 +104,12 @@ func main() {
 			}
 		}
 	}()
+
+	if ignore != "" {
+		if err := w.Ignore(ignore); err != nil {
+			log.Fatalln(errors.Wrapf(err, "ignoring %s", ignore))
+		}
+	}
 
 	for _, target := range targets {
 		if err := w.AddRecursive(target); err != nil {
