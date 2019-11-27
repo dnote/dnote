@@ -29,21 +29,21 @@ interface Perk {
 
 interface Props {
   name: string;
+  desc: string;
   price: string;
   bottomContent: string;
   ctaContent: React.ReactElement;
   interval?: string;
-  perks: Perk[];
   wrapperClassName: string;
 }
 
 const Plan: React.FunctionComponent<Props> = ({
   name,
+  desc,
   price,
   bottomContent,
   ctaContent,
   interval,
-  perks,
   wrapperClassName
 }) => {
   return (
@@ -55,23 +55,14 @@ const Plan: React.FunctionComponent<Props> = ({
       >
         <h2 className={styles.name}>{name}</h2>
 
-        <ul className={classnames('list-unstyled', styles.perks)}>
-          {perks.map(perk => {
-            return (
-              <li key={perk.id} className={styles['perk-item']}>
-                <div className={styles['perk-icon']}>{perk.icon}</div>
-                <div className={styles['perk-value']}>{perk.value}</div>
-              </li>
-            );
-          })}
-        </ul>
+        <div className={styles['price-wrapper']}>
+          <strong className={styles.price}>{price}</strong>{' '}
+          {interval && <div className={styles.interval}> / {interval}</div>}
+        </div>
+
+        <p className={styles.desc}>{desc}</p>
 
         <div className={styles['header-body']}>
-          <div className={styles['price-wrapper']}>
-            <strong className={styles.price}>{price}</strong>
-            {interval && <div className={styles.interval}>/ {interval}</div>}
-          </div>
-
           <div className={styles['cta-wrapper']}>{ctaContent}</div>
         </div>
       </div>

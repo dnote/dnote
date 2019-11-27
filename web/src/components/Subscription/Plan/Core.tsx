@@ -18,23 +18,17 @@
 
 import React from 'react';
 
-import BookIcon from '../../Icons/Book';
 import Plan from './internal';
 
-const selfHostedPerks = [
-  {
-    id: 'own-machine',
-    icon: <BookIcon width={16} height={16} fill="#6e6e6e" className="" />,
-    value: 'Ideal for occasional note taking'
-  }
-];
+const desc =
+  'Streamline your learnings into a personal knowledge base. You can access any item at any time.';
 
 function Core({ wrapperClassName, ctaContent, bottomContent }) {
   return (
     <Plan
       name="Core"
+      desc={desc}
       price="Free"
-      perks={selfHostedPerks}
       wrapperClassName={wrapperClassName}
       ctaContent={ctaContent}
       bottomContent={bottomContent}

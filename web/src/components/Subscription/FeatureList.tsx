@@ -17,19 +17,28 @@
  */
 
 import React from 'react';
+import classnames from 'classnames';
 
 import FeatureItem from './FeatureItem';
 
-import styles from './FeatureList.module.scss';
+import styles from './FeatureList.scss';
 
-function FeatureList({ features }) {
+interface Props {
+  features: any;
+  wrapperClassName?: string;
+}
+
+const FeatureList: React.FunctionComponent<Props> = ({
+  features,
+  wrapperClassName
+}) => {
   return (
-    <ul className={styles['feature-list']}>
+    <ul className={classnames(styles['feature-list'], wrapperClassName)}>
       {features.map(feature => {
         return <FeatureItem key={feature.id} label={feature.label} />;
       })}
     </ul>
   );
-}
+};
 
 export default FeatureList;

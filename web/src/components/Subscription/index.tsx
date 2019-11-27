@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
@@ -31,11 +31,11 @@ import styles from './Subscription.scss';
 
 const proFeatures = [
   {
-    id: 'core',
-    label: <div className={styles['feature-bold']}>Everything in core</div>
+    id: 'num-books',
+    label: <div>Unlimited books</div>
   },
   {
-    id: 'host',
+    id: 'spaced-rep',
     label: <div>Automated Spaced Repetition</div>
   },
   {
@@ -44,10 +44,18 @@ const proFeatures = [
   }
 ];
 
-const baseFeatures = [
+const coreFeatures = [
   {
     id: 'oss',
     label: <div>Open source</div>
+  },
+  {
+    id: 'num-notes',
+    label: <div>Unlimited notes</div>
+  },
+  {
+    id: 'num-books',
+    label: <div>5 total books</div>
   },
   {
     id: 'sync',
@@ -100,7 +108,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
         )}
         to={getSubscriptionCheckoutPath()}
       >
-        Unlock
+        Upgrade
       </Link>
     );
   }
@@ -117,9 +125,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
 
       <div className={styles.hero}>
         <div className="container">
-          <h1 className={styles.heading}>
-            Dnote has simple plans for everyone.
-          </h1>
+          <h1 className={styles.heading}>Choose your Dnote plan.</h1>
         </div>
       </div>
 
@@ -137,13 +143,27 @@ const Subscription: React.FunctionComponent<Props> = () => {
                 See source code
               </a>
             }
-            bottomContent={<FeatureList features={baseFeatures} />}
+            bottomContent={
+              <div className={styles.bottom}>
+                <FeatureList features={coreFeatures} />
+              </div>
+            }
           />
 
           <ProPlan
             wrapperClassName={styles['pro-plan']}
             ctaContent={renderPlanCta()}
-            bottomContent={<FeatureList features={proFeatures} />}
+            bottomContent={
+              <div className={styles.bottom}>
+                <div className={styles['pro-prelude']}>
+                  Everything from the core plan, plus:
+                </div>
+                <FeatureList
+                  features={proFeatures}
+                  wrapperClassName={styles['pro-feature-list']}
+                />
+              </div>
+            }
           />
         </div>
       </div>

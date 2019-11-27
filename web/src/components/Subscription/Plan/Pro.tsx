@@ -19,29 +19,17 @@
 import React from 'react';
 
 import Plan from './internal';
-import ServerIcon from '../../Icons/Server';
-import GlobeIcon from '../../Icons/Globe';
 
-const proPerks = [
-  {
-    id: 'hosted',
-    icon: <ServerIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Ideal for maximizing memory retention'
-  },
-  {
-    id: 'support',
-    icon: <GlobeIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Support the Dnote community and development'
-  }
-];
+const desc =
+  'Powerful features to maximize your memory retention and become the best learner you can be.';
 
 function ProPlan({ wrapperClassName, ctaContent, bottomContent }) {
   return (
     <Plan
       name="Pro"
       price="$3"
+      desc={desc}
       interval="month"
-      perks={proPerks}
       wrapperClassName={wrapperClassName}
       ctaContent={ctaContent}
       bottomContent={bottomContent}
