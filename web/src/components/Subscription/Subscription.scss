@@ -18,12 +18,34 @@
 
 @import '../App/responsive';
 @import '../App/font';
+@import '../App/theme';
 @import '../App/rem';
 
 .wrapper {
-  // padding-bottom: rem(80px);
   background: white;
-  height: calc(100vh - #{$header-height});
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @include breakpoint(md) {
+    height: calc(100vh - #{$header-height});
+  }
+}
+
+.content {
+  margin-bottom: rem(40px);
+
+  @include breakpoint(md) {
+    margin-bottom: auto;
+  }
+}
+
+.footer {
+  margin-top: auto;
+  padding: rem(12px) 0;
+  text-align: center;
+  @include font-size('x-small');
+  color: $gray;
 }
 
 .hero {

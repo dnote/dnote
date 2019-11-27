@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { Fragment } from 'react';
+import React from 'react';
 import Helmet from 'react-helmet';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
@@ -123,50 +123,56 @@ const Subscription: React.FunctionComponent<Props> = () => {
         />
       </Helmet>
 
-      <div className={styles.hero}>
+      <div className={styles.content}>
+        <div className={styles.hero}>
+          <div className="container">
+            <h1 className={styles.heading}>Choose your Dnote plan.</h1>
+          </div>
+        </div>
+
         <div className="container">
-          <h1 className={styles.heading}>Choose your Dnote plan.</h1>
-        </div>
-      </div>
-
-      <div className="container">
-        <div className={styles['plans-wrapper']}>
-          <CorePlan
-            wrapperClassName={styles['core-plan']}
-            ctaContent={
-              <a
-                href="https://github.com/dnote/dnote"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="button button-normal button-second-outline button-stretch"
-              >
-                See source code
-              </a>
-            }
-            bottomContent={
-              <div className={styles.bottom}>
-                <FeatureList features={coreFeatures} />
-              </div>
-            }
-          />
-
-          <ProPlan
-            wrapperClassName={styles['pro-plan']}
-            ctaContent={renderPlanCta()}
-            bottomContent={
-              <div className={styles.bottom}>
-                <div className={styles['pro-prelude']}>
-                  Everything from the core plan, plus:
+          <div className={styles['plans-wrapper']}>
+            <CorePlan
+              wrapperClassName={styles['core-plan']}
+              ctaContent={
+                <a
+                  href="https://github.com/dnote/dnote"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-normal button-second-outline button-stretch"
+                >
+                  See source code
+                </a>
+              }
+              bottomContent={
+                <div className={styles.bottom}>
+                  <FeatureList features={coreFeatures} />
                 </div>
-                <FeatureList
-                  features={proFeatures}
-                  wrapperClassName={styles['pro-feature-list']}
-                />
-              </div>
-            }
-          />
+              }
+            />
+
+            <ProPlan
+              wrapperClassName={styles['pro-plan']}
+              ctaContent={renderPlanCta()}
+              bottomContent={
+                <div className={styles.bottom}>
+                  <div className={styles['pro-prelude']}>
+                    Everything from the core plan, plus:
+                  </div>
+                  <FeatureList
+                    features={proFeatures}
+                    wrapperClassName={styles['pro-feature-list']}
+                  />
+                </div>
+              }
+            />
+          </div>
         </div>
       </div>
+
+      <footer className={styles.footer}>
+        &copy; 2019 Monomax Software Pty Ltd
+      </footer>
     </div>
   );
 };
