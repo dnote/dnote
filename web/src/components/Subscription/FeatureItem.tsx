@@ -19,10 +19,13 @@
 import React from 'react';
 
 import CheckIcon from '../Icons/Check';
+import styles from './FeatureItem.scss';
 
-import styles from './FeatureItem.module.scss';
+interface Props {
+  label: string;
+}
 
-export default ({ label }) => {
+const FeatureItem: React.FunctionComponent<Props> = ({ label }) => {
   return (
     <li className={styles.wrapper}>
       <CheckIcon width={16} height={16} fill="#0d5ec1" className="check-icon" />
@@ -31,3 +34,5 @@ export default ({ label }) => {
     </li>
   );
 };
+
+export default FeatureItem;

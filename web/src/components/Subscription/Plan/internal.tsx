@@ -31,7 +31,7 @@ interface Props {
   name: string;
   desc: string;
   price: string;
-  bottomContent: string;
+  bottomContent: React.ReactElement;
   ctaContent: React.ReactElement;
   interval?: string;
   wrapperClassName: string;

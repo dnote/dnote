@@ -20,7 +20,6 @@ import React from 'react';
 import classnames from 'classnames';
 
 import FeatureItem from './FeatureItem';
-
 import styles from './FeatureList.scss';
 
 interface Props {

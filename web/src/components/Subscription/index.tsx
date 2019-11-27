@@ -18,10 +18,7 @@
 
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Link } from 'react-router-dom';
-import classnames from 'classnames';
 
-import { getSubscriptionCheckoutPath } from 'web/libs/paths';
 import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
@@ -88,31 +85,6 @@ const Subscription: React.FunctionComponent<Props> = () => {
     };
   });
 
-  function renderPlanCta() {
-    if (user && user.pro) {
-      return (
-        <Link
-          to="/"
-          className="button button-normal button-third-outline button-stretch"
-        >
-          Go to your notes
-        </Link>
-      );
-    }
-
-    return (
-      <Link
-        id="T-unlock-pro-btn"
-        className={classnames(
-          'button button-normal button-third button-stretch'
-        )}
-        to={getSubscriptionCheckoutPath()}
-      >
-        Upgrade
-      </Link>
-    );
-  }
-
   return (
     <div className={styles.wrapper}>
       <Helmet>
@@ -134,16 +106,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
           <div className={styles['plans-wrapper']}>
             <CorePlan
               wrapperClassName={styles['core-plan']}
-              ctaContent={
-                <a
-                  href="https://github.com/dnote/dnote"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="button button-normal button-second-outline button-stretch"
-                >
-                  See source code
-                </a>
-              }
+              user={user}
               bottomContent={
                 <div className={styles.bottom}>
                   <FeatureList features={coreFeatures} />
@@ -153,7 +116,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
 
             <ProPlan
               wrapperClassName={styles['pro-plan']}
-              ctaContent={renderPlanCta()}
+              user={user}
               bottomContent={
                 <div className={styles.bottom}>
                   <div className={styles['pro-prelude']}>

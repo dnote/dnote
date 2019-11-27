@@ -18,22 +18,41 @@
 
 import React from 'react';
 
+import { UserData } from 'jslib/operations/types';
 import Plan from './internal';
 
 const desc =
   'Streamline your learnings into a personal knowledge base. You can access any item at any time.';
 
-function Core({ wrapperClassName, ctaContent, bottomContent }) {
+interface Props {
+  wrapperClassName: string;
+  user: UserData;
+  bottomContent: React.ReactElement;
+}
+
+const Core: React.FunctionComponent<Props> = ({
+  wrapperClassName,
+  user,
+  bottomContent
+}) => {
   return (
     <Plan
       name="Core"
       desc={desc}
       price="Free"
       wrapperClassName={wrapperClassName}
-      ctaContent={ctaContent}
+      ctaContent={
+        <button
+          type="button"
+          className="button button-large button-second button-stretch"
+          disabled
+        >
+          {user && user.pro ? 'Already upgraded!' : 'Your current plan'}
+        </button>
+      }
       bottomContent={bottomContent}
     />
   );
-}
+};
 
 export default Core;

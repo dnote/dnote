@@ -18,12 +18,24 @@
 
 import React from 'react';
 
+import { UserData } from 'jslib/operations/types';
 import Plan from './internal';
+import ProCTA from './ProCTA';
 
 const desc =
   'Powerful features to maximize your memory retention and become the best learner you can be.';
 
-function ProPlan({ wrapperClassName, ctaContent, bottomContent }) {
+interface Props {
+  wrapperClassName: string;
+  user: UserData;
+  bottomContent: React.ReactElement;
+}
+
+const ProPlan: React.FunctionComponent<Props> = ({
+  wrapperClassName,
+  user,
+  bottomContent
+}) => {
   return (
     <Plan
       name="Pro"
@@ -31,10 +43,10 @@ function ProPlan({ wrapperClassName, ctaContent, bottomContent }) {
       desc={desc}
       interval="month"
       wrapperClassName={wrapperClassName}
-      ctaContent={ctaContent}
+      ctaContent={<ProCTA user={user} />}
       bottomContent={bottomContent}
     />
   );
-}
+};
 
 export default ProPlan;
