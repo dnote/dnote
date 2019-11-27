@@ -169,6 +169,9 @@ type CreateNoteResp struct {
 }
 
 // CreateNote creates a note
+// TODO: Make this idempotent by having a unique identifier chosen and posted by the client as
+// an idempotency key. In a possible sync error, users will then be replay the sync without
+// creating duplicate notes.
 func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
@@ -208,6 +211,7 @@ func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 	resp := CreateNoteResp{
 		Result: presenters.PresentNote(note),
 	}
+	w.Header().Set("Location", a.getNoteURL(note.UUID))
 	respondJSON(w, http.StatusCreated, resp)
 }
 

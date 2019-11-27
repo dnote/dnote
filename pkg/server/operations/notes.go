@@ -52,13 +52,7 @@ func CreateNote(db *gorm.DB, user database.User, clock clock.Clock, bookUUID, co
 		noteEditedOn = *editedOn
 	}
 
-	uuid, err := helpers.GenUUID()
-	if err != nil {
-		return database.Note{}, err
-	}
-
 	note := database.Note{
-		UUID:      uuid,
 		BookUUID:  bookUUID,
 		UserID:    user.ID,
 		AddedOn:   noteAddedOn,

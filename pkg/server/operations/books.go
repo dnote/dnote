@@ -21,7 +21,6 @@ package operations
 import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -36,13 +35,7 @@ func CreateBook(db *gorm.DB, user database.User, clock clock.Clock, name string)
 		return database.Book{}, errors.Wrap(err, "incrementing user max_usn")
 	}
 
-	uuid, err := helpers.GenUUID()
-	if err != nil {
-		return database.Book{}, err
-	}
-
 	book := database.Book{
-		UUID:      uuid,
 		UserID:    user.ID,
 		Label:     name,
 		AddedOn:   clock.Now().UnixNano(),

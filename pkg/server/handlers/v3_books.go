@@ -70,23 +70,21 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bookCount int
-	err = a.DB.Model(database.Book{}).
-		Where("user_id = ? AND label = ?", user.ID, params.Name).
-		Count(&bookCount).Error
-	if err != nil {
-		HandleError(w, "checking duplicate", err, http.StatusInternalServerError)
-		return
-	}
-	if bookCount > 0 {
-		http.Error(w, "duplicate book exists", http.StatusConflict)
+	var book database.Book
+	conn := a.DB.Model(database.Book{}).Where("user_id = ? AND label = ?", user.ID, params.Name).First(&book)
+
+	if conn.RecordNotFound() {
+		b, err := operations.CreateBook(a.DB, user, a.Clock, params.Name)
+		if err != nil {
+			HandleError(w, "inserting book", err, http.StatusInternalServerError)
+		}
+
+		book = b
+	} else if conn.Error != nil {
+		http.Error(w, "checking for dulpicate", http.StatusInternalServerError)
 		return
 	}
 
-	book, err := operations.CreateBook(a.DB, user, a.Clock, params.Name)
-	if err != nil {
-		HandleError(w, "inserting book", err, http.StatusInternalServerError)
-	}
 	resp := CreateBookResp{
 		Book: presenters.PresentBook(book),
 	}

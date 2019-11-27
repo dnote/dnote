@@ -33,13 +33,12 @@ import (
 )
 
 func TestGetBooks(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -113,13 +112,13 @@ Clock: clock.NewMock(),
 }
 
 func TestGetBooksByName(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -199,13 +198,13 @@ func TestDeleteBook(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
 			server := MustNewServer(t, &App{
-				
-Clock: clock.NewMock(),
+
+				Clock: clock.NewMock(),
 			})
 			defer server.Close()
 
@@ -349,14 +348,71 @@ Clock: clock.NewMock(),
 	}
 }
 
-func TestCreateBook(t *testing.T) {
-	
+func TestDeleteBookIdempotent(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+		Clock: clock.NewMock(),
+	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 58), "preparing user max_usn")
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+		USN:    1,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing a book data")
+	n1 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "n1 content",
+		USN:      4,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing a note data")
+
+	endpoint := fmt.Sprintf("/v3/books/%s", b1.UUID)
+	req := testutils.MakeReq(server, "DELETE", endpoint, "")
+	res := testutils.HTTPAuthDo(t, req, user)
+	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+	req2 := testutils.MakeReq(server, "DELETE", endpoint, "")
+	res2 := testutils.HTTPAuthDo(t, req2, user)
+	assert.StatusCodeEquals(t, res2, http.StatusOK, "")
+
+	var b1Record database.Book
+	var n1Record database.Note
+	var userRecord database.User
+	var bookCount, noteCount int
+
+	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	assert.Equal(t, bookCount, 1, "book count mismatch")
+	assert.Equal(t, noteCount, 1, "note count mismatch")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", n1.ID).First(&n1Record), "finding n1")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+	assert.Equal(t, userRecord.MaxUSN, 61, "user max_usn mismatch")
+
+	assert.Equal(t, b1Record.Deleted, true, "b1 deleted mismatch")
+	assert.Equal(t, b1Record.Label, "", "b1 content mismatch")
+	assert.Equal(t, b1Record.USN, 61, "b1 usn mismatch")
+	assert.Equal(t, n1Record.USN, 59, "n1 usn mismatch")
+	assert.Equal(t, n1Record.Deleted, true, "n1 deleted mismatch")
+	assert.Equal(t, n1Record.Body, "", "n1 content mismatch")
+}
+
+func TestCreateBook(t *testing.T) {
+	defer testutils.ClearData()
+
+	// Setup
+	server := MustNewServer(t, &App{
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -409,14 +465,12 @@ Clock: clock.NewMock(),
 	assert.DeepEqual(t, got, expected, "payload mismatch")
 }
 
-func TestCreateBookDuplicate(t *testing.T) {
-	
+func TestCreateBookIdempotent(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -435,7 +489,7 @@ Clock: clock.NewMock(),
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
-	assert.StatusCodeEquals(t, res, http.StatusConflict, "")
+	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 	var bookRecord database.Book
 	var bookCount, noteCount int
@@ -490,13 +544,13 @@ func TestUpdateBook(t *testing.T) {
 
 	for idx, tc := range testCases {
 		func() {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
 			server := MustNewServer(t, &App{
-				
-Clock: clock.NewMock(),
+
+				Clock: clock.NewMock(),
 			})
 			defer server.Close()
 
