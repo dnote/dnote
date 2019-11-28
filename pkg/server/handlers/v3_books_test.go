@@ -33,7 +33,6 @@ import (
 )
 
 func TestGetBooks(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	// Setup
@@ -112,7 +111,6 @@ func TestGetBooks(t *testing.T) {
 }
 
 func TestGetBooksByName(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	// Setup
@@ -506,6 +504,56 @@ func TestCreateBookIdempotent(t *testing.T) {
 	assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
 	assert.Equal(t, bookRecord.USN, b1.USN, "book usn mismatch")
 	assert.Equal(t, userRecord.MaxUSN, 101, "user max_usn mismatch")
+}
+
+func TestCreateBookPlanAllowance(t *testing.T) {
+	// Setup
+	server := MustNewServer(t, &App{
+		Clock: clock.NewMock(),
+	})
+	defer server.Close()
+
+	createBook := func(t *testing.T, u database.User, name string, expectedStatusCode int) {
+		req := testutils.MakeReq(server, "POST", "/v3/books", fmt.Sprintf(`{"name": "%s"}`, name))
+		res := testutils.HTTPAuthDo(t, req, u)
+		assert.StatusCodeEquals(t, res, expectedStatusCode, "")
+	}
+
+	t.Run("pro plan", func(t *testing.T) {
+		defer testutils.ClearData()
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", true), "preparing user")
+
+		createBook(t, user, "js1", http.StatusCreated)
+		createBook(t, user, "js2", http.StatusCreated)
+		createBook(t, user, "js3", http.StatusCreated)
+		createBook(t, user, "js4", http.StatusCreated)
+		createBook(t, user, "js5", http.StatusCreated)
+		createBook(t, user, "js6", http.StatusCreated)
+
+		var bookCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+		assert.Equal(t, bookCount, 6, "book count mismatch")
+	})
+
+	t.Run("core plan", func(t *testing.T) {
+		defer testutils.ClearData()
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing user")
+
+		createBook(t, user, "js1", http.StatusCreated)
+		createBook(t, user, "js2", http.StatusCreated)
+		createBook(t, user, "js3", http.StatusCreated)
+		createBook(t, user, "js4", http.StatusCreated)
+		createBook(t, user, "js5", http.StatusCreated)
+		createBook(t, user, "js6", http.StatusForbidden)
+
+		var bookCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+		assert.Equal(t, bookCount, 5, "book count mismatch")
+	})
 }
 
 func TestUpdateBook(t *testing.T) {
