@@ -29,7 +29,8 @@ const perks = [
   {
     id: 'hosted',
     icon: <ServerIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Fully hosted and managed'
+    value:
+      'Maximize your memory retention and become the best learner you can be'
   },
   {
     id: 'support',

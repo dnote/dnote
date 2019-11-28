@@ -23,7 +23,7 @@ import Plan from './internal';
 import ProCTA from './ProCTA';
 
 const desc =
-  'Powerful features to maximize your memory retention and become the best learner you can be.';
+  'Maximize your memory retention and become the best learner you can be.';
 
 interface Props {
   wrapperClassName: string;

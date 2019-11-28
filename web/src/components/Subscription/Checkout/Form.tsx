@@ -32,6 +32,7 @@ import { useDispatch } from '../../../store';
 import { setMessage } from '../../../store/ui';
 import NameOnCardInput from '../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../Common/PaymentInput/Card';
+import Footer from '../Footer';
 import CountryInput from '../../Common/PaymentInput/Country';
 import styles from './Form.scss';
 
@@ -116,7 +117,10 @@ const Form: React.FunctionComponent<Props> = ({
 
   return (
     <div className={styles.wrapper}>
-      <form className={classnames('container')} onSubmit={handleSubmit}>
+      <form
+        className={classnames('container', styles.form)}
+        onSubmit={handleSubmit}
+      >
         <Helmet>
           <title>Subscriptions</title>
         </Helmet>
@@ -174,6 +178,8 @@ const Form: React.FunctionComponent<Props> = ({
           </div>
         </div>
       </form>
+
+      <Footer />
     </div>
   );
 };

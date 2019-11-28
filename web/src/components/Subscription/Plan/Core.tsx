@@ -22,7 +22,7 @@ import { UserData } from 'jslib/operations/types';
 import Plan from './internal';
 
 const desc =
-  'Streamline your learnings into a personal knowledge base. You can access any item at any time.';
+  'Streamline your learnings into your own personal knowledge base. You can access any item at any time.';
 
 interface Props {
   wrapperClassName: string;

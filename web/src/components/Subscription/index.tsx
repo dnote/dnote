@@ -22,15 +22,12 @@ import Helmet from 'react-helmet';
 import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
+import Footer from './Footer';
 import { useSelector } from '../../store';
 
 import styles from './Subscription.scss';
 
 const proFeatures = [
-  {
-    id: 'num-books',
-    label: <div>Unlimited books</div>
-  },
   {
     id: 'spaced-rep',
     label: <div>Automated Spaced Repetition</div>
@@ -52,7 +49,7 @@ const coreFeatures = [
   },
   {
     id: 'num-books',
-    label: <div>5 total books</div>
+    label: <div>Unlimited books</div>
   },
   {
     id: 'sync',
@@ -133,9 +130,7 @@ const Subscription: React.FunctionComponent<Props> = () => {
         </div>
       </div>
 
-      <footer className={styles.footer}>
-        &copy; 2019 Monomax Software Pty Ltd
-      </footer>
+      <Footer />
     </div>
   );
 };
