@@ -70,21 +70,6 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check for the plan allowance
-	if !user.Cloud {
-		var bookCount int
-		if err := a.DB.Model(database.Book{}).Where("user_id = ? AND NOT deleted", user.ID).Count(&bookCount).Error; err != nil {
-			HandleError(w, "checking plan threshold", err, http.StatusInternalServerError)
-			return
-		}
-
-		if bookCount >= 5 {
-			msg := fmt.Sprintf("Your plan has reached the limit for the total number of books. Please upgrade at %s", a.WebURL)
-			http.Error(w, msg, http.StatusForbidden)
-			return
-		}
-	}
-
 	var book database.Book
 	conn := a.DB.Model(database.Book{}).Where("user_id = ? AND label = ?", user.ID, params.Name).First(&book)
 

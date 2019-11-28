@@ -282,3 +282,16 @@ func MustRespondJSON(t *testing.T, w http.ResponseWriter, i interface{}, message
 		t.Fatal(message)
 	}
 }
+
+// PrepareBooks creates the given number of undeleted books for the given user
+func PrepareBooks(t *testing.T, user database.User, num int) {
+	for i := 1; i <= num; i++ {
+		name := fmt.Sprintf("b%d", i)
+
+		MustExec(t, DB.Save(&database.Book{
+			UserID:  user.ID,
+			Label:   name,
+			Deleted: false,
+		}), fmt.Sprintf("preparing %s", name))
+	}
+}

@@ -72,18 +72,17 @@ const CreateBookModal: React.FunctionComponent<Props> = ({
     >
       <Header labelId={labelId} heading="Create a book" onDismiss={onDismiss} />
 
-      {msgId && (
-        <Flash
-          kind="danger"
-          onDismiss={() => {
-            setErrMessage('');
-          }}
-          hasBorder={false}
-          id={msgId}
-        >
-          {errMessage}
-        </Flash>
-      )}
+      <Flash
+        when={errMessage !== ''}
+        kind="danger"
+        onDismiss={() => {
+          setErrMessage('');
+        }}
+        hasBorder={false}
+        id={msgId}
+      >
+        {errMessage}
+      </Flash>
 
       <Body>
         <form

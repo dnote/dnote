@@ -30,6 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/permissions"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -182,7 +183,8 @@ func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthMiddle
 
 // AuthMiddlewareParams is the params for the authentication middleware
 type AuthMiddlewareParams struct {
-	ProOnly bool
+	ProOnly        bool
+	CheckPlanLimit bool
 }
 
 func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
@@ -197,9 +199,22 @@ func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerF
 			return
 		}
 
-		if p != nil && p.ProOnly {
-			if !user.Cloud {
-				respondForbidden(w)
+		if p != nil {
+			if p.ProOnly {
+				if !user.Cloud {
+					respondForbidden(w)
+					return
+				}
+			}
+
+			allowed, err := permissions.CheckPlanAllowance(a.DB, user)
+			if err != nil {
+				HandleError(w, "checking plan threshold", err, http.StatusInternalServerError)
+				return
+			}
+			if !allowed {
+				a.respondPlanLimitExceeded(w)
+				return
 			}
 		}
 
@@ -237,6 +252,7 @@ func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewa
 		if p != nil && p.ProOnly {
 			if !user.Cloud {
 				respondForbidden(w)
+				return
 			}
 		}
 
@@ -341,6 +357,7 @@ func NewRouter(app *App) (*mux.Router, error) {
 	}
 
 	proOnly := AuthMiddlewareParams{ProOnly: true}
+	checkPlanLimit := AuthMiddlewareParams{CheckPlanLimit: true}
 
 	var routes = []Route{
 		// internal
@@ -382,12 +399,12 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
 		{"GET", "/v3/books", cors(app.auth(app.GetBooks, nil)), true},
 		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, nil)), true},
-		{"POST", "/v3/books", cors(app.auth(app.CreateBook, nil)), false},
-		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, nil)), false},
+		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &checkPlanLimit)), false},
+		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, &checkPlanLimit)), false},
 		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, nil)), false},
 		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},
-		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, nil)), false},
-		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, nil), false},
+		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, &checkPlanLimit)), false},
+		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, &checkPlanLimit), false},
 		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, nil), false},
 		{"POST", "/v3/signin", cors(app.signin), true},
 		{"OPTIONS", "/v3/signout", cors(app.signoutOptions), true},

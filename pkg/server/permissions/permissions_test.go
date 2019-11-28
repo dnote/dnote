@@ -19,22 +19,12 @@
 package permissions
 
 import (
-	"os"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
-
-func TestMain(m *testing.M) {
-	testutils.InitTestDB()
-
-	code := m.Run()
-	testutils.ClearData()
-
-	os.Exit(code)
-}
 
 func TestViewNote(t *testing.T) {
 	user := testutils.SetupUserData()

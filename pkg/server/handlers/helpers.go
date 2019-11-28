@@ -22,6 +22,7 @@ import (
 	crand "crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -154,4 +155,9 @@ func respondUnauthorized(w http.ResponseWriter) {
 // RespondNotFound responds with not found
 func RespondNotFound(w http.ResponseWriter) {
 	http.Error(w, "not found", http.StatusNotFound)
+}
+
+func (a *App) respondPlanLimitExceeded(w http.ResponseWriter) {
+	msg := fmt.Sprintf("Your plan has reached the limit for the total number of books. Please upgrade at %s", a.WebURL)
+	http.Error(w, msg, http.StatusForbidden)
 }

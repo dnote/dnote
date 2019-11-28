@@ -296,7 +296,6 @@ func TestAuthMiddleware(t *testing.T) {
 }
 
 func TestAuthMiddleware_ProOnly(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	user := testutils.SetupUserData()
@@ -384,8 +383,61 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 	})
 }
 
-func TestTokenAuthMiddleWare(t *testing.T) {
+func TestAuthMiddleware_CheckPlanLimit(t *testing.T) {
+	defer testutils.ClearData()
 
+	user1 := testutils.SetupUserData()
+	testutils.MustExec(t, testutils.DB.Model(&user1).Update("cloud", false), "preparing session")
+	session1 := database.Session{
+		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
+		UserID:    user1.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
+	testutils.PrepareBooks(t, user1, 5)
+
+	user2 := testutils.SetupUserData()
+	testutils.MustExec(t, testutils.DB.Model(&user2).Update("cloud", false), "preparing session for user2")
+	session2 := database.Session{
+		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
+		UserID:    user2.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session")
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+	app := App{DB: testutils.DB}
+	server := httptest.NewServer(app.auth(handler, &AuthMiddlewareParams{
+		CheckPlanLimit: true,
+	}))
+	defer server.Close()
+
+	t.Run("plan exceeded", func(t *testing.T) {
+		req := testutils.MakeReq(server, "GET", "/", "")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session1.Key))
+
+		// execute
+		res := testutils.HTTPDo(t, req)
+
+		// test
+		assert.Equal(t, res.StatusCode, http.StatusForbidden, "status code mismatch")
+	})
+
+	t.Run("plan not exceeded", func(t *testing.T) {
+		req := testutils.MakeReq(server, "GET", "/", "")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session2.Key))
+
+		// execute
+		res := testutils.HTTPDo(t, req)
+
+		// test
+		assert.Equal(t, res.StatusCode, http.StatusOK, "status code mismatch")
+	})
+}
+
+func TestTokenAuthMiddleWare(t *testing.T) {
 	defer testutils.ClearData()
 
 	user := testutils.SetupUserData()
@@ -515,7 +567,6 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	user := testutils.SetupUserData()
