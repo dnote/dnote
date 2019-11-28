@@ -16,14 +16,28 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import '../App/responsive';
-@import '../App/theme';
-@import '../App/rem';
-@import '../App/font';
+import React from 'react';
+import classnames from 'classnames';
 
-.feature-list {
-  list-style: none;
-  margin-bottom: 0;
-  padding-left: 0;
-  padding-top: rem(12px);
+import FeatureItem from './FeatureItem';
+import styles from './FeatureList.scss';
+
+interface Props {
+  features: any;
+  wrapperClassName?: string;
 }
+
+const FeatureList: React.FunctionComponent<Props> = ({
+  features,
+  wrapperClassName
+}) => {
+  return (
+    <ul className={classnames(styles['feature-list'], wrapperClassName)}>
+      {features.map(feature => {
+        return <FeatureItem key={feature.id} label={feature.label} />;
+      })}
+    </ul>
+  );
+};
+
+export default FeatureList;

@@ -49,7 +49,6 @@
     "react", "react-hooks", "import", "prettier", "@typescript-eslint"
   ],
   "globals": {
-    // web
     "__DEVELOPMENT__": true,
     "__PRODUCTION__": true,
     "__DISABLE_SSR__": true,
@@ -64,7 +63,6 @@
     "webpackIsomorphicTools": true,
     "StripeCheckout": true,
 
-    // browser
     "browser": true,
     "chrome": true,
     __WEB_URL__: true,

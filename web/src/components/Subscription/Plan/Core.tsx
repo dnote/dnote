@@ -18,28 +18,41 @@
 
 import React from 'react';
 
-import BoxIcon from '../../Icons/Box';
+import { UserData } from 'jslib/operations/types';
 import Plan from './internal';
 
-const selfHostedPerks = [
-  {
-    id: 'own-machine',
-    icon: <BoxIcon width="16" height="16" fill="#6e6e6e" />,
-    value: 'Host on your own machine'
-  }
-];
+const desc =
+  'Streamline your learnings into your own personal knowledge base. You can access any item at any time.';
 
-function Core({ wrapperClassName, ctaContent, bottomContent }) {
+interface Props {
+  wrapperClassName: string;
+  user: UserData;
+  bottomContent: React.ReactElement;
+}
+
+const Core: React.FunctionComponent<Props> = ({
+  wrapperClassName,
+  user,
+  bottomContent
+}) => {
   return (
     <Plan
       name="Core"
+      desc={desc}
       price="Free"
-      perks={selfHostedPerks}
       wrapperClassName={wrapperClassName}
-      ctaContent={ctaContent}
+      ctaContent={
+        <button
+          type="button"
+          className="button button-large button-second button-stretch"
+          disabled
+        >
+          {user && user.pro ? 'Already upgraded!' : 'Your current plan'}
+        </button>
+      }
       bottomContent={bottomContent}
     />
   );
-}
+};
 
 export default Core;

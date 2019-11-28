@@ -18,18 +18,21 @@
 
 import React from 'react';
 
-import FeatureItem from './FeatureItem';
+import CheckIcon from '../Icons/Check';
+import styles from './FeatureItem.scss';
 
-import styles from './FeatureList.module.scss';
-
-function FeatureList({ features }) {
-  return (
-    <ul className={styles['feature-list']}>
-      {features.map(feature => {
-        return <FeatureItem key={feature.id} label={feature.label} />;
-      })}
-    </ul>
-  );
+interface Props {
+  label: string;
 }
 
-export default FeatureList;
+const FeatureItem: React.FunctionComponent<Props> = ({ label }) => {
+  return (
+    <li className={styles.wrapper}>
+      <CheckIcon width={16} height={16} fill="#0d5ec1" className="check-icon" />
+
+      <span className={styles.name}>{label}</span>
+    </li>
+  );
+};
+
+export default FeatureItem;

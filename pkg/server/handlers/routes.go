@@ -200,6 +200,7 @@ func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerF
 		if p != nil && p.ProOnly {
 			if !user.Cloud {
 				respondForbidden(w)
+				return
 			}
 		}
 
@@ -237,6 +238,7 @@ func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewa
 		if p != nil && p.ProOnly {
 			if !user.Cloud {
 				respondForbidden(w)
+				return
 			}
 		}
 
@@ -360,10 +362,10 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"GET", "/subscriptions", app.auth(app.getSub, nil), true},
 		{"GET", "/stripe_source", app.auth(app.getStripeSource, nil), true},
 		{"PATCH", "/stripe_source", app.auth(app.updateStripeSource, nil), true},
-		{"GET", "/notes", app.auth(app.getNotes, &proOnly), false},
+		{"GET", "/notes", app.auth(app.getNotes, nil), false},
 		{"GET", "/notes/{noteUUID}", app.getNote, true},
-		{"GET", "/calendar", app.auth(app.getCalendar, &proOnly), true},
-		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, &proOnly), true},
+		{"GET", "/calendar", app.auth(app.getCalendar, nil), true},
+		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, nil), true},
 		{"GET", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
 		{"POST", "/repetition_rules", app.auth(app.createRepetitionRule, &proOnly), true},
 		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
@@ -377,18 +379,18 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"PATCH", "/classic/set-password", app.auth(app.classicSetPassword, nil), true},
 
 		// v3
-		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, &proOnly)), false},
-		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, &proOnly)), false},
+		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, nil)), false},
+		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, nil)), false},
 		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
-		{"GET", "/v3/books", cors(app.auth(app.GetBooks, &proOnly)), true},
-		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, &proOnly)), true},
-		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &proOnly)), false},
-		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, &proOnly)), false},
-		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, &proOnly)), false},
+		{"GET", "/v3/books", cors(app.auth(app.GetBooks, nil)), true},
+		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, nil)), true},
+		{"POST", "/v3/books", cors(app.auth(app.CreateBook, nil)), false},
+		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, nil)), false},
+		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, nil)), false},
 		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},
-		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, &proOnly)), false},
-		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, &proOnly), false},
-		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, &proOnly), false},
+		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, nil)), false},
+		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, nil), false},
+		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, nil), false},
 		{"POST", "/v3/signin", cors(app.signin), true},
 		{"OPTIONS", "/v3/signout", cors(app.signoutOptions), true},
 		{"POST", "/v3/signout", cors(app.signout), true},

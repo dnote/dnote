@@ -31,6 +31,7 @@ interface Props {
   isOpen: boolean;
   setIsOpen: React.Dispatch<any>;
   wrapperClassName?: string;
+  disabled?: boolean;
 }
 
 const ItemActions: React.FunctionComponent<Props> = ({
@@ -41,7 +42,8 @@ const ItemActions: React.FunctionComponent<Props> = ({
   optRefs,
   isOpen,
   setIsOpen,
-  wrapperClassName
+  wrapperClassName,
+  disabled
 }) => {
   return (
     <div
@@ -62,6 +64,7 @@ const ItemActions: React.FunctionComponent<Props> = ({
         contentClassName={styles.content}
         alignment="right"
         direction="bottom"
+        disabled={disabled}
       />
     </div>
   );

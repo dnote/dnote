@@ -18,29 +18,19 @@
 
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Link } from 'react-router-dom';
-import classnames from 'classnames';
 
-import { getSubscriptionCheckoutPath } from 'web/libs/paths';
 import ProPlan from './Plan/Pro';
 import CorePlan from './Plan/Core';
 import FeatureList from './FeatureList';
+import Footer from './Footer';
 import { useSelector } from '../../store';
 
 import styles from './Subscription.scss';
 
 const proFeatures = [
   {
-    id: 'core',
-    label: <div className={styles['feature-bold']}>Everything in core</div>
-  },
-  {
-    id: 'host',
-    label: <div>Hosting</div>
-  },
-  {
-    id: 'auto',
-    label: <div>Automatic update and migration</div>
+    id: 'spaced-rep',
+    label: <div>Automated Spaced Repetition</div>
   },
   {
     id: 'email-support',
@@ -48,7 +38,19 @@ const proFeatures = [
   }
 ];
 
-const baseFeatures = [
+const coreFeatures = [
+  {
+    id: 'oss',
+    label: <div>Open source</div>
+  },
+  {
+    id: 'num-notes',
+    label: <div>Unlimited notes</div>
+  },
+  {
+    id: 'num-books',
+    label: <div>Unlimited books</div>
+  },
   {
     id: 'sync',
     label: <div>Multi-device sync</div>
@@ -58,24 +60,12 @@ const baseFeatures = [
     label: <div>Command line interface</div>
   },
   {
-    id: 'atom',
-    label: <div>Atom plugin</div>
-  },
-  {
     id: 'web',
-    label: <div>Web client</div>
-  },
-  {
-    id: 'digest',
-    label: <div>Automated email digest</div>
+    label: <div>Web application</div>
   },
   {
     id: 'ext',
-    label: <div>Firefox/Chrome extension</div>
-  },
-  {
-    id: 'foss',
-    label: <div>Free and open source</div>
+    label: <div>Chrome/Firefox extension</div>
   },
   {
     id: 'forum-support',
@@ -92,31 +82,6 @@ const Subscription: React.FunctionComponent<Props> = () => {
     };
   });
 
-  function renderPlanCta() {
-    if (user && user.pro) {
-      return (
-        <Link
-          to="/"
-          className="button button-normal button-third-outline button-stretch"
-        >
-          Go to your notes
-        </Link>
-      );
-    }
-
-    return (
-      <Link
-        id="T-unlock-pro-btn"
-        className={classnames(
-          'button button-normal button-third button-stretch'
-        )}
-        to={getSubscriptionCheckoutPath()}
-      >
-        Unlock
-      </Link>
-    );
-  }
-
   return (
     <div className={styles.wrapper}>
       <Helmet>
@@ -127,38 +92,45 @@ const Subscription: React.FunctionComponent<Props> = () => {
         />
       </Helmet>
 
-      <div className={styles.hero}>
+      <div className={styles.content}>
+        <div className={styles.hero}>
+          <div className="container">
+            <h1 className={styles.heading}>Choose your Dnote plan.</h1>
+          </div>
+        </div>
+
         <div className="container">
-          <h1 className={styles.heading}>
-            You can self-host or sign up for the hosted version.
-          </h1>
+          <div className={styles['plans-wrapper']}>
+            <CorePlan
+              wrapperClassName={styles['core-plan']}
+              user={user}
+              bottomContent={
+                <div className={styles.bottom}>
+                  <FeatureList features={coreFeatures} />
+                </div>
+              }
+            />
+
+            <ProPlan
+              wrapperClassName={styles['pro-plan']}
+              user={user}
+              bottomContent={
+                <div className={styles.bottom}>
+                  <div className={styles['pro-prelude']}>
+                    Everything from the core plan, plus:
+                  </div>
+                  <FeatureList
+                    features={proFeatures}
+                    wrapperClassName={styles['pro-feature-list']}
+                  />
+                </div>
+              }
+            />
+          </div>
         </div>
       </div>
 
-      <div className="container">
-        <div className={styles['plans-wrapper']}>
-          <CorePlan
-            wrapperClassName={styles['core-plan']}
-            ctaContent={
-              <a
-                href="https://github.com/dnote/dnote"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="button button-normal button-second-outline button-stretch"
-              >
-                See source code
-              </a>
-            }
-            bottomContent={<FeatureList features={baseFeatures} />}
-          />
-
-          <ProPlan
-            wrapperClassName={styles['pro-plan']}
-            ctaContent={renderPlanCta()}
-            bottomContent={<FeatureList features={proFeatures} />}
-          />
-        </div>
-      </div>
+      <Footer />
     </div>
   );
 };

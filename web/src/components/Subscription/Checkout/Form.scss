@@ -22,9 +22,15 @@
 @import '../../App/rem';
 
 .wrapper {
+  display: flex;
+  flex-direction: column;
   background: white;
   padding-top: rem(52px);
   flex-grow: 1;
+}
+
+.form {
+  margin-bottom: auto;
 }
 
 .cvc,

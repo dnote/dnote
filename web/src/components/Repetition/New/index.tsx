@@ -22,6 +22,7 @@ import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
 import { getRepetitionsPath, repetitionsPathDef } from 'web/libs/paths';
+import PayWall from '../../Common/PayWall';
 import {
   getRepetitionRules,
   createRepetitionRule
@@ -70,25 +71,27 @@ const NewRepetition: React.FunctionComponent<Props> = ({ history }) => {
         <title>New Repetition</title>
       </Helmet>
 
-      <div className="container mobile-fw">
-        <div className={classnames('page-header', repetitionStyles.header)}>
-          <h1 className="page-heading">New Repetition</h1>
+      <PayWall>
+        <div className="container mobile-fw">
+          <div className={classnames('page-header', repetitionStyles.header)}>
+            <h1 className="page-heading">New Repetition</h1>
 
-          <Link to={getRepetitionsPath()}>Back</Link>
+            <Link to={getRepetitionsPath()}>Back</Link>
+          </div>
+
+          <Flash
+            kind="danger"
+            when={errMsg !== ''}
+            onDismiss={() => {
+              setErrMsg('');
+            }}
+          >
+            Error creating a rule: {errMsg}
+          </Flash>
+
+          <Form onSubmit={handleSubmit} setErrMsg={setErrMsg} />
         </div>
-
-        <Flash
-          kind="danger"
-          when={errMsg !== ''}
-          onDismiss={() => {
-            setErrMsg('');
-          }}
-        >
-          Error creating a rule: {errMsg}
-        </Flash>
-
-        <Form onSubmit={handleSubmit} setErrMsg={setErrMsg} />
-      </div>
+      </PayWall>
     </div>
   );
 };

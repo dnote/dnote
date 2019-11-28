@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import {
   getNewRepetitionPath,
   getSettingsPath,
+  getSubscriptionPath,
   SettingSections,
   repetitionsPathDef
 } from 'web/libs/paths';
@@ -37,29 +38,44 @@ const Content: React.FunctionComponent = () => {
         <div className={classnames('page-header', styles.header)}>
           <h1 className="page-heading">Repetition</h1>
 
-          <Link
-            id="T-new-rule-btn"
-            className="button button-first button-normal"
-            to={getNewRepetitionPath()}
-          >
-            New
-          </Link>
+          {!user.pro ? (
+            <button
+              disabled
+              type="button"
+              className="button button-first button-normal"
+            >
+              New
+            </button>
+          ) : (
+            <Link
+              id="T-new-rule-btn"
+              className="button button-first button-normal"
+              to={getNewRepetitionPath()}
+            >
+              New
+            </Link>
+          )}
         </div>
       </div>
 
       <div className="container mobile-nopadding">
-        <Flash when={!user.emailVerified} kind="warning">
+        <Flash when={!user.pro} kind="warning">
+          Repetitions are not enabled on your plan.{' '}
+          <Link to={getSubscriptionPath()}>Upgrade here.</Link>
+        </Flash>
+
+        <Flash when={user.pro && !user.emailVerified} kind="warning">
           Please verify your email address in order to receive digests.{' '}
           <Link to={getSettingsPath(SettingSections.account)}>
             Go to settings.
           </Link>
         </Flash>
-
         <RepetitionList
           isFetching={repetitionRules.isFetching}
           isFetched={repetitionRules.isFetched}
           items={repetitionRules.data}
           setRuleUUIDToDelete={setRuleUUIDToDelete}
+          pro={user.pro}
         />
       </div>
 

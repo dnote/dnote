@@ -18,35 +18,35 @@
 
 import React from 'react';
 
+import { UserData } from 'jslib/operations/types';
 import Plan from './internal';
-import ServerIcon from '../../Icons/Server';
-import GlobeIcon from '../../Icons/Globe';
+import ProCTA from './ProCTA';
 
-const proPerks = [
-  {
-    id: 'hosted',
-    icon: <ServerIcon width="16" height="16" fill="#4d4d8b" />,
-    value: 'Fully hosted and managed'
-  },
-  {
-    id: 'support',
-    icon: <GlobeIcon width="16" height="16" fill="#4d4d8b" />,
-    value: 'Support the Dnote community and development'
-  }
-];
+const desc =
+  'Maximize your memory retention and become the best learner you can be.';
 
-function ProPlan({ wrapperClassName, ctaContent, bottomContent }) {
+interface Props {
+  wrapperClassName: string;
+  user: UserData;
+  bottomContent: React.ReactElement;
+}
+
+const ProPlan: React.FunctionComponent<Props> = ({
+  wrapperClassName,
+  user,
+  bottomContent
+}) => {
   return (
     <Plan
       name="Pro"
       price="$3"
+      desc={desc}
       interval="month"
-      perks={proPerks}
       wrapperClassName={wrapperClassName}
-      ctaContent={ctaContent}
+      ctaContent={<ProCTA user={user} />}
       bottomContent={bottomContent}
     />
   );
-}
+};
 
 export default ProPlan;

@@ -32,7 +32,6 @@ import { useDispatch, useSelector } from '../../store';
 import { getNotes } from '../../store/notes';
 import TopActions from './Actions/Top';
 import Flash from '../Common/Flash';
-import PayWall from '../Common/PayWall';
 
 interface Props extends RouteComponentProps {}
 
@@ -47,9 +46,6 @@ function useFetchNotes(filters: Filters) {
   const prevFilters = usePrevious(filters);
 
   useEffect(() => {
-    if (!user.pro) {
-      return () => null;
-    }
     if (prevFilters && checkFilterEqual(filters, prevFilters)) {
       return () => null;
     }
@@ -61,9 +57,8 @@ function useFetchNotes(filters: Filters) {
 }
 
 const Home: React.FunctionComponent<Props> = ({ location }) => {
-  const { notes, user } = useSelector(state => {
+  const { notes } = useSelector(state => {
     return {
-      user: state.auth.user.data,
       notes: state.notes
     };
   });
@@ -80,24 +75,21 @@ const Home: React.FunctionComponent<Props> = ({ location }) => {
     >
       <HeadData filters={filters} />
 
-      <PayWall>
-        <h1 className="sr-only">Notes</h1>
+      <h1 className="sr-only">Notes</h1>
 
-        <Flash kind="danger" when={Boolean(notes.errorMessage)}>
-          Error getting notes: {notes.errorMessage}
-        </Flash>
+      <Flash kind="danger" when={Boolean(notes.errorMessage)}>
+        Error getting notes: {notes.errorMessage}
+      </Flash>
 
-        <TopActions />
+      <TopActions />
 
-        <NoteGroupList
-          groups={groups}
-          pro={user.pro}
-          filters={filters}
-          isFetched={notes.isFetched}
-        />
+      <NoteGroupList
+        groups={groups}
+        filters={filters}
+        isFetched={notes.isFetched}
+      />
 
-        {notes.data.length > 10 && <TopActions position="bottom" />}
-      </PayWall>
+      {notes.data.length > 10 && <TopActions position="bottom" />}
     </div>
   );
 };

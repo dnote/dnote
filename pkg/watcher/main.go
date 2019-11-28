@@ -106,8 +106,11 @@ func main() {
 	}()
 
 	if ignore != "" {
-		if err := w.Ignore(ignore); err != nil {
-			log.Fatalln(errors.Wrapf(err, "ignoring %s", ignore))
+		files := strings.Split(ignore, ",")
+		for _, file := range files {
+			if err := w.Ignore(file); err != nil {
+				log.Fatalln(errors.Wrapf(err, "ignoring %s", file))
+			}
 		}
 	}
 

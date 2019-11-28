@@ -33,6 +33,7 @@ import styles from './RepetitionItem.scss';
 interface Props {
   item: RepetitionRuleData;
   setRuleUUIDToDelete: React.Dispatch<any>;
+  pro: boolean;
 }
 
 function formatLastActive(ms: number): string {
@@ -48,6 +49,7 @@ function formatNextActive(ms: number): string {
 
 const RepetitionItem: React.FunctionComponent<Props> = ({
   item,
+  pro,
   setRuleUUIDToDelete
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -94,7 +96,7 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
         <div className={styles.right}>
           <ul className={classnames('list-unstyled', styles['detail-list'])}>
             <li>
-              {item.enabled ? (
+              {item.enabled && item.nextActive !== 0 ? (
                 <span>
                   Scheduled in{' '}
                   <Time
@@ -145,6 +147,7 @@ const RepetitionItem: React.FunctionComponent<Props> = ({
           setRuleUUIDToDelete(item.uuid);
         }}
         repetitionUUID={item.uuid}
+        disabled={!pro}
       />
     </li>
   );

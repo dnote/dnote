@@ -19,7 +19,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 
-import PayWall from '../Common/PayWall';
 import Content from './Content';
 
 const Repetition: React.FunctionComponent = () => {
@@ -29,9 +28,7 @@ const Repetition: React.FunctionComponent = () => {
         <title>Repetition</title>
       </Helmet>
 
-      <PayWall>
-        <Content />
-      </PayWall>
+      <Content />
     </div>
   );
 };
