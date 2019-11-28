@@ -86,9 +86,9 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 
 func createDefaultRepetitionRule(user database.User, tx *gorm.DB) error {
 	r := database.RepetitionRule{
-		Title:      "Default repetition - all bookx",
+		Title:      "Default repetition - all book",
 		UserID:     user.ID,
-		Enabled:    true,
+		Enabled:    false,
 		Hour:       20,
 		Minute:     30,
 		Frequency:  604800000,

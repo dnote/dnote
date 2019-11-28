@@ -28,13 +28,15 @@ interface Props {
   isFetched: boolean;
   items: RepetitionRuleData[];
   setRuleUUIDToDelete: React.Dispatch<any>;
+  pro: boolean;
 }
 
 const ReptitionList: React.FunctionComponent<Props> = ({
   isFetching,
   isFetched,
   items,
-  setRuleUUIDToDelete
+  setRuleUUIDToDelete,
+  pro
 }) => {
   if (isFetching && !isFetched) {
     return <div>loading</div>;
@@ -53,6 +55,7 @@ const ReptitionList: React.FunctionComponent<Props> = ({
             key={i.uuid}
             item={i}
             setRuleUUIDToDelete={setRuleUUIDToDelete}
+            pro={pro}
           />
         );
       })}

@@ -27,12 +27,14 @@ interface Props {
   isActive: boolean;
   onDelete: () => void;
   repetitionUUID: string;
+  disabled?: boolean;
 }
 
 const Actions: React.FunctionComponent<Props> = ({
   isActive,
   onDelete,
-  repetitionUUID
+  repetitionUUID,
+  disabled
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -83,6 +85,7 @@ const Actions: React.FunctionComponent<Props> = ({
       setIsOpen={setIsOpen}
       isActive={isActive}
       options={options}
+      disabled={disabled}
       optRefs={optRefs}
     />
   );

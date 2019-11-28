@@ -200,6 +200,7 @@ func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerF
 		if p != nil && p.ProOnly {
 			if !user.Cloud {
 				respondForbidden(w)
+				return
 			}
 		}
 
@@ -237,6 +238,7 @@ func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewa
 		if p != nil && p.ProOnly {
 			if !user.Cloud {
 				respondForbidden(w)
+				return
 			}
 		}
 
@@ -363,7 +365,7 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"GET", "/notes", app.auth(app.getNotes, nil), false},
 		{"GET", "/notes/{noteUUID}", app.getNote, true},
 		{"GET", "/calendar", app.auth(app.getCalendar, nil), true},
-		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, &proOnly), true},
+		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, nil), true},
 		{"GET", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
 		{"POST", "/repetition_rules", app.auth(app.createRepetitionRule, &proOnly), true},
 		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
