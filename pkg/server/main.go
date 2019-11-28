@@ -115,6 +115,8 @@ func initApp(db *gorm.DB) handlers.App {
 		DB:               db,
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
+		EmailTemplates:   mailer.NewTemplates(nil),
+		EmailBackend:     &mailer.SimpleBackendImplementation{},
 		WebURL:           os.Getenv("WebURL"),
 	}
 }
@@ -124,7 +126,6 @@ func startCmd() {
 	defer db.Close()
 
 	app := initApp(db)
-	mailer.InitTemplates(nil)
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))

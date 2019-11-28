@@ -30,6 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -307,12 +308,17 @@ type App struct {
 	DB               *gorm.DB
 	Clock            clock.Clock
 	StripeAPIBackend stripe.Backend
+	EmailTemplates   mailer.Templates
+	EmailBackend     mailer.Backend
 	WebURL           string
 }
 
 func (a *App) validate() error {
 	if a.WebURL == "" {
 		return errors.New("WebURL is empty")
+	}
+	if a.EmailBackend == nil {
+		return errors.New("EmailBackend is empty")
 	}
 	if a.DB == nil {
 		return errors.New("DB is empty")
