@@ -18,9 +18,23 @@ func CheckPlanAllowance(db *gorm.DB, user database.User) (bool, error) {
 		return false, errors.Wrap(err, "checking plan threshold")
 	}
 
-	if bookCount >= 5 {
+	if bookCount > 5 {
 		return false, nil
 	}
 
 	return true, nil
+}
+
+// CanCreateBook checks if the given user can create a book
+func CanCreateBook(db *gorm.DB, user database.User) (bool, error) {
+	if user.Cloud {
+		return true, nil
+	}
+
+	var bookCount int
+	if err := db.Model(database.Book{}).Where("user_id = ? AND NOT deleted", user.ID).Count(&bookCount).Error; err != nil {
+		return false, errors.Wrap(err, "checking plan threshold")
+	}
+
+	return bookCount < 5, nil
 }

@@ -399,7 +399,7 @@ func NewRouter(app *App) (*mux.Router, error) {
 		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
 		{"GET", "/v3/books", cors(app.auth(app.GetBooks, nil)), true},
 		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, nil)), true},
-		{"POST", "/v3/books", cors(app.auth(app.CreateBook, &checkPlanLimit)), false},
+		{"POST", "/v3/books", cors(app.auth(app.CreateBook, nil)), false},
 		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, &checkPlanLimit)), false},
 		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, nil)), false},
 		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},

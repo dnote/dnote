@@ -631,7 +631,8 @@ func stepSync(ctx context.DnoteCtx, tx *database.DB, afterUSN int) error {
 func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	isBehind := false
 
-	rows, err := tx.Query("SELECT uuid, label, usn, deleted FROM books WHERE dirty")
+	// send deleted books first to allow users to remain within the plan limit
+	rows, err := tx.Query("SELECT uuid, label, usn, deleted FROM books WHERE dirty ORDER BY deleted DESC")
 	if err != nil {
 		return isBehind, errors.Wrap(err, "getting syncable books")
 	}

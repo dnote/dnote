@@ -27,6 +27,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
+	"github.com/dnote/dnote/pkg/server/permissions"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -71,9 +72,19 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var book database.Book
-	conn := a.DB.Model(database.Book{}).Where("user_id = ? AND label = ?", user.ID, params.Name).First(&book)
+	conn := a.DB.Debug().Model(database.Book{}).Where("user_id = ? AND label = ?", user.ID, params.Name).First(&book)
 
 	if conn.RecordNotFound() {
+		allowed, err := permissions.CanCreateBook(a.DB, user)
+		if err != nil {
+			HandleError(w, "checking plan threshold", err, http.StatusInternalServerError)
+			return
+		}
+		if !allowed {
+			a.respondPlanLimitExceeded(w)
+			return
+		}
+
 		b, err := operations.CreateBook(a.DB, user, a.Clock, params.Name)
 		if err != nil {
 			HandleError(w, "inserting book", err, http.StatusInternalServerError)
