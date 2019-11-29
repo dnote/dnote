@@ -79,9 +79,8 @@ func (c Context) digestHandler(w http.ResponseWriter, r *http.Request) {
 
 func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	data := mailer.EmailVerificationTmplData{
-		Subject: "Verify your email",
-		Token:   "testToken",
-		WebURL:  "http://localhost:3000",
+		Token:  "testToken",
+		WebURL: "http://localhost:3000",
 	}
 	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindHTML, data)
 	if err != nil {

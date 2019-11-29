@@ -173,16 +173,14 @@ func (a *App) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subject := "Verify your email"
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindHTML, mailer.EmailVerificationTmplData{
-		Subject: subject,
-		Token:   tokenValue,
-		WebURL:  a.WebURL,
+	body, err := a.EmailTemplates.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, mailer.EmailVerificationTmplData{
+		Token:  tokenValue,
+		WebURL: a.WebURL,
 	})
 	if err != nil {
-		HandleError(w, errors.Wrap(err, "executing reset password email template").Error(), nil, http.StatusInternalServerError)
+		HandleError(w, errors.Wrap(err, "executing reset verification template").Error(), nil, http.StatusInternalServerError)
 	}
-
-	if err := a.EmailBackend.Queue(subject, "noreply@getdnote.com", []string{account.Email.String}, "text/html", body); err != nil {
+	if err := a.EmailBackend.Queue(subject, "sung@getdnote.com", []string{account.Email.String}, "text/plain", body); err != nil {
 		HandleError(w, errors.Wrap(err, "queueing email").Error(), nil, http.StatusInternalServerError)
 	}
 

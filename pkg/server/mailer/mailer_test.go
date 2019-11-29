@@ -48,11 +48,10 @@ func TestEmailVerificationEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
 			dat := EmailVerificationTmplData{
-				Subject: "Test email verification email",
-				Token:   tc.token,
-				WebURL:  tc.webURL,
+				Token:  tc.token,
+				WebURL: tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeEmailVerification, EmailKindHTML, dat)
+			body, err := tmpl.Execute(EmailTypeEmailVerification, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
@@ -87,10 +86,9 @@ func TestResetPasswordEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
-			dat := EmailVerificationTmplData{
-				Subject: "Test reset passowrd email",
-				Token:   tc.token,
-				WebURL:  tc.webURL,
+			dat := EmailResetPasswordTmplData{
+				Token:  tc.token,
+				WebURL: tc.webURL,
 			}
 			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindHTML, dat)
 			if err != nil {

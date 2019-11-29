@@ -37,7 +37,7 @@ var (
 	// EmailTypeWeeklyDigest represents a weekly digest email
 	EmailTypeWeeklyDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
-	EmailTypeEmailVerification = "email_verification"
+	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
 )
@@ -91,10 +91,6 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing weekly digest template"))
 	}
-	emailVerificationHTML, err := initHTMLTmpl(box, EmailTypeEmailVerification)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing email verification template"))
-	}
 	passwordResetHTML, err := initHTMLTmpl(box, EmailTypeResetPassword)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
@@ -103,11 +99,15 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing welcome template"))
 	}
+	verifyEmailTXT, err := initTextTmpl(box, EmailTypeEmailVerification)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing email verification template"))
+	}
 
 	T := Templates{}
 	T.set(EmailTypeWeeklyDigest, EmailKindHTML, weeklyDigestHTML)
-	T.set(EmailTypeEmailVerification, EmailKindHTML, emailVerificationHTML)
 	T.set(EmailTypeResetPassword, EmailKindHTML, passwordResetHTML)
+	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailTXT)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeTXT)
 
 	return T

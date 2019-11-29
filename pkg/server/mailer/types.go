@@ -61,9 +61,8 @@ type DigestTmplData struct {
 
 // EmailVerificationTmplData is a template data for email verification emails
 type EmailVerificationTmplData struct {
-	Subject string
-	Token   string
-	WebURL  string
+	Token  string
+	WebURL string
 }
 
 // EmailResetPasswordTmplData is a template data for reset password emails
