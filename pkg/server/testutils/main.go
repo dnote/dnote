@@ -299,7 +299,7 @@ type MockEmailbackendImplementation struct {
 }
 
 // Queue is an implementation of Backend.Queue.
-func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string, body string) error {
+func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string, contentType, body string) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 

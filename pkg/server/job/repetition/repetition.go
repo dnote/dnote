@@ -94,7 +94,7 @@ func BuildEmail(db *gorm.DB, emailTmpl mailer.Templates, p BuildEmailParams) (st
 		WebURL:            os.Getenv("WebURL"),
 	}
 
-	body, err := emailTmpl.Execute(mailer.EmailTypeWeeklyDigest, tmplData)
+	body, err := emailTmpl.Execute(mailer.EmailTypeWeeklyDigest, mailer.EmailKindHTML, tmplData)
 	if err != nil {
 		return "", "", errors.Wrap(err, "executing digest email template")
 	}
@@ -158,7 +158,7 @@ func notify(p Params, now time.Time, user database.User, digest database.Digest,
 		return errors.Wrap(err, "making email")
 	}
 
-	if err := p.EmailBackend.Queue(subject, "noreply@getdnote.com", []string{account.Email.String}, body); err != nil {
+	if err := p.EmailBackend.Queue(subject, "noreply@getdnote.com", []string{account.Email.String}, mailer.EmailKindHTML, body); err != nil {
 		return errors.Wrap(err, "queueing email")
 	}
 

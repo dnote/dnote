@@ -52,7 +52,7 @@ func TestEmailVerificationEmail(t *testing.T) {
 				Token:   tc.token,
 				WebURL:  tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeEmailVerification, dat)
+			body, err := tmpl.Execute(EmailTypeEmailVerification, EmailKindHTML, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
@@ -92,7 +92,7 @@ func TestResetPasswordEmail(t *testing.T) {
 				Token:   tc.token,
 				WebURL:  tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeResetPassword, dat)
+			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindHTML, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}

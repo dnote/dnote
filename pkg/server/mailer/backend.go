@@ -12,7 +12,7 @@ import (
 
 // Backend is an interface for sending emails.
 type Backend interface {
-	Queue(subject, from string, to []string, body string) error
+	Queue(subject, from string, to []string, contentType, body string) error
 }
 
 // SimpleBackendImplementation is an implementation of the Backend
@@ -45,7 +45,7 @@ func getSMTPParams() (*dialerParams, error) {
 }
 
 // Queue is an implementation of Backend.Queue.
-func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, body string) error {
+func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, contentType, body string) error {
 	// If not production, never actually send an email
 	if os.Getenv("GO_ENV") != "PRODUCTION" {
 		log.Println("Not sending email because Dnote is not running in a production environment.")
@@ -58,7 +58,8 @@ func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, b
 	m.SetHeader("From", from)
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", body)
+	m.SetBody(contentType, body)
+	// m.SetBody("text/html", body)
 
 	p, err := getSMTPParams()
 	if err != nil {

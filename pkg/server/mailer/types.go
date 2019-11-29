@@ -72,3 +72,9 @@ type EmailResetPasswordTmplData struct {
 	Token   string
 	WebURL  string
 }
+
+// WelcomeTmplData is a template data for welcome emails
+type WelcomeTmplData struct {
+	AccountEmail string
+	WebURL       string
+}

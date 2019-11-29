@@ -22,7 +22,9 @@ package mailer
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	htemplate "html/template"
+	"io"
+	ttemplate "text/template"
 
 	"github.com/aymerick/douceur/inliner"
 	"github.com/gobuffalo/packr/v2"
@@ -36,10 +38,44 @@ var (
 	EmailTypeWeeklyDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
 	EmailTypeEmailVerification = "email_verification"
+	// EmailTypeWelcome represents an welcome email
+	EmailTypeWelcome = "welcome"
 )
 
+var (
+	// EmailKindHTML is the type of html email
+	EmailKindHTML = "html"
+	// EmailKindHTML is the type of text email
+	EmailKindText = "text"
+)
+
+// template is the common interface shared between Template from
+// html/template and text/template
+type template interface {
+	Execute(wr io.Writer, data interface{}) error
+}
+
 // Templates holds the parsed email templates
-type Templates map[string]*template.Template
+type Templates map[string]template
+
+func getTemplateKey(name, kind string) string {
+	return fmt.Sprintf("%s.%s", name, kind)
+}
+
+func (tmpl Templates) get(name, kind string) (template, error) {
+	key := getTemplateKey(name, kind)
+	t := tmpl[key]
+	if t == nil {
+		return nil, errors.Errorf("unsupported template '%s' with type '%s'", name, kind)
+	}
+
+	return t, nil
+}
+
+func (tmpl Templates) set(name, kind string, t template) {
+	key := getTemplateKey(name, kind)
+	tmpl[key] = t
+}
 
 // NewTemplates initializes templates
 func NewTemplates(srcDir *string) Templates {
@@ -51,30 +87,35 @@ func NewTemplates(srcDir *string) Templates {
 		box = packr.New("emailTemplates", "./templates/src")
 	}
 
-	weeklyDigestTmpl, err := initTemplate(box, EmailTypeWeeklyDigest)
+	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeWeeklyDigest)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing weekly digest template"))
 	}
-	emailVerificationTmpl, err := initTemplate(box, EmailTypeEmailVerification)
+	emailVerificationHTML, err := initHTMLTmpl(box, EmailTypeEmailVerification)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing email verification template"))
 	}
-	passwowrdResetTmpl, err := initTemplate(box, EmailTypeResetPassword)
+	passwordResetHTML, err := initHTMLTmpl(box, EmailTypeResetPassword)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
+	welcomeTXT, err := initTextTmpl(box, EmailTypeWelcome)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing welcome template"))
+	}
 
-	T := map[string]*template.Template{}
-	T[EmailTypeWeeklyDigest] = weeklyDigestTmpl
-	T[EmailTypeEmailVerification] = emailVerificationTmpl
-	T[EmailTypeResetPassword] = passwowrdResetTmpl
+	T := Templates{}
+	T.set(EmailTypeWeeklyDigest, EmailKindHTML, weeklyDigestHTML)
+	T.set(EmailTypeEmailVerification, EmailKindHTML, emailVerificationHTML)
+	T.set(EmailTypeResetPassword, EmailKindHTML, passwordResetHTML)
+	T.set(EmailTypeWelcome, EmailKindText, welcomeTXT)
 
 	return T
 }
 
-// initTemplate returns a template instance by parsing the template with the
+// initHTMLTmpl returns a template instance by parsing the template with the
 // given name along with partials
-func initTemplate(box *packr.Box, templateName string) (*template.Template, error) {
+func initHTMLTmpl(box *packr.Box, templateName string) (template, error) {
 	filename := fmt.Sprintf("%s.html", templateName)
 
 	content, err := box.FindString(filename)
@@ -90,7 +131,7 @@ func initTemplate(box *packr.Box, templateName string) (*template.Template, erro
 		return nil, errors.Wrap(err, "reading footer template")
 	}
 
-	t := template.New(templateName)
+	t := htemplate.New(templateName)
 	if _, err = t.Parse(content); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
@@ -104,12 +145,28 @@ func initTemplate(box *packr.Box, templateName string) (*template.Template, erro
 	return t, nil
 }
 
-// Execute executes the template with the given name with the givn data, and inlines
-// CSS rules.
-func (tmpl Templates) Execute(templateName string, data interface{}) (string, error) {
-	t := tmpl[templateName]
-	if t == nil {
-		return "", errors.Errorf("unsupported template '%s'", templateName)
+// initTextTmpl returns a template instance by parsing the template with the given name
+func initTextTmpl(box *packr.Box, templateName string) (template, error) {
+	filename := fmt.Sprintf("%s.txt", templateName)
+
+	content, err := box.FindString(filename)
+	if err != nil {
+		return nil, errors.Wrap(err, "reading template")
+	}
+
+	t := ttemplate.New(templateName)
+	if _, err = t.Parse(content); err != nil {
+		return nil, errors.Wrap(err, "parsing template")
+	}
+
+	return t, nil
+}
+
+// Execute executes the template with the given name with the givn data
+func (tmpl Templates) Execute(name, kind string, data interface{}) (string, error) {
+	t, err := tmpl.get(name, kind)
+	if err != nil {
+		return "", errors.Wrap(err, "getting template")
 	}
 
 	buf := new(bytes.Buffer)
@@ -117,10 +174,15 @@ func (tmpl Templates) Execute(templateName string, data interface{}) (string, er
 		return "", errors.Wrap(err, "executing the template")
 	}
 
-	html, err := inliner.Inline(buf.String())
-	if err != nil {
-		return "", errors.Wrap(err, "inlining the css rules")
+	// If HTML email, inline the CSS rules
+	if kind == EmailKindHTML {
+		html, err := inliner.Inline(buf.String())
+		if err != nil {
+			return "", errors.Wrap(err, "inlining the css rules")
+		}
+
+		return html, nil
 	}
 
-	return html, nil
+	return buf.String(), nil
 }

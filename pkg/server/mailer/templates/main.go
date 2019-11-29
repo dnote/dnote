@@ -83,7 +83,21 @@ func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request
 		Token:   "testToken",
 		WebURL:  "http://localhost:3000",
 	}
-	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, data)
+	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindHTML, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(body))
+}
+
+func (c Context) welcomeHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.WelcomeTmplData{
+		AccountEmail: "alice@example.com",
+		WebURL:       "http://localhost:3000",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,5 +141,6 @@ func main() {
 	http.HandleFunc("/", ctx.homeHandler)
 	http.HandleFunc("/digest", ctx.digestHandler)
 	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
+	http.HandleFunc("/welcome", ctx.welcomeHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }
