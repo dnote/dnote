@@ -24,16 +24,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
-
-func init() {
-	testutils.InitTestDB()
-
-	templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-	InitTemplates(&templatePath)
-}
 
 func TestEmailVerificationEmail(t *testing.T) {
 	testCases := []struct {
@@ -50,24 +42,24 @@ func TestEmailVerificationEmail(t *testing.T) {
 		},
 	}
 
+	tmplPath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
+	tmpl := NewTemplates(&tmplPath)
+
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
-			m := NewEmail("alice@example.com", []string{"bob@example.com"}, "Test email")
-
 			dat := EmailVerificationTmplData{
-				Subject: "Test email verification email",
-				Token:   tc.token,
-				WebURL:  tc.webURL,
+				Token:  tc.token,
+				WebURL: tc.webURL,
 			}
-			err := m.ParseTemplate(EmailTypeEmailVerification, dat)
+			body, err := tmpl.Execute(EmailTypeEmailVerification, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
-			if ok := strings.Contains(m.Body, tc.webURL); !ok {
+			if ok := strings.Contains(body, tc.webURL); !ok {
 				t.Errorf("email body did not contain %s", tc.webURL)
 			}
-			if ok := strings.Contains(m.Body, tc.token); !ok {
+			if ok := strings.Contains(body, tc.token); !ok {
 				t.Errorf("email body did not contain %s", tc.token)
 			}
 		})
@@ -89,24 +81,24 @@ func TestResetPasswordEmail(t *testing.T) {
 		},
 	}
 
+	tmplPath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
+	tmpl := NewTemplates(&tmplPath)
+
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
-			m := NewEmail("alice@example.com", []string{"bob@example.com"}, "Test email")
-
-			dat := EmailVerificationTmplData{
-				Subject: "Test reset passowrd email",
-				Token:   tc.token,
-				WebURL:  tc.webURL,
+			dat := EmailResetPasswordTmplData{
+				Token:  tc.token,
+				WebURL: tc.webURL,
 			}
-			err := m.ParseTemplate(EmailTypeResetPassword, dat)
+			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
-			if ok := strings.Contains(m.Body, tc.webURL); !ok {
+			if ok := strings.Contains(body, tc.webURL); !ok {
 				t.Errorf("email body did not contain %s", tc.webURL)
 			}
-			if ok := strings.Contains(m.Body, tc.token); !ok {
+			if ok := strings.Contains(body, tc.token); !ok {
 				t.Errorf("email body did not contain %s", tc.token)
 			}
 		})

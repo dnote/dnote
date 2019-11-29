@@ -41,7 +41,7 @@ func TestGetMe(t *testing.T) {
 	defer server.Close()
 
 	u := testutils.SetupUserData()
-	testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 	dat := `{"email": "alice@example.com"}`
 	req := testutils.MakeReq(server, "POST", "/reset-token", dat)
@@ -59,18 +59,17 @@ func TestGetMe(t *testing.T) {
 
 func TestCreateResetToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		dat := `{"email": "alice@example.com"}`
 		req := testutils.MakeReq(server, "POST", "/reset-token", dat)
@@ -93,18 +92,18 @@ func TestCreateResetToken(t *testing.T) {
 	})
 
 	t.Run("nonexistent email", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		dat := `{"email": "bob@example.com"}`
 		req := testutils.MakeReq(server, "POST", "/reset-token", dat)
@@ -123,18 +122,18 @@ func TestCreateResetToken(t *testing.T) {
 
 func TestResetPassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData( u, "alice@example.com", "oldpassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -170,18 +169,18 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("nonexistent token", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -209,18 +208,18 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -247,18 +246,18 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("used token", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := database.Token{
@@ -296,18 +295,18 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("using wrong type token: email_verification", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &App{
-			
+
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData( u, "alice@example.com", "somepassword")
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",

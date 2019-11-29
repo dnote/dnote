@@ -1,0 +1,9 @@
+Hi.
+
+Welcome to Dnote! To verify your email so that you can automate spaced reptition, visit the following link:
+
+    {{ .WebURL }}/verify-email/{{ .Token }}
+
+Thanks for using my software.
+
+- Sung (Maker of Dnote)

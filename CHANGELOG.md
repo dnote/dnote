@@ -12,7 +12,9 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
-N/A
+#### Added
+
+- Send welcome email with login instructions upon reigstering
 
 ### 0.3.2 - 2019-11-20
 

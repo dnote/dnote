@@ -28,6 +28,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -281,4 +282,33 @@ func MustRespondJSON(t *testing.T, w http.ResponseWriter, i interface{}, message
 	if err := json.NewEncoder(w).Encode(i); err != nil {
 		t.Fatal(message)
 	}
+}
+
+// MockEmail is a mock email data
+type MockEmail struct {
+	Subject string
+	From    string
+	To      []string
+	Body    string
+}
+
+// MockEmailbackendImplementation is an email backend that simply discards the emails
+type MockEmailbackendImplementation struct {
+	mu     sync.RWMutex
+	Emails []MockEmail
+}
+
+// Queue is an implementation of Backend.Queue.
+func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string, contentType, body string) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.Emails = append(b.Emails, MockEmail{
+		Subject: subject,
+		From:    from,
+		To:      to,
+		Body:    body,
+	})
+
+	return nil
 }

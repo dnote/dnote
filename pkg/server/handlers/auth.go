@@ -128,21 +128,17 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subject := "Reset your password"
-	data := mailer.EmailResetPasswordTmplData{
-		Subject: subject,
-		Token:   resetToken,
-		WebURL:  a.WebURL,
-	}
-	email := mailer.NewEmail("noreply@getdnote.com", []string{params.Email}, subject)
-	if err := email.ParseTemplate(mailer.EmailTypeResetPassword, data); err != nil {
-		HandleError(w, errors.Wrap(err, "parsing template").Error(), nil, http.StatusInternalServerError)
-		return
+	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
+		AccountEmail: account.Email.String,
+		Token:        resetToken,
+		WebURL:       a.WebURL,
+	})
+	if err != nil {
+		HandleError(w, errors.Wrap(err, "executing reset password email template").Error(), nil, http.StatusInternalServerError)
 	}
 
-	if err := email.Send(); err != nil {
-		HandleError(w, errors.Wrap(err, "sending email").Error(), nil, http.StatusInternalServerError)
-		return
+	if err := a.EmailBackend.Queue("Reset your password", "sung@getdnote.com", []string{params.Email}, "text/html", body); err != nil {
+		HandleError(w, errors.Wrap(err, "queueing email").Error(), nil, http.StatusInternalServerError)
 	}
 }
 

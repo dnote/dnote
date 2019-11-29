@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -203,6 +205,23 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithSession(a.DB, w, user.ID, http.StatusCreated)
+
+	// send welcome email
+	body, err := a.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
+		AccountEmail: params.Email,
+		WebURL:       a.WebURL,
+	})
+	if err != nil {
+		log.WithFields(log.Fields{
+			"email": params.Email,
+		}).ErrorWrap(err, "executing welcome email template")
+		return
+	}
+	if err := a.EmailBackend.Queue("Welcome to Dnote!", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
+		log.WithFields(log.Fields{
+			"email": params.Email,
+		}).ErrorWrap(err, "queueing email")
+	}
 }
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.

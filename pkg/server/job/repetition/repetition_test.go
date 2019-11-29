@@ -26,11 +26,11 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 func assertLastActive(t *testing.T, ruleUUID string, lastActive int64) {
-
 	var rule database.RepetitionRule
 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", ruleUUID).First(&rule), "finding rule1")
 
@@ -42,6 +42,15 @@ func assertDigestCount(t *testing.T, rule database.RepetitionRule, expected int)
 	var digestCount int
 	testutils.MustExec(t, testutils.DB.Model(&database.Digest{}).Where("rule_id = ? AND user_id = ?", rule.ID, rule.UserID).Count(&digestCount), "counting digest")
 	assert.Equal(t, digestCount, expected, "digest count mismatch")
+}
+
+func getTestParams(c clock.Clock) Params {
+	return Params{
+		DB:           testutils.DB,
+		Clock:        c,
+		EmailTmpl:    mailer.Templates{},
+		EmailBackend: &testutils.MockEmailbackendImplementation{},
+	}
 }
 
 func TestDo(t *testing.T) {
@@ -71,64 +80,63 @@ func TestDo(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&r1), "preparing rule1")
 
 		c := clock.NewMock()
-
 		// Test
 		// 1 day later
 		c.SetNow(time.Date(2009, time.November, 2, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(0))
 		assertDigestCount(t, r1, 0)
 
 		// 2 days later
 		c.SetNow(time.Date(2009, time.November, 3, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(0))
 		assertDigestCount(t, r1, 0)
 
 		// 3 days later - should be processed
 		c.SetNow(time.Date(2009, time.November, 4, 12, 1, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(0))
 		assertDigestCount(t, r1, 0)
 
 		c.SetNow(time.Date(2009, time.November, 4, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertDigestCount(t, r1, 1)
 
 		c.SetNow(time.Date(2009, time.November, 4, 12, 3, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertDigestCount(t, r1, 1)
 
 		// 4 day later
 		c.SetNow(time.Date(2009, time.November, 5, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertDigestCount(t, r1, 1)
 		// 5 days later
 		c.SetNow(time.Date(2009, time.November, 6, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257336120000))
 		assertDigestCount(t, r1, 1)
 		// 6 days later - should be processed
 		c.SetNow(time.Date(2009, time.November, 7, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertDigestCount(t, r1, 2)
 		// 7 days later
 		c.SetNow(time.Date(2009, time.November, 8, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertDigestCount(t, r1, 2)
 		// 8 days later
 		c.SetNow(time.Date(2009, time.November, 9, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257595320000))
 		assertDigestCount(t, r1, 2)
 		// 9 days later - should be processed
 		c.SetNow(time.Date(2009, time.November, 10, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 		assertLastActive(t, r1.UUID, int64(1257854520000))
 		assertDigestCount(t, r1, 3)
 	})
@@ -174,7 +182,7 @@ func TestDo(t *testing.T) {
 
 		c := clock.NewMock()
 		c.SetNow(time.Date(2009, time.November, 10, 12, 2, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 
 		var rule database.RepetitionRule
 		testutils.MustExec(t, testutils.DB.Where("uuid = ?", r1.UUID).First(&rule), "finding rule1")
@@ -213,7 +221,7 @@ func TestDo_Disabled(t *testing.T) {
 	// Execute
 	c := clock.NewMock()
 	c.SetNow(time.Date(2009, time.November, 4, 12, 2, 0, 0, time.UTC))
-	Do(testutils.DB, c)
+	Do(getTestParams(c))
 
 	// Test
 	assertLastActive(t, r1.UUID, int64(0))
@@ -307,7 +315,7 @@ func TestDo_BalancedStrategy(t *testing.T) {
 		c := clock.NewMock()
 
 		c.SetNow(time.Date(2009, time.November, 8, 21, 0, 0, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 
 		// Test
 		assertLastActive(t, r1.UUID, int64(1257714000000))
@@ -362,7 +370,7 @@ func TestDo_BalancedStrategy(t *testing.T) {
 		c := clock.NewMock()
 
 		c.SetNow(time.Date(2009, time.November, 8, 21, 0, 1, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 
 		// Test
 		assertLastActive(t, r1.UUID, int64(1257714000000))
@@ -416,7 +424,7 @@ func TestDo_BalancedStrategy(t *testing.T) {
 		c := clock.NewMock()
 
 		c.SetNow(time.Date(2009, time.November, 8, 21, 0, 0, 0, time.UTC))
-		Do(testutils.DB, c)
+		Do(getTestParams(c))
 
 		// Test
 		assertLastActive(t, r1.UUID, int64(1257714000000))

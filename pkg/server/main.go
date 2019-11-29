@@ -110,26 +110,40 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initApp(db *gorm.DB) handlers.App {
+func initApp() handlers.App {
+	db := initDB()
+
 	return handlers.App{
 		DB:               db,
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
+		EmailTemplates:   mailer.NewTemplates(nil),
+		EmailBackend:     &mailer.SimpleBackendImplementation{},
 		WebURL:           os.Getenv("WebURL"),
 	}
 }
 
-func startCmd() {
-	db := initDB()
-	defer db.Close()
+func runJob(a handlers.App) error {
+	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.WebURL)
+	if err != nil {
+		return errors.Wrap(err, "getting a job runner")
+	}
+	if err := jobRunner.Do(); err != nil {
+		return errors.Wrap(err, "running job")
+	}
 
-	app := initApp(db)
-	mailer.InitTemplates(nil)
+	return nil
+}
+
+func startCmd() {
+	app := initApp()
+	defer app.DB.Close()
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
-	if err := job.Run(db); err != nil {
+
+	if err := runJob(app); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
@@ -147,7 +161,7 @@ func versionCmd() {
 }
 
 func rootCmd() {
-	fmt.Printf(`Dnote Server - A simple notebook for developers
+	fmt.Printf(`Dnote Server - A simple personal knowledge base
 
 Usage:
   dnote-server [command]

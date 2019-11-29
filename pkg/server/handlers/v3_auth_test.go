@@ -77,13 +77,13 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("register %s %s", tc.email, tc.password), func(t *testing.T) {
-
 			defer testutils.ClearData()
 
 			// Setup
+			emailBackend := testutils.MockEmailbackendImplementation{}
 			server := MustNewServer(t, &App{
-
-				Clock: clock.NewMock(),
+				Clock:        clock.NewMock(),
+				EmailBackend: &emailBackend,
 			})
 			defer server.Close()
 
@@ -112,6 +112,10 @@ func TestRegister(t *testing.T) {
 			var repetitionRuleCount int
 			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Where("user_id = ?", account.UserID).Count(&repetitionRuleCount), "counting repetition rules")
 			assert.Equal(t, repetitionRuleCount, 1, "repetitionRuleCount mismatch")
+
+			// welcome email
+			assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{tc.email}, "email to mismatch")
 
 			// after register, should sign in user
 			assertSessionResp(t, res)
@@ -178,7 +182,6 @@ func TestRegisterMissingParams(t *testing.T) {
 }
 
 func TestRegisterDuplicateEmail(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	// Setup

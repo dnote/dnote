@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -32,6 +33,14 @@ import (
 func MustNewServer(t *testing.T, app *App) *httptest.Server {
 	app.WebURL = os.Getenv("WebURL")
 	app.DB = testutils.DB
+
+	// If email backend was not provided, use the default mock backend
+	if app.EmailBackend == nil {
+		app.EmailBackend = &testutils.MockEmailbackendImplementation{}
+	}
+
+	emailTmplDir := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
+	app.EmailTemplates = mailer.NewTemplates(&emailTmplDir)
 
 	r, err := NewRouter(app)
 	if err != nil {

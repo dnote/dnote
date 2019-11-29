@@ -63,38 +63,60 @@ func (c Context) digestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	email, err := repetition.BuildEmail(db, repetition.BuildEmailParams{
-		Now:       now,
-		User:      user,
-		EmailAddr: "sung@getdnote.com",
-		Digest:    digest,
-		Rule:      rule,
+	_, body, err := repetition.BuildEmail(db, c.Tmpl, repetition.BuildEmailParams{
+		Now:    now,
+		User:   user,
+		Digest: digest,
+		Rule:   rule,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	body := email.Body
 	w.Write([]byte(body))
 }
 
-func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
-	data := struct {
-		Subject string
-		Token   string
-	}{
-		"Verify your email",
-		"testToken",
+func (c Context) passwordResetHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.EmailResetPasswordTmplData{
+		AccountEmail: "alice@example.com",
+		Token:        "testToken",
+		WebURL:       "http://localhost:3000",
 	}
-	email := mailer.NewEmail("noreply@getdnote.com", []string{"sung@getdnote.com"}, "Reset your password")
-	err := email.ParseTemplate(mailer.EmailTypeEmailVerification, data)
+	body, err := c.Tmpl.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	body := email.Body
+	w.Write([]byte(body))
+}
+
+func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.EmailVerificationTmplData{
+		Token:  "testToken",
+		WebURL: "http://localhost:3000",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(body))
+}
+
+func (c Context) welcomeHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.WelcomeTmplData{
+		AccountEmail: "alice@example.com",
+		WebURL:       "http://localhost:3000",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Write([]byte(body))
 }
 
@@ -111,7 +133,8 @@ func init() {
 
 // Context is a context holding global information
 type Context struct {
-	DB *gorm.DB
+	DB   *gorm.DB
+	Tmpl mailer.Templates
 }
 
 func main() {
@@ -124,14 +147,15 @@ func main() {
 	})
 	defer db.Close()
 
-	mailer.InitTemplates(nil)
-
 	log.Println("Email template development server running on http://127.0.0.1:2300")
 
-	ctx := Context{DB: db}
+	tmpl := mailer.NewTemplates(nil)
+	ctx := Context{DB: db, Tmpl: tmpl}
 
 	http.HandleFunc("/", ctx.homeHandler)
 	http.HandleFunc("/digest", ctx.digestHandler)
 	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
+	http.HandleFunc("/password-reset", ctx.passwordResetHandler)
+	http.HandleFunc("/welcome", ctx.welcomeHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }

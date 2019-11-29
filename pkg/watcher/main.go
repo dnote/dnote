@@ -23,6 +23,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"syscall"
 	"time"
@@ -71,6 +72,13 @@ func init() {
 	}
 }
 
+func killCmdProcess(cmd *exec.Cmd) {
+	pgid, err := syscall.Getpgid(cmd.Process.Pid)
+	if err == nil {
+		syscall.Kill(-pgid, syscall.SIGKILL)
+	}
+}
+
 func main() {
 	w := watcher.New()
 	w.IgnoreHiddenFiles(true)
@@ -88,10 +96,7 @@ func main() {
 
 				// Killing the process here.
 				if e != nil {
-					pgid, err := syscall.Getpgid(e.Process.Pid)
-					if err == nil {
-						syscall.Kill(-pgid, syscall.SIGKILL)
-					}
+					killCmdProcess(e)
 					e.Wait()
 				}
 
@@ -121,6 +126,15 @@ func main() {
 	}
 
 	e = execCmd(task, context)
+
+	// watch for quit signals and kill the child process
+	go func() {
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+		<-signalChan
+		killCmdProcess(e)
+		os.Exit(0)
+	}()
 
 	log.Printf("watching %d files", len(w.WatchedFiles()))
 	if err := w.Start(time.Millisecond * 1000); err != nil {

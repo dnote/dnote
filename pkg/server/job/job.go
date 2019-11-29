@@ -20,14 +20,73 @@ package job
 
 import (
 	"log"
-	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 )
+
+var (
+	// ErrEmptyDB is an error for missing database connection in the app configuration
+	ErrEmptyDB = errors.New("No database connection was provided")
+	// ErrEmptyClock is an error for missing clock in the app configuration
+	ErrEmptyClock = errors.New("No clock was provided")
+	// ErrEmptyWebURL is an error for missing WebURL content in the app configuration
+	ErrEmptyWebURL = errors.New("No WebURL was provided")
+	// ErrEmptyEmailTemplates is an error for missing EmailTemplates content in the app configuration
+	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
+	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
+	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
+)
+
+// Runner is a configuration for job
+type Runner struct {
+	DB           *gorm.DB
+	Clock        clock.Clock
+	EmailTmpl    mailer.Templates
+	EmailBackend mailer.Backend
+	WebURL       string
+}
+
+// NewRunner returns a new runner
+func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, webURL string) (Runner, error) {
+	ret := Runner{
+		DB:           db,
+		EmailTmpl:    t,
+		EmailBackend: b,
+		Clock:        c,
+		WebURL:       webURL,
+	}
+
+	if err := ret.validate(); err != nil {
+		return Runner{}, errors.Wrap(err, "validating runner configuration")
+	}
+
+	return ret, nil
+}
+
+func (r *Runner) validate() error {
+	if r.DB == nil {
+		return ErrEmptyDB
+	}
+	if r.Clock == nil {
+		return ErrEmptyClock
+	}
+	if r.EmailTmpl == nil {
+		return ErrEmptyEmailTemplates
+	}
+	if r.EmailBackend == nil {
+		return ErrEmptyEmailBackend
+	}
+	if r.WebURL == "" {
+		return ErrEmptyWebURL
+	}
+
+	return nil
+}
 
 func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	s, err := cron.ParseStandard(spec)
@@ -38,21 +97,11 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	c.Schedule(s, cron.FuncJob(cmd))
 }
 
-func checkEnvironment() error {
-	if os.Getenv("WebURL") == "" {
-		return errors.New("WebURL is empty")
-	}
-
-	return nil
-}
-
-func schedule(db *gorm.DB, ch chan error) {
-	cl := clock.New()
-
+func (r *Runner) schedule(ch chan error) {
 	// Schedule jobs
-	c := cron.New()
-	scheduleJob(c, "* * * * *", func() { repetition.Do(db, cl) })
-	c.Start()
+	cr := cron.New()
+	scheduleJob(cr, "* * * * *", func() { r.DoRepetition() })
+	cr.Start()
 
 	ch <- nil
 
@@ -60,19 +109,35 @@ func schedule(db *gorm.DB, ch chan error) {
 	select {}
 }
 
-// Run starts the background tasks in a separate goroutine that runs forever
-func Run(db *gorm.DB) error {
-	if err := checkEnvironment(); err != nil {
-		return errors.Wrap(err, "checking environment variables")
+// Do starts the background tasks in a separate goroutine that runs forever
+func (r *Runner) Do() error {
+	// validate
+	if err := r.validate(); err != nil {
+		return errors.Wrap(err, "validating job configurations")
 	}
 
 	ch := make(chan error)
-	go schedule(db, ch)
+	go r.schedule(ch)
 	if err := <-ch; err != nil {
 		return errors.Wrap(err, "scheduling jobs")
 	}
 
 	log.Println("Started background tasks")
+
+	return nil
+}
+
+// DoRepetition creates spaced repetitions and delivers the results based on the rules
+func (r *Runner) DoRepetition() error {
+	p := repetition.Params{
+		DB:           r.DB,
+		Clock:        r.Clock,
+		EmailTmpl:    r.EmailTmpl,
+		EmailBackend: r.EmailBackend,
+	}
+	if err := repetition.Do(p); err != nil {
+		return errors.Wrap(err, "performing repetition job")
+	}
 
 	return nil
 }
