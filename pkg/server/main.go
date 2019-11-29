@@ -30,6 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
+	jobCtx "github.com/dnote/dnote/pkg/server/job/ctx"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/web"
 	"github.com/jinzhu/gorm"
@@ -110,12 +111,12 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initApp(db *gorm.DB) handlers.App {
+func initApp(db *gorm.DB, t mailer.Templates) handlers.App {
 	return handlers.App{
 		DB:               db,
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
-		EmailTemplates:   mailer.NewTemplates(nil),
+		EmailTemplates:   t,
 		EmailBackend:     &mailer.SimpleBackendImplementation{},
 		WebURL:           os.Getenv("WebURL"),
 	}
@@ -125,12 +126,19 @@ func startCmd() {
 	db := initDB()
 	defer db.Close()
 
-	app := initApp(db)
+	emailTmpl := mailer.NewTemplates(nil)
+	app := initApp(db, emailTmpl)
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
-	if err := job.Run(db); err != nil {
+
+	if err := job.Run(jobCtx.Ctx{
+		DB:           db,
+		EmailTmpl:    emailTmpl,
+		EmailBackend: app.EmailBackend,
+		Clock:        clock.New(),
+	}); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
