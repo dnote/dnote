@@ -29,8 +29,21 @@ import (
 	"github.com/robfig/cron"
 )
 
-// Job is a configuration for job
-type Job struct {
+var (
+	// ErrEmptyDB is an error for missing database connection in the app configuration
+	ErrEmptyDB = errors.New("No database connection was provided")
+	// ErrEmptyClock is an error for missing clock in the app configuration
+	ErrEmptyClock = errors.New("No clock was provided")
+	// ErrEmptyWebURL is an error for missing WebURL content in the app configuration
+	ErrEmptyWebURL = errors.New("No WebURL was provided")
+	// ErrEmptyEmailTemplates is an error for missing EmailTemplates content in the app configuration
+	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
+	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
+	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
+)
+
+// Runner is a configuration for job
+type Runner struct {
 	DB           *gorm.DB
 	Clock        clock.Clock
 	EmailTmpl    mailer.Templates
@@ -38,21 +51,38 @@ type Job struct {
 	WebURL       string
 }
 
-func (j *Job) validate() error {
-	if j.DB == nil {
-		return errors.New("DB is not provided")
+// NewRunner returns a new runner
+func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, webURL string) (Runner, error) {
+	ret := Runner{
+		DB:           db,
+		EmailTmpl:    t,
+		EmailBackend: b,
+		Clock:        c,
+		WebURL:       webURL,
 	}
-	if j.Clock == nil {
-		return errors.New("Clock is not provided")
+
+	if err := ret.validate(); err != nil {
+		return Runner{}, errors.Wrap(err, "validating runner configuration")
 	}
-	if j.EmailTmpl == nil {
-		return errors.New("EmailTmpl is not provided")
+
+	return ret, nil
+}
+
+func (r *Runner) validate() error {
+	if r.DB == nil {
+		return ErrEmptyDB
 	}
-	if j.EmailBackend == nil {
-		return errors.New("EmailBackend is not provided")
+	if r.Clock == nil {
+		return ErrEmptyClock
 	}
-	if j.WebURL == "" {
-		return errors.New("WebURL is not provided")
+	if r.EmailTmpl == nil {
+		return ErrEmptyEmailTemplates
+	}
+	if r.EmailBackend == nil {
+		return ErrEmptyEmailBackend
+	}
+	if r.WebURL == "" {
+		return ErrEmptyWebURL
 	}
 
 	return nil
@@ -67,10 +97,10 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	c.Schedule(s, cron.FuncJob(cmd))
 }
 
-func (j *Job) schedule(ch chan error) {
+func (r *Runner) schedule(ch chan error) {
 	// Schedule jobs
 	cr := cron.New()
-	scheduleJob(cr, "* * * * *", func() { j.DoRepetition() })
+	scheduleJob(cr, "* * * * *", func() { r.DoRepetition() })
 	cr.Start()
 
 	ch <- nil
@@ -79,15 +109,15 @@ func (j *Job) schedule(ch chan error) {
 	select {}
 }
 
-// Run starts the background tasks in a separate goroutine that runs forever
-func (j *Job) Run() error {
+// Do starts the background tasks in a separate goroutine that runs forever
+func (r *Runner) Do() error {
 	// validate
-	if err := j.validate(); err != nil {
+	if err := r.validate(); err != nil {
 		return errors.Wrap(err, "validating job configurations")
 	}
 
 	ch := make(chan error)
-	go j.schedule(ch)
+	go r.schedule(ch)
 	if err := <-ch; err != nil {
 		return errors.Wrap(err, "scheduling jobs")
 	}
@@ -98,12 +128,12 @@ func (j *Job) Run() error {
 }
 
 // DoRepetition creates spaced repetitions and delivers the results based on the rules
-func (j *Job) DoRepetition() error {
+func (r *Runner) DoRepetition() error {
 	p := repetition.Params{
-		DB:           j.DB,
-		Clock:        j.Clock,
-		EmailTmpl:    j.EmailTmpl,
-		EmailBackend: j.EmailBackend,
+		DB:           r.DB,
+		Clock:        r.Clock,
+		EmailTmpl:    r.EmailTmpl,
+		EmailBackend: r.EmailBackend,
 	}
 	if err := repetition.Do(p); err != nil {
 		return errors.Wrap(err, "performing repetition job")

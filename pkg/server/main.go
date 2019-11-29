@@ -123,14 +123,16 @@ func initApp() handlers.App {
 	}
 }
 
-func initJob(a handlers.App) job.Job {
-	return job.Job{
-		DB:           a.DB,
-		EmailTmpl:    a.EmailTemplates,
-		EmailBackend: a.EmailBackend,
-		Clock:        a.Clock,
-		WebURL:       a.WebURL,
+func runJob(a handlers.App) error {
+	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.WebURL)
+	if err != nil {
+		return errors.Wrap(err, "getting a job runner")
 	}
+	if err := jobRunner.Do(); err != nil {
+		return errors.Wrap(err, "running job")
+	}
+
+	return nil
 }
 
 func startCmd() {
@@ -141,8 +143,7 @@ func startCmd() {
 		panic(errors.Wrap(err, "running migrations"))
 	}
 
-	j := initJob(app)
-	if err := j.Run(); err != nil {
+	if err := runJob(app); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
