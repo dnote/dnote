@@ -90,7 +90,7 @@ func TestResetPasswordEmail(t *testing.T) {
 				Token:  tc.token,
 				WebURL: tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindHTML, dat)
+			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}

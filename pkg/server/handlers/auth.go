@@ -129,10 +129,10 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	subject := "Reset your password"
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindHTML, mailer.EmailResetPasswordTmplData{
-		Subject: subject,
-		Token:   resetToken,
-		WebURL:  a.WebURL,
+	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
+		AccountEmail: account.Email.String,
+		Token:        resetToken,
+		WebURL:       a.WebURL,
 	})
 	if err != nil {
 		HandleError(w, errors.Wrap(err, "executing reset password email template").Error(), nil, http.StatusInternalServerError)

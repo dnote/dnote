@@ -77,12 +77,27 @@ func (c Context) digestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
+func (c Context) passwordResetHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.EmailResetPasswordTmplData{
+		AccountEmail: "alice@example.com",
+		Token:        "testToken",
+		WebURL:       "http://localhost:3000",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(body))
+}
+
 func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	data := mailer.EmailVerificationTmplData{
 		Token:  "testToken",
 		WebURL: "http://localhost:3000",
 	}
-	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindHTML, data)
+	body, err := c.Tmpl.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -140,6 +155,7 @@ func main() {
 	http.HandleFunc("/", ctx.homeHandler)
 	http.HandleFunc("/digest", ctx.digestHandler)
 	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
+	http.HandleFunc("/password-reset", ctx.passwordResetHandler)
 	http.HandleFunc("/welcome", ctx.welcomeHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }
