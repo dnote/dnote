@@ -81,6 +81,7 @@ func (j *Job) schedule(ch chan error) {
 
 // Run starts the background tasks in a separate goroutine that runs forever
 func (j *Job) Run() error {
+	// validate
 	if err := j.validate(); err != nil {
 		return errors.Wrap(err, "validating job configurations")
 	}
