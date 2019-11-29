@@ -30,7 +30,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
-	jobCtx "github.com/dnote/dnote/pkg/server/job/ctx"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/web"
 	"github.com/jinzhu/gorm"
@@ -111,34 +110,39 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initApp(db *gorm.DB, t mailer.Templates) handlers.App {
+func initApp() handlers.App {
+	db := initDB()
+
 	return handlers.App{
 		DB:               db,
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
-		EmailTemplates:   t,
+		EmailTemplates:   mailer.NewTemplates(nil),
 		EmailBackend:     &mailer.SimpleBackendImplementation{},
 		WebURL:           os.Getenv("WebURL"),
 	}
 }
 
-func startCmd() {
-	db := initDB()
-	defer db.Close()
+func initJob(a handlers.App) job.Job {
+	return job.Job{
+		DB:           a.DB,
+		EmailTmpl:    a.EmailTemplates,
+		EmailBackend: a.EmailBackend,
+		Clock:        a.Clock,
+		WebURL:       a.WebURL,
+	}
+}
 
-	emailTmpl := mailer.NewTemplates(nil)
-	app := initApp(db, emailTmpl)
+func startCmd() {
+	app := initApp()
+	defer app.DB.Close()
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
 
-	if err := job.Run(jobCtx.Ctx{
-		DB:           db,
-		EmailTmpl:    emailTmpl,
-		EmailBackend: app.EmailBackend,
-		Clock:        clock.New(),
-	}); err != nil {
+	j := initJob(app)
+	if err := j.Run(); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
@@ -156,7 +160,7 @@ func versionCmd() {
 }
 
 func rootCmd() {
-	fmt.Printf(`Dnote Server - A simple notebook for developers
+	fmt.Printf(`Dnote Server - A simple personal knowledge base
 
 Usage:
   dnote-server [command]

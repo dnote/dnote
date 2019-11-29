@@ -20,13 +20,43 @@ package job
 
 import (
 	"log"
-	"os"
 
-	"github.com/dnote/dnote/pkg/server/job/ctx"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
+	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 )
+
+// Job is a configuration for job
+type Job struct {
+	DB           *gorm.DB
+	Clock        clock.Clock
+	EmailTmpl    mailer.Templates
+	EmailBackend mailer.Backend
+	WebURL       string
+}
+
+func (j *Job) validate() error {
+	if j.DB == nil {
+		return errors.New("DB is not provided")
+	}
+	if j.Clock == nil {
+		return errors.New("Clock is not provided")
+	}
+	if j.EmailTmpl == nil {
+		return errors.New("EmailTmpl is not provided")
+	}
+	if j.EmailBackend == nil {
+		return errors.New("EmailBackend is not provided")
+	}
+	if j.WebURL == "" {
+		return errors.New("WebURL is not provided")
+	}
+
+	return nil
+}
 
 func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	s, err := cron.ParseStandard(spec)
@@ -37,18 +67,10 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 	c.Schedule(s, cron.FuncJob(cmd))
 }
 
-func checkEnvironment() error {
-	if os.Getenv("WebURL") == "" {
-		return errors.New("WebURL is empty")
-	}
-
-	return nil
-}
-
-func schedule(c ctx.Ctx, ch chan error) {
+func (j *Job) schedule(ch chan error) {
 	// Schedule jobs
 	cr := cron.New()
-	scheduleJob(cr, "* * * * *", func() { repetition.Do(c) })
+	scheduleJob(cr, "* * * * *", func() { j.DoRepetition() })
 	cr.Start()
 
 	ch <- nil
@@ -58,18 +80,33 @@ func schedule(c ctx.Ctx, ch chan error) {
 }
 
 // Run starts the background tasks in a separate goroutine that runs forever
-func Run(c ctx.Ctx) error {
-	if err := checkEnvironment(); err != nil {
-		return errors.Wrap(err, "checking environment variables")
+func (j *Job) Run() error {
+	if err := j.validate(); err != nil {
+		return errors.Wrap(err, "validating job configurations")
 	}
 
 	ch := make(chan error)
-	go schedule(c, ch)
+	go j.schedule(ch)
 	if err := <-ch; err != nil {
 		return errors.Wrap(err, "scheduling jobs")
 	}
 
 	log.Println("Started background tasks")
+
+	return nil
+}
+
+// DoRepetition creates spaced repetitions and delivers the results based on the rules
+func (j *Job) DoRepetition() error {
+	p := repetition.Params{
+		DB:           j.DB,
+		Clock:        j.Clock,
+		EmailTmpl:    j.EmailTmpl,
+		EmailBackend: j.EmailBackend,
+	}
+	if err := repetition.Do(p); err != nil {
+		return errors.Wrap(err, "performing repetition job")
+	}
 
 	return nil
 }

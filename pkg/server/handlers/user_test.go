@@ -22,14 +22,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -123,20 +121,13 @@ func TestUpdatePassword(t *testing.T) {
 
 func TestCreateVerificationToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
-
-		// TODO: send emails in the background using job queue to avoid coupling the
-		// handler itself to the mailer
-
-		templatePath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-		mailer.InitTemplates(&templatePath)
-
+		emailBackend := testutils.MockEmailbackendImplementation{}
 		server := MustNewServer(t, &App{
-
-			Clock: clock.NewMock(),
+			Clock:        clock.NewMock(),
+			EmailBackend: &emailBackend,
 		})
 		defer server.Close()
 
@@ -161,6 +152,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		assert.NotEqual(t, token.Value, "", "token Value mismatch")
 		assert.Equal(t, tokenCount, 1, "token count mismatch")
 		assert.Equal(t, token.UsedAt, (*time.Time)(nil), "token UsedAt mismatch")
+		assert.Equal(t, len(emailBackend.Emails), 1, "email queue count mismatch")
 	})
 
 	t.Run("already verified", func(t *testing.T) {
