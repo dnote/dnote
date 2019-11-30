@@ -25,7 +25,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -206,21 +205,8 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 
 	respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
 
-	// send welcome email
-	body, err := a.App.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
-		AccountEmail: params.Email,
-		WebURL:       a.App.WebURL,
-	})
-	if err != nil {
-		log.WithFields(log.Fields{
-			"email": params.Email,
-		}).ErrorWrap(err, "executing welcome email template")
-		return
-	}
-	if err := a.App.EmailBackend.Queue("Welcome to Dnote!", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
-		log.WithFields(log.Fields{
-			"email": params.Email,
-		}).ErrorWrap(err, "queueing email")
+	if err := a.App.SendWelcomeEmail(params.Email); err != nil {
+		log.ErrorWrap(err, "sending welcome email")
 	}
 }
 

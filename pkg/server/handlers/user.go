@@ -26,7 +26,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -172,15 +171,8 @@ func (a *API) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := a.App.EmailTemplates.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, mailer.EmailVerificationTmplData{
-		Token:  tokenValue,
-		WebURL: a.App.WebURL,
-	})
-	if err != nil {
-		HandleError(w, errors.Wrap(err, "executing reset verification template").Error(), nil, http.StatusInternalServerError)
-	}
-	if err := a.App.EmailBackend.Queue("Verify your Dnote email address", "sung@getdnote.com", []string{account.Email.String}, "text/plain", body); err != nil {
-		HandleError(w, errors.Wrap(err, "queueing email").Error(), nil, http.StatusInternalServerError)
+	if err := a.App.SendVerificationEmail(account.Email.String, tokenValue); err != nil {
+		HandleError(w, errors.Wrap(err, "sending verification email").Error(), nil, http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusCreated)

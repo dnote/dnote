@@ -26,7 +26,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -128,17 +127,8 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := a.App.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
-		AccountEmail: account.Email.String,
-		Token:        resetToken,
-		WebURL:       a.App.WebURL,
-	})
-	if err != nil {
-		HandleError(w, errors.Wrap(err, "executing reset password email template").Error(), nil, http.StatusInternalServerError)
-	}
-
-	if err := a.App.EmailBackend.Queue("Reset your password", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
-		HandleError(w, errors.Wrap(err, "queueing email").Error(), nil, http.StatusInternalServerError)
+	if err := a.App.SendPasswordResetEmail(account.Email.String, resetToken); err != nil {
+		HandleError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
 	}
 }
 
