@@ -53,7 +53,7 @@ func makeSession(user database.User, account database.Account) Session {
 	}
 }
 
-func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
+func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -61,7 +61,7 @@ func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
@@ -74,7 +74,7 @@ func (a *App) getMe(w http.ResponseWriter, r *http.Request) {
 		User: session,
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 	if err := operations.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
 		// In case of an error, gracefully continue to avoid disturbing the service
@@ -89,7 +89,7 @@ type createResetTokenPayload struct {
 	Email string `json:"email"`
 }
 
-func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
+func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 	var params createResetTokenPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
@@ -97,7 +97,7 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := a.DB.Where("email = ?", params.Email).First(&account)
+	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		return
 	}
@@ -123,21 +123,21 @@ func (a *App) createResetToken(w http.ResponseWriter, r *http.Request) {
 		Type:   database.TokenTypeResetPassword,
 	}
 
-	if err := a.DB.Save(&token).Error; err != nil {
+	if err := a.App.DB.Save(&token).Error; err != nil {
 		HandleError(w, errors.Wrap(err, "saving token").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
+	body, err := a.App.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
 		AccountEmail: account.Email.String,
 		Token:        resetToken,
-		WebURL:       a.WebURL,
+		WebURL:       a.App.WebURL,
 	})
 	if err != nil {
 		HandleError(w, errors.Wrap(err, "executing reset password email template").Error(), nil, http.StatusInternalServerError)
 	}
 
-	if err := a.EmailBackend.Queue("Reset your password", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
+	if err := a.App.EmailBackend.Queue("Reset your password", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
 		HandleError(w, errors.Wrap(err, "queueing email").Error(), nil, http.StatusInternalServerError)
 	}
 }
@@ -147,7 +147,7 @@ type resetPasswordPayload struct {
 	Token    string `json:"token"`
 }
 
-func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
+func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 	var params resetPasswordPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
@@ -155,7 +155,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var token database.Token
-	conn := a.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
+	conn := a.App.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
 	if conn.RecordNotFound() {
 		http.Error(w, "invalid token", http.StatusBadRequest)
 		return
@@ -176,7 +176,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -186,7 +186,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := a.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
 		tx.Rollback()
 		HandleError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
 		return
@@ -206,10 +206,10 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 	tx.Commit()
 
 	var user database.User
-	if err := a.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
+	if err := a.App.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
 		HandleError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(a.DB, w, user.ID, http.StatusOK)
+	respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
 }

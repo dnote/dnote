@@ -120,13 +120,13 @@ func (e *queryParamError) Error() string {
 	return fmt.Sprintf("invalid query param %s=%s. %s", e.key, e.value, e.message)
 }
 
-func (a *App) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment, error) {
+func (a *API) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment, error) {
 	var notes []database.Note
-	if err := a.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&notes).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&notes).Error; err != nil {
 		return SyncFragment{}, nil
 	}
 	var books []database.Book
-	if err := a.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&books).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&books).Error; err != nil {
 		return SyncFragment{}, nil
 	}
 
@@ -191,7 +191,7 @@ func (a *App) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment
 	ret := SyncFragment{
 		FragMaxUSN:    fragMaxUSN,
 		UserMaxUSN:    userMaxUSN,
-		CurrentTime:   a.Clock.Now().Unix(),
+		CurrentTime:   a.App.Clock.Now().Unix(),
 		Notes:         fragNotes,
 		Books:         fragBooks,
 		ExpungedNotes: fragExpungedNotes,
@@ -247,7 +247,7 @@ type GetSyncFragmentResp struct {
 }
 
 // GetSyncFragment responds with a sync fragment
-func (a *App) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
+func (a *API) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -280,7 +280,7 @@ type GetSyncStateResp struct {
 }
 
 // GetSyncState responds with a sync fragment
-func (a *App) GetSyncState(w http.ResponseWriter, r *http.Request) {
+func (a *API) GetSyncState(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -291,7 +291,7 @@ func (a *App) GetSyncState(w http.ResponseWriter, r *http.Request) {
 		FullSyncBefore: fullSyncBefore,
 		MaxUSN:         user.MaxUSN,
 		// TODO: exposing server time means we probably shouldn't seed random generator with time?
-		CurrentTime: a.Clock.Now().Unix(),
+		CurrentTime: a.App.Clock.Now().Unix(),
 	}
 
 	log.WithFields(log.Fields{

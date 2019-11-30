@@ -51,7 +51,7 @@ func validateCreateBookPayload(p createBookPayload) error {
 }
 
 // CreateBook creates a new book
-func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
+func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		return
@@ -71,7 +71,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var bookCount int
-	err = a.DB.Model(database.Book{}).
+	err = a.App.DB.Model(database.Book{}).
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
@@ -83,7 +83,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := operations.CreateBook(a.DB, user, a.Clock, params.Name)
+	book, err := operations.CreateBook(a.App.DB, user, a.App.Clock, params.Name)
 	if err != nil {
 		HandleError(w, "inserting book", err, http.StatusInternalServerError)
 	}
@@ -94,7 +94,7 @@ func (a *App) CreateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 // BooksOptions is a handler for OPTIONS endpoint for notes
-func (a *App) BooksOptions(w http.ResponseWriter, r *http.Request) {
+func (a *API) BooksOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }
@@ -130,7 +130,7 @@ func respondWithBooks(db *gorm.DB, userID int, query url.Values, w http.Response
 }
 
 // GetBooks returns books for the user
-func (a *App) GetBooks(w http.ResponseWriter, r *http.Request) {
+func (a *API) GetBooks(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		return
@@ -138,11 +138,11 @@ func (a *App) GetBooks(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 
-	respondWithBooks(a.DB, user.ID, query, w)
+	respondWithBooks(a.App.DB, user.ID, query, w)
 }
 
 // GetBook returns a book for the user
-func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
+func (a *API) GetBook(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		return
@@ -152,7 +152,7 @@ func (a *App) GetBook(w http.ResponseWriter, r *http.Request) {
 	bookUUID := vars["bookUUID"]
 
 	var book database.Book
-	conn := a.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
+	conn := a.App.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
 
 	if conn.RecordNotFound() {
 		w.WriteHeader(http.StatusNotFound)
@@ -177,7 +177,7 @@ type UpdateBookResp struct {
 }
 
 // UpdateBook updates a book
-func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		return
@@ -186,7 +186,7 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["bookUUID"]
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
@@ -201,7 +201,7 @@ func (a *App) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err = operations.UpdateBook(tx, a.Clock, user, book, params.Name)
+	book, err = operations.UpdateBook(tx, a.App.Clock, user, book, params.Name)
 	if err != nil {
 		tx.Rollback()
 		HandleError(w, "updating a book", err, http.StatusInternalServerError)
@@ -222,7 +222,7 @@ type DeleteBookResp struct {
 }
 
 // DeleteBook removes a book
-func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
+func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		return
@@ -231,7 +231,7 @@ func (a *App) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["bookUUID"]
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {

@@ -125,7 +125,7 @@ type createSubPayload struct {
 }
 
 // createSub creates a subscription for a the current user
-func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -138,7 +138,7 @@ func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -214,7 +214,7 @@ func validateUpdateSubPayload(p updateSubPayload) error {
 	return nil
 }
 
-func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -285,7 +285,7 @@ func respondWithEmptySub(w http.ResponseWriter) {
 	}
 }
 
-func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) getSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -413,7 +413,7 @@ func validateUpdateStripeSourcePayload(p updateStripeSourcePayload) error {
 	return nil
 }
 
-func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -430,7 +430,7 @@ func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -469,7 +469,7 @@ func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
+func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -507,7 +507,7 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, resp)
 }
 
-func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
+func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		HandleError(w, "reading body", err, http.StatusServiceUnavailable)
@@ -530,7 +530,7 @@ func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			operations.MarkUnsubscribed(a.DB, subscription.Customer.ID)
+			operations.MarkUnsubscribed(a.App.DB, subscription.Customer.ID)
 		}
 	default:
 		{

@@ -23,6 +23,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -30,19 +31,21 @@ import (
 
 // MustNewServer is a test utility function to initialize a new server
 // with the given app paratmers
-func MustNewServer(t *testing.T, app *App) *httptest.Server {
-	app.WebURL = os.Getenv("WebURL")
-	app.DB = testutils.DB
+func MustNewServer(t *testing.T, a *app.App) *httptest.Server {
+	a.WebURL = os.Getenv("WebURL")
+	a.DB = testutils.DB
 
 	// If email backend was not provided, use the default mock backend
-	if app.EmailBackend == nil {
-		app.EmailBackend = &testutils.MockEmailbackendImplementation{}
+	if a.EmailBackend == nil {
+		a.EmailBackend = &testutils.MockEmailbackendImplementation{}
 	}
 
 	emailTmplDir := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-	app.EmailTemplates = mailer.NewTemplates(&emailTmplDir)
+	a.EmailTemplates = mailer.NewTemplates(&emailTmplDir)
 
-	r, err := NewRouter(app)
+	api := API{App: a}
+
+	r, err := api.NewRouter()
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "initializing server"))
 	}

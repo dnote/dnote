@@ -136,7 +136,7 @@ func respondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 }
 
 // notSupported is the handler for the route that is no longer supported
-func (a *App) notSupported(w http.ResponseWriter, r *http.Request) {
+func (a *API) notSupported(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
 	return
 }

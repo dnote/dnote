@@ -32,7 +32,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (a *App) classicMigrate(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicMigrate(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -40,12 +40,12 @@ func (a *App) classicMigrate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
-	if err := a.DB.Model(&account).
+	if err := a.App.DB.Model(&account).
 		Update(map[string]interface{}{
 			"salt":                 "",
 			"auth_key_hash":        "",
@@ -63,7 +63,7 @@ type PresigninResponse struct {
 	Iteration int `json:"iteration"`
 }
 
-func (a *App) classicPresignin(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicPresignin(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	email := q.Get("email")
 	if email == "" {
@@ -72,7 +72,7 @@ func (a *App) classicPresignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := a.DB.Where("email = ?", email).First(&account)
+	conn := a.App.DB.Where("email = ?", email).First(&account)
 	if !conn.RecordNotFound() && conn.Error != nil {
 		HandleError(w, "getting user", conn.Error, http.StatusInternalServerError)
 		return
@@ -101,7 +101,7 @@ type classicSigninPayload struct {
 	AuthKey string `json:"auth_key"`
 }
 
-func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicSignin(w http.ResponseWriter, r *http.Request) {
 	var params classicSigninPayload
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
@@ -114,7 +114,7 @@ func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := a.DB.Where("email = ?", params.Email).First(&account)
+	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
@@ -132,7 +132,7 @@ func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := operations.CreateSession(a.DB, account.UserID)
+	session, err := operations.CreateSession(a.App.DB, account.UserID)
 	if err != nil {
 		HandleError(w, "creating session", nil, http.StatusBadRequest)
 		return
@@ -156,7 +156,7 @@ func (a *App) classicSignin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *App) classicGetMe(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicGetMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -164,7 +164,7 @@ func (a *App) classicGetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
@@ -214,7 +214,7 @@ type classicSetPasswordPayload struct {
 	Password string
 }
 
-func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -228,7 +228,7 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		HandleError(w, "getting user", nil, http.StatusInternalServerError)
 		return
 	}
@@ -239,7 +239,7 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+	if err := a.App.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
 		http.Error(w, errors.Wrap(err, "updating password").Error(), http.StatusInternalServerError)
 		return
 	}
@@ -247,7 +247,7 @@ func (a *App) classicSetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *App) classicGetNotes(w http.ResponseWriter, r *http.Request) {
+func (a *API) classicGetNotes(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -255,7 +255,7 @@ func (a *App) classicGetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var notes []database.Note
-	if err := a.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
 		HandleError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}

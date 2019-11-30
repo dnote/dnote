@@ -22,7 +22,7 @@ import (
 	"net/http"
 )
 
-func (a *App) checkHealth(w http.ResponseWriter, r *http.Request) {
+func (a *API) checkHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
 }

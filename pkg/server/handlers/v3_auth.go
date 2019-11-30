@@ -80,7 +80,7 @@ type signinPayload struct {
 	Password string `json:"password"`
 }
 
-func (a *App) signin(w http.ResponseWriter, r *http.Request) {
+func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 	var params signinPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
@@ -93,7 +93,7 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := a.DB.Where("email = ?", params.Email).First(&account)
+	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
@@ -110,27 +110,27 @@ func (a *App) signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user database.User
-	err = a.DB.Where("id = ?", account.UserID).First(&user).Error
+	err = a.App.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
 		HandleError(w, "finding user", err, http.StatusInternalServerError)
 		return
 	}
 
-	err = operations.TouchLastLoginAt(user, a.DB)
+	err = operations.TouchLastLoginAt(user, a.App.DB)
 	if err != nil {
 		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(a.DB, w, account.UserID, http.StatusOK)
+	respondWithSession(a.App.DB, w, account.UserID, http.StatusOK)
 }
 
-func (a *App) signoutOptions(w http.ResponseWriter, r *http.Request) {
+func (a *API) signoutOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }
 
-func (a *App) signout(w http.ResponseWriter, r *http.Request) {
+func (a *API) signout(w http.ResponseWriter, r *http.Request) {
 	key, err := getCredential(r)
 	if err != nil {
 		HandleError(w, "getting credential", nil, http.StatusInternalServerError)
@@ -142,7 +142,7 @@ func (a *App) signout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = operations.DeleteSession(a.DB, key)
+	err = operations.DeleteSession(a.App.DB, key)
 	if err != nil {
 		HandleError(w, "deleting session", nil, http.StatusInternalServerError)
 		return
@@ -177,7 +177,7 @@ func parseRegisterPaylaod(r *http.Request) (registerPayload, error) {
 	return ret, nil
 }
 
-func (a *App) register(w http.ResponseWriter, r *http.Request) {
+func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	params, err := parseRegisterPaylaod(r)
 	if err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
@@ -189,7 +189,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var count int
-	if err := a.DB.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
+	if err := a.App.DB.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
 		HandleError(w, "checking duplicate user", err, http.StatusInternalServerError)
 		return
 	}
@@ -198,18 +198,18 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := operations.CreateUser(a.DB, params.Email, params.Password)
+	user, err := operations.CreateUser(a.App.DB, params.Email, params.Password)
 	if err != nil {
 		HandleError(w, "creating user", err, http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(a.DB, w, user.ID, http.StatusCreated)
+	respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
 
 	// send welcome email
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
+	body, err := a.App.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
 		AccountEmail: params.Email,
-		WebURL:       a.WebURL,
+		WebURL:       a.App.WebURL,
 	})
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -217,7 +217,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		}).ErrorWrap(err, "executing welcome email template")
 		return
 	}
-	if err := a.EmailBackend.Queue("Welcome to Dnote!", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
+	if err := a.App.EmailBackend.Queue("Welcome to Dnote!", "sung@getdnote.com", []string{params.Email}, "text/plain", body); err != nil {
 		log.WithFields(log.Fields{
 			"email": params.Email,
 		}).ErrorWrap(err, "queueing email")
