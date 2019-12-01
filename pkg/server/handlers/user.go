@@ -26,6 +26,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -172,7 +173,13 @@ func (a *API) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.App.SendVerificationEmail(account.Email.String, tokenValue); err != nil {
-		HandleError(w, errors.Wrap(err, "sending verification email").Error(), nil, http.StatusInternalServerError)
+		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
+			respondInvalidSMTPConfig(w)
+		} else {
+			HandleError(w, errors.Wrap(err, "sending verification email").Error(), nil, http.StatusInternalServerError)
+		}
+
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)

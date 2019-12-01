@@ -10,6 +10,9 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+// ErrSMTPNotConfigured is an error indicating that SMTP is not configured
+var ErrSMTPNotConfigured = errors.New("SMTP is not configured")
+
 // Backend is an interface for sending emails.
 type Backend interface {
 	Queue(subject, from string, to []string, contentType, body string) error
@@ -27,18 +30,35 @@ type dialerParams struct {
 	Password string
 }
 
+func validateSMTPConfig() bool {
+	port := os.Getenv("SmtpPort")
+	host := os.Getenv("SmtpHost")
+	username := os.Getenv("SmtpUsername")
+	password := os.Getenv("SmtpPassword")
+
+	return port != "" && host != "" && username != "" && password != ""
+}
+
 func getSMTPParams() (*dialerParams, error) {
-	portStr := os.Getenv("SmtpPort")
-	port, err := strconv.Atoi(portStr)
+	portEnv := os.Getenv("SmtpPort")
+	hostEnv := os.Getenv("SmtpHost")
+	usernameEnv := os.Getenv("SmtpUsername")
+	passwordEnv := os.Getenv("SmtpPassword")
+
+	if portEnv != "" && hostEnv != "" && usernameEnv != "" && passwordEnv != "" {
+		return nil, ErrSMTPNotConfigured
+	}
+
+	port, err := strconv.Atoi(portEnv)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsing SMTP port")
 	}
 
 	p := &dialerParams{
-		Host:     os.Getenv("SmtpHost"),
+		Host:     hostEnv,
 		Port:     port,
-		Username: os.Getenv("SmtpUsername"),
-		Password: os.Getenv("SmtpPassword"),
+		Username: usernameEnv,
+		Password: passwordEnv,
 	}
 
 	return p, nil

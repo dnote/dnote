@@ -155,3 +155,7 @@ func respondUnauthorized(w http.ResponseWriter) {
 func RespondNotFound(w http.ResponseWriter) {
 	http.Error(w, "not found", http.StatusNotFound)
 }
+
+func respondInvalidSMTPConfig(w http.ResponseWriter) {
+	http.Error(w, "SMTP is not configured", http.StatusInternalServerError)
+}

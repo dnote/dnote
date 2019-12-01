@@ -26,6 +26,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -128,7 +129,13 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.App.SendPasswordResetEmail(account.Email.String, resetToken); err != nil {
-		HandleError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
+		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
+			respondInvalidSMTPConfig(w)
+		} else {
+			HandleError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
+		}
+
+		return
 	}
 }
 
