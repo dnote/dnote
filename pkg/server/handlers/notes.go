@@ -28,7 +28,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -109,7 +108,7 @@ func (a *API) getNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	note, ok, err := operations.GetNote(a.App.DB, noteUUID, user)
+	note, ok, err := a.App.GetNote(noteUUID, user)
 	if !ok {
 		RespondNotFound(w)
 		return

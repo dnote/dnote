@@ -16,10 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
-	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
@@ -27,8 +26,8 @@ import (
 )
 
 // CreateBook creates a book with the next usn and updates the user's max_usn
-func CreateBook(db *gorm.DB, user database.User, clock clock.Clock, name string) (database.Book, error) {
-	tx := db.Begin()
+func (a *App) CreateBook(user database.User, name string) (database.Book, error) {
+	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
@@ -45,7 +44,7 @@ func CreateBook(db *gorm.DB, user database.User, clock clock.Clock, name string)
 		UUID:      uuid,
 		UserID:    user.ID,
 		Label:     name,
-		AddedOn:   clock.Now().UnixNano(),
+		AddedOn:   a.Clock.Now().UnixNano(),
 		USN:       nextUSN,
 		Encrypted: false,
 	}
@@ -60,7 +59,7 @@ func CreateBook(db *gorm.DB, user database.User, clock clock.Clock, name string)
 }
 
 // DeleteBook marks a book deleted with the next usn and updates the user's max_usn
-func DeleteBook(tx *gorm.DB, user database.User, book database.Book) (database.Book, error) {
+func (a *App) DeleteBook(tx *gorm.DB, user database.User, book database.Book) (database.Book, error) {
 	if user.ID != book.UserID {
 		return book, errors.New("Not allowed")
 	}
@@ -83,7 +82,7 @@ func DeleteBook(tx *gorm.DB, user database.User, book database.Book) (database.B
 }
 
 // UpdateBook updaates the book, the usn and the user's max_usn
-func UpdateBook(tx *gorm.DB, c clock.Clock, user database.User, book database.Book, label *string) (database.Book, error) {
+func (a *App) UpdateBook(tx *gorm.DB, user database.User, book database.Book, label *string) (database.Book, error) {
 	if user.ID != book.UserID {
 		return book, errors.New("Not allowed")
 	}
@@ -98,7 +97,7 @@ func UpdateBook(tx *gorm.DB, c clock.Clock, user database.User, book database.Bo
 	}
 
 	book.USN = nextUSN
-	book.EditedOn = c.Now().UnixNano()
+	book.EditedOn = a.Clock.Now().UnixNano()
 	book.Deleted = false
 	// TODO: remove after all users have been migrated
 	book.Encrypted = false

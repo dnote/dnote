@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/jinzhu/gorm"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/pkg/errors"
 )
 
@@ -37,14 +37,15 @@ var templateNoteMetaTags = "note_metatags"
 
 // AppShell represents the application in HTML
 type AppShell struct {
-	T *template.Template
+	App *app.App
+	T   *template.Template
 }
 
 // ErrNotFound is an error indicating that a resource was not found
 var ErrNotFound = errors.New("not found")
 
 // NewAppShell parses the templates for the application
-func NewAppShell(content []byte) (AppShell, error) {
+func NewAppShell(a *app.App, content []byte) (AppShell, error) {
 	t, err := template.New(templateIndex).Parse(string(content))
 	if err != nil {
 		return AppShell{}, errors.Wrap(err, "parsing the index template")
@@ -55,12 +56,12 @@ func NewAppShell(content []byte) (AppShell, error) {
 		return AppShell{}, errors.Wrap(err, "parsing the note meta tags template")
 	}
 
-	return AppShell{t}, nil
+	return AppShell{App: a, T: t}, nil
 }
 
 // Execute executes the index template
-func (a AppShell) Execute(r *http.Request, db *gorm.DB) ([]byte, error) {
-	data, err := a.getData(db, r)
+func (a AppShell) Execute(r *http.Request) ([]byte, error) {
+	data, err := a.getData(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "getting data")
 	}
@@ -73,11 +74,11 @@ func (a AppShell) Execute(r *http.Request, db *gorm.DB) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (a AppShell) getData(db *gorm.DB, r *http.Request) (tmplData, error) {
+func (a AppShell) getData(r *http.Request) (tmplData, error) {
 	path := r.URL.Path
 
 	if ok, params := matchPath(path, notesPathRegex); ok {
-		p, err := a.newNotePage(db, r, params[0])
+		p, err := a.newNotePage(r, params[0])
 		if err != nil {
 			return tmplData{}, errors.Wrap(err, "instantiating note page")
 		}

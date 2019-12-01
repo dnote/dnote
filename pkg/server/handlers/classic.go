@@ -26,7 +26,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -132,7 +131,7 @@ func (a *API) classicSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := operations.CreateSession(a.App.DB, account.UserID)
+	session, err := a.App.CreateSession(account.UserID)
 	if err != nil {
 		HandleError(w, "creating session", nil, http.StatusBadRequest)
 		return

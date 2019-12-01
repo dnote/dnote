@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -77,7 +77,7 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	tx := a.App.DB.Begin()
 
-	note, err = operations.UpdateNote(tx, user, a.App.Clock, note, &operations.UpdateNoteParams{
+	note, err = a.App.UpdateNote(tx, user, note, &app.UpdateNoteParams{
 		BookUUID: params.BookUUID,
 		Content:  params.Content,
 		Public:   params.Public,
@@ -132,7 +132,7 @@ func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 
 	tx := a.App.DB.Begin()
 
-	n, err := operations.DeleteNote(tx, user, note)
+	n, err := a.App.DeleteNote(tx, user, note)
 	if err != nil {
 		tx.Rollback()
 		HandleError(w, "deleting note", err, http.StatusInternalServerError)
@@ -195,7 +195,7 @@ func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := operations.CreateNote(a.App.DB, user, a.App.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
+	note, err := a.App.CreateNote(user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
 	if err != nil {
 		HandleError(w, "creating note", err, http.StatusInternalServerError)
 		return

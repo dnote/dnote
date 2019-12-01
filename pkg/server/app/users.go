@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
 	"time"
@@ -47,7 +47,7 @@ func generateVerificationCode() (string, error) {
 }
 
 // TouchLastLoginAt updates the last login timestamp
-func TouchLastLoginAt(user database.User, tx *gorm.DB) error {
+func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
 	t := time.Now()
 	if err := tx.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
@@ -104,8 +104,8 @@ func createDefaultRepetitionRule(user database.User, tx *gorm.DB) error {
 }
 
 // CreateUser creates a user
-func CreateUser(db *gorm.DB, email, password string) (database.User, error) {
-	tx := db.Begin()
+func (a *App) CreateUser(email, password string) (database.User, error) {
+	tx := a.DB.Begin()
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -140,7 +140,7 @@ func CreateUser(db *gorm.DB, email, password string) (database.User, error) {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating default repetition rule")
 	}
-	if err := TouchLastLoginAt(user, tx); err != nil {
+	if err := a.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "updating last login")
 	}

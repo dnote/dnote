@@ -86,7 +86,7 @@ func (a *API) updateProfile(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
+	a.respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
 }
 
 type updateEmailPayload struct {

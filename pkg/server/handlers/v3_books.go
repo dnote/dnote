@@ -26,7 +26,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -83,7 +82,7 @@ func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := operations.CreateBook(a.App.DB, user, a.App.Clock, params.Name)
+	book, err := a.App.CreateBook(user, params.Name)
 	if err != nil {
 		HandleError(w, "inserting book", err, http.StatusInternalServerError)
 	}
@@ -201,7 +200,7 @@ func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err = operations.UpdateBook(tx, a.App.Clock, user, book, params.Name)
+	book, err = a.App.UpdateBook(tx, user, book, params.Name)
 	if err != nil {
 		tx.Rollback()
 		HandleError(w, "updating a book", err, http.StatusInternalServerError)
@@ -246,12 +245,12 @@ func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, note := range notes {
-		if _, err := operations.DeleteNote(tx, user, note); err != nil {
+		if _, err := a.App.DeleteNote(tx, user, note); err != nil {
 			HandleError(w, "deleting a note", err, http.StatusInternalServerError)
 			return
 		}
 	}
-	b, err := operations.DeleteBook(tx, user, book)
+	b, err := a.App.DeleteBook(tx, user, book)
 	if err != nil {
 		HandleError(w, "deleting book", err, http.StatusInternalServerError)
 		return

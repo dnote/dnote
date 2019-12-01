@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/jinzhu/gorm"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/pkg/errors"
 )
 
@@ -16,13 +16,17 @@ func TestInit(t *testing.T) {
 	mockServiceWorkerJs := []byte("function() {}")
 	mockStaticFileSystem := http.Dir(".")
 
+	testApp := app.NewTest(nil)
+	testAppNoDB := app.NewTest(nil)
+	testAppNoDB.DB = nil
+
 	testCases := []struct {
 		ctx         Context
 		expectedErr error
 	}{
 		{
 			ctx: Context{
-				DB:               &gorm.DB{},
+				App:              &testApp,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -32,17 +36,17 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               nil,
+				App:              &testAppNoDB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
 				StaticFileSystem: mockStaticFileSystem,
 			},
-			expectedErr: ErrEmptyDB,
+			expectedErr: app.ErrEmptyDB,
 		},
 		{
 			ctx: Context{
-				DB:               &gorm.DB{},
+				App:              &testApp,
 				IndexHTML:        nil,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -52,7 +56,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               &gorm.DB{},
+				App:              &testApp,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        nil,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -62,7 +66,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               &gorm.DB{},
+				App:              &testApp,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  nil,
@@ -72,7 +76,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               &gorm.DB{},
+				App:              &testApp,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,

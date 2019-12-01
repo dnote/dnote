@@ -26,9 +26,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -237,14 +237,14 @@ func (a *API) updateSub(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	if payload.Op == updateSubOpCancel {
-		err = operations.CancelSub(payload.StripeSubcriptionID, user)
+		err = a.App.CancelSub(payload.StripeSubcriptionID, user)
 	} else if payload.Op == updateSubOpReactivate {
-		err = operations.ReactivateSub(payload.StripeSubcriptionID, user)
+		err = a.App.ReactivateSub(payload.StripeSubcriptionID, user)
 	}
 
 	if err != nil {
 		var statusCode int
-		if err == operations.ErrSubscriptionActive {
+		if err == app.ErrSubscriptionActive {
 			statusCode = http.StatusBadRequest
 		} else {
 			statusCode = http.StatusInternalServerError
@@ -530,7 +530,7 @@ func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			operations.MarkUnsubscribed(a.App.DB, subscription.Customer.ID)
+			a.App.MarkUnsubscribed(subscription.Customer.ID)
 		}
 	default:
 		{

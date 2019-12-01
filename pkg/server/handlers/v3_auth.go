@@ -25,7 +25,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -115,13 +114,13 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = operations.TouchLastLoginAt(user, a.App.DB)
+	err = a.App.TouchLastLoginAt(user, a.App.DB)
 	if err != nil {
 		http.Error(w, errors.Wrap(err, "touching login timestamp").Error(), http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(a.App.DB, w, account.UserID, http.StatusOK)
+	a.respondWithSession(a.App.DB, w, account.UserID, http.StatusOK)
 }
 
 func (a *API) signoutOptions(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +140,7 @@ func (a *API) signout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = operations.DeleteSession(a.App.DB, key)
+	err = a.App.DeleteSession(key)
 	if err != nil {
 		HandleError(w, "deleting session", nil, http.StatusInternalServerError)
 		return
@@ -197,13 +196,13 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := operations.CreateUser(a.App.DB, params.Email, params.Password)
+	user, err := a.App.CreateUser(params.Email, params.Password)
 	if err != nil {
 		HandleError(w, "creating user", err, http.StatusInternalServerError)
 		return
 	}
 
-	respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
+	a.respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
 
 	if err := a.App.SendWelcomeEmail(params.Email); err != nil {
 		log.ErrorWrap(err, "sending welcome email")
@@ -212,8 +211,8 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.
 // It sets the HTTP-Only cookie for browser clients and also sends a JSON response for non-browser clients.
-func respondWithSession(db *gorm.DB, w http.ResponseWriter, userID int, statusCode int) {
-	session, err := operations.CreateSession(db, userID)
+func (a *API) respondWithSession(db *gorm.DB, w http.ResponseWriter, userID int, statusCode int) {
+	session, err := a.App.CreateSession(userID)
 	if err != nil {
 		HandleError(w, "creating session", nil, http.StatusBadRequest)
 		return

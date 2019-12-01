@@ -27,7 +27,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -75,7 +74,7 @@ func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx := a.App.DB.Begin()
-	if err := operations.TouchLastLoginAt(user, tx); err != nil {
+	if err := a.App.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
 		// In case of an error, gracefully continue to avoid disturbing the service
 		log.Println("error touching last_login_at", err.Error())
@@ -208,5 +207,5 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
+	a.respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
 }

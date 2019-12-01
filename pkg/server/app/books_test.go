@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
 	"fmt"
@@ -62,9 +62,11 @@ func TestCreateBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			c := clock.NewMock()
+			a := NewTest(&App{
+				Clock: clock.NewMock(),
+			})
 
-			book, err := CreateBook(testutils.DB, user, c, tc.label)
+			book, err := a.CreateBook(user, tc.label)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "creating book"))
 			}
@@ -130,7 +132,8 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Save(&book), fmt.Sprintf("preparing book for test case %d", idx))
 
 			tx := testutils.DB.Begin()
-			ret, err := DeleteBook(tx, user, book)
+			a := NewTest(nil)
+			ret, err := a.DeleteBook(tx, user, book)
 			if err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "deleting book"))
@@ -203,14 +206,16 @@ func TestUpdateBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			c := clock.NewMock()
-
 			b := database.Book{UserID: user.ID, Deleted: false, Label: tc.expectedLabel}
 			testutils.MustExec(t, testutils.DB.Save(&b), fmt.Sprintf("preparing book for test case %d", idx))
 
-			tx := testutils.DB.Begin()
+			c := clock.NewMock()
+			a := NewTest(&App{
+				Clock: c,
+			})
 
-			book, err := UpdateBook(tx, c, user, b, tc.payloadLabel)
+			tx := testutils.DB.Begin()
+			book, err := a.UpdateBook(tx, user, b, tc.payloadLabel)
 			if err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "updating book"))
