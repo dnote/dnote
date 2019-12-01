@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -202,8 +203,8 @@ func TestAuthMiddleware(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	app := App{DB: testutils.DB}
-	server := httptest.NewServer(app.auth(handler, nil))
+	api := API{App: &app.App{DB: testutils.DB}}
+	server := httptest.NewServer(api.auth(handler, nil))
 	defer server.Close()
 
 	t.Run("with header", func(t *testing.T) {
@@ -310,8 +311,8 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	app := App{DB: testutils.DB}
-	server := httptest.NewServer(app.auth(handler, &AuthMiddlewareParams{
+	api := API{App: &app.App{DB: testutils.DB}}
+	server := httptest.NewServer(api.auth(handler, &AuthMiddlewareParams{
 		ProOnly: true,
 	}))
 	defer server.Close()
@@ -403,8 +404,8 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	app := App{DB: testutils.DB}
-	server := httptest.NewServer(app.tokenAuth(handler, database.TokenTypeEmailPreference, nil))
+	api := API{App: &app.App{DB: testutils.DB}}
+	server := httptest.NewServer(api.tokenAuth(handler, database.TokenTypeEmailPreference, nil))
 	defer server.Close()
 
 	t.Run("with token", func(t *testing.T) {
@@ -533,8 +534,8 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	app := App{DB: testutils.DB}
-	server := httptest.NewServer(app.tokenAuth(handler, database.TokenTypeEmailPreference, &AuthMiddlewareParams{
+	api := API{App: &app.App{DB: testutils.DB}}
+	server := httptest.NewServer(api.tokenAuth(handler, database.TokenTypeEmailPreference, &AuthMiddlewareParams{
 		ProOnly: true,
 	}))
 	defer server.Close()
@@ -671,7 +672,7 @@ func TestNotSupportedVersions(t *testing.T) {
 	}
 
 	// setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 		DB:    &gorm.DB{},
 		Clock: clock.NewMock(),
 	})
@@ -691,11 +692,11 @@ func TestNotSupportedVersions(t *testing.T) {
 
 func TestNewRouter_AppValidate(t *testing.T) {
 	testCases := []struct {
-		app         App
+		app         app.App
 		expectedErr error
 	}{
 		{
-			app: App{
+			app: app.App{
 				DB:               &gorm.DB{},
 				Clock:            clock.NewMock(),
 				StripeAPIBackend: nil,
@@ -706,7 +707,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			app: App{
+			app: app.App{
 				DB:               nil,
 				Clock:            clock.NewMock(),
 				StripeAPIBackend: nil,
@@ -714,10 +715,10 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
 				WebURL:           "http://mock.url",
 			},
-			expectedErr: ErrEmptyDB,
+			expectedErr: app.ErrEmptyDB,
 		},
 		{
-			app: App{
+			app: app.App{
 				DB:               &gorm.DB{},
 				Clock:            nil,
 				StripeAPIBackend: nil,
@@ -725,10 +726,10 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
 				WebURL:           "http://mock.url",
 			},
-			expectedErr: ErrEmptyClock,
+			expectedErr: app.ErrEmptyClock,
 		},
 		{
-			app: App{
+			app: app.App{
 				DB:               &gorm.DB{},
 				Clock:            clock.NewMock(),
 				StripeAPIBackend: nil,
@@ -736,10 +737,10 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
 				WebURL:           "http://mock.url",
 			},
-			expectedErr: ErrEmptyEmailTemplates,
+			expectedErr: app.ErrEmptyEmailTemplates,
 		},
 		{
-			app: App{
+			app: app.App{
 				DB:               &gorm.DB{},
 				Clock:            clock.NewMock(),
 				StripeAPIBackend: nil,
@@ -747,10 +748,10 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				EmailBackend:     nil,
 				WebURL:           "http://mock.url",
 			},
-			expectedErr: ErrEmptyEmailBackend,
+			expectedErr: app.ErrEmptyEmailBackend,
 		},
 		{
-			app: App{
+			app: app.App{
 				DB:               &gorm.DB{},
 				Clock:            clock.NewMock(),
 				StripeAPIBackend: nil,
@@ -758,13 +759,14 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
 				WebURL:           "",
 			},
-			expectedErr: ErrEmptyWebURL,
+			expectedErr: app.ErrEmptyWebURL,
 		},
 	}
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			_, err := NewRouter(&tc.app)
+			api := API{App: &tc.app}
+			_, err := api.NewRouter()
 
 			assert.Equal(t, errors.Cause(err), tc.expectedErr, "error mismatch")
 		})

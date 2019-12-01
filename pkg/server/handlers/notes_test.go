@@ -28,6 +28,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -59,7 +60,7 @@ func TestGetNotes(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 
 		Clock: clock.NewMock(),
 	})
@@ -171,7 +172,7 @@ func TestGetNote(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 
 		Clock: clock.NewMock(),
 	})

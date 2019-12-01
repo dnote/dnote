@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -34,12 +35,12 @@ import (
 )
 
 func TestGetRepetitionRule(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
+	server := MustNewServer(t, &app.App{
+
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -109,12 +110,12 @@ func TestGetRepetitionRule(t *testing.T) {
 }
 
 func TestGetRepetitionRules(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
+	server := MustNewServer(t, &app.App{
+
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -215,7 +216,7 @@ func TestGetRepetitionRules(t *testing.T) {
 
 func TestCreateRepetitionRules(t *testing.T) {
 	t.Run("all books", func(t *testing.T) {
-		
+
 		defer testutils.ClearData()
 
 		// Setup
@@ -223,8 +224,8 @@ func TestCreateRepetitionRules(t *testing.T) {
 		t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 		c.SetNow(t0)
 
-		server := MustNewServer(t, &App{
-			
+		server := MustNewServer(t, &app.App{
+
 			Clock: c,
 		})
 		defer server.Close()
@@ -274,7 +275,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 	}
 	for _, tc := range bookDomainTestCases {
 		t.Run(tc, func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
@@ -282,8 +283,8 @@ func TestCreateRepetitionRules(t *testing.T) {
 			t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 			c.SetNow(t0)
 
-			server := MustNewServer(t, &App{
-				
+			server := MustNewServer(t, &app.App{
+
 				Clock: c,
 			})
 			defer server.Close()
@@ -339,15 +340,15 @@ func TestCreateRepetitionRules(t *testing.T) {
 }
 
 func TestUpdateRepetitionRules(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
 	c := clock.NewMock()
 	t0 := time.Date(2009, time.November, 1, 2, 3, 4, 5, time.UTC)
 	c.SetNow(t0)
-	server := MustNewServer(t, &App{
-		
+	server := MustNewServer(t, &app.App{
+
 		Clock: c,
 	})
 	defer server.Close()
@@ -417,12 +418,12 @@ func TestUpdateRepetitionRules(t *testing.T) {
 }
 
 func TestDeleteRepetitionRules(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
+	server := MustNewServer(t, &app.App{
+
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -543,12 +544,12 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case - create %d", idx), func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
-			server := MustNewServer(t, &App{
-				
+			server := MustNewServer(t, &app.App{
+
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -568,7 +569,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("test case %d - update", idx), func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
@@ -592,8 +593,8 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book1")
 
-			server := MustNewServer(t, &App{
-				
+			server := MustNewServer(t, &app.App{
+
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()
@@ -628,12 +629,12 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
-			server := MustNewServer(t, &App{
-				
+			server := MustNewServer(t, &app.App{
+
 				Clock: clock.NewMock(),
 			})
 			defer server.Close()

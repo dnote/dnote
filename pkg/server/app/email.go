@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/pkg/errors"
@@ -10,6 +11,7 @@ import (
 
 var defaultSender = "sung@getdnote.com"
 
+// getSenderEmail returns the sender email
 func (a *App) getSenderEmail(want string) (string, error) {
 	if !a.SelfHosted {
 		return want, nil
@@ -23,14 +25,29 @@ func (a *App) getSenderEmail(want string) (string, error) {
 	return addr, nil
 }
 
+func getDomainFromURL(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", errors.Wrap(err, "parsing url")
+	}
+
+	host := u.Hostname()
+	parts := strings.Split(host, ".")
+	if len(parts) < 2 {
+		return host, nil
+	}
+	domain := parts[len(parts)-2] + "." + parts[len(parts)-1]
+
+	return domain, nil
+}
+
 func (a *App) getNoreplySender() (string, error) {
-	u, err := url.Parse(a.WebURL)
+	domain, err := getDomainFromURL(a.WebURL)
 	if err != nil {
 		return "", errors.Wrap(err, "parsing web url")
 	}
 
-	hostname := u.Hostname()
-	addr := fmt.Sprintf("noreply@%s", hostname)
+	addr := fmt.Sprintf("noreply@%s", domain)
 	return addr, nil
 }
 

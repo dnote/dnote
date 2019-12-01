@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -81,7 +82,7 @@ func TestRegister(t *testing.T) {
 
 			// Setup
 			emailBackend := testutils.MockEmailbackendImplementation{}
-			server := MustNewServer(t, &App{
+			server := MustNewServer(t, &app.App{
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
 			})
@@ -129,7 +130,7 @@ func TestRegisterMissingParams(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -157,7 +158,7 @@ func TestRegisterMissingParams(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -185,7 +186,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 
 		Clock: clock.NewMock(),
 	})
@@ -223,7 +224,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -254,7 +255,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -286,7 +287,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -318,7 +319,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -362,7 +363,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -414,7 +415,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})

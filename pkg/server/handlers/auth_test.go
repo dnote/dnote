@@ -25,6 +25,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"golang.org/x/crypto/bcrypt"
@@ -35,7 +36,7 @@ func TestGetMe(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -62,7 +63,7 @@ func TestCreateResetToken(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -96,7 +97,7 @@ func TestCreateResetToken(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -126,7 +127,7 @@ func TestResetPassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -173,7 +174,7 @@ func TestResetPassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -212,7 +213,7 @@ func TestResetPassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -250,7 +251,7 @@ func TestResetPassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -299,7 +300,7 @@ func TestResetPassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})

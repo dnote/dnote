@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -40,8 +41,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -69,7 +69,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -96,7 +96,7 @@ func TestUpdatePassword(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -125,7 +125,7 @@ func TestCreateVerificationToken(t *testing.T) {
 
 		// Setup
 		emailBackend := testutils.MockEmailbackendImplementation{}
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 			Clock:        clock.NewMock(),
 			EmailBackend: &emailBackend,
 		})
@@ -160,7 +160,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -194,8 +194,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -236,8 +235,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -281,8 +279,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -324,8 +321,7 @@ func TestVerifyEmail(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -370,8 +366,7 @@ func TestUpdateEmail(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -405,8 +400,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
-
+		server := MustNewServer(t, &app.App{
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -432,7 +426,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -473,7 +467,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -508,7 +502,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -545,7 +539,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -582,7 +576,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -609,7 +603,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -646,7 +640,7 @@ func TestGetEmailPreference(t *testing.T) {
 
 	defer testutils.ClearData()
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 
 		Clock: clock.NewMock(),
 	})
