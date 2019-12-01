@@ -10,24 +10,24 @@ import (
 
 func TestSendVerificationEmail(t *testing.T) {
 	testCases := []struct {
-		selfHosted     bool
+		onPremise     bool
 		expectedSender string
 	}{
 		{
-			selfHosted:     false,
+			onPremise:     false,
 			expectedSender: "sung@getdnote.com",
 		},
 		{
-			selfHosted:     true,
+			onPremise:     true,
 			expectedSender: "noreply@example.com",
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.selfHosted), func(t *testing.T) {
+		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
-				SelfHosted:   tc.selfHosted,
+				OnPremise:   tc.onPremise,
 				WebURL:       "http://example.com",
 				EmailBackend: &emailBackend,
 			})
@@ -45,24 +45,24 @@ func TestSendVerificationEmail(t *testing.T) {
 
 func TestSendWelcomeEmail(t *testing.T) {
 	testCases := []struct {
-		selfHosted     bool
+		onPremise     bool
 		expectedSender string
 	}{
 		{
-			selfHosted:     false,
+			onPremise:     false,
 			expectedSender: "sung@getdnote.com",
 		},
 		{
-			selfHosted:     true,
+			onPremise:     true,
 			expectedSender: "noreply@example.com",
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.selfHosted), func(t *testing.T) {
+		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
-				SelfHosted:   tc.selfHosted,
+				OnPremise:   tc.onPremise,
 				WebURL:       "http://example.com",
 				EmailBackend: &emailBackend,
 			})
@@ -80,24 +80,24 @@ func TestSendWelcomeEmail(t *testing.T) {
 
 func TestSendPasswordResetEmail(t *testing.T) {
 	testCases := []struct {
-		selfHosted     bool
+		onPremise     bool
 		expectedSender string
 	}{
 		{
-			selfHosted:     false,
+			onPremise:     false,
 			expectedSender: "sung@getdnote.com",
 		},
 		{
-			selfHosted:     true,
+			onPremise:     true,
 			expectedSender: "noreply@example.com",
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.selfHosted), func(t *testing.T) {
+		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
-				SelfHosted:   tc.selfHosted,
+				OnPremise:   tc.onPremise,
 				WebURL:       "http://example.com",
 				EmailBackend: &emailBackend,
 			})

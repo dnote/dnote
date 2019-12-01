@@ -37,7 +37,7 @@ func NewTest(appParams *App) App {
 		EmailTemplates:   mailer.NewTemplates(&emailTmplDir),
 		EmailBackend:     &testutils.MockEmailbackendImplementation{},
 		StripeAPIBackend: nil,
-		SelfHosted:       false,
+		OnPremise:       false,
 	}
 
 	// Allow to override with appParams
@@ -53,8 +53,8 @@ func NewTest(appParams *App) App {
 	if appParams != nil && appParams.StripeAPIBackend != nil {
 		a.StripeAPIBackend = appParams.StripeAPIBackend
 	}
-	if appParams != nil && appParams.SelfHosted {
-		a.SelfHosted = appParams.SelfHosted
+	if appParams != nil && appParams.OnPremise {
+		a.OnPremise = appParams.OnPremise
 	}
 	if appParams != nil && appParams.WebURL != "" {
 		a.WebURL = appParams.WebURL

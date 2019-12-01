@@ -113,7 +113,17 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 		return database.User{}, errors.Wrap(err, "hashing password")
 	}
 
-	user := database.User{}
+	// Grant all privileges if self-hosting
+	var pro bool
+	if a.OnPremise {
+		pro = true
+	} else {
+		pro = false
+	}
+
+	user := database.User{
+		Cloud: pro,
+	}
 	if err = tx.Save(&user).Error; err != nil {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "saving user")

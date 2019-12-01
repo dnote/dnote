@@ -29,7 +29,7 @@ type App struct {
 	EmailTemplates   mailer.Templates
 	EmailBackend     mailer.Backend
 	WebURL           string
-	SelfHosted       bool
+	OnPremise       bool
 }
 
 // Validate validates the app configuration

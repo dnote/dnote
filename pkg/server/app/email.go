@@ -13,7 +13,7 @@ var defaultSender = "sung@getdnote.com"
 
 // getSenderEmail returns the sender email
 func (a *App) getSenderEmail(want string) (string, error) {
-	if !a.SelfHosted {
+	if !a.OnPremise {
 		return want, nil
 	}
 
