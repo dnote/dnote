@@ -637,7 +637,6 @@ func TestUpdateEmailPreference(t *testing.T) {
 }
 
 func TestGetEmailPreference(t *testing.T) {
-
 	defer testutils.ClearData()
 	// Setup
 	server := MustNewServer(t, &app.App{
