@@ -56,9 +56,10 @@ agpl="/* Copyright (C) 2019 Monomax Software Pty Ltd
  */"
 
 dir=$(dirname "${BASH_SOURCE[0]}")
-pkgPath="$dir/pkg"
-serverPath="$dir/pkg/server"
-browserPath="$dir/browser"
+basedir="$dir/.."
+pkgPath="$basedir/pkg"
+serverPath="$basedir/pkg/server"
+browserPath="$basedir/browser"
 
 gplFiles=$(find "$pkgPath" "$browserPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "$serverPath/*")
 
@@ -67,8 +68,8 @@ for file in $gplFiles; do
   add_notice "$file" "$gpl"
 done
 
-webPath="$dir/web"
-jslibPath="$dir/jslib/src"
+webPath="$basedir/web"
+jslibPath="$basedir/jslib/src"
 agplFiles=$(find "$serverPath" "$webPath" "$jslibPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css" \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
 
 for file in $agplFiles; do
