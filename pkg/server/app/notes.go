@@ -16,10 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
-	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/permissions"
@@ -29,8 +28,8 @@ import (
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
 // It returns the created note.
-func CreateNote(db *gorm.DB, user database.User, clock clock.Clock, bookUUID, content string, addedOn *int64, editedOn *int64, public bool) (database.Note, error) {
-	tx := db.Begin()
+func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool) (database.Note, error) {
+	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
@@ -40,7 +39,7 @@ func CreateNote(db *gorm.DB, user database.User, clock clock.Clock, bookUUID, co
 
 	var noteAddedOn int64
 	if addedOn == nil {
-		noteAddedOn = clock.Now().UnixNano()
+		noteAddedOn = a.Clock.Now().UnixNano()
 	} else {
 		noteAddedOn = *addedOn
 	}
@@ -113,7 +112,7 @@ func (r UpdateNoteParams) GetPublic() bool {
 }
 
 // UpdateNote creates a note with the next usn and updates the user's max_usn
-func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note database.Note, p *UpdateNoteParams) (database.Note, error) {
+func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p *UpdateNoteParams) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
@@ -130,7 +129,7 @@ func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note databas
 	}
 
 	note.USN = nextUSN
-	note.EditedOn = clock.Now().UnixNano()
+	note.EditedOn = a.Clock.Now().UnixNano()
 	note.Deleted = false
 	// TODO: remove after all users are migrated
 	note.Encrypted = false
@@ -143,7 +142,7 @@ func UpdateNote(tx *gorm.DB, user database.User, clock clock.Clock, note databas
 }
 
 // DeleteNote marks a note deleted with the next usn and updates the user's max_usn
-func DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.Note, error) {
+func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
@@ -162,13 +161,13 @@ func DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.N
 }
 
 // GetNote retrieves a note for the given user
-func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool, error) {
+func (a *App) GetNote(uuid string, user database.User) (database.Note, bool, error) {
 	zeroNote := database.Note{}
 	if !helpers.ValidateUUID(uuid) {
 		return zeroNote, false, nil
 	}
 
-	conn := db.Where("notes.uuid = ? AND deleted = ?", uuid, false)
+	conn := a.DB.Where("notes.uuid = ? AND deleted = ?", uuid, false)
 	conn = database.PreloadNote(conn)
 
 	var note database.Note

@@ -16,13 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/pkg/errors"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/sub"
 )
@@ -32,7 +31,7 @@ import (
 var ErrSubscriptionActive = errors.New("The subscription is currently active")
 
 // CancelSub cancels the subscription of the given user
-func CancelSub(subscriptionID string, user database.User) error {
+func (a *App) CancelSub(subscriptionID string, user database.User) error {
 	updateParams := &stripe.SubscriptionParams{
 		CancelAtPeriodEnd: stripe.Bool(true),
 	}
@@ -46,7 +45,7 @@ func CancelSub(subscriptionID string, user database.User) error {
 }
 
 // ReactivateSub reactivates the subscription of the given user
-func ReactivateSub(subscriptionID string, user database.User) error {
+func (a *App) ReactivateSub(subscriptionID string, user database.User) error {
 	s, err := sub.Get(subscriptionID, nil)
 	if err != nil {
 		return errors.Wrap(err, "fetching subscription")
@@ -67,13 +66,13 @@ func ReactivateSub(subscriptionID string, user database.User) error {
 }
 
 // MarkUnsubscribed marks the user unsubscribed
-func MarkUnsubscribed(db *gorm.DB, stripeCustomerID string) error {
+func (a *App) MarkUnsubscribed(stripeCustomerID string) error {
 	var user database.User
-	if err := db.Where("stripe_customer_id = ?", stripeCustomerID).First(&user).Error; err != nil {
+	if err := a.DB.Where("stripe_customer_id = ?", stripeCustomerID).First(&user).Error; err != nil {
 		return errors.Wrap(err, "finding user")
 	}
 
-	if err := db.Model(&user).Update("cloud", false).Error; err != nil {
+	if err := a.DB.Model(&user).Update("cloud", false).Error; err != nil {
 		return errors.Wrap(err, "updating user")
 	}
 

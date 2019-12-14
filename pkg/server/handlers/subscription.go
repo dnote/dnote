@@ -26,9 +26,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -125,7 +125,7 @@ type createSubPayload struct {
 }
 
 // createSub creates a subscription for a the current user
-func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -138,7 +138,7 @@ func (a *App) createSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -214,7 +214,7 @@ func validateUpdateSubPayload(p updateSubPayload) error {
 	return nil
 }
 
-func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -237,14 +237,14 @@ func (a *App) updateSub(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	if payload.Op == updateSubOpCancel {
-		err = operations.CancelSub(payload.StripeSubcriptionID, user)
+		err = a.App.CancelSub(payload.StripeSubcriptionID, user)
 	} else if payload.Op == updateSubOpReactivate {
-		err = operations.ReactivateSub(payload.StripeSubcriptionID, user)
+		err = a.App.ReactivateSub(payload.StripeSubcriptionID, user)
 	}
 
 	if err != nil {
 		var statusCode int
-		if err == operations.ErrSubscriptionActive {
+		if err == app.ErrSubscriptionActive {
 			statusCode = http.StatusBadRequest
 		} else {
 			statusCode = http.StatusInternalServerError
@@ -285,7 +285,7 @@ func respondWithEmptySub(w http.ResponseWriter) {
 	}
 }
 
-func (a *App) getSub(w http.ResponseWriter, r *http.Request) {
+func (a *API) getSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -413,7 +413,7 @@ func validateUpdateStripeSourcePayload(p updateStripeSourcePayload) error {
 	return nil
 }
 
-func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -430,7 +430,7 @@ func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	if err := tx.Model(&user).
 		Update(map[string]interface{}{
@@ -469,7 +469,7 @@ func (a *App) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
+func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -507,7 +507,7 @@ func (a *App) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, resp)
 }
 
-func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
+func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		HandleError(w, "reading body", err, http.StatusServiceUnavailable)
@@ -530,7 +530,7 @@ func (a *App) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			operations.MarkUnsubscribed(a.DB, subscription.Customer.ID)
+			a.App.MarkUnsubscribed(subscription.Customer.ID)
 		}
 	default:
 		{

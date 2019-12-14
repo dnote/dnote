@@ -16,25 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package web
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"os"
+	"testing"
+
+	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-// incrementUserUSN increment the given user's max_usn by 1
-// and returns the new, incremented max_usn
-func incrementUserUSN(tx *gorm.DB, userID int) (int, error) {
-	if err := tx.Table("users").Where("id = ?", userID).Update("max_usn", gorm.Expr("max_usn + 1")).Error; err != nil {
-		return 0, errors.Wrap(err, "incrementing user max_usn")
-	}
+func TestMain(m *testing.M) {
+	testutils.InitTestDB()
 
-	var user database.User
-	if err := tx.Select("max_usn").Where("id = ?", userID).First(&user).Error; err != nil {
-		return 0, errors.Wrap(err, "getting the updated user max_usn")
-	}
+	code := m.Run()
+	testutils.ClearData()
 
-	return user.MaxUSN, nil
+	os.Exit(code)
 }

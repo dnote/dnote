@@ -30,7 +30,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (a *App) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
+func (a *API) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -46,7 +46,7 @@ func (a *App) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var repetitionRule database.RepetitionRule
-	if err := a.DB.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").Find(&repetitionRule).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").Find(&repetitionRule).Error; err != nil {
 		HandleError(w, "getting repetition rules", err, http.StatusInternalServerError)
 		return
 	}
@@ -55,7 +55,7 @@ func (a *App) getRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, resp)
 }
 
-func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
+func (a *API) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -63,7 +63,7 @@ func (a *App) getRepetitionRules(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var repetitionRules []database.RepetitionRule
-	if err := a.DB.Where("user_id = ?", user.ID).Preload("Books").Order("last_active DESC").Find(&repetitionRules).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ?", user.ID).Preload("Books").Order("last_active DESC").Find(&repetitionRules).Error; err != nil {
 		HandleError(w, "getting repetition rules", err, http.StatusInternalServerError)
 		return
 	}
@@ -273,7 +273,7 @@ func calcNextActive(now time.Time, p calcNextActiveParams) int64 {
 	return t0 + p.Frequency
 }
 
-func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
+func (a *API) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -287,12 +287,12 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var books []database.Book
-	if err := a.DB.Where("user_id = ? AND uuid IN (?)", user.ID, params.GetBookUUIDs()).Find(&books).Error; err != nil {
+	if err := a.App.DB.Where("user_id = ? AND uuid IN (?)", user.ID, params.GetBookUUIDs()).Find(&books).Error; err != nil {
 		HandleError(w, "finding books", nil, http.StatusInternalServerError)
 		return
 	}
 
-	nextActive := calcNextActive(a.Clock.Now(), calcNextActiveParams{
+	nextActive := calcNextActive(a.App.Clock.Now(), calcNextActiveParams{
 		Hour:      params.GetHour(),
 		Minute:    params.GetMinute(),
 		Frequency: params.GetFrequency(),
@@ -310,7 +310,7 @@ func (a *App) createRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		NoteCount:  params.GetNoteCount(),
 		Enabled:    params.GetEnabled(),
 	}
-	if err := a.DB.Create(&record).Error; err != nil {
+	if err := a.App.DB.Create(&record).Error; err != nil {
 		HandleError(w, "creating a repetition rule", err, http.StatusInternalServerError)
 		return
 	}
@@ -333,7 +333,7 @@ func parseUpdateDigestParams(r *http.Request) (repetitionRuleParams, error) {
 	return ret, nil
 }
 
-func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
+func (a *API) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -344,7 +344,7 @@ func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	repetitionRuleUUID := vars["repetitionRuleUUID"]
 
 	var rule database.RepetitionRule
-	conn := a.DB.Where("uuid = ? AND user_id = ?", repetitionRuleUUID, user.ID).First(&rule)
+	conn := a.App.DB.Where("uuid = ? AND user_id = ?", repetitionRuleUUID, user.ID).First(&rule)
 
 	if conn.RecordNotFound() {
 		http.Error(w, "Not found", http.StatusNotFound)
@@ -354,14 +354,14 @@ func (a *App) deleteRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.DB.Exec("DELETE from repetition_rules WHERE uuid = ?", rule.UUID).Error; err != nil {
+	if err := a.App.DB.Exec("DELETE from repetition_rules WHERE uuid = ?", rule.UUID).Error; err != nil {
 		HandleError(w, "deleting the repetition rule", err, http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
+func (a *API) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -377,7 +377,7 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
 	var repetitionRule database.RepetitionRule
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, repetitionRuleUUID).Preload("Books").First(&repetitionRule).Error; err != nil {
@@ -393,7 +393,7 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		repetitionRule.Enabled = enabled
 
 		if enabled && !repetitionRule.Enabled {
-			repetitionRule.NextActive = calcNextActive(a.Clock.Now(), calcNextActiveParams{
+			repetitionRule.NextActive = calcNextActive(a.App.Clock.Now(), calcNextActiveParams{
 				Hour:      repetitionRule.Hour,
 				Minute:    repetitionRule.Minute,
 				Frequency: repetitionRule.Frequency,
@@ -412,7 +412,7 @@ func (a *App) updateRepetitionRule(w http.ResponseWriter, r *http.Request) {
 		frequency := params.GetFrequency()
 
 		repetitionRule.Frequency = frequency
-		repetitionRule.NextActive = calcNextActive(a.Clock.Now(), calcNextActiveParams{
+		repetitionRule.NextActive = calcNextActive(a.App.Clock.Now(), calcNextActiveParams{
 			Hour:      repetitionRule.Hour,
 			Minute:    repetitionRule.Minute,
 			Frequency: frequency,

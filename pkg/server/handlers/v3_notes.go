@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -47,7 +47,7 @@ func validateUpdateNotePayload(p updateNotePayload) bool {
 }
 
 // UpdateNote updates note
-func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
+func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
@@ -70,14 +70,14 @@ func (a *App) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var note database.Note
-	if err := a.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
+	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
-	note, err = operations.UpdateNote(tx, user, a.Clock, note, &operations.UpdateNoteParams{
+	note, err = a.App.UpdateNote(tx, user, note, &app.UpdateNoteParams{
 		BookUUID: params.BookUUID,
 		Content:  params.Content,
 		Public:   params.Public,
@@ -114,7 +114,7 @@ type deleteNoteResp struct {
 }
 
 // DeleteNote removes note
-func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
+func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
@@ -125,14 +125,14 @@ func (a *App) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var note database.Note
-	if err := a.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
+	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
-	tx := a.DB.Begin()
+	tx := a.App.DB.Begin()
 
-	n, err := operations.DeleteNote(tx, user, note)
+	n, err := a.App.DeleteNote(tx, user, note)
 	if err != nil {
 		tx.Rollback()
 		HandleError(w, "deleting note", err, http.StatusInternalServerError)
@@ -169,7 +169,7 @@ type CreateNoteResp struct {
 }
 
 // CreateNote creates a note
-func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
+func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
@@ -190,12 +190,12 @@ func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var book database.Book
-	if err := a.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
+	if err := a.App.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
 		HandleError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
-	note, err := operations.CreateNote(a.DB, user, a.Clock, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
+	note, err := a.App.CreateNote(user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false)
 	if err != nil {
 		HandleError(w, "creating note", err, http.StatusInternalServerError)
 		return
@@ -212,7 +212,7 @@ func (a *App) CreateNote(w http.ResponseWriter, r *http.Request) {
 }
 
 // NotesOptions is a handler for OPTIONS endpoint for notes
-func (a *App) NotesOptions(w http.ResponseWriter, r *http.Request) {
+func (a *API) NotesOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }

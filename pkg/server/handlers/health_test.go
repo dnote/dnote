@@ -24,13 +24,14 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/jinzhu/gorm"
 )
 
 func TestCheckHealth(t *testing.T) {
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 		DB:    &gorm.DB{},
 		Clock: clock.NewMock(),
 	})

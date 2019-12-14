@@ -24,14 +24,17 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
 func TestAppShellExecute(t *testing.T) {
+	testApp := app.NewTest(nil)
+
 	t.Run("home", func(t *testing.T) {
-		a, err := NewAppShell([]byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
+		a, err := NewAppShell(&testApp, []byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}
@@ -41,7 +44,7 @@ func TestAppShellExecute(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "preparing request"))
 		}
 
-		b, err := a.Execute(r, testutils.DB)
+		b, err := a.Execute(r)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
@@ -66,7 +69,7 @@ func TestAppShellExecute(t *testing.T) {
 		}
 		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing note")
 
-		a, err := NewAppShell([]byte("{{ .MetaTags }}"))
+		a, err := NewAppShell(&testApp, []byte("{{ .MetaTags }}"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}
@@ -77,7 +80,7 @@ func TestAppShellExecute(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "preparing request"))
 		}
 
-		b, err := a.Execute(r, testutils.DB)
+		b, err := a.Execute(r)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}

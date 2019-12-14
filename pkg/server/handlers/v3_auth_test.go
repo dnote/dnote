@@ -27,6 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -58,20 +59,35 @@ func assertSessionResp(t *testing.T, res *http.Response) {
 
 func TestRegister(t *testing.T) {
 	testCases := []struct {
-		email    string
-		password string
+		email       string
+		password    string
+		onPremise   bool
+		expectedPro bool
 	}{
 		{
-			email:    "alice@example.com",
-			password: "pass1234",
+			email:       "alice@example.com",
+			password:    "pass1234",
+			onPremise:   false,
+			expectedPro: false,
 		},
 		{
-			email:    "bob@example.com",
-			password: "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
+			email:       "bob@example.com",
+			password:    "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
+			onPremise:   false,
+			expectedPro: false,
 		},
 		{
-			email:    "chuck@example.com",
-			password: "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			email:       "chuck@example.com",
+			password:    "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			onPremise:   false,
+			expectedPro: false,
+		},
+		// on premise
+		{
+			email:       "dan@example.com",
+			password:    "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			onPremise:   true,
+			expectedPro: true,
 		},
 	}
 
@@ -81,9 +97,10 @@ func TestRegister(t *testing.T) {
 
 			// Setup
 			emailBackend := testutils.MockEmailbackendImplementation{}
-			server := MustNewServer(t, &App{
+			server := MustNewServer(t, &app.App{
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
+				OnPremise:    tc.onPremise,
 			})
 			defer server.Close()
 
@@ -105,7 +122,7 @@ func TestRegister(t *testing.T) {
 
 			var user database.User
 			testutils.MustExec(t, testutils.DB.Where("id = ?", account.UserID).First(&user), "finding user")
-			assert.Equal(t, user.Cloud, false, "Cloud mismatch")
+			assert.Equal(t, user.Cloud, tc.expectedPro, "Cloud mismatch")
 			assert.Equal(t, user.StripeCustomerID, "", "StripeCustomerID mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
@@ -125,11 +142,10 @@ func TestRegister(t *testing.T) {
 
 func TestRegisterMissingParams(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -157,7 +173,7 @@ func TestRegisterMissingParams(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -185,7 +201,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
+	server := MustNewServer(t, &app.App{
 
 		Clock: clock.NewMock(),
 	})
@@ -219,11 +235,10 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 
 func TestSignIn(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -250,11 +265,10 @@ func TestSignIn(t *testing.T) {
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -286,7 +300,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -318,7 +332,7 @@ func TestSignIn(t *testing.T) {
 		defer testutils.ClearData()
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -362,7 +376,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})
@@ -414,7 +428,7 @@ func TestSignout(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
 
 		// Setup
-		server := MustNewServer(t, &App{
+		server := MustNewServer(t, &app.App{
 
 			Clock: clock.NewMock(),
 		})

@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
 	"fmt"
@@ -28,43 +28,39 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestIncremenetUserUSN(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	testCases := []struct {
-		maxUSN         int
-		expectedMaxUSN int
+		onPremise  bool
+		expectedPro bool
 	}{
 		{
-			maxUSN:         1,
-			expectedMaxUSN: 2,
+			onPremise:  true,
+			expectedPro: true,
 		},
 		{
-			maxUSN:         1988,
-			expectedMaxUSN: 1989,
+			onPremise:  false,
+			expectedPro: false,
 		},
 	}
 
-	// set up
-	for idx, tc := range testCases {
-		func() {
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("self hosting %t", tc.onPremise), func(t *testing.T) {
 			defer testutils.ClearData()
 
-			user := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
-
-			// execute
-			tx := testutils.DB.Begin()
-			nextUSN, err := incrementUserUSN(tx, user.ID)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "incrementing the user usn"))
+			a := NewTest(&App{
+				OnPremise: tc.onPremise,
+			})
+			if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
+				t.Fatal(errors.Wrap(err, "executing"))
 			}
-			tx.Commit()
 
-			// test
+			var userCount int
 			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+			testutils.MustExec(t, testutils.DB.First(&userRecord), "finding user")
 
-			assert.Equal(t, userRecord.MaxUSN, tc.expectedMaxUSN, fmt.Sprintf("user max_usn mismatch for case %d", idx))
-			assert.Equal(t, nextUSN, tc.expectedMaxUSN, fmt.Sprintf("next_usn mismatch for case %d", idx))
-		}()
+			assert.Equal(t, userCount, 1, "book count mismatch")
+			assert.Equal(t, userRecord.Cloud, tc.expectedPro, "user pro mismatch")
+		})
 	}
 }

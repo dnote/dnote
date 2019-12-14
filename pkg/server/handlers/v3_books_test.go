@@ -26,6 +26,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -33,13 +34,13 @@ import (
 )
 
 func TestGetBooks(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+	server := MustNewServer(t, &app.App{
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -113,13 +114,13 @@ Clock: clock.NewMock(),
 }
 
 func TestGetBooksByName(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+	server := MustNewServer(t, &app.App{
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -199,13 +200,13 @@ func TestDeleteBook(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
-			server := MustNewServer(t, &App{
-				
-Clock: clock.NewMock(),
+			server := MustNewServer(t, &app.App{
+
+				Clock: clock.NewMock(),
 			})
 			defer server.Close()
 
@@ -350,13 +351,13 @@ Clock: clock.NewMock(),
 }
 
 func TestCreateBook(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+	server := MustNewServer(t, &app.App{
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -410,13 +411,13 @@ Clock: clock.NewMock(),
 }
 
 func TestCreateBookDuplicate(t *testing.T) {
-	
+
 	defer testutils.ClearData()
 
 	// Setup
-	server := MustNewServer(t, &App{
-		
-Clock: clock.NewMock(),
+	server := MustNewServer(t, &app.App{
+
+		Clock: clock.NewMock(),
 	})
 	defer server.Close()
 
@@ -490,13 +491,13 @@ func TestUpdateBook(t *testing.T) {
 
 	for idx, tc := range testCases {
 		func() {
-			
+
 			defer testutils.ClearData()
 
 			// Setup
-			server := MustNewServer(t, &App{
-				
-Clock: clock.NewMock(),
+			server := MustNewServer(t, &app.App{
+
+				Clock: clock.NewMock(),
 			})
 			defer server.Close()
 

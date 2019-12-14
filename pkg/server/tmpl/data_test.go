@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/pkg/errors"
 )
@@ -38,7 +39,8 @@ func TestDefaultPageGetData(t *testing.T) {
 }
 
 func TestNotePageGetData(t *testing.T) {
-	a, err := NewAppShell(nil)
+	testApp := app.NewTest(nil)
+	a, err := NewAppShell(&testApp, nil)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "preparing app shell"))
 	}

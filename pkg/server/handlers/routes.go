@@ -26,28 +26,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
-)
-
-var (
-	// ErrEmptyDB is an error for missing database connection in the app configuration
-	ErrEmptyDB = errors.New("No database connection was provided")
-	// ErrEmptyClock is an error for missing clock in the app configuration
-	ErrEmptyClock = errors.New("No clock was provided")
-	// ErrEmptyWebURL is an error for missing WebURL content in the app configuration
-	ErrEmptyWebURL = errors.New("No WebURL was provided")
-	// ErrEmptyEmailTemplates is an error for missing EmailTemplates content in the app configuration
-	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
-	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
-	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 )
 
 // Route represents a single route
@@ -199,9 +185,9 @@ type AuthMiddlewareParams struct {
 	ProOnly bool
 }
 
-func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
+func (a *API) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok, err := AuthWithSession(a.DB, r, p)
+		user, ok, err := AuthWithSession(a.App.DB, r, p)
 		if !ok {
 			respondUnauthorized(w)
 			return
@@ -223,9 +209,9 @@ func (a *App) auth(next http.HandlerFunc, p *AuthMiddlewareParams) http.HandlerF
 	})
 }
 
-func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewareParams) http.HandlerFunc {
+func (a *API) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewareParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, token, ok, err := authWithToken(a.DB, r, tokenType, p)
+		user, token, ok, err := authWithToken(a.App.DB, r, tokenType, p)
 		if err != nil {
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with token")
@@ -237,7 +223,7 @@ func (a *App) tokenAuth(next http.HandlerFunc, tokenType string, p *AuthMiddlewa
 			ctx = context.WithValue(ctx, helpers.KeyToken, token)
 		} else {
 			// If token-based auth fails, fall back to session-based auth
-			user, ok, err = AuthWithSession(a.DB, r, p)
+			user, ok, err = AuthWithSession(a.App.DB, r, p)
 			if err != nil {
 				HandleError(w, "authenticating with session", err, http.StatusInternalServerError)
 				return
@@ -316,54 +302,29 @@ func applyMiddleware(h http.HandlerFunc, rateLimit bool) http.Handler {
 	return ret
 }
 
-// App is an application configuration
-type App struct {
-	DB               *gorm.DB
-	Clock            clock.Clock
-	StripeAPIBackend stripe.Backend
-	EmailTemplates   mailer.Templates
-	EmailBackend     mailer.Backend
-	WebURL           string
-}
-
-func (a *App) validate() error {
-	if a.WebURL == "" {
-		return ErrEmptyWebURL
-	}
-	if a.Clock == nil {
-		return ErrEmptyClock
-	}
-	if a.EmailTemplates == nil {
-		return ErrEmptyEmailTemplates
-	}
-	if a.EmailBackend == nil {
-		return ErrEmptyEmailBackend
-	}
-	if a.DB == nil {
-		return ErrEmptyDB
-	}
-
-	return nil
+// API is a web API configuration
+type API struct {
+	App *app.App
 }
 
 // init sets up the application based on the configuration
-func (a *App) init() error {
-	if err := a.validate(); err != nil {
+func (a *API) init() error {
+	if err := a.App.Validate(); err != nil {
 		return errors.Wrap(err, "validating the app parameters")
 	}
 
 	stripe.Key = os.Getenv("StripeSecretKey")
 
-	if a.StripeAPIBackend != nil {
-		stripe.SetBackend(stripe.APIBackend, a.StripeAPIBackend)
+	if a.App.StripeAPIBackend != nil {
+		stripe.SetBackend(stripe.APIBackend, a.App.StripeAPIBackend)
 	}
 
 	return nil
 }
 
 // NewRouter creates and returns a new router
-func NewRouter(app *App) (*mux.Router, error) {
-	if err := app.init(); err != nil {
+func (a *API) NewRouter() (*mux.Router, error) {
+	if err := a.init(); err != nil {
 		return nil, errors.Wrap(err, "initializing app")
 	}
 
@@ -371,61 +332,61 @@ func NewRouter(app *App) (*mux.Router, error) {
 
 	var routes = []Route{
 		// internal
-		{"GET", "/health", app.checkHealth, false},
-		{"GET", "/me", app.auth(app.getMe, nil), true},
-		{"POST", "/verification-token", app.auth(app.createVerificationToken, nil), true},
-		{"PATCH", "/verify-email", app.verifyEmail, true},
-		{"POST", "/reset-token", app.createResetToken, true},
-		{"PATCH", "/reset-password", app.resetPassword, true},
-		{"PATCH", "/account/profile", app.auth(app.updateProfile, nil), true},
-		{"PATCH", "/account/password", app.auth(app.updatePassword, nil), true},
-		{"GET", "/account/email-preference", app.tokenAuth(app.getEmailPreference, database.TokenTypeEmailPreference, nil), true},
-		{"PATCH", "/account/email-preference", app.tokenAuth(app.updateEmailPreference, database.TokenTypeEmailPreference, nil), true},
-		{"POST", "/subscriptions", app.auth(app.createSub, nil), true},
-		{"PATCH", "/subscriptions", app.auth(app.updateSub, nil), true},
-		{"POST", "/webhooks/stripe", app.stripeWebhook, true},
-		{"GET", "/subscriptions", app.auth(app.getSub, nil), true},
-		{"GET", "/stripe_source", app.auth(app.getStripeSource, nil), true},
-		{"PATCH", "/stripe_source", app.auth(app.updateStripeSource, nil), true},
-		{"GET", "/notes", app.auth(app.getNotes, nil), false},
-		{"GET", "/notes/{noteUUID}", app.getNote, true},
-		{"GET", "/calendar", app.auth(app.getCalendar, nil), true},
-		{"GET", "/repetition_rules", app.auth(app.getRepetitionRules, nil), true},
-		{"GET", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"POST", "/repetition_rules", app.auth(app.createRepetitionRule, &proOnly), true},
-		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", app.tokenAuth(app.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", app.auth(app.deleteRepetitionRule, &proOnly), true},
+		{"GET", "/health", a.checkHealth, false},
+		{"GET", "/me", a.auth(a.getMe, nil), true},
+		{"POST", "/verification-token", a.auth(a.createVerificationToken, nil), true},
+		{"PATCH", "/verify-email", a.verifyEmail, true},
+		{"POST", "/reset-token", a.createResetToken, true},
+		{"PATCH", "/reset-password", a.resetPassword, true},
+		{"PATCH", "/account/profile", a.auth(a.updateProfile, nil), true},
+		{"PATCH", "/account/password", a.auth(a.updatePassword, nil), true},
+		{"GET", "/account/email-preference", a.tokenAuth(a.getEmailPreference, database.TokenTypeEmailPreference, nil), true},
+		{"PATCH", "/account/email-preference", a.tokenAuth(a.updateEmailPreference, database.TokenTypeEmailPreference, nil), true},
+		{"POST", "/subscriptions", a.auth(a.createSub, nil), true},
+		{"PATCH", "/subscriptions", a.auth(a.updateSub, nil), true},
+		{"POST", "/webhooks/stripe", a.stripeWebhook, true},
+		{"GET", "/subscriptions", a.auth(a.getSub, nil), true},
+		{"GET", "/stripe_source", a.auth(a.getStripeSource, nil), true},
+		{"PATCH", "/stripe_source", a.auth(a.updateStripeSource, nil), true},
+		{"GET", "/notes", a.auth(a.getNotes, nil), false},
+		{"GET", "/notes/{noteUUID}", a.getNote, true},
+		{"GET", "/calendar", a.auth(a.getCalendar, nil), true},
+		{"GET", "/repetition_rules", a.auth(a.getRepetitionRules, nil), true},
+		{"GET", "/repetition_rules/{repetitionRuleUUID}", a.tokenAuth(a.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
+		{"POST", "/repetition_rules", a.auth(a.createRepetitionRule, &proOnly), true},
+		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", a.tokenAuth(a.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
+		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", a.auth(a.deleteRepetitionRule, &proOnly), true},
 
 		// migration of classic users
-		{"GET", "/classic/presignin", cors(app.classicPresignin), true},
-		{"POST", "/classic/signin", cors(app.classicSignin), true},
-		{"PATCH", "/classic/migrate", app.auth(app.classicMigrate, &proOnly), true},
-		{"GET", "/classic/notes", app.auth(app.classicGetNotes, nil), true},
-		{"PATCH", "/classic/set-password", app.auth(app.classicSetPassword, nil), true},
+		{"GET", "/classic/presignin", cors(a.classicPresignin), true},
+		{"POST", "/classic/signin", cors(a.classicSignin), true},
+		{"PATCH", "/classic/migrate", a.auth(a.classicMigrate, &proOnly), true},
+		{"GET", "/classic/notes", a.auth(a.classicGetNotes, nil), true},
+		{"PATCH", "/classic/set-password", a.auth(a.classicSetPassword, nil), true},
 
 		// v3
-		{"GET", "/v3/sync/fragment", cors(app.auth(app.GetSyncFragment, nil)), false},
-		{"GET", "/v3/sync/state", cors(app.auth(app.GetSyncState, nil)), false},
-		{"OPTIONS", "/v3/books", cors(app.BooksOptions), true},
-		{"GET", "/v3/books", cors(app.auth(app.GetBooks, nil)), true},
-		{"GET", "/v3/books/{bookUUID}", cors(app.auth(app.GetBook, nil)), true},
-		{"POST", "/v3/books", cors(app.auth(app.CreateBook, nil)), false},
-		{"PATCH", "/v3/books/{bookUUID}", cors(app.auth(app.UpdateBook, nil)), false},
-		{"DELETE", "/v3/books/{bookUUID}", cors(app.auth(app.DeleteBook, nil)), false},
-		{"OPTIONS", "/v3/notes", cors(app.NotesOptions), true},
-		{"POST", "/v3/notes", cors(app.auth(app.CreateNote, nil)), false},
-		{"PATCH", "/v3/notes/{noteUUID}", app.auth(app.UpdateNote, nil), false},
-		{"DELETE", "/v3/notes/{noteUUID}", app.auth(app.DeleteNote, nil), false},
-		{"POST", "/v3/signin", cors(app.signin), true},
-		{"OPTIONS", "/v3/signout", cors(app.signoutOptions), true},
-		{"POST", "/v3/signout", cors(app.signout), true},
-		{"POST", "/v3/register", app.register, true},
+		{"GET", "/v3/sync/fragment", cors(a.auth(a.GetSyncFragment, nil)), false},
+		{"GET", "/v3/sync/state", cors(a.auth(a.GetSyncState, nil)), false},
+		{"OPTIONS", "/v3/books", cors(a.BooksOptions), true},
+		{"GET", "/v3/books", cors(a.auth(a.GetBooks, nil)), true},
+		{"GET", "/v3/books/{bookUUID}", cors(a.auth(a.GetBook, nil)), true},
+		{"POST", "/v3/books", cors(a.auth(a.CreateBook, nil)), false},
+		{"PATCH", "/v3/books/{bookUUID}", cors(a.auth(a.UpdateBook, nil)), false},
+		{"DELETE", "/v3/books/{bookUUID}", cors(a.auth(a.DeleteBook, nil)), false},
+		{"OPTIONS", "/v3/notes", cors(a.NotesOptions), true},
+		{"POST", "/v3/notes", cors(a.auth(a.CreateNote, nil)), false},
+		{"PATCH", "/v3/notes/{noteUUID}", a.auth(a.UpdateNote, nil), false},
+		{"DELETE", "/v3/notes/{noteUUID}", a.auth(a.DeleteNote, nil), false},
+		{"POST", "/v3/signin", cors(a.signin), true},
+		{"OPTIONS", "/v3/signout", cors(a.signoutOptions), true},
+		{"POST", "/v3/signout", cors(a.signout), true},
+		{"POST", "/v3/register", a.register, true},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.PathPrefix("/v1").Handler(applyMiddleware(app.notSupported, true))
-	router.PathPrefix("/v2").Handler(applyMiddleware(app.notSupported, true))
+	router.PathPrefix("/v1").Handler(applyMiddleware(a.notSupported, true))
+	router.PathPrefix("/v2").Handler(applyMiddleware(a.notSupported, true))
 
 	for _, route := range routes {
 		handler := route.HandlerFunc

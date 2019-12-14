@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package app
 
 import (
 	"fmt"
@@ -85,8 +85,12 @@ func TestCreateNote(t *testing.T) {
 			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
 			testutils.MustExec(t, testutils.DB.Save(&b1), fmt.Sprintf("preparing b1 for test case %d", idx))
 
+			a := NewTest(&App{
+				Clock: mockClock,
+			})
+
 			tx := testutils.DB.Begin()
-			if _, err := CreateNote(testutils.DB, user, mockClock, b1.UUID, "note content", tc.addedOn, tc.editedOn, false); err != nil {
+			if _, err := a.CreateNote(user, b1.UUID, "note content", tc.addedOn, tc.editedOn, false); err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "deleting note"))
 			}
@@ -151,8 +155,12 @@ func TestUpdateNote(t *testing.T) {
 			content := "updated test content"
 			public := true
 
+			a := NewTest(&App{
+				Clock: c,
+			})
+
 			tx := testutils.DB.Begin()
-			if _, err := UpdateNote(tx, user, c, note, &UpdateNoteParams{
+			if _, err := a.UpdateNote(tx, user, note, &UpdateNoteParams{
 				Content: &content,
 				Public:  &public,
 			}); err != nil {
@@ -218,8 +226,10 @@ func TestDeleteNote(t *testing.T) {
 			note := database.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
 			testutils.MustExec(t, testutils.DB.Save(&note), fmt.Sprintf("preparing note for test case %d", idx))
 
+			a := NewTest(nil)
+
 			tx := testutils.DB.Begin()
-			ret, err := DeleteNote(tx, user, note)
+			ret, err := a.DeleteNote(tx, user, note)
 			if err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "deleting note"))
@@ -330,7 +340,8 @@ func TestGetNote(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			note, ok, err := GetNote(testutils.DB, tc.note.UUID, tc.user)
+			a := NewTest(nil)
+			note, ok, err := a.GetNote(tc.note.UUID, tc.user)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
@@ -363,8 +374,9 @@ func TestGetNote_nonexistent(t *testing.T) {
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
 
+	a := NewTest(nil)
 	nonexistentUUID := "4fd19336-671e-4ff3-8f22-662b80e22edd"
-	note, ok, err := GetNote(testutils.DB, nonexistentUUID, user)
+	note, ok, err := a.GetNote(nonexistentUUID, user)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "executing"))
 	}

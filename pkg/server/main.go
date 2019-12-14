@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
@@ -55,11 +56,11 @@ func mustFind(box *packr.Box, path string) []byte {
 	return b
 }
 
-func initContext(db *gorm.DB) web.Context {
+func initContext(a *app.App) web.Context {
 	staticBox := packr.New("static", "../../web/public/static")
 
 	return web.Context{
-		DB:               db,
+		App:              a,
 		IndexHTML:        mustFind(rootBox, "index.html"),
 		RobotsTxt:        mustFind(rootBox, "robots.txt"),
 		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
@@ -67,13 +68,14 @@ func initContext(db *gorm.DB) web.Context {
 	}
 }
 
-func initServer(app handlers.App) (*http.ServeMux, error) {
-	apiRouter, err := handlers.NewRouter(&app)
+func initServer(a app.App) (*http.ServeMux, error) {
+	api := handlers.API{App: &a}
+	apiRouter, err := api.NewRouter()
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	webCtx := initContext(app.DB)
+	webCtx := initContext(&a)
 	webHandlers, err := web.Init(webCtx)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing web handlers")
@@ -110,10 +112,10 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initApp() handlers.App {
+func initApp() app.App {
 	db := initDB()
 
-	return handlers.App{
+	return app.App{
 		DB:               db,
 		Clock:            clock.New(),
 		StripeAPIBackend: nil,
@@ -123,7 +125,7 @@ func initApp() handlers.App {
 	}
 }
 
-func runJob(a handlers.App) error {
+func runJob(a app.App) error {
 	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.WebURL)
 	if err != nil {
 		return errors.Wrap(err, "getting a job runner")

@@ -16,13 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package handlers
+package app
 
 import (
-	"net/http"
+	"os"
+	"testing"
+
+	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-func (a *API) checkHealth(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
+func TestMain(m *testing.M) {
+	testutils.InitTestDB()
+
+	code := m.Run()
+	testutils.ClearData()
+
+	os.Exit(code)
 }
