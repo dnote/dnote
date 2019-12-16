@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
@@ -34,17 +34,13 @@ func TestInit(t *testing.T) {
 	mockServiceWorkerJs := []byte("function() {}")
 	mockStaticFileSystem := http.Dir(".")
 
-	testApp := app.NewTest(nil)
-	testAppNoDB := app.NewTest(nil)
-	testAppNoDB.DB = nil
-
 	testCases := []struct {
 		ctx         Context
 		expectedErr error
 	}{
 		{
 			ctx: Context{
-				App:              &testApp,
+				DB:               testutils.DB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -54,17 +50,17 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				App:              &testAppNoDB,
+				DB:               nil,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
 				StaticFileSystem: mockStaticFileSystem,
 			},
-			expectedErr: app.ErrEmptyDB,
+			expectedErr: ErrEmptyDatabase,
 		},
 		{
 			ctx: Context{
-				App:              &testApp,
+				DB:               testutils.DB,
 				IndexHTML:        nil,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -74,7 +70,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				App:              &testApp,
+				DB:               testutils.DB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        nil,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -84,7 +80,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				App:              &testApp,
+				DB:               testutils.DB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  nil,
@@ -94,7 +90,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				App:              &testApp,
+				DB:               testutils.DB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
