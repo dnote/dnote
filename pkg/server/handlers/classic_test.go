@@ -75,7 +75,7 @@ func TestClassicPresignin(t *testing.T) {
 			defer server.Close()
 
 			endpoint := fmt.Sprintf("/classic/presignin?email=%s", tc.email)
-			req := testutils.MakeReq(server, "GET", endpoint, "")
+			req := testutils.MakeReq(server.URL, "GET", endpoint, "")
 
 			// Execute
 			res := testutils.HTTPDo(t, req)
@@ -102,7 +102,7 @@ func TestClassicPresignin_MissingParams(t *testing.T) {
 	})
 	defer server.Close()
 
-	req := testutils.MakeReq(server, "GET", "/classic/presignin", "")
+	req := testutils.MakeReq(server.URL, "GET", "/classic/presignin", "")
 
 	// Execute
 	res := testutils.HTTPDo(t, req)
@@ -125,7 +125,7 @@ func TestClassicSignin(t *testing.T) {
 	defer server.Close()
 
 	dat := fmt.Sprintf(`{"email": "%s", "auth_key": "%s"}`, "alice@example.com", "/XCYisXJ6/o+vf6NUEtmrdYzJYPz+T9oAUCtMpOjhzc=")
-	req := testutils.MakeReq(server, "POST", "/classic/signin", dat)
+	req := testutils.MakeReq(server.URL, "POST", "/classic/signin", dat)
 
 	// Execute
 	res := testutils.HTTPDo(t, req)
@@ -223,7 +223,7 @@ func TestClassicSignin_Failure(t *testing.T) {
 			defer server.Close()
 
 			dat := fmt.Sprintf(`{"email": "%s", "auth_key": "%s"}`, tc.email, tc.authKey)
-			req := testutils.MakeReq(server, "POST", "/classic/signin", dat)
+			req := testutils.MakeReq(server.URL, "POST", "/classic/signin", dat)
 
 			// Execute
 			res := testutils.HTTPDo(t, req)

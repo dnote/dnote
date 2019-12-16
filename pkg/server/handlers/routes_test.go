@@ -228,7 +228,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.header, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.Header.Set("Authorization", tc.header)
 
 				// execute
@@ -273,7 +273,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.cookie.Value, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.AddCookie(tc.cookie)
 
 				// execute
@@ -286,7 +286,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("without anything", func(t *testing.T) {
-		req := testutils.MakeReq(server, "GET", "/", "")
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
 
 		// execute
 		res := testutils.HTTPDo(t, req)
@@ -334,7 +334,7 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.header, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.Header.Set("Authorization", tc.header)
 
 				// execute
@@ -371,7 +371,7 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.cookie.Value, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.AddCookie(tc.cookie)
 
 				// execute
@@ -425,7 +425,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.token, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", fmt.Sprintf("/?token=%s", tc.token), "")
+				req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/?token=%s", tc.token), "")
 
 				// execute
 				res := testutils.HTTPDo(t, req)
@@ -453,7 +453,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.header, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.Header.Set("Authorization", tc.header)
 
 				// execute
@@ -490,7 +490,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.cookie.Value, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.AddCookie(tc.cookie)
 
 				// execute
@@ -503,7 +503,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 	})
 
 	t.Run("without anything", func(t *testing.T) {
-		req := testutils.MakeReq(server, "GET", "/", "")
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
 
 		// execute
 		res := testutils.HTTPDo(t, req)
@@ -557,7 +557,7 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.token, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", fmt.Sprintf("/?token=%s", tc.token), "")
+				req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/?token=%s", tc.token), "")
 
 				// execute
 				res := testutils.HTTPDo(t, req)
@@ -585,7 +585,7 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.header, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.Header.Set("Authorization", tc.header)
 
 				// execute
@@ -622,7 +622,7 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.cookie.Value, func(t *testing.T) {
-				req := testutils.MakeReq(server, "GET", "/", "")
+				req := testutils.MakeReq(server.URL, "GET", "/", "")
 				req.AddCookie(tc.cookie)
 
 				// execute
@@ -635,7 +635,7 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 	})
 
 	t.Run("without anything", func(t *testing.T) {
-		req := testutils.MakeReq(server, "GET", "/", "")
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
 
 		// execute
 		res := testutils.HTTPDo(t, req)
@@ -681,7 +681,7 @@ func TestNotSupportedVersions(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
 			// execute
-			req := testutils.MakeReq(server, "GET", tc.path, "")
+			req := testutils.MakeReq(server.URL, "GET", tc.path, "")
 			res := testutils.HTTPDo(t, req)
 
 			// test

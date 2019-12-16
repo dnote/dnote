@@ -53,7 +53,7 @@ func TestCreateNote(t *testing.T) {
 
 	// Execute
 	dat := fmt.Sprintf(`{"book_uuid": "%s", "content": "note content"}`, b1.UUID)
-	req := testutils.MakeReq(server, "POST", "/v3/notes", dat)
+	req := testutils.MakeReq(server.URL, "POST", "/v3/notes", dat)
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -274,7 +274,7 @@ func TestUpdateNote(t *testing.T) {
 
 			// Execute
 			endpoint := fmt.Sprintf("/v3/notes/%s", note.UUID)
-			req := testutils.MakeReq(server, "PATCH", endpoint, tc.payload)
+			req := testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -362,7 +362,7 @@ func TestDeleteNote(t *testing.T) {
 
 			// Execute
 			endpoint := fmt.Sprintf("/v3/notes/%s", note.UUID)
-			req := testutils.MakeReq(server, "DELETE", endpoint, "")
+			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test

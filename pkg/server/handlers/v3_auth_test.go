@@ -105,7 +105,7 @@ func TestRegister(t *testing.T) {
 			defer server.Close()
 
 			dat := fmt.Sprintf(`{"email": "%s", "password": "%s"}`, tc.email, tc.password)
-			req := testutils.MakeReq(server, "POST", "/v3/register", dat)
+			req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
 
 			// Execute
 			res := testutils.HTTPDo(t, req)
@@ -146,13 +146,12 @@ func TestRegisterMissingParams(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		dat := fmt.Sprintf(`{"password": %s}`, "SLMZFM5RmSjA5vfXnG5lPOnrpZSbtmV76cnAcrlr2yU")
-		req := testutils.MakeReq(server, "POST", "/v3/register", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -174,13 +173,12 @@ func TestRegisterMissingParams(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
 
 		dat := fmt.Sprintf(`{"email": "%s"}`, "alice@example.com")
-		req := testutils.MakeReq(server, "POST", "/v3/register", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -202,7 +200,6 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -211,7 +208,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 	dat := `{"email": "alice@example.com", "password": "foobarbaz"}`
-	req := testutils.MakeReq(server, "POST", "/v3/register", dat)
+	req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
 
 	// Execute
 	res := testutils.HTTPDo(t, req)
@@ -248,7 +245,7 @@ func TestSignIn(t *testing.T) {
 		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "alice@example.com", "password": "pass1234"}`
-		req := testutils.MakeReq(server, "POST", "/v3/signin", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -278,7 +275,7 @@ func TestSignIn(t *testing.T) {
 		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "alice@example.com", "password": "wrongpassword1234"}`
-		req := testutils.MakeReq(server, "POST", "/v3/signin", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -310,7 +307,7 @@ func TestSignIn(t *testing.T) {
 		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "bob@example.com", "password": "pass1234"}`
-		req := testutils.MakeReq(server, "POST", "/v3/signin", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -339,7 +336,7 @@ func TestSignIn(t *testing.T) {
 		defer server.Close()
 
 		dat := `{"email": "nonexistent@example.com", "password": "pass1234"}`
-		req := testutils.MakeReq(server, "POST", "/v3/signin", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -383,7 +380,7 @@ func TestSignout(t *testing.T) {
 		defer server.Close()
 
 		// Execute
-		req := testutils.MakeReq(server, "POST", "/v3/signout", "")
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signout", "")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU="))
 		res := testutils.HTTPDo(t, req)
 
@@ -435,7 +432,7 @@ func TestSignout(t *testing.T) {
 		defer server.Close()
 
 		// Execute
-		req := testutils.MakeReq(server, "POST", "/v3/signout", "")
+		req := testutils.MakeReq(server.URL, "POST", "/v3/signout", "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test

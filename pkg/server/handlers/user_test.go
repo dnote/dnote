@@ -51,7 +51,7 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "newpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/account/password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -80,7 +80,7 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Execute
 		dat := `{"old_password": "randompassword", "new_password": "newpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/account/password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
 		// Test
@@ -107,7 +107,7 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "a"}`
-		req := testutils.MakeReq(server, "PATCH", "/account/password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
 		// Test
@@ -135,7 +135,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
 		// Execute
-		req := testutils.MakeReq(server, "POST", "/verification-token", "")
+		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -172,7 +172,7 @@ func TestCreateVerificationToken(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
 
 		// Execute
-		req := testutils.MakeReq(server, "POST", "/verification-token", "")
+		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -209,7 +209,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server, "PATCH", "/verify-email", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
 		res := testutils.HTTPAuthDo(t, req, user)
@@ -253,7 +253,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server, "PATCH", "/verify-email", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
 		res := testutils.HTTPAuthDo(t, req, user)
@@ -296,7 +296,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-31)), "Failed to prepare token created_at")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server, "PATCH", "/verify-email", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
 		res := testutils.HTTPAuthDo(t, req, user)
@@ -339,7 +339,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server, "PATCH", "/verify-email", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
 		res := testutils.HTTPAuthDo(t, req, user)
@@ -378,7 +378,7 @@ func TestUpdateEmail(t *testing.T) {
 
 		// Execute
 		dat := `{"email": "alice-new@example.com"}`
-		req := testutils.MakeReq(server, "PATCH", "/account/profile", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/profile", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
 		// Test
@@ -410,7 +410,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		// Execute
 		dat := `{"digest_weekly": true}`
-		req := testutils.MakeReq(server, "PATCH", "/account/email-preference", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
 		// Test
@@ -444,7 +444,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Execute
 		dat := `{"digest_weekly": true}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server, "PATCH", url, dat)
+		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -484,7 +484,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		dat := `{"digest_weekly": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someNonexistentToken")
-		req := testutils.MakeReq(server, "PATCH", url, dat)
+		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -523,7 +523,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Execute
 		dat := `{"digest_weekly": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server, "PATCH", url, dat)
+		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -558,7 +558,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		dat := `{"digest_weekly": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server, "PATCH", url, dat)
+		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -587,7 +587,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		// Execute
 		dat := `{"digest_weekly": false}`
-		req := testutils.MakeReq(server, "PATCH", "/account/email-preference", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -620,7 +620,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Execute
 		dat := `{"digest_weekly": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server, "PATCH", url, dat)
+		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -649,7 +649,7 @@ func TestGetEmailPreference(t *testing.T) {
 	pref := testutils.SetupEmailPreferenceData(u, true)
 
 	// Execute
-	req := testutils.MakeReq(server, "GET", "/account/email-preference", "")
+	req := testutils.MakeReq(server.URL, "GET", "/account/email-preference", "")
 	res := testutils.HTTPAuthDo(t, req, u)
 
 	// Test

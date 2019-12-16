@@ -122,6 +122,7 @@ func initApp() app.App {
 		EmailTemplates:   mailer.NewTemplates(nil),
 		EmailBackend:     &mailer.SimpleBackendImplementation{},
 		WebURL:           os.Getenv("WebURL"),
+		OnPremise:        true,
 	}
 }
 

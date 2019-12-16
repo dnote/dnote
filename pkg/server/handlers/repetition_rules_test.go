@@ -67,7 +67,7 @@ func TestGetRepetitionRule(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&r1), "preparing rule1")
 
 	// Execute
-	req := testutils.MakeReq(server, "GET", fmt.Sprintf("/repetition_rules/%s", r1.UUID), "")
+	req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/repetition_rules/%s", r1.UUID), "")
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -155,7 +155,7 @@ func TestGetRepetitionRules(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&r2), "preparing rule2")
 
 	// Execute
-	req := testutils.MakeReq(server, "GET", "/repetition_rules", "")
+	req := testutils.MakeReq(server.URL, "GET", "/repetition_rules", "")
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -243,7 +243,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 	"book_uuids": [],
 	"note_count": 20
 }`
-		req := testutils.MakeReq(server, "POST", "/repetition_rules", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/repetition_rules", dat)
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -308,7 +308,7 @@ func TestCreateRepetitionRules(t *testing.T) {
 	"book_uuids": ["%s"],
 	"note_count": 20
 }`, tc, b1.UUID)
-			req := testutils.MakeReq(server, "POST", "/repetition_rules", dat)
+			req := testutils.MakeReq(server.URL, "POST", "/repetition_rules", dat)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -388,7 +388,7 @@ func TestUpdateRepetitionRules(t *testing.T) {
 	"note_count": 30
 }`, b1.UUID)
 	endpoint := fmt.Sprintf("/repetition_rules/%s", r1.UUID)
-	req := testutils.MakeReq(server, "PATCH", endpoint, dat)
+	req := testutils.MakeReq(server.URL, "PATCH", endpoint, dat)
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -458,7 +458,7 @@ func TestDeleteRepetitionRules(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&r2), "preparing r2")
 
 	endpoint := fmt.Sprintf("/repetition_rules/%s", r1.UUID)
-	req := testutils.MakeReq(server, "DELETE", endpoint, "")
+	req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -557,7 +557,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			user := testutils.SetupUserData()
 
 			// Execute
-			req := testutils.MakeReq(server, "POST", "/repetition_rules", tc)
+			req := testutils.MakeReq(server.URL, "POST", "/repetition_rules", tc)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -600,7 +600,7 @@ func TestCreateUpdateRepetitionRules_BadRequest(t *testing.T) {
 			defer server.Close()
 
 			// Execute
-			req := testutils.MakeReq(server, "PATCH", fmt.Sprintf("/repetition_rules/%s", r1.UUID), tc)
+			req := testutils.MakeReq(server.URL, "PATCH", fmt.Sprintf("/repetition_rules/%s", r1.UUID), tc)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -642,7 +642,7 @@ func TestCreateRepetitionRules_BadRequest(t *testing.T) {
 			user := testutils.SetupUserData()
 
 			// Execute
-			req := testutils.MakeReq(server, "POST", "/repetition_rules", tc)
+			req := testutils.MakeReq(server.URL, "POST", "/repetition_rules", tc)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
