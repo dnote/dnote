@@ -161,13 +161,13 @@ func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (d
 }
 
 // GetNote retrieves a note for the given user
-func (a *App) GetNote(uuid string, user database.User) (database.Note, bool, error) {
+func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool, error) {
 	zeroNote := database.Note{}
 	if !helpers.ValidateUUID(uuid) {
 		return zeroNote, false, nil
 	}
 
-	conn := a.DB.Where("notes.uuid = ? AND deleted = ?", uuid, false)
+	conn := db.Where("notes.uuid = ? AND deleted = ?", uuid, false)
 	conn = database.PreloadNote(conn)
 
 	var note database.Note

@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
@@ -108,7 +109,7 @@ func (a *API) getNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	note, ok, err := a.App.GetNote(noteUUID, user)
+	note, ok, err := app.GetNote(a.App.DB, noteUUID, user)
 	if !ok {
 		RespondNotFound(w)
 		return

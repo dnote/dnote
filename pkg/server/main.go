@@ -60,7 +60,7 @@ func initContext(a *app.App) web.Context {
 	staticBox := packr.New("static", "../../web/public/static")
 
 	return web.Context{
-		App:              a,
+		DB:               a.DB,
 		IndexHTML:        mustFind(rootBox, "index.html"),
 		RobotsTxt:        mustFind(rootBox, "robots.txt"),
 		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
