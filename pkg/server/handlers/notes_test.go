@@ -141,7 +141,7 @@ func TestGetNotes(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
 
 	// Execute
-	req := testutils.MakeReq(server, "GET", "/notes?year=2018&month=8", "")
+	req := testutils.MakeReq(server.URL, "GET", "/notes?year=2018&month=8", "")
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -211,7 +211,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("owner accessing private note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", privateNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -232,7 +232,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("owner accessing public note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", publicNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -253,7 +253,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("non-owner accessing public note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", publicNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
@@ -274,7 +274,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("non-owner accessing private note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", privateNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
@@ -291,7 +291,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("guest accessing public note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", publicNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -312,7 +312,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("guest accessing private note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", privateNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -329,7 +329,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("nonexistent", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", "someRandomString")
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -346,7 +346,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("deleted", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", deletedNote.UUID)
-		req := testutils.MakeReq(server, "GET", url, "")
+		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test

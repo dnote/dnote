@@ -45,7 +45,7 @@ func TestGetMe(t *testing.T) {
 	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 	dat := `{"email": "alice@example.com"}`
-	req := testutils.MakeReq(server, "POST", "/reset-token", dat)
+	req := testutils.MakeReq(server.URL, "POST", "/reset-token", dat)
 
 	// Execute
 	res := testutils.HTTPAuthDo(t, req, u)
@@ -73,7 +73,7 @@ func TestCreateResetToken(t *testing.T) {
 		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		dat := `{"email": "alice@example.com"}`
-		req := testutils.MakeReq(server, "POST", "/reset-token", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/reset-token", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -107,7 +107,7 @@ func TestCreateResetToken(t *testing.T) {
 		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		dat := `{"email": "bob@example.com"}`
-		req := testutils.MakeReq(server, "POST", "/reset-token", dat)
+		req := testutils.MakeReq(server.URL, "POST", "/reset-token", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -149,7 +149,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&otherTok), "preparing another token")
 
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "newpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/reset-password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -190,7 +190,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		dat := `{"token": "-ApMnyvpg59uOU5b-Kf5uQ==", "password": "oldpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/reset-password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -230,7 +230,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
 
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "oldpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/reset-password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -271,7 +271,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
 
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "oldpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/reset-password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -317,7 +317,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
 
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "oldpassword"}`
-		req := testutils.MakeReq(server, "PATCH", "/reset-password", dat)
+		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)

@@ -77,7 +77,7 @@ func TestGetBooks(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&b4), "preparing b4")
 
 	// Execute
-	req := testutils.MakeReq(server, "GET", "/v3/books", "")
+	req := testutils.MakeReq(server.URL, "GET", "/v3/books", "")
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -126,7 +126,7 @@ func TestGetBooksByName(t *testing.T) {
 
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
-	req := testutils.MakeReq(server, "GET", "/v3/books?name=js", "")
+	req := testutils.MakeReq(server.URL, "GET", "/v3/books?name=js", "")
 
 	b1 := database.Book{
 		UserID: user.ID,
@@ -284,7 +284,7 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Save(&n5), "preparing a note data")
 
 			endpoint := fmt.Sprintf("/v3/books/%s", b2.UUID)
-			req := testutils.MakeReq(server, "DELETE", endpoint, "")
+			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
 			req.Header.Set("Version", "0.1.1")
 			req.Header.Set("Origin", "chrome-extension://iaolnfnipkoinabdbbakcmkkdignedce")
 
@@ -364,7 +364,7 @@ func TestCreateBook(t *testing.T) {
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-	req := testutils.MakeReq(server, "POST", "/v3/books", `{"name": "js"}`)
+	req := testutils.MakeReq(server.URL, "POST", "/v3/books", `{"name": "js"}`)
 	req.Header.Set("Version", "0.1.1")
 	req.Header.Set("Origin", "chrome-extension://iaolnfnipkoinabdbbakcmkkdignedce")
 
@@ -432,7 +432,7 @@ func TestCreateBookDuplicate(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book data")
 
 	// Execute
-	req := testutils.MakeReq(server, "POST", "/v3/books", `{"name": "js"}`)
+	req := testutils.MakeReq(server.URL, "POST", "/v3/books", `{"name": "js"}`)
 	res := testutils.HTTPAuthDo(t, req, user)
 
 	// Test
@@ -520,7 +520,7 @@ func TestUpdateBook(t *testing.T) {
 
 			// Executdb,e
 			endpoint := fmt.Sprintf("/v3/books/%s", tc.bookUUID)
-			req := testutils.MakeReq(server, "PATCH", endpoint, tc.payload)
+			req := testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload)
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
