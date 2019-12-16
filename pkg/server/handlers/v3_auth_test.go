@@ -230,6 +230,36 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 }
 
+func TestRegisterDisabled(t *testing.T) {
+	defer testutils.ClearData()
+
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock:               clock.NewMock(),
+		DisableRegistration: true,
+	})
+	defer server.Close()
+
+	u := testutils.SetupUserData()
+	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+
+	dat := `{"email": "alice@example.com", "password": "foobarbaz"}`
+	req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
+
+	// Execute
+	res := testutils.HTTPDo(t, req)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusForbidden, "status code mismatch")
+
+	var accountCount, userCount int
+	testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
+	testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+
+	assert.Equal(t, accountCount, 0, "account count mismatch")
+	assert.Equal(t, userCount, 0, "user count mismatch")
+}
+
 func TestSignIn(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		defer testutils.ClearData()

@@ -108,13 +108,14 @@ func initApp() app.App {
 	db := initDB()
 
 	return app.App{
-		DB:               db,
-		Clock:            clock.New(),
-		StripeAPIBackend: nil,
-		EmailTemplates:   mailer.NewTemplates(nil),
-		EmailBackend:     &mailer.SimpleBackendImplementation{},
-		WebURL:           os.Getenv("WebURL"),
-		OnPremise:        true,
+		DB:                  db,
+		Clock:               clock.New(),
+		StripeAPIBackend:    nil,
+		EmailTemplates:      mailer.NewTemplates(nil),
+		EmailBackend:        &mailer.SimpleBackendImplementation{},
+		WebURL:              os.Getenv("WebURL"),
+		OnPremise:           true,
+		DisableRegistration: os.Getenv("DisableRegistration") == "true",
 	}
 }
 

@@ -41,13 +41,14 @@ var (
 
 // App is an application configuration
 type App struct {
-	DB               *gorm.DB
-	Clock            clock.Clock
-	StripeAPIBackend stripe.Backend
-	EmailTemplates   mailer.Templates
-	EmailBackend     mailer.Backend
-	WebURL           string
-	OnPremise        bool
+	DB                  *gorm.DB
+	Clock               clock.Clock
+	StripeAPIBackend    stripe.Backend
+	EmailTemplates      mailer.Templates
+	EmailBackend        mailer.Backend
+	WebURL              string
+	OnPremise           bool
+	DisableRegistration bool
 }
 
 // Validate validates the app configuration

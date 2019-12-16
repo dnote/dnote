@@ -176,6 +176,11 @@ func parseRegisterPaylaod(r *http.Request) (registerPayload, error) {
 }
 
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
+	if a.App.DisableRegistration {
+		respondForbidden(w)
+		return
+	}
+
 	params, err := parseRegisterPaylaod(r)
 	if err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
