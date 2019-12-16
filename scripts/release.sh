@@ -47,12 +47,10 @@ fi
 echo "* creating release"
 set -x
 
-# first line is the title and the rest are body in markdown
-message="$version_tag
-Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)"
-
 hub release create \
   "${file_flags[@]}" \
   "${flags[@]}" \
-  --message="$message"\
+  # first message is the title and the following are body in markdown
+  --message="$version_tag"\
+  --message="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
   "$version_tag"
