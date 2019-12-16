@@ -173,7 +173,6 @@ func TestRegisterMissingParams(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -201,7 +200,6 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
