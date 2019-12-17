@@ -104,9 +104,10 @@ Environment=GO_ENV=PRODUCTION
 Environment=DBHost=localhost
 Environment=DBPort=5432
 Environment=DBName=dnote
-Environment=WebURL=$WebURL
 Environment=DBUser=$DBUser
 Environment=DBPassword=$DBPassword
+Environment=DBSkipSSL=true
+Environment=WebURL=$WebURL
 Environment=SmtpHost=
 Environment=SmtpPort=
 Environment=SmtpUsername=
@@ -123,18 +124,6 @@ Optionally, if you would like to send spaced repetitions throught email, populat
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
 4. Start the Daemon by running `sudo systemctl start dnote`
-
-### Enable Pro version
-
-After signing up with an account, enable the pro version to access all features.
-
-Log into the `dnote` Postgres database and execute the following query:
-
-```sql
-UPDATE users SET cloud = true FROM accounts WHERE accounts.user_id = users.id AND accounts.email = '$yourEmail';
-```
-
-Replace `$yourEmail` with the email you used to create the account.
 
 ### Configure clients
 
