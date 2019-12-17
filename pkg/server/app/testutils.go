@@ -37,7 +37,7 @@ func NewTest(appParams *App) App {
 		EmailTemplates:   mailer.NewTemplates(&emailTmplDir),
 		EmailBackend:     &testutils.MockEmailbackendImplementation{},
 		StripeAPIBackend: nil,
-		OnPremise:       false,
+		OnPremise:        false,
 	}
 
 	// Allow to override with appParams
@@ -58,6 +58,9 @@ func NewTest(appParams *App) App {
 	}
 	if appParams != nil && appParams.WebURL != "" {
 		a.WebURL = appParams.WebURL
+	}
+	if appParams != nil && appParams.DisableRegistration {
+		a.DisableRegistration = appParams.DisableRegistration
 	}
 
 	return a
