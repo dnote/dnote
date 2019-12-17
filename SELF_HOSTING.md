@@ -32,6 +32,7 @@ SmtpHost=$SmtpHost \
 SmtpPort=$SmtpPort \
 SmtpUsername=$SmtpUsername \
 SmtpPassword=$SmtpPassword \
+DisableRegistration=false
   dnote-server start
 ```
 
@@ -40,6 +41,8 @@ Replace `$user`, `$password` with the credentials of the Postgres user that owns
 Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
 
 Replace `$SmtpHost`, `SmtpPort`, `$SmtpUsername`, `$SmtpPassword` with actual values, if you would like to receive spaced repetition through email.
+
+Replace `DisableRegistration` to `true` if you would like to disable user registrations.
 
 By default, dnote server will run on the port 3000.
 
