@@ -151,7 +151,7 @@ endif
 	)
 .PHONY: release-cli
 
-release-server: clean
+release-server:
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 release-server)
 endif
