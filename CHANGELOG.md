@@ -14,7 +14,13 @@ The following log documents the history of the server project.
 
 #### Added
 
-- Send welcome email with login instructions upon reigstering
+- Send welcome email with login instructions upon reigstering (#352)
+- Add an option to disable registration (#365)
+
+#### Changed
+
+- Send emails from the domain that hosts the application for on premise installations (#355)
+- For on premise installations, automatically upgrade user accounts (#361)
 
 ### 0.3.2 - 2019-11-20
 
