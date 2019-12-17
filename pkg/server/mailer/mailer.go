@@ -44,9 +44,9 @@ var (
 
 var (
 	// EmailKindHTML is the type of html email
-	EmailKindHTML = "html"
+	EmailKindHTML = "text/html"
 	// EmailKindHTML is the type of text email
-	EmailKindText = "text"
+	EmailKindText = "text/plain"
 )
 
 // template is the common interface shared between Template from

@@ -56,11 +56,11 @@ func mustFind(box *packr.Box, path string) []byte {
 	return b
 }
 
-func initContext(a *app.App) web.Context {
+func initWebContext(db *gorm.DB) web.Context {
 	staticBox := packr.New("static", "../../web/public/static")
 
 	return web.Context{
-		App:              a,
+		DB:               db,
 		IndexHTML:        mustFind(rootBox, "index.html"),
 		RobotsTxt:        mustFind(rootBox, "robots.txt"),
 		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
@@ -75,7 +75,7 @@ func initServer(a app.App) (*http.ServeMux, error) {
 		return nil, errors.Wrap(err, "initializing router")
 	}
 
-	webCtx := initContext(&a)
+	webCtx := initWebContext(a.DB)
 	webHandlers, err := web.Init(webCtx)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing web handlers")
@@ -92,15 +92,7 @@ func initServer(a app.App) (*http.ServeMux, error) {
 }
 
 func initDB() *gorm.DB {
-	var skipSSL bool
-	if os.Getenv("GO_ENV") != "PRODUCTION" || os.Getenv("DB_NOSSL") != "" || os.Getenv("DBSkipSSL") == "true" {
-		skipSSL = true
-	} else {
-		skipSSL = false
-	}
-
 	db := dbconn.Open(dbconn.Config{
-		SkipSSL:  skipSSL,
 		Host:     os.Getenv("DBHost"),
 		Port:     os.Getenv("DBPort"),
 		Name:     os.Getenv("DBName"),

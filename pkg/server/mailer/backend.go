@@ -48,22 +48,13 @@ type dialerParams struct {
 	Password string
 }
 
-func validateSMTPConfig() bool {
-	port := os.Getenv("SmtpPort")
-	host := os.Getenv("SmtpHost")
-	username := os.Getenv("SmtpUsername")
-	password := os.Getenv("SmtpPassword")
-
-	return port != "" && host != "" && username != "" && password != ""
-}
-
 func getSMTPParams() (*dialerParams, error) {
 	portEnv := os.Getenv("SmtpPort")
 	hostEnv := os.Getenv("SmtpHost")
 	usernameEnv := os.Getenv("SmtpUsername")
 	passwordEnv := os.Getenv("SmtpPassword")
 
-	if portEnv != "" && hostEnv != "" && usernameEnv != "" && passwordEnv != "" {
+	if portEnv == "" || hostEnv == "" || usernameEnv == "" || passwordEnv == "" {
 		return nil, ErrSMTPNotConfigured
 	}
 
@@ -106,7 +97,7 @@ func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, c
 
 	d := gomail.NewPlainDialer(p.Host, p.Port, p.Username, p.Password)
 	if err := d.DialAndSend(m); err != nil {
-		return err
+		return errors.Wrap(err, "dialing and sending email")
 	}
 
 	return nil

@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -37,15 +37,15 @@ var templateNoteMetaTags = "note_metatags"
 
 // AppShell represents the application in HTML
 type AppShell struct {
-	App *app.App
-	T   *template.Template
+	DB *gorm.DB
+	T  *template.Template
 }
 
 // ErrNotFound is an error indicating that a resource was not found
 var ErrNotFound = errors.New("not found")
 
 // NewAppShell parses the templates for the application
-func NewAppShell(a *app.App, content []byte) (AppShell, error) {
+func NewAppShell(db *gorm.DB, content []byte) (AppShell, error) {
 	t, err := template.New(templateIndex).Parse(string(content))
 	if err != nil {
 		return AppShell{}, errors.Wrap(err, "parsing the index template")
@@ -56,7 +56,7 @@ func NewAppShell(a *app.App, content []byte) (AppShell, error) {
 		return AppShell{}, errors.Wrap(err, "parsing the note meta tags template")
 	}
 
-	return AppShell{App: a, T: t}, nil
+	return AppShell{DB: db, T: t}, nil
 }
 
 // Execute executes the index template

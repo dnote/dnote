@@ -20,6 +20,7 @@ package dbconn
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -27,7 +28,6 @@ import (
 
 // Config holds the connection configuration
 type Config struct {
-	SkipSSL  bool
 	Host     string
 	Port     string
 	Name     string
@@ -64,13 +64,27 @@ func validateConfig(c Config) error {
 	return nil
 }
 
+// checkSSLMode checks if SSL is required for the database connection
+func checkSSLMode() bool {
+	// TODO: deprecate DB_NOSSL in favor of DBSkipSSL
+	if os.Getenv("DB_NOSSL") != "" {
+		return true
+	}
+
+	if os.Getenv("DBSkipSSL") == "true" {
+		return true
+	}
+
+	return os.Getenv("GO_ENV") != "PRODUCTION"
+}
+
 func getPGConnectionString(c Config) (string, error) {
 	if err := validateConfig(c); err != nil {
 		return "", errors.Wrap(err, "invalid database config")
 	}
 
 	var sslmode string
-	if c.SkipSSL {
+	if checkSSLMode() {
 		sslmode = "disable"
 	} else {
 		sslmode = "require"

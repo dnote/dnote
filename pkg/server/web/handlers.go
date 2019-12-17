@@ -22,13 +22,15 @@ package web
 import (
 	"net/http"
 
-	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/tmpl"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
 var (
+	// ErrEmptyDatabase is an error for missing db in the context
+	ErrEmptyDatabase = errors.New("No DB was provided")
 	// ErrEmptyIndexHTML is an error for missing index.html content in the context
 	ErrEmptyIndexHTML = errors.New("No index.html content was provided")
 	// ErrEmptyRobotsTxt is an error for missing robots.txt content in the context
@@ -41,7 +43,7 @@ var (
 
 // Context contains contents of web assets
 type Context struct {
-	App              *app.App
+	DB               *gorm.DB
 	IndexHTML        []byte
 	RobotsTxt        []byte
 	ServiceWorkerJs  []byte
@@ -57,8 +59,8 @@ type Handlers struct {
 }
 
 func validateContext(c Context) error {
-	if err := c.App.Validate(); err != nil {
-		return errors.Wrap(err, "validating app")
+	if c.DB == nil {
+		return ErrEmptyDatabase
 	}
 	if c.IndexHTML == nil {
 		return ErrEmptyIndexHTML
@@ -92,7 +94,7 @@ func Init(c Context) (Handlers, error) {
 
 // getRootHandler returns an HTTP handler that serves the app shell
 func getRootHandler(c Context) http.HandlerFunc {
-	appShell, err := tmpl.NewAppShell(c.App, c.IndexHTML)
+	appShell, err := tmpl.NewAppShell(c.DB, c.IndexHTML)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing app shell"))
 	}
