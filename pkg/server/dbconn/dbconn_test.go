@@ -40,7 +40,6 @@ func TestValidateConfig(t *testing.T) {
 		},
 		{
 			input: Config{
-				SkipSSL:  true,
 				Host:     "mockHost",
 				Port:     "mockPort",
 				Name:     "mockName",
