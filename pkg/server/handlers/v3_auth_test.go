@@ -240,9 +240,6 @@ func TestRegisterDisabled(t *testing.T) {
 	})
 	defer server.Close()
 
-	u := testutils.SetupUserData()
-	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
-
 	dat := `{"email": "alice@example.com", "password": "foobarbaz"}`
 	req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
 
