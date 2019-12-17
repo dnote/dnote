@@ -209,6 +209,9 @@ func process(p Params, now time.Time, rule database.RepetitionRule) error {
 	tx := p.DB.Begin()
 
 	if !checkCooldown(now, rule) {
+		log.WithFields(log.Fields{
+			"uuid": rule.UUID,
+		}).Info("Skipping repetition processing due to cooldown")
 		return nil
 	}
 
