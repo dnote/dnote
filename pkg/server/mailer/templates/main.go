@@ -92,6 +92,20 @@ func (c Context) passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
+func (c Context) passwordResetAlertHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.EmailResetPasswordAlertTmplData{
+		AccountEmail: "alice@example.com",
+		WebURL:       "http://localhost:3000",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeResetPasswordAlert, mailer.EmailKindText, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(body))
+}
+
 func (c Context) emailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	data := mailer.EmailVerificationTmplData{
 		Token:  "testToken",
@@ -156,6 +170,7 @@ func main() {
 	http.HandleFunc("/digest", ctx.digestHandler)
 	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
 	http.HandleFunc("/password-reset", ctx.passwordResetHandler)
+	http.HandleFunc("/password-reset-alert", ctx.passwordResetAlertHandler)
 	http.HandleFunc("/welcome", ctx.welcomeHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }

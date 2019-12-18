@@ -34,6 +34,8 @@ import (
 var (
 	// EmailTypeResetPassword represents a reset password email
 	EmailTypeResetPassword = "reset_password"
+	// EmailTypeResetPasswordAlert represents a password change notification email
+	EmailTypeResetPasswordAlert = "reset_password_alert"
 	// EmailTypeWeeklyDigest represents a weekly digest email
 	EmailTypeWeeklyDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
@@ -45,7 +47,7 @@ var (
 var (
 	// EmailKindHTML is the type of html email
 	EmailKindHTML = "text/html"
-	// EmailKindHTML is the type of text email
+	// EmailKindText is the type of text email
 	EmailKindText = "text/plain"
 )
 
@@ -103,10 +105,15 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
+	passwordResetAlertText, err := initTextTmpl(box, EmailTypeResetPasswordAlert)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
+	}
 
 	T := Templates{}
 	T.set(EmailTypeWeeklyDigest, EmailKindHTML, weeklyDigestHTML)
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
+	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
 

@@ -88,7 +88,6 @@ func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, c
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", subject)
 	m.SetBody(contentType, body)
-	// m.SetBody("text/html", body)
 
 	p, err := getSMTPParams()
 	if err != nil {
