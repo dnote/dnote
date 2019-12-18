@@ -134,6 +134,21 @@ func (c Context) welcomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
+func (c Context) inactiveHandler(w http.ResponseWriter, r *http.Request) {
+	data := mailer.InactiveReminderTmplData{
+		SampleNoteUUID: "some-uuid",
+		WebURL:         "http://localhost:3000",
+		Token:          "some-random-token",
+	}
+	body, err := c.Tmpl.Execute(mailer.EmailTypeInactiveReminder, mailer.EmailKindText, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(body))
+}
+
 func (c Context) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Email development server is running."))
 }
@@ -172,5 +187,6 @@ func main() {
 	http.HandleFunc("/password-reset", ctx.passwordResetHandler)
 	http.HandleFunc("/password-reset-alert", ctx.passwordResetAlertHandler)
 	http.HandleFunc("/welcome", ctx.welcomeHandler)
+	http.HandleFunc("/inactive-reminder", ctx.inactiveHandler)
 	log.Fatal(http.ListenAndServe(":2300", nil))
 }

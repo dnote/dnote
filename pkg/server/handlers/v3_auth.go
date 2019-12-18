@@ -176,7 +176,7 @@ func parseRegisterPaylaod(r *http.Request) (registerPayload, error) {
 }
 
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
-	if a.App.DisableRegistration {
+	if a.App.Config.DisableRegistration {
 		respondForbidden(w)
 		return
 	}

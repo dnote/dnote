@@ -362,7 +362,6 @@ func TestVerifyEmail(t *testing.T) {
 
 func TestUpdateEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
@@ -396,7 +395,6 @@ func TestUpdateEmail(t *testing.T) {
 
 func TestUpdateEmailPreference(t *testing.T) {
 	t.Run("with login", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
@@ -409,7 +407,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.SetupEmailPreferenceData(u, false)
 
 		// Execute
-		dat := `{"digest_weekly": true}`
+		dat := `{"inactive_reminder": true}`
 		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
@@ -418,16 +416,14 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding account")
-		assert.Equal(t, preference.DigestWeekly, true, "preference mismatch")
+		assert.Equal(t, preference.InactiveReminder, true, "preference mismatch")
 	})
 
 	t.Run("with an unused token", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -442,7 +438,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		dat := `{"digest_weekly": true}`
+		dat := `{"inactive_reminder": true}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
@@ -458,17 +454,15 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Where("id = ?", tok.ID).First(&token), "failed to find token")
 
 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
-		assert.Equal(t, preference.DigestWeekly, true, "email mismatch")
+		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 		assert.NotEqual(t, token.UsedAt, (*time.Time)(nil), "token should have been used")
 	})
 
 	t.Run("with nonexistent token", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-
 			Clock: clock.NewMock(),
 		})
 		defer server.Close()
@@ -482,7 +476,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
-		dat := `{"digest_weekly": false}`
+		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someNonexistentToken")
 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 
@@ -494,11 +488,10 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.DigestWeekly, true, "email mismatch")
+		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("with expired token", func(t *testing.T) {
-
 		defer testutils.ClearData()
 
 		// Setup
@@ -521,7 +514,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		dat := `{"digest_weekly": false}`
+		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
@@ -531,7 +524,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.DigestWeekly, true, "email mismatch")
+		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("with a used but unexpired token", func(t *testing.T) {
@@ -556,7 +549,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
-		dat := `{"digest_weekly": false}`
+		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 
@@ -568,7 +561,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.DigestWeekly, false, "DigestWeekly mismatch")
+		assert.Equal(t, preference.InactiveReminder, false, "InactiveReminder mismatch")
 	})
 
 	t.Run("no user and no token", func(t *testing.T) {
@@ -586,7 +579,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.SetupEmailPreferenceData(u, true)
 
 		// Execute
-		dat := `{"digest_weekly": false}`
+		dat := `{"inactive_reminder": false}`
 		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
 		res := testutils.HTTPDo(t, req)
 
@@ -595,7 +588,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.DigestWeekly, true, "email mismatch")
+		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("create a record if not exists", func(t *testing.T) {
@@ -618,7 +611,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		dat := `{"digest_weekly": false}`
+		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
@@ -632,7 +625,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		var preference database.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.DigestWeekly, false, "email mismatch")
+		assert.Equal(t, preference.InactiveReminder, false, "email mismatch")
 	})
 }
 
@@ -661,9 +654,9 @@ func TestGetEmailPreference(t *testing.T) {
 	}
 
 	expected := presenters.EmailPreference{
-		DigestWeekly: pref.DigestWeekly,
-		CreatedAt:    presenters.FormatTS(pref.CreatedAt),
-		UpdatedAt:    presenters.FormatTS(pref.UpdatedAt),
+		InactiveReminder: pref.InactiveReminder,
+		CreatedAt:        presenters.FormatTS(pref.CreatedAt),
+		UpdatedAt:        presenters.FormatTS(pref.UpdatedAt),
 	}
 	assert.DeepEqual(t, got, expected, "payload mismatch")
 }

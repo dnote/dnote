@@ -109,11 +109,12 @@ type Notification struct {
 	UserID int `gorm:"index"`
 }
 
-// EmailPreference is information about how often user wants to receive digest email
+// EmailPreference is a preference per user for receiving email communication
 type EmailPreference struct {
 	Model
-	UserID       int  `gorm:"index" json:"-"`
-	DigestWeekly bool `json:"digest_weekly"` // Deprecated: email digests now sends based on the repetition rule
+	UserID           int  `gorm:"index" json:"-"`
+	InactiveReminder bool `json:"inactive_reminder"`
+	ProductUpdate    bool `json:"product_update"`
 }
 
 // Session represents a user session

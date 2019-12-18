@@ -37,7 +37,8 @@ export interface NoteData {
 }
 
 export interface EmailPrefData {
-  digestWeekly: boolean;
+  inactiveReminder: boolean;
+  productUpdate: boolean;
 }
 
 export interface UserData {

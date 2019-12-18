@@ -19,8 +19,6 @@
 package handlers
 
 import (
-	crand "crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -30,39 +28,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
-
-const (
-	demoUserEmail = "demo@dnote.io"
-)
-
-func generateRandomToken(bits int) (string, error) {
-	b := make([]byte, bits)
-
-	_, err := crand.Read(b)
-	if err != nil {
-		return "", errors.Wrap(err, "generating random bytes")
-	}
-
-	return base64.URLEncoding.EncodeToString(b), nil
-}
-
-func generateResetToken() (string, error) {
-	ret, err := generateRandomToken(16)
-	if err != nil {
-		return "", errors.Wrap(err, "generating random token")
-	}
-
-	return ret, nil
-}
-
-func generateVerificationCode() (string, error) {
-	ret, err := generateRandomToken(16)
-	if err != nil {
-		return "", errors.Wrap(err, "generating random token")
-	}
-
-	return ret, nil
-}
 
 func paginate(conn *gorm.DB, page int) *gorm.DB {
 	limit := 30

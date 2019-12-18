@@ -29,7 +29,7 @@ const digestWeekly = 'weekly';
 const digestNever = 'never';
 
 function getDigestFrequency(emailPreference: any): string {
-  if (emailPreference.digest_weekly) {
+  if (emailPreference.inactive_reminder) {
     return digestWeekly;
   }
 
@@ -64,7 +64,7 @@ const EmailPreferenceForm: React.FunctionComponent<Props> = ({
     setInProgress(true);
 
     services.users
-      .updateEmailPreference({ digestFrequency, token })
+      .updateEmailPreference({ inactiveReminder: true, token })
       .then(updatedPreference => {
         dispatch(receiveEmailPreference(updatedPreference));
 

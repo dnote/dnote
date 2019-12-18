@@ -36,12 +36,14 @@ var (
 	EmailTypeResetPassword = "reset_password"
 	// EmailTypeResetPasswordAlert represents a password change notification email
 	EmailTypeResetPasswordAlert = "reset_password_alert"
-	// EmailTypeWeeklyDigest represents a weekly digest email
-	EmailTypeWeeklyDigest = "digest"
+	// EmailTypeDigest represents a weekly digest email
+	EmailTypeDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
 	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
+	// EmailTypeInactiveReminder represents an inactivity reminder email
+	EmailTypeInactiveReminder = "inactive"
 )
 
 var (
@@ -89,7 +91,7 @@ func NewTemplates(srcDir *string) Templates {
 		box = packr.New("emailTemplates", "./templates/src")
 	}
 
-	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeWeeklyDigest)
+	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeDigest)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing weekly digest template"))
 	}
@@ -109,13 +111,18 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
+	inactiveReminderText, err := initTextTmpl(box, EmailTypeInactiveReminder)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
+	}
 
 	T := Templates{}
-	T.set(EmailTypeWeeklyDigest, EmailKindHTML, weeklyDigestHTML)
+	T.set(EmailTypeDigest, EmailKindHTML, weeklyDigestHTML)
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
 	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
+	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
 
 	return T
 }

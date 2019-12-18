@@ -24,6 +24,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/jinzhu/gorm"
@@ -91,7 +92,9 @@ func TestNewRunner(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			_, err := NewRunner(tc.db, tc.clock, tc.emailTmpl, tc.emailBackend, tc.webURL)
+			_, err := NewRunner(tc.db, tc.clock, tc.emailTmpl, tc.emailBackend, app.Config{
+				WebURL: tc.webURL,
+			})
 
 			assert.Equal(t, errors.Cause(err), tc.expectedErr, "error mismatch")
 		})

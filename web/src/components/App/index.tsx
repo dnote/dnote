@@ -64,8 +64,10 @@ function useFetchData() {
   });
 
   useEffect(() => {
-    dispatch(getCurrentUser());
-  }, [dispatch]);
+    if (!user.isFetched) {
+      dispatch(getCurrentUser());
+    }
+  }, [dispatch, user.isFetched]);
 
   useEffect(() => {
     if (user.isFetched) {

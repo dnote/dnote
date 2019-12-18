@@ -100,7 +100,9 @@ func TestRegister(t *testing.T) {
 			server := MustNewServer(t, &app.App{
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
-				OnPremise:    tc.onPremise,
+				Config: app.Config{
+					OnPremise: tc.onPremise,
+				},
 			})
 			defer server.Close()
 
@@ -235,8 +237,10 @@ func TestRegisterDisabled(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock:               clock.NewMock(),
-		DisableRegistration: true,
+		Clock: clock.NewMock(),
+		Config: app.Config{
+			DisableRegistration: true,
+		},
 	})
 	defer server.Close()
 

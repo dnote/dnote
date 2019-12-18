@@ -29,13 +29,13 @@ import (
 
 var defaultSender = "sung@getdnote.com"
 
-// getSenderEmail returns the sender email
-func (a *App) getSenderEmail(want string) (string, error) {
-	if !a.OnPremise {
+// GetSenderEmail returns the sender email
+func (c Config) GetSenderEmail(want string) (string, error) {
+	if !c.OnPremise {
 		return want, nil
 	}
 
-	addr, err := a.getNoreplySender()
+	addr, err := getNoreplySender(c)
 	if err != nil {
 		return "", errors.Wrap(err, "getting sender email address")
 	}
@@ -59,8 +59,8 @@ func getDomainFromURL(rawURL string) (string, error) {
 	return domain, nil
 }
 
-func (a *App) getNoreplySender() (string, error) {
-	domain, err := getDomainFromURL(a.WebURL)
+func getNoreplySender(c Config) (string, error) {
+	domain, err := getDomainFromURL(c.WebURL)
 	if err != nil {
 		return "", errors.Wrap(err, "parsing web url")
 	}
@@ -73,13 +73,13 @@ func (a *App) getNoreplySender() (string, error) {
 func (a *App) SendVerificationEmail(email, tokenValue string) error {
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, mailer.EmailVerificationTmplData{
 		Token:  tokenValue,
-		WebURL: a.WebURL,
+		WebURL: a.Config.WebURL,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "executing reset verification template for %s", email)
 	}
 
-	from, err := a.getSenderEmail(defaultSender)
+	from, err := a.Config.GetSenderEmail(defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -95,13 +95,13 @@ func (a *App) SendVerificationEmail(email, tokenValue string) error {
 func (a *App) SendWelcomeEmail(email string) error {
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
 		AccountEmail: email,
-		WebURL:       a.WebURL,
+		WebURL:       a.Config.WebURL,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "executing reset verification template for %s", email)
 	}
 
-	from, err := a.getSenderEmail(defaultSender)
+	from, err := a.Config.GetSenderEmail(defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -118,13 +118,13 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
 		AccountEmail: email,
 		Token:        tokenValue,
-		WebURL:       a.WebURL,
+		WebURL:       a.Config.WebURL,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "executing reset password template for %s", email)
 	}
 
-	from, err := a.getSenderEmail(defaultSender)
+	from, err := a.Config.GetSenderEmail(defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -140,13 +140,13 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 func (a *App) SendPasswordResetAlertEmail(email string) error {
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPasswordAlert, mailer.EmailKindText, mailer.EmailResetPasswordAlertTmplData{
 		AccountEmail: email,
-		WebURL:       a.WebURL,
+		WebURL:       a.Config.WebURL,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "executing reset password alert template for %s", email)
 	}
 
-	from, err := a.getSenderEmail(defaultSender)
+	from, err := a.Config.GetSenderEmail(defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}

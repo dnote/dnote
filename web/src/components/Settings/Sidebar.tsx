@@ -51,6 +51,15 @@ const Sidebar: React.FunctionComponent<Props> = () => {
           <NavLink
             className={styles.item}
             activeClassName={styles.active}
+            to={getSettingsPath(SettingSections.notifications)}
+          >
+            Notifications
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            className={styles.item}
+            activeClassName={styles.active}
             to={getSettingsPath(SettingSections.about)}
           >
             About

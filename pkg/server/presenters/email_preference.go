@@ -26,17 +26,19 @@ import (
 
 // EmailPreference is a presented email digest
 type EmailPreference struct {
-	DigestWeekly bool      `json:"digest_weekly"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	InactiveReminder bool      `json:"inactive_reminder"`
+	ProductUpdate    bool      `json:"product_update"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 // PresentEmailPreference presents a digest
 func PresentEmailPreference(p database.EmailPreference) EmailPreference {
 	ret := EmailPreference{
-		DigestWeekly: p.DigestWeekly,
-		CreatedAt:    FormatTS(p.CreatedAt),
-		UpdatedAt:    FormatTS(p.UpdatedAt),
+		InactiveReminder: p.InactiveReminder,
+		ProductUpdate:    p.ProductUpdate,
+		CreatedAt:        FormatTS(p.CreatedAt),
+		UpdatedAt:        FormatTS(p.UpdatedAt),
 	}
 
 	return ret

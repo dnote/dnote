@@ -1,0 +1,42 @@
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
+
+.wrapper {
+  text-align: center;
+  height: 100vh;
+  padding: rem(52px) 0;
+  background: $light-gray;
+}
+
+.heading {
+  @include font-size('2x-large');
+  color: $black;
+  font-weight: 300;
+  margin-top: rem(16px);
+}
+
+.body {
+  text-align: left;
+  padding: rem(20px) rem(28px);
+  margin-top: rem(20px);
+  max-width: rem(700px);
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #fff;
+}
+
+.footer {
+  @include font-size('small');
+  text-align: center;
+  margin-top: rem(20px);
+
+  a {
+    color: $gray;
+  }
+}
+
+.flash {
+  margin-bottom: rem(8px);
+}

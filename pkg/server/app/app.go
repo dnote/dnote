@@ -39,21 +39,26 @@ var (
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 )
 
-// App is an application configuration
-type App struct {
-	DB                  *gorm.DB
-	Clock               clock.Clock
-	StripeAPIBackend    stripe.Backend
-	EmailTemplates      mailer.Templates
-	EmailBackend        mailer.Backend
+// Config is an application configuration
+type Config struct {
 	WebURL              string
 	OnPremise           bool
 	DisableRegistration bool
 }
 
+// App is an application context
+type App struct {
+	DB               *gorm.DB
+	Clock            clock.Clock
+	StripeAPIBackend stripe.Backend
+	EmailTemplates   mailer.Templates
+	EmailBackend     mailer.Backend
+	Config           Config
+}
+
 // Validate validates the app configuration
 func (a *App) Validate() error {
-	if a.WebURL == "" {
+	if a.Config.WebURL == "" {
 		return ErrEmptyWebURL
 	}
 	if a.Clock == nil {

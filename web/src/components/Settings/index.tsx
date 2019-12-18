@@ -25,6 +25,7 @@ import { SettingSections } from 'web/libs/paths';
 import Account from './Account';
 import Sidebar from './Sidebar';
 import About from './About';
+import Notifications from './Notifications';
 import Billing from './Billing';
 import styles from './Settings.scss';
 
@@ -37,6 +38,9 @@ function renderContent(section: string): React.ReactNode {
   }
   if (section === SettingSections.about) {
     return <About />;
+  }
+  if (section === SettingSections.notifications) {
+    return <Notifications />;
   }
 
   return <div>Not found</div>;

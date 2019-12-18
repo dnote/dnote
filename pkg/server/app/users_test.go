@@ -30,15 +30,15 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	testCases := []struct {
-		onPremise  bool
+		onPremise   bool
 		expectedPro bool
 	}{
 		{
-			onPremise:  true,
+			onPremise:   true,
 			expectedPro: true,
 		},
 		{
-			onPremise:  false,
+			onPremise:   false,
 			expectedPro: false,
 		},
 	}
@@ -48,7 +48,9 @@ func TestCreateUser(t *testing.T) {
 			defer testutils.ClearData()
 
 			a := NewTest(&App{
-				OnPremise: tc.onPremise,
+				Config: Config{
+					OnPremise: tc.onPremise,
+				},
 			})
 			if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
