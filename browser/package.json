@@ -28,11 +28,11 @@
     "redux-thunk": "^2.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.7.5",
-    "@babel/preset-env": "^7.7.6",
-    "@types/react": "^16.9.16",
+    "@babel/core": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "@types/react": "^16.9.17",
     "@types/react-dom": "^16.9.4",
-    "concurrently": "^5.0.1",
+    "concurrently": "^5.0.2",
     "del": "^5.0.0",
     "gulp": "^4.0.0",
     "gulp-if": "^3.0.0",
@@ -42,8 +42,8 @@
     "gulp-zip": "^5.0.1",
     "prettier": "^1.19.1",
     "ts-loader": "^6.2.1",
-    "typescript": "^3.7.3",
-    "webpack": "^4.41.3",
+    "typescript": "^3.7.4",
+    "webpack": "^4.41.4",
     "webpack-cli": "^3.3.10"
   }
 }
