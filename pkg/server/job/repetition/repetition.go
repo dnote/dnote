@@ -52,8 +52,7 @@ type BuildEmailParams struct {
 
 // BuildEmail builds an email for the spaced repetition
 func BuildEmail(db *gorm.DB, emailTmpl mailer.Templates, p BuildEmailParams) (string, string, error) {
-	date := p.Now.Format("Jan 02 2006")
-	subject := fmt.Sprintf("%s %s", p.Rule.Title, date)
+	subject := fmt.Sprintf("%s #%d", p.Rule.Title, p.Digest.Version)
 	tok, err := mailer.GetToken(db, p.User, database.TokenTypeRepetition)
 	if err != nil {
 		return "", "", errors.Wrap(err, "getting email frequency token")
