@@ -76,6 +76,7 @@ const EmailPreference: React.FunctionComponent<Props> = ({ location }) => {
           </Flash>
 
           <Flash
+            id="T-notifications-success"
             kind="success"
             wrapperClassName={classnames(styles.flash, 'T-success')}
             when={successMsg !== ''}

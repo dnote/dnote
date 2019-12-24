@@ -157,3 +157,25 @@ func (a *App) SendPasswordResetAlertEmail(email string) error {
 
 	return nil
 }
+
+// SendSubscriptionConfirmationEmail sends email that confirms subscription purchase
+func (a *App) SendSubscriptionConfirmationEmail(email string) error {
+	body, err := a.EmailTemplates.Execute(mailer.EmailTypeSubscriptionConfirmation, mailer.EmailKindText, mailer.EmailTypeSubscriptionConfirmationTmplData{
+		AccountEmail: email,
+		WebURL:       a.Config.WebURL,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "executing subscription confirmation template for %s", email)
+	}
+
+	from, err := a.Config.GetSenderEmail(defaultSender)
+	if err != nil {
+		return errors.Wrap(err, "getting the sender email")
+	}
+
+	if err := a.EmailBackend.Queue("Welcome to Dnote Pro", from, []string{email}, mailer.EmailKindText, body); err != nil {
+		return errors.Wrapf(err, "queueing email for %s", email)
+	}
+
+	return nil
+}

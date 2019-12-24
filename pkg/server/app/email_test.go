@@ -137,6 +137,25 @@ func TestSendPasswordResetEmail(t *testing.T) {
 	}
 }
 
+func TestSendSubscriptionConfirmationEmail(t *testing.T) {
+	emailBackend := testutils.MockEmailbackendImplementation{}
+	a := NewTest(&App{
+		EmailBackend: &emailBackend,
+		Config: Config{
+			OnPremise: false,
+			WebURL:    "http://example.com",
+		},
+	})
+
+	if err := a.SendSubscriptionConfirmationEmail("alice@example.com"); err != nil {
+		t.Fatal(err, "failed to perform")
+	}
+
+	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+	assert.Equal(t, emailBackend.Emails[0].From, "sung@getdnote.com", "email sender mismatch")
+	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
+}
+
 func TestGetSenderEmail(t *testing.T) {
 	testCases := []struct {
 		onPremise      bool

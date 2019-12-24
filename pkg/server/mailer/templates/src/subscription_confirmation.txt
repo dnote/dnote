@@ -1,0 +1,10 @@
+Hi, thanks for signing up for Dnote Pro.
+
+Dnote Pro is your own simple personal knowledge base that helps you retain new information.
+
+Your account is "{{ .AccountEmail }}". Log in at {{ .WebURL }}/login
+
+I appreciate your support. It makes it possible to develop Dnote and help learners around the world.
+Thank you for using my software.
+
+- Sung (Maker of Dnote)

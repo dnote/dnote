@@ -59,6 +59,7 @@ const Notifications: React.FunctionComponent<Props> = ({ location }) => {
       <h1 className="sr-only">Notifications</h1>
 
       <Flash
+        id="T-notifications-success"
         when={successMsg !== ''}
         kind="success"
         onDismiss={() => {

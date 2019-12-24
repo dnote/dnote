@@ -1,3 +1,21 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import React, { useState, useReducer } from 'react';
 
 import services from 'web/libs/services';
@@ -36,7 +54,7 @@ interface Props {
   token?: string;
 }
 
-const Form: React.SFC<Props> = ({
+const Form: React.FunctionComponent<Props> = ({
   emailPreference,
   setSuccessMsg,
   setFailureMsg,
@@ -73,7 +91,7 @@ const Form: React.SFC<Props> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form id="T-notifications-form" onSubmit={handleSubmit}>
       <div className={styles.section}>
         <h3 className={styles.heading}>Alerts</h3>
         <p className={styles.subtext}>Email me when:</p>

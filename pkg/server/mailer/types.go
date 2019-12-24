@@ -90,3 +90,9 @@ type InactiveReminderTmplData struct {
 	WebURL         string
 	Token          string
 }
+
+// EmailTypeSubscriptionConfirmationTmplData is a template data for reset password emails
+type EmailTypeSubscriptionConfirmationTmplData struct {
+	AccountEmail string
+	WebURL       string
+}

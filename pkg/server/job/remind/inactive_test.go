@@ -1,3 +1,21 @@
+/* Copyright (C) 2019 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package remind
 
 import (
@@ -71,7 +89,9 @@ func TestDoInactive(t *testing.T) {
 	u3 := testutils.SetupUserData()
 	a3 := testutils.SetupAccountData(u3, "alice@example.com", "pass1234")
 	testutils.MustExec(t, testutils.DB.Model(&a3).Update("email_verified", true), "setting email verified")
-	testutils.MustExec(t, testutils.DB.Save(&database.EmailPreference{UserID: u3.ID, InactiveReminder: false}), "preparing email preference")
+	emailPref3 := database.EmailPreference{UserID: u3.ID}
+	testutils.MustExec(t, testutils.DB.Save(&emailPref3), "preparing email preference")
+	testutils.MustExec(t, testutils.DB.Model(&emailPref3).Update(map[string]interface{}{"inactive_reminder": false}), "updating email preference")
 
 	b3 := database.Book{
 		UserID: u3.ID,
@@ -129,20 +149,20 @@ func TestDoInactive_Cooldown(t *testing.T) {
 	setup(t, now, "alice@example.com")
 
 	bob := setup(t, now, "bob@example.com")
-	bobNotif := database.Notification{Type: "inactive", UserID: bob.ID}
+	bobNotif := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: bob.ID}
 	testutils.MustExec(t, testutils.DB.Create(&bobNotif), "preparing inactive notification for bob")
 	testutils.MustExec(t, testutils.DB.Model(&bobNotif).Update("created_at", now.AddDate(0, 0, -7)), "preparing created_at for inactive notification for bob")
 
 	chuck := setup(t, now, "chuck@example.com")
-	chuckNotif := database.Notification{Type: "inactive", UserID: chuck.ID}
+	chuckNotif := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: chuck.ID}
 	testutils.MustExec(t, testutils.DB.Create(&chuckNotif), "preparing inactive notification for chuck")
 	testutils.MustExec(t, testutils.DB.Model(&chuckNotif).Update("created_at", now.AddDate(0, 0, -15)), "preparing created_at for inactive notification for chuck")
 
 	dan := setup(t, now, "dan@example.com")
-	danNotif1 := database.Notification{Type: "inactive", UserID: dan.ID}
+	danNotif1 := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
 	testutils.MustExec(t, testutils.DB.Create(&danNotif1), "preparing inactive notification 1 for dan")
 	testutils.MustExec(t, testutils.DB.Model(&danNotif1).Update("created_at", now.AddDate(0, 0, -10)), "preparing created_at for inactive notification for dan")
-	danNotif2 := database.Notification{Type: "inactive", UserID: dan.ID}
+	danNotif2 := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
 	testutils.MustExec(t, testutils.DB.Create(&danNotif2), "preparing inactive notification 2 for dan")
 	testutils.MustExec(t, testutils.DB.Model(&danNotif2).Update("created_at", now.AddDate(0, 0, -15)), "preparing created_at for inactive notification for dan")
 

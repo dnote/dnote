@@ -14,6 +14,12 @@ The following log documents the history of the server project.
 
 None
 
+### 0.3.4 - 2019-12-24
+
+#### Added
+
+- Send email when user has stopped learning (#375)
+
 ### 0.3.3 - 2019-12-17
 
 #### Added

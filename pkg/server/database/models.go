@@ -113,8 +113,8 @@ type Notification struct {
 type EmailPreference struct {
 	Model
 	UserID           int  `gorm:"index" json:"-"`
-	InactiveReminder bool `json:"inactive_reminder"`
-	ProductUpdate    bool `json:"product_update"`
+	InactiveReminder bool `json:"inactive_reminder" gorm:"default:true"`
+	ProductUpdate    bool `json:"product_update" gorm:"default:true"`
 }
 
 // Session represents a user session

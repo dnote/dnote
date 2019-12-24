@@ -29,6 +29,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -131,6 +132,11 @@ func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
+	var account database.Account
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		HandleError(w, "getting user", err, http.StatusInternalServerError)
+		return
+	}
 
 	var payload createSubPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -172,6 +178,10 @@ func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit().Error; err != nil {
 		HandleError(w, "committing a subscription transaction", err, http.StatusInternalServerError)
 		return
+	}
+
+	if err := a.App.SendSubscriptionConfirmationEmail(account.Email.String); err != nil {
+		log.ErrorWrap(err, "sending subscription confirmation email")
 	}
 
 	w.WriteHeader(http.StatusOK)

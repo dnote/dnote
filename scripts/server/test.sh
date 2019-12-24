@@ -9,7 +9,7 @@ pushd "$dir/../../pkg/server"
 export DNOTE_TEST_EMAIL_TEMPLATE_DIR="$dir/../../pkg/server/mailer/templates/src"
 
 function run_test {
-  go test ./... -cover -p 1
+  go test ./... -cover -p 1 
 }
 
 if [ "${WATCH-false}" == true ]; then

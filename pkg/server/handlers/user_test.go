@@ -655,6 +655,7 @@ func TestGetEmailPreference(t *testing.T) {
 
 	expected := presenters.EmailPreference{
 		InactiveReminder: pref.InactiveReminder,
+		ProductUpdate:    pref.ProductUpdate,
 		CreatedAt:        presenters.FormatTS(pref.CreatedAt),
 		UpdatedAt:        presenters.FormatTS(pref.UpdatedAt),
 	}
