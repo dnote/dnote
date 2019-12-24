@@ -18,7 +18,12 @@ None
 
 #### Added
 
-- Send email when user has stopped learning (#375)
+- Remind when the knowledge base stops growing (#375)
+- Alert when a password is changed (#375)
+
+#### Fixed
+
+- Implement syntax highlighting for code blocks ($377)
 
 ### 0.3.3 - 2019-12-17
 
