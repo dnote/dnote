@@ -1,0 +1,9 @@
+Hi, nothing has been added to your Dnote for some time.
+
+What about revisiting one of your previous knowledge? {{ .WebURL }}/notes/{{ .SampleNoteUUID }}
+
+Expand your knowledge base at {{ .WebURL }}/new or using Dnote apps.
+
+- Dnote team
+
+UNSUBSCRIBE: {{ .WebURL }}/settings/notifications?token={{ .Token }}

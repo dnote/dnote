@@ -42,6 +42,9 @@ import NewRepetition from './components/Repetition/New';
 import EditRepetition from './components/Repetition/Edit';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
+import EmailPreference from './components/EmailPreference';
+
+// paths
 import {
   notePathDef,
   homePathDef,
@@ -61,7 +64,8 @@ import {
   classicMigrationPathDef,
   repetitionsPathDef,
   newRepetitionRulePathDef,
-  editRepetitionRulePathDef
+  editRepetitionRulePathDef,
+  emailPreferencePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -175,6 +179,11 @@ const routes = [
     path: editRepetitionRulePathDef,
     exact: true,
     component: AuthenticatedEditRepetition
+  },
+  {
+    path: emailPreferencePathDef,
+    exact: true,
+    component: EmailPreference
   },
   {
     component: NotFound

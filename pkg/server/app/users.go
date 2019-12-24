@@ -21,53 +21,18 @@ package app
 import (
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/crypt"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
-
-func generateResetToken() (string, error) {
-	ret, err := crypt.GetRandomStr(16)
-	if err != nil {
-		return "", errors.Wrap(err, "generating random token")
-	}
-
-	return ret, nil
-}
-
-func generateVerificationCode() (string, error) {
-	ret, err := crypt.GetRandomStr(16)
-	if err != nil {
-		return "", errors.Wrap(err, "generating random token")
-	}
-
-	return ret, nil
-}
 
 // TouchLastLoginAt updates the last login timestamp
 func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
 	t := time.Now()
 	if err := tx.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
-	}
-
-	return nil
-}
-
-func createEmailVerificaitonToken(user database.User, tx *gorm.DB) error {
-	verificationCode, err := generateVerificationCode()
-	if err != nil {
-		return errors.Wrap(err, "generating verification code")
-	}
-	token := database.Token{
-		UserID: user.ID,
-		Type:   database.TokenTypeEmailVerification,
-		Value:  verificationCode,
-	}
-	if err := tx.Save(&token).Error; err != nil {
-		return errors.Wrap(err, "saving verification token")
 	}
 
 	return nil
@@ -115,7 +80,7 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 
 	// Grant all privileges if self-hosting
 	var pro bool
-	if a.OnPremise {
+	if a.Config.OnPremise {
 		pro = true
 	} else {
 		pro = false
@@ -138,7 +103,7 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 		return database.User{}, errors.Wrap(err, "saving account")
 	}
 
-	if err := createEmailVerificaitonToken(user, tx); err != nil {
+	if _, err := token.Create(tx, user.ID, database.TokenTypeEmailPreference); err != nil {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating email verificaiton token")
 	}

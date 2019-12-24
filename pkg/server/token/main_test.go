@@ -16,26 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package helpers
+package token
 
 import (
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
+	"os"
+	"testing"
+
+	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-// GenUUID generates a new uuid v4
-func GenUUID() (string, error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return "", errors.Wrap(err, "generating uuid")
-	}
+func TestMain(m *testing.M) {
+	testutils.InitTestDB()
 
-	return id.String(), nil
-}
+	code := m.Run()
+	testutils.ClearData()
 
-// ValidateUUID validates the given uuid
-func ValidateUUID(u string) bool {
-	_, err := uuid.Parse(u)
-
-	return err == nil
+	os.Exit(code)
 }

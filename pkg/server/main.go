@@ -108,19 +108,21 @@ func initApp() app.App {
 	db := initDB()
 
 	return app.App{
-		DB:                  db,
-		Clock:               clock.New(),
-		StripeAPIBackend:    nil,
-		EmailTemplates:      mailer.NewTemplates(nil),
-		EmailBackend:        &mailer.SimpleBackendImplementation{},
-		WebURL:              os.Getenv("WebURL"),
-		OnPremise:           true,
-		DisableRegistration: os.Getenv("DisableRegistration") == "true",
+		DB:               db,
+		Clock:            clock.New(),
+		StripeAPIBackend: nil,
+		EmailTemplates:   mailer.NewTemplates(nil),
+		EmailBackend:     &mailer.SimpleBackendImplementation{},
+		Config: app.Config{
+			WebURL:              os.Getenv("WebURL"),
+			OnPremise:           true,
+			DisableRegistration: os.Getenv("DisableRegistration") == "true",
+		},
 	}
 }
 
 func runJob(a app.App) error {
-	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.WebURL)
+	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
 	if err != nil {
 		return errors.Wrap(err, "getting a job runner")
 	}

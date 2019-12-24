@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package app
+package token
 
 import (
 	"fmt"
@@ -28,41 +28,38 @@ import (
 	"github.com/pkg/errors"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestCreate(t *testing.T) {
 	testCases := []struct {
-		onPremise   bool
-		expectedPro bool
+		kind string
 	}{
 		{
-			onPremise:   true,
-			expectedPro: true,
-		},
-		{
-			onPremise:   false,
-			expectedPro: false,
+			kind: database.TokenTypeEmailPreference,
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosting %t", tc.onPremise), func(t *testing.T) {
+		t.Run(fmt.Sprintf("token type %s", tc.kind), func(t *testing.T) {
 			defer testutils.ClearData()
 
-			a := NewTest(&App{
-				Config: Config{
-					OnPremise: tc.onPremise,
-				},
-			})
-			if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
-				t.Fatal(errors.Wrap(err, "executing"))
+			// Set up
+			u := testutils.SetupUserData()
+
+			// Execute
+			tok, err := Create(testutils.DB, u.ID, tc.kind)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "performing"))
 			}
 
-			var userCount int
-			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
-			testutils.MustExec(t, testutils.DB.First(&userRecord), "finding user")
+			// Test
+			var count int
+			testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&count), "counting token")
+			assert.Equalf(t, count, 1, "error mismatch")
 
-			assert.Equal(t, userCount, 1, "book count mismatch")
-			assert.Equal(t, userRecord.Cloud, tc.expectedPro, "user pro mismatch")
+			var tokenRecord database.Token
+			testutils.MustExec(t, testutils.DB.First(&tokenRecord), "finding token")
+			assert.Equalf(t, tokenRecord.UserID, tok.UserID, "UserID mismatch")
+			assert.Equalf(t, tokenRecord.Value, tok.Value, "Value mismatch")
+			assert.Equalf(t, tokenRecord.Type, tok.Type, "Type mismatch")
 		})
 	}
 }

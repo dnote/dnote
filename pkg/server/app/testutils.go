@@ -32,12 +32,14 @@ func NewTest(appParams *App) App {
 
 	a := App{
 		DB:               testutils.DB,
-		WebURL:           os.Getenv("WebURL"),
 		Clock:            clock.NewMock(),
 		EmailTemplates:   mailer.NewTemplates(&emailTmplDir),
 		EmailBackend:     &testutils.MockEmailbackendImplementation{},
 		StripeAPIBackend: nil,
-		OnPremise:        false,
+		Config: Config{
+			OnPremise: false,
+			WebURL:    os.Getenv("WebURL"),
+		},
 	}
 
 	// Allow to override with appParams
@@ -53,14 +55,14 @@ func NewTest(appParams *App) App {
 	if appParams != nil && appParams.StripeAPIBackend != nil {
 		a.StripeAPIBackend = appParams.StripeAPIBackend
 	}
-	if appParams != nil && appParams.OnPremise {
-		a.OnPremise = appParams.OnPremise
+	if appParams != nil && appParams.Config.OnPremise {
+		a.Config.OnPremise = appParams.Config.OnPremise
 	}
-	if appParams != nil && appParams.WebURL != "" {
-		a.WebURL = appParams.WebURL
+	if appParams != nil && appParams.Config.WebURL != "" {
+		a.Config.WebURL = appParams.Config.WebURL
 	}
-	if appParams != nil && appParams.DisableRegistration {
-		a.DisableRegistration = appParams.DisableRegistration
+	if appParams != nil && appParams.Config.DisableRegistration {
+		a.Config.DisableRegistration = appParams.Config.DisableRegistration
 	}
 
 	return a

@@ -17,7 +17,8 @@
  */
 
 import services from 'web/libs/services';
-import { UserData, EmailPrefData, SourceData, SubscriptionData } from './type';
+import { EmailPrefData } from 'jslib/operations/types';
+import { UserData, SourceData, SubscriptionData } from './type';
 import { ThunkAction } from '../types';
 
 import {

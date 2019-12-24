@@ -16,6 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { EmailPrefData } from 'jslib/operations/types';
 import { RemoteData } from '../types';
 
 export interface UserData {
@@ -25,10 +26,6 @@ export interface UserData {
   pro: boolean;
   // TODO: remove once all classic users have been migrated
   classic: boolean;
-}
-
-export interface EmailPrefData {
-  digestWeekly: boolean;
 }
 
 // TODO: type

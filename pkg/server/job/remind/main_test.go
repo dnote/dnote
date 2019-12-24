@@ -16,3 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+package remind
+
+import (
+	"os"
+	"testing"
+
+	"github.com/dnote/dnote/pkg/server/testutils"
+)
+
+func TestMain(m *testing.M) {
+	testutils.InitTestDB()
+
+	code := m.Run()
+	testutils.ClearData()
+
+	os.Exit(code)
+}

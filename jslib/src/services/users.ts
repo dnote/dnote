@@ -48,6 +48,17 @@ export interface GetEmailPreferenceParams {
   token?: string;
 }
 
+export interface GetEmailPreferenceResponse {
+  inactive_reminder: boolean;
+  product_update: boolean;
+}
+
+export interface UpdateEmailPreferenceParams {
+  token?: string;
+  inactiveReminder?: boolean;
+  productUpdate?: boolean;
+}
+
 export interface classicPresigninPayload {
   key: string;
   expiresAt: number;
@@ -143,14 +154,33 @@ export default function init(config: HttpClientConfig) {
       return client.patch('/verify-email', payload);
     },
 
-    updateEmailPreference: ({ token, digestFrequency }) => {
-      const payload = { digest_weekly: digestFrequency === 'weekly' };
+    updateEmailPreference: ({
+      token,
+      inactiveReminder,
+      productUpdate
+    }: UpdateEmailPreferenceParams): Promise<EmailPrefData> => {
+      const payload: any = {};
+
+      if (inactiveReminder !== undefined) {
+        payload.inactive_reminder = inactiveReminder;
+      }
+      if (productUpdate !== undefined) {
+        payload.product_update = productUpdate;
+      }
 
       let endpoint = '/account/email-preference';
       if (token) {
         endpoint = `${endpoint}?token=${token}`;
       }
-      return client.patch(endpoint, payload);
+
+      return client
+        .patch<GetEmailPreferenceResponse>(endpoint, payload)
+        .then(res => {
+          return {
+            inactiveReminder: res.inactive_reminder,
+            productUpdate: res.product_update
+          };
+        });
     },
 
     getEmailPreference: ({
@@ -161,7 +191,12 @@ export default function init(config: HttpClientConfig) {
         endpoint = `${endpoint}?token=${token}`;
       }
 
-      return client.get<EmailPrefData>(endpoint);
+      return client.get<GetEmailPreferenceResponse>(endpoint).then(res => {
+        return {
+          inactiveReminder: res.inactive_reminder,
+          productUpdate: res.product_update
+        };
+      });
     },
 
     getMe: (): Promise<UserData> => {

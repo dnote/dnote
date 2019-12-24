@@ -34,18 +34,24 @@ import (
 var (
 	// EmailTypeResetPassword represents a reset password email
 	EmailTypeResetPassword = "reset_password"
-	// EmailTypeWeeklyDigest represents a weekly digest email
-	EmailTypeWeeklyDigest = "digest"
+	// EmailTypeResetPasswordAlert represents a password change notification email
+	EmailTypeResetPasswordAlert = "reset_password_alert"
+	// EmailTypeDigest represents a weekly digest email
+	EmailTypeDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
 	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
+	// EmailTypeInactiveReminder represents an inactivity reminder email
+	EmailTypeInactiveReminder = "inactive"
+	// EmailTypeSubscriptionConfirmation represents an inactivity reminder email
+	EmailTypeSubscriptionConfirmation = "subscription_confirmation"
 )
 
 var (
 	// EmailKindHTML is the type of html email
 	EmailKindHTML = "text/html"
-	// EmailKindHTML is the type of text email
+	// EmailKindText is the type of text email
 	EmailKindText = "text/plain"
 )
 
@@ -87,7 +93,7 @@ func NewTemplates(srcDir *string) Templates {
 		box = packr.New("emailTemplates", "./templates/src")
 	}
 
-	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeWeeklyDigest)
+	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeDigest)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing weekly digest template"))
 	}
@@ -103,12 +109,27 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
+	passwordResetAlertText, err := initTextTmpl(box, EmailTypeResetPasswordAlert)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
+	}
+	inactiveReminderText, err := initTextTmpl(box, EmailTypeInactiveReminder)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
+	}
+	subscriptionConfirmationText, err := initTextTmpl(box, EmailTypeSubscriptionConfirmation)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing password reset template"))
+	}
 
 	T := Templates{}
-	T.set(EmailTypeWeeklyDigest, EmailKindHTML, weeklyDigestHTML)
+	T.set(EmailTypeDigest, EmailKindHTML, weeklyDigestHTML)
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
+	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
+	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
+	T.set(EmailTypeSubscriptionConfirmation, EmailKindText, subscriptionConfirmationText)
 
 	return T
 }

@@ -16,12 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { EmailPrefData } from 'jslib/operations/types';
 import { RemoteData } from '../types';
 import {
   AuthState,
   AuthActionType,
   UserData,
-  EmailPrefData,
   SubscriptionData,
   SourceData,
   RECEIVE_EMAIL_PREFERENCE,
@@ -56,7 +56,8 @@ export const initialState: AuthState = {
     isFetching: false,
     isFetched: false,
     data: {
-      digestWeekly: false
+      inactiveReminder: false,
+      productUpdate: false
     },
     errorMessage: ''
   },

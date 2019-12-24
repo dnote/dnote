@@ -41,6 +41,7 @@ export const repetitionsPathDef = '/repetition';
 export const repetitionPathDef = '/repetition/:repetitionUUID';
 export const newRepetitionRulePathDef = '/repetition/new';
 export const editRepetitionRulePathDef = '/repetition/:repetitionUUID/edit';
+export const emailPreferencePathDef = '/email-preferences';
 
 // layout definitions
 export const noHeaderPaths = [
@@ -50,7 +51,8 @@ export const noHeaderPaths = [
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
-  passwordResetConfirmPathDef
+  passwordResetConfirmPathDef,
+  emailPreferencePathDef
 ];
 export const noFooterPaths = [
   loginPathDef,
@@ -61,7 +63,8 @@ export const noFooterPaths = [
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
-  passwordResetConfirmPathDef
+  passwordResetConfirmPathDef,
+  emailPreferencePathDef
 ];
 export const subscriptionPaths = [
   subscriptionsPathDef,
@@ -211,6 +214,7 @@ export function getPasswordResetConfirmPath(searchObj = {}): Location {
 export enum SettingSections {
   account = 'account',
   billing = 'billing',
+  notifications = 'notifications',
   about = 'about'
 }
 

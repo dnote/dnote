@@ -72,8 +72,27 @@ type EmailResetPasswordTmplData struct {
 	WebURL       string
 }
 
+// EmailResetPasswordAlertTmplData is a template data for reset password emails
+type EmailResetPasswordAlertTmplData struct {
+	AccountEmail string
+	WebURL       string
+}
+
 // WelcomeTmplData is a template data for welcome emails
 type WelcomeTmplData struct {
+	AccountEmail string
+	WebURL       string
+}
+
+// InactiveReminderTmplData is a template data for welcome emails
+type InactiveReminderTmplData struct {
+	SampleNoteUUID string
+	WebURL         string
+	Token          string
+}
+
+// EmailTypeSubscriptionConfirmationTmplData is a template data for reset password emails
+type EmailTypeSubscriptionConfirmationTmplData struct {
 	AccountEmail string
 	WebURL       string
 }

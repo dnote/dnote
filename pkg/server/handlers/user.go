@@ -28,6 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/presenters"
+	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -155,24 +156,13 @@ func (a *API) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenValue, err := generateVerificationCode()
+	tok, err := token.Create(a.App.DB, account.UserID, database.TokenTypeEmailVerification)
 	if err != nil {
-		HandleError(w, "generating verification code", err, http.StatusInternalServerError)
-		return
-	}
-
-	token := database.Token{
-		UserID: account.UserID,
-		Value:  tokenValue,
-		Type:   database.TokenTypeEmailVerification,
-	}
-
-	if err := a.App.DB.Save(&token).Error; err != nil {
 		HandleError(w, "saving token", err, http.StatusInternalServerError)
 		return
 	}
 
-	if err := a.App.SendVerificationEmail(account.Email.String, tokenValue); err != nil {
+	if err := a.App.SendVerificationEmail(account.Email.String, tok.Value); err != nil {
 		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
 			respondInvalidSMTPConfig(w)
 		} else {
@@ -249,8 +239,25 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, session)
 }
 
-type updateEmailPreferencePayload struct {
-	DigestWeekly bool `json:"digest_weekly"`
+type emailPreferernceParams struct {
+	InactiveReminder *bool `json:"inactive_reminder"`
+	ProductUpdate    *bool `json:"product_update"`
+}
+
+func (p emailPreferernceParams) getInactiveReminder() bool {
+	if p.InactiveReminder == nil {
+		return false
+	}
+
+	return *p.InactiveReminder
+}
+
+func (p emailPreferernceParams) getProductUpdate() bool {
+	if p.ProductUpdate == nil {
+		return false
+	}
+
+	return *p.ProductUpdate
 }
 
 func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
@@ -260,30 +267,36 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var params updateEmailPreferencePayload
+	var params emailPreferernceParams
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
-	var frequency database.EmailPreference
-	if err := a.App.DB.Where(database.EmailPreference{UserID: user.ID}).FirstOrCreate(&frequency).Error; err != nil {
-		HandleError(w, "finding frequency", err, http.StatusInternalServerError)
+	var pref database.EmailPreference
+	if err := a.App.DB.Where(database.EmailPreference{UserID: user.ID}).FirstOrCreate(&pref).Error; err != nil {
+		HandleError(w, "finding pref", err, http.StatusInternalServerError)
 		return
 	}
 
 	tx := a.App.DB.Begin()
 
-	frequency.DigestWeekly = params.DigestWeekly
-	if err := tx.Save(&frequency).Error; err != nil {
+	if params.InactiveReminder != nil {
+		pref.InactiveReminder = params.getInactiveReminder()
+	}
+	if params.ProductUpdate != nil {
+		pref.ProductUpdate = params.getProductUpdate()
+	}
+
+	if err := tx.Save(&pref).Error; err != nil {
 		tx.Rollback()
-		HandleError(w, "saving frequency", err, http.StatusInternalServerError)
+		HandleError(w, "saving pref", err, http.StatusInternalServerError)
 		return
 	}
 
 	token, ok := r.Context().Value(helpers.KeyToken).(database.Token)
 	if ok {
-		// Use token if the user was authenticated by token
+		// Mark token as used if the user was authenticated by token
 		if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
 			tx.Rollback()
 			HandleError(w, "updating reset token", err, http.StatusInternalServerError)
@@ -293,7 +306,7 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	respondJSON(w, http.StatusOK, frequency)
+	respondJSON(w, http.StatusOK, pref)
 }
 
 func (a *API) getEmailPreference(w http.ResponseWriter, r *http.Request) {

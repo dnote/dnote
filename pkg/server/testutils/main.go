@@ -173,10 +173,10 @@ func SetupSession(t *testing.T, user database.User) database.Session {
 }
 
 // SetupEmailPreferenceData creates and returns a new email frequency for a user
-func SetupEmailPreferenceData(user database.User, digestWeekly bool) database.EmailPreference {
+func SetupEmailPreferenceData(user database.User, inactiveReminder bool) database.EmailPreference {
 	frequency := database.EmailPreference{
-		UserID:       user.ID,
-		DigestWeekly: digestWeekly,
+		UserID:           user.ID,
+		InactiveReminder: inactiveReminder,
 	}
 
 	if err := DB.Save(&frequency).Error; err != nil {
@@ -295,6 +295,14 @@ type MockEmail struct {
 type MockEmailbackendImplementation struct {
 	mu     sync.RWMutex
 	Emails []MockEmail
+}
+
+// Clear clears the mock email queue
+func (b *MockEmailbackendImplementation) Clear() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.Emails = []MockEmail{}
 }
 
 // Queue is an implementation of Backend.Queue.

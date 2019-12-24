@@ -19,10 +19,13 @@
 package job
 
 import (
-	"log"
+	slog "log"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/job/remind"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -48,17 +51,17 @@ type Runner struct {
 	Clock        clock.Clock
 	EmailTmpl    mailer.Templates
 	EmailBackend mailer.Backend
-	WebURL       string
+	Config       app.Config
 }
 
 // NewRunner returns a new runner
-func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, webURL string) (Runner, error) {
+func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, config app.Config) (Runner, error) {
 	ret := Runner{
 		DB:           db,
 		EmailTmpl:    t,
 		EmailBackend: b,
 		Clock:        c,
-		WebURL:       webURL,
+		Config:       config,
 	}
 
 	if err := ret.validate(); err != nil {
@@ -81,7 +84,7 @@ func (r *Runner) validate() error {
 	if r.EmailBackend == nil {
 		return ErrEmptyEmailBackend
 	}
-	if r.WebURL == "" {
+	if r.Config.WebURL == "" {
 		return ErrEmptyWebURL
 	}
 
@@ -101,6 +104,7 @@ func (r *Runner) schedule(ch chan error) {
 	// Schedule jobs
 	cr := cron.New()
 	scheduleJob(cr, "* * * * *", func() { r.DoRepetition() })
+	scheduleJob(cr, "0 8 * * *", func() { r.RemindNoRecentNotes() })
 	cr.Start()
 
 	ch <- nil
@@ -122,22 +126,53 @@ func (r *Runner) Do() error {
 		return errors.Wrap(err, "scheduling jobs")
 	}
 
-	log.Println("Started background tasks")
+	slog.Println("Started background tasks")
 
 	return nil
 }
 
 // DoRepetition creates spaced repetitions and delivers the results based on the rules
-func (r *Runner) DoRepetition() error {
-	p := repetition.Params{
+func (r *Runner) DoRepetition() {
+	c := repetition.Context{
 		DB:           r.DB,
 		Clock:        r.Clock,
 		EmailTmpl:    r.EmailTmpl,
 		EmailBackend: r.EmailBackend,
-	}
-	if err := repetition.Do(p); err != nil {
-		return errors.Wrap(err, "performing repetition job")
+		Config:       r.Config,
 	}
 
-	return nil
+	result, err := repetition.Do(c)
+	m := log.WithFields(log.Fields{
+		"success_count":     result.SuccessCount,
+		"failed_rule_uuids": result.FailedRuleUUIDs,
+	})
+
+	if err == nil {
+		m.Info("successfully processed repetition job")
+	} else {
+		m.ErrorWrap(err, "error processing repetition job")
+	}
+}
+
+// RemindNoRecentNotes remind users if no notes have been added recently
+func (r *Runner) RemindNoRecentNotes() {
+	c := remind.Context{
+		DB:           r.DB,
+		Clock:        r.Clock,
+		EmailTmpl:    r.EmailTmpl,
+		EmailBackend: r.EmailBackend,
+		Config:       r.Config,
+	}
+
+	result, err := remind.DoInactive(c)
+	m := log.WithFields(log.Fields{
+		"success_count":   result.SuccessCount,
+		"failed_user_ids": result.FailedUserIDs,
+	})
+
+	if err == nil {
+		m.Info("successfully processed no recent note reminder job")
+	} else {
+		m.ErrorWrap(err, "error processing no recent note reminder job")
+	}
 }
