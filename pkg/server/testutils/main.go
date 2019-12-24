@@ -80,10 +80,10 @@ func ClearData() {
 		panic(errors.Wrap(err, "Failed to clear accounts"))
 	}
 	if err := DB.Delete(&database.Token{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
 	if err := DB.Delete(&database.EmailPreference{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
 	if err := DB.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
@@ -92,7 +92,7 @@ func ClearData() {
 		panic(errors.Wrap(err, "Failed to clear digests"))
 	}
 	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
+		panic(errors.Wrap(err, "Failed to clear repetition rules"))
 	}
 }
 

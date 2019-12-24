@@ -19,7 +19,12 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import { getNewPath, getBooksPath, getRepetitionsPath } from 'web/libs/paths';
+import {
+  getNewPath,
+  getBooksPath,
+  getRepetitionsPath,
+  getDigestsPath
+} from 'web/libs/paths';
 import { Filters, toSearchObj } from 'jslib/helpers/filters';
 import Item from './Item';
 import styles from './Nav.scss';
@@ -37,7 +42,7 @@ const Nav: React.FunctionComponent<Props> = ({ filters }) => {
         <Item to={getNewPath(searchObj)} label="New" />
         <Item to={getBooksPath(searchObj)} label="Books" />
         <Item to={getRepetitionsPath(searchObj)} label="Repetition" />
-        {/* <Item to={getRandomPath(searchObj)} label="Random" /> */}
+        <Item to={getDigestsPath(searchObj)} label="Digests" />
       </ul>
     </nav>
   );

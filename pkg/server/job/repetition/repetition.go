@@ -28,6 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -124,13 +125,9 @@ func build(tx *gorm.DB, rule database.RepetitionRule) (database.Digest, error) {
 		return database.Digest{}, errors.Wrap(err, "getting notes")
 	}
 
-	digest := database.Digest{
-		RuleID: rule.ID,
-		UserID: rule.UserID,
-		Notes:  notes,
-	}
-	if err := tx.Save(&digest).Error; err != nil {
-		return database.Digest{}, errors.Wrap(err, "saving digest")
+	digest, err := operations.CreateDigest(tx, rule, notes)
+	if err != nil {
+		return database.Digest{}, errors.Wrap(err, "creating digest")
 	}
 
 	return digest, nil

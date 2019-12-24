@@ -42,6 +42,7 @@ export const repetitionPathDef = '/repetition/:repetitionUUID';
 export const newRepetitionRulePathDef = '/repetition/new';
 export const editRepetitionRulePathDef = '/repetition/:repetitionUUID/edit';
 export const emailPreferencePathDef = '/email-preferences';
+export const digestsPathDef = '/digests';
 
 // layout definitions
 export const noHeaderPaths = [
@@ -137,6 +138,10 @@ export function getBooksPath(searchObj = {}): Location {
 
 export function getRepetitionsPath(searchObj = {}): Location {
   return getLocation({ pathname: repetitionsPathDef, searchObj });
+}
+
+export function getDigestsPath(searchObj = {}): Location {
+  return getLocation({ pathname: digestsPathDef, searchObj });
 }
 
 export function getNewRepetitionPath(searchObj = {}): Location {
