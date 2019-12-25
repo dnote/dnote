@@ -83,3 +83,18 @@ export interface RepetitionRuleData {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ReceiptData {
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DigestData {
+  uuid: string;
+  createdAt: string;
+  updatedAt: string;
+  version: number;
+  notes: NoteData[];
+  receipts: ReceiptData[];
+  repetitionRule: RepetitionRuleData;
+}

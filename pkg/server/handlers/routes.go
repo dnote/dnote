@@ -356,8 +356,8 @@ func (a *API) NewRouter() (*mux.Router, error) {
 		{"POST", "/repetition_rules", a.auth(a.createRepetitionRule, &proOnly), true},
 		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", a.tokenAuth(a.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
 		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", a.auth(a.deleteRepetitionRule, &proOnly), true},
-		{"GET", "/digests/{digestUUID}", a.auth(a.getDigest, &proOnly), true},
-		{"GET", "/digests", a.auth(a.getDigests, &proOnly), true},
+		{"GET", "/digests/{digestUUID}", a.auth(a.getDigest, nil), true},
+		{"GET", "/digests", a.auth(a.getDigests, nil), true},
 
 		// migration of classic users
 		{"GET", "/classic/presignin", cors(a.classicPresignin), true},

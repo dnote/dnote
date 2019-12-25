@@ -26,10 +26,13 @@ import (
 
 // Digest is a presented digest
 type Digest struct {
-	UUID      string    `json:"uuid"`
-	Notes     []Note    `json:"notes"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UUID           string          `json:"uuid"`
+	Version        int             `json:"version"`
+	RepetitionRule RepetitionRule  `json:"repetition_rule"`
+	Notes          []Note          `json:"notes"`
+	Receipts       []DigestReceipt `json:"receipts"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
 }
 
 // PresentDigests presetns digests
@@ -38,9 +41,12 @@ func PresentDigests(digests []database.Digest) []Digest {
 
 	for _, digest := range digests {
 		p := Digest{
-			UUID:      digest.UUID,
-			CreatedAt: digest.CreatedAt,
-			UpdatedAt: digest.UpdatedAt,
+			UUID:           digest.UUID,
+			Version:        digest.Version,
+			RepetitionRule: PresentRepetitionRule(digest.Rule),
+			Receipts:       PresentDigestReceipts(digest.Receipts),
+			CreatedAt:      digest.CreatedAt,
+			UpdatedAt:      digest.UpdatedAt,
 		}
 
 		ret = append(ret, p)
@@ -52,8 +58,9 @@ func PresentDigests(digests []database.Digest) []Digest {
 // PresentDigest presents a digest
 func PresentDigest(digest database.Digest) Digest {
 	ret := Digest{
-		UUID:  digest.UUID,
-		Notes: PresentNotes(digest.Notes),
+		UUID:     digest.UUID,
+		Notes:    PresentNotes(digest.Notes),
+		Receipts: PresentDigestReceipts(digest.Receipts),
 	}
 
 	return ret

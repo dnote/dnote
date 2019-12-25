@@ -28,6 +28,7 @@ import { NotesState } from './notes/type';
 import { UIState } from './ui/type';
 import { RouteState } from './route/type';
 import { FiltersState } from './filters/type';
+import { DigestsState } from './digests/type';
 import { RepetitionRulesState } from './repetitionRules/type';
 
 // RemoteData represents a data in Redux store that is fetched from a remote source.
@@ -50,6 +51,7 @@ export interface AppState {
   ui: UIState;
   route: RouteState;
   filters: FiltersState;
+  digests: DigestsState;
   repetitionRules: RepetitionRulesState;
 }
 

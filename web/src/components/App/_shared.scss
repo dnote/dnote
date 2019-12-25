@@ -166,10 +166,10 @@ html body {
 
 .page-header {
   margin-top: rem(20px);
-  margin-bottom: rem(20px);
 
   @include breakpoint(lg) {
     padding: 0;
+    margin-bottom: rem(20px);
     margin-top: 0;
   }
 }

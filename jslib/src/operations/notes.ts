@@ -16,9 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// This module provides interfaces to perform operations. It abstarcts
-// the backend implementation and thus unifies the API for web and desktop clients.
-
 import initNotesService from '../services/notes';
 import { HttpClientConfig } from '../helpers/http';
 import { NoteData } from './types';

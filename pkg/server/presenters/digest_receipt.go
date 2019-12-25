@@ -16,21 +16,38 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { HttpClientConfig } from '../helpers/http';
-import initBooksOperation from './books';
-import initNotesOperation from './notes';
-import initDigestsOperation from './digests';
+package presenters
 
-// init initializes operations with the given http configuration
-// and returns an object of all services.
-export default function initOperations(c: HttpClientConfig) {
-  const booksOperation = initBooksOperation(c);
-  const notesOperation = initNotesOperation(c);
-  const digestsOperation = initDigestsOperation(c);
+import (
+	"time"
 
-  return {
-    books: booksOperation,
-    notes: notesOperation,
-    digests: digestsOperation
-  };
+	"github.com/dnote/dnote/pkg/server/database"
+)
+
+// DigestReceipt is a presented receipt
+type DigestReceipt struct {
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// PresentDigestReceipt presents a receipt
+func PresentDigestReceipt(receipt database.DigestReceipt) DigestReceipt {
+	ret := DigestReceipt{
+		CreatedAt: receipt.CreatedAt,
+		UpdatedAt: receipt.UpdatedAt,
+	}
+
+	return ret
+}
+
+// PresentDigestReceipts presents receipts
+func PresentDigestReceipts(receipts []database.DigestReceipt) []DigestReceipt {
+	ret := []DigestReceipt{}
+
+	for _, receipt := range receipts {
+		r := PresentDigestReceipt(receipt)
+		ret = append(ret, r)
+	}
+
+	return ret
 }

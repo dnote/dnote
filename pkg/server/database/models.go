@@ -128,13 +128,22 @@ type Session struct {
 
 // Digest is a digest of notes
 type Digest struct {
-	UUID      string    `json:"uuid" gorm:"primary_key:true;type:uuid;index;default:uuid_generate_v4()"`
-	RuleID    int       `gorm:"index"`
-	UserID    int       `gorm:"index"`
-	Version   int       `gorm:"version"`
-	Notes     []Note    `gorm:"many2many:digest_notes;association_foreignKey:uuid;association_jointable_foreignkey:note_uuid;jointable_foreignkey:digest_uuid;"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Model
+	UUID     string          `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	RuleID   int             `gorm:"index"`
+	Rule     RepetitionRule  `json:"rule"`
+	UserID   int             `gorm:"index"`
+	Version  int             `gorm:"version"`
+	Notes    []Note          `gorm:"many2many:digest_notes;"`
+	Receipts []DigestReceipt `gorm:"polymorphic:Target;"`
+}
+
+// DigestNote is an intermediary to represent many-to-many relationship
+// between digests and notes
+type DigestNote struct {
+	Model
+	NoteID   int `gorm:"index"`
+	DigestID int `gorm:"index"`
 }
 
 // RepetitionRule is the rules for sending digest emails
@@ -155,4 +164,11 @@ type RepetitionRule struct {
 	BookDomain string `json:"book_domain"`
 	Books      []Book `gorm:"many2many:repetition_rule_books;"`
 	NoteCount  int    `json:"note_count"`
+}
+
+// DigestReceipt is a read receipt for digests
+type DigestReceipt struct {
+	Model
+	UserID   int `json:"user_id" gorm:"index"`
+	DigestID int `json:"digest_id" gorm:"index"`
 }

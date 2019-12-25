@@ -16,21 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { HttpClientConfig } from '../helpers/http';
-import initBooksOperation from './books';
-import initNotesOperation from './notes';
-import initDigestsOperation from './digests';
-
-// init initializes operations with the given http configuration
-// and returns an object of all services.
-export default function initOperations(c: HttpClientConfig) {
-  const booksOperation = initBooksOperation(c);
-  const notesOperation = initNotesOperation(c);
-  const digestsOperation = initDigestsOperation(c);
-
-  return {
-    books: booksOperation,
-    notes: notesOperation,
-    digests: digestsOperation
-  };
-}
+export * from './actions';
+export * from './reducers';
+export * from './type';

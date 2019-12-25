@@ -24,7 +24,7 @@ import styles from './TabBar.scss';
 import Item from './Item';
 import NoteIcon from '../Icons/Note';
 import BookIcon from '../Icons/Book';
-// import DashboardIcon from '../Icons/Dashboard';
+import DashboardIcon from '../Icons/Dashboard';
 import DotsIcon from '../Icons/Dots';
 import HomeIcon from '../Icons/Home';
 
@@ -51,7 +51,7 @@ const TabBar: React.FunctionComponent<Props> = ({
 }) => {
   const isHomeActive = !isMobileMenuOpen && location.pathname === '/';
   const isBookActive = !isMobileMenuOpen && location.pathname === '/books';
-  // const isRandomActive = !isMobileMenuOpen && location.pathname === '/random';
+  const isDigestsActive = !isMobileMenuOpen && location.pathname === '/digests';
   const isNewActive = !isMobileMenuOpen && location.pathname === '/new';
 
   return (
@@ -81,24 +81,6 @@ const TabBar: React.FunctionComponent<Props> = ({
           </Link>
         </Item>
 
-        {/*
-        <Item>
-          <Link
-            to="/random"
-            className={classnames(styles.link, {
-              [styles.active]: isRandomActive
-            })}
-          >
-            <DashboardIcon
-              width={16}
-              height={16}
-              fill={getFill(isRandomActive)}
-            />
-            <span className={styles.label}>Random</span>
-          </Link>
-        </Item>
-        */}
-
         <Item>
           <Link
             to="/new"
@@ -113,6 +95,22 @@ const TabBar: React.FunctionComponent<Props> = ({
               fill={getFill(isNewActive)}
             />
             <span className={styles.label}>New</span>
+          </Link>
+        </Item>
+
+        <Item>
+          <Link
+            to="/digests"
+            className={classnames(styles.link, {
+              [styles.active]: isDigestsActive
+            })}
+          >
+            <DashboardIcon
+              width={16}
+              height={16}
+              fill={getFill(isDigestsActive)}
+            />
+            <span className={styles.label}>Digests</span>
           </Link>
         </Item>
 
