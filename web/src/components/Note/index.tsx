@@ -20,15 +20,17 @@ import React, { useEffect, useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { parseSearchString } from 'jslib/helpers/url';
+import { checkOwner } from 'web/libs/notes';
 import Content from '../Common/Note';
+import Placeholder from '../Common/Note/Placeholder';
 import Flash from '../Common/Flash';
 import { getNote } from '../../store/note';
-import Placeholder from './Placeholder';
 import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import DeleteModal from './DeleteModal';
 import ShareModal from './ShareModal';
 import HeaderData from './HeaderData';
 import FooterActions from './FooterActions';
+import Header from './Header';
 import styles from './index.scss';
 
 interface Match {
@@ -58,13 +60,16 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
   const { noteUUID } = params;
 
   const dispatch = useDispatch();
-  const { note } = useSelector(state => {
+  const { note, user } = useSelector(state => {
     return {
-      note: state.note
+      note: state.note,
+      user: state.auth.user
     };
   });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const isOwner = checkOwner(note.data, user.data);
 
   useFetchData(dispatch, noteUUID, location.search);
 
@@ -79,8 +84,10 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
       <div className="container mobile-nopadding page page-mobile-full">
         {note.isFetched ? (
           <Content
+            note={note.data}
             footerActions={
               <FooterActions
+                isOwner={isOwner}
                 noteUUID={note.data.uuid}
                 onDeleteModalOpen={() => {
                   setIsDeleteModalOpen(true);
@@ -90,6 +97,7 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
                 }}
               />
             }
+            header={<Header isOwner={isOwner} note={note.data} />}
           />
         ) : (
           <Placeholder />

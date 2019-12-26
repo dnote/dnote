@@ -1,0 +1,15 @@
+REFRESH YOUR MEMORY
+
+There is a new automated spaced repetition "{{ .RuleTitle }} #{{ .DigestVersion }}"
+
+    {{ .WebURL }}/digests/{{ .DigestUUID }}
+
+
+MANAGE THE RULE
+
+Go to the following link to manage the notification and other settings for "{{ .RuleTitle }}"
+
+    {{ .WebURL }}/preferences/repetitions/{{ .RuleUUID }}?token={{ .EmailSessionToken }}
+
+- Dnote team
+

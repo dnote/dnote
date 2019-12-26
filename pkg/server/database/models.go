@@ -46,19 +46,20 @@ type Book struct {
 // Note is a model for a note
 type Note struct {
 	Model
-	UUID      string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
-	Book      Book   `json:"book" gorm:"foreignkey:BookUUID"`
-	User      User   `json:"user"`
-	UserID    int    `json:"user_id" gorm:"index"`
-	BookUUID  string `json:"book_uuid" gorm:"index;type:uuid"`
-	Body      string `json:"content"`
-	AddedOn   int64  `json:"added_on"`
-	EditedOn  int64  `json:"edited_on"`
-	TSV       string `json:"-" gorm:"type:tsvector"`
-	Public    bool   `json:"public" gorm:"default:false"`
-	USN       int    `json:"-" gorm:"index"`
-	Deleted   bool   `json:"-" gorm:"default:false"`
-	Encrypted bool   `json:"-" gorm:"default:false"`
+	UUID       string     `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
+	Book       Book       `json:"book" gorm:"foreignkey:BookUUID"`
+	User       User       `json:"user"`
+	UserID     int        `json:"user_id" gorm:"index"`
+	BookUUID   string     `json:"book_uuid" gorm:"index;type:uuid"`
+	Body       string     `json:"content"`
+	AddedOn    int64      `json:"added_on"`
+	EditedOn   int64      `json:"edited_on"`
+	TSV        string     `json:"-" gorm:"type:tsvector"`
+	Public     bool       `json:"public" gorm:"default:false"`
+	USN        int        `json:"-" gorm:"index"`
+	Deleted    bool       `json:"-" gorm:"default:false"`
+	Encrypted  bool       `json:"-" gorm:"default:false"`
+	NoteReview NoteReview `json:"-"`
 }
 
 // User is a model for a user
@@ -171,4 +172,13 @@ type DigestReceipt struct {
 	Model
 	UserID   int `json:"user_id" gorm:"index"`
 	DigestID int `json:"digest_id" gorm:"index"`
+}
+
+// NoteReview is a record for reviewing a note in a digest
+type NoteReview struct {
+	Model
+	UUID     string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
+	UserID   int    `json:"user_id" gorm:"index"`
+	DigestID int    `json:"digest_id" gorm:"index"`
+	NoteID   int    `json:"note_id" gorm:"index"`
 }

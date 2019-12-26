@@ -16,15 +16,22 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import classnames from 'classnames';
+@import '../App/rem';
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/font';
 
-import styles from './BookHolder.module.scss';
+.book-label {
+  max-width: rem(200px);
+  margin-left: rem(12px);
 
-export default () => {
-  return (
-    <li className={styles.wrapper}>
-      <div className={classnames('holder', styles.title)} />
-    </li>
-  );
-};
+  @include breakpoint(sm) {
+    max-width: rem(200px);
+  }
+  @include breakpoint(md) {
+    max-width: rem(420px);
+  }
+  @include breakpoint(lg) {
+    max-width: rem(600px);
+  }
+}

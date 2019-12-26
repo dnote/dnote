@@ -86,16 +86,14 @@ func BuildEmail(db *gorm.DB, emailTmpl mailer.Templates, p BuildEmailParams) (st
 	}
 
 	tmplData := mailer.DigestTmplData{
-		Subject:           subject,
-		NoteInfo:          noteInfos,
-		ActiveBookCount:   bookCount,
-		ActiveNoteCount:   len(p.Digest.Notes),
 		EmailSessionToken: tok.Value,
+		DigestUUID:        p.Digest.UUID,
+		DigestVersion:     p.Digest.Version,
 		RuleUUID:          p.Rule.UUID,
 		RuleTitle:         p.Rule.Title,
 		WebURL:            os.Getenv("WebURL"),
 	}
-	body, err := emailTmpl.Execute(mailer.EmailTypeDigest, mailer.EmailKindHTML, tmplData)
+	body, err := emailTmpl.Execute(mailer.EmailTypeDigest, mailer.EmailKindText, tmplData)
 	if err != nil {
 		return "", "", errors.Wrap(err, "executing digest email template")
 	}

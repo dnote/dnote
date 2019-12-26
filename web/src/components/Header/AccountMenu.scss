@@ -22,7 +22,6 @@
 @import '../App/responsive';
 
 .wrapper {
-  position: relative;
   display: none;
   margin-left: rem(20px);
   align-self: stretch;
@@ -88,7 +87,7 @@
   color: black;
 
   &:hover {
-    background: $light-gray;
+    background: $lighter-gray;
     text-decoration: none;
     color: #0056b3;
   }
@@ -99,7 +98,7 @@
   }
 
   &:not(.disabled):focus {
-    background: $light-gray;
+    background: $lighter-gray;
     color: #0056b3;
     outline: 1px dotted gray;
   }

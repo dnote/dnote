@@ -259,3 +259,45 @@ func TestDeleteNote(t *testing.T) {
 		}()
 	}
 }
+
+func TestDeleteNote_DigestNotes(t *testing.T) {
+	defer testutils.ClearData()
+
+	user := testutils.SetupUserData()
+
+	b1 := database.Book{UserID: user.ID, Label: "testBook"}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	n1 := database.Note{UserID: user.ID, Deleted: false, Body: "n1", BookUUID: b1.UUID}
+	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+	n2 := database.Note{UserID: user.ID, Deleted: false, Body: "n2", BookUUID: b1.UUID}
+	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
+
+	d1 := database.Digest{UserID: user.ID}
+	testutils.MustExec(t, testutils.DB.Save(&d1), "preparing d1")
+	dn1 := database.DigestNote{NoteID: n1.ID, DigestID: d1.ID}
+	testutils.MustExec(t, testutils.DB.Save(&dn1), "preparing dn1")
+	dn2 := database.DigestNote{NoteID: n2.ID, DigestID: d1.ID}
+	testutils.MustExec(t, testutils.DB.Save(&dn2), "preparing dn2")
+
+	a := NewTest(nil)
+
+	tx := testutils.DB.Begin()
+	if _, err := a.DeleteNote(tx, user, n1); err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "deleting note"))
+	}
+	tx.Commit()
+
+	var noteCount, digestNoteCount int
+	var dn2Record database.DigestNote
+
+	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	testutils.MustExec(t, testutils.DB.Model(&database.DigestNote{}).Count(&digestNoteCount), "counting digest_notes")
+
+	assert.Equal(t, noteCount, 2, "note count mismatch")
+	assert.Equal(t, digestNoteCount, 1, "digest_notes count mismatch")
+
+	testutils.MustExec(t, testutils.DB.Where("id = ?", dn2.ID).First(&dn2Record), "finding dn2")
+	assert.Equal(t, dn2Record.NoteID, dn2.NoteID, "dn2 NoteID mismatch")
+	assert.Equal(t, dn2Record.DigestID, dn2.DigestID, "dn2 DigestID mismatch")
+}

@@ -1,0 +1,57 @@
+import React from 'react';
+
+import { NoteData } from 'jslib/operations/types';
+import Time from '../../Common/Time';
+import { nanosecToMillisec } from '../../../helpers/time';
+import formatTime from '../../../helpers/time/format';
+import { timeAgo } from '../../../helpers/time';
+import styles from './Note.scss';
+
+function formatAddedOn(ts: number): string {
+  const ms = nanosecToMillisec(ts);
+  const d = new Date(ms);
+
+  return formatTime(d, '%MMMM %DD, %YYYY');
+}
+
+interface Props {
+  note: NoteData;
+  useTimeAgo: boolean;
+  collapsed?: boolean;
+  actions?: React.ReactElement;
+}
+
+const Footer: React.FunctionComponent<Props> = ({
+  collapsed,
+  actions,
+  note,
+  useTimeAgo
+}) => {
+  if (collapsed) {
+    return null;
+  }
+
+  let timeText;
+  if (useTimeAgo) {
+    timeText = timeAgo(nanosecToMillisec(note.addedOn));
+  } else {
+    timeText = formatAddedOn(note.addedOn);
+  }
+
+  return (
+    <footer className={styles.footer}>
+      <Time
+        id="note-ts"
+        text={timeText}
+        ms={nanosecToMillisec(note.addedOn)}
+        wrapperClassName={styles.ts}
+        tooltipAlignment="left"
+        tooltipDirection="bottom"
+      />
+
+      {actions}
+    </footer>
+  );
+};
+
+export default Footer;

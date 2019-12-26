@@ -2,39 +2,43 @@ import React, { useEffect } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 
-import { getDigestsPath } from 'web/libs/paths';
 import { usePrevious } from 'web/libs/hooks';
 import { parseSearchString } from 'jslib/helpers/url';
-import PageToolbar from '../Common/PageToolbar';
 import { useDispatch, useSelector } from '../../store';
 import { getDigests } from '../../store/digests';
+import { Status } from './types';
 import Flash from '../Common/Flash';
 import List from './List';
+import Toolbar from './Toolbar';
 
-const PER_PAGE = 30;
-
-function useFetchDigests(page: number) {
+function useFetchDigests(params: { page: number; status: Status }) {
   const dispatch = useDispatch();
 
-  const prevPage = usePrevious(page);
+  const prevParams = usePrevious(params);
 
   useEffect(() => {
-    if (prevPage !== page) {
-      dispatch(getDigests(page));
+    if (
+      !prevParams ||
+      prevParams.page !== params.page || prevParams.status !== params.status
+    ) {
+      dispatch(getDigests(params));
     }
-  }, [dispatch, page, prevPage]);
+  }, [dispatch, params, prevParams]);
 }
 
 interface Props extends RouteComponentProps {}
 
-const Digests: React.SFC<Props> = ({ location }) => {
+const Digests: React.FunctionComponent<Props> = ({ location }) => {
   const { digests } = useSelector(state => {
     return {
       digests: state.digests
     };
   });
-  const { page } = parseSearchString(location.search);
-  useFetchDigests(page || 1);
+  const { page, status } = parseSearchString(location.search);
+  useFetchDigests({
+    page: page || 1,
+    status
+  });
 
   return (
     <div className="page page-mobile-full">
@@ -48,21 +52,18 @@ const Digests: React.SFC<Props> = ({ location }) => {
         </div>
 
         <Flash kind="danger" when={Boolean(digests.errorMessage)}>
-          Error getting notes: {digests.errorMessage}
+          Error getting digests: {digests.errorMessage}
         </Flash>
       </div>
 
       <div className="container mobile-nopadding">
-        <PageToolbar
-          perPage={PER_PAGE}
-          total={digests.total}
-          currentPage={digests.page}
-          getPath={(p: number) => {
-            return getDigestsPath({ page: p });
-          }}
-        />
+        <Toolbar total={digests.total} page={digests.page} status={status} />
 
-        <List isFetched={digests.isFetched} items={digests.data} />
+        <List
+          isFetching={digests.isFetching}
+          isFetched={digests.isFetched}
+          items={digests.data}
+        />
       </div>
     </div>
   );

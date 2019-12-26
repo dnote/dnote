@@ -20,23 +20,16 @@ import React from 'react';
 import classnames from 'classnames';
 
 import styles from './Placeholder.scss';
-import noteStyles from './Content.scss';
+import itemStyles from './RepetitionItem.scss';
 
 interface Props {}
 
 const Placeholder: React.FunctionComponent<Props> = () => {
   return (
-    <div className={noteStyles.frame}>
-      <div className={noteStyles.header}>
-        <div className={classnames('holder', styles.title)} />
-      </div>
-      <div className={noteStyles.content}>
-        <div className={classnames('holder', styles.line1, styles.line)} />
-        <div className={classnames('holder', styles.line2, styles.line)} />
-        <div className={classnames('holder', styles.line3, styles.line)} />
-        <div className={classnames('holder', styles.line4, styles.line)} />
-        <div className={classnames('holder', styles.line5, styles.line)} />
-      </div>
+    <div className={classnames(itemStyles.wrapper, styles.wrapper)}>
+      <div className={classnames('holder', styles.line, styles.title)} />
+      <div className={classnames('holder', styles.line, styles.line1)} />
+      <div className={classnames('holder', styles.line, styles.line2)} />
     </div>
   );
 };

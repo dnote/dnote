@@ -32,6 +32,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+func preloadDigest(conn *gorm.DB, userID int) *gorm.DB {
+	return conn.
+		Preload("Notes", func(db *gorm.DB) *gorm.DB {
+			return db.Order("notes.created_at DESC")
+		}).
+		Preload("Notes.Book").
+		Preload("Notes.NoteReview").
+		Preload("Rule").
+		Preload("Receipts", func(db *gorm.DB) *gorm.DB {
+			return db.Where("digest_receipts.user_id = ?", userID)
+		})
+}
+
 func (a *API) getDigest(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
@@ -45,17 +58,19 @@ func (a *API) getDigest(w http.ResponseWriter, r *http.Request) {
 	db := a.App.DB
 
 	var digest database.Digest
-	conn := db.Preload("Notes").Preload("Receipts", func(db *gorm.DB) *gorm.DB {
-		return db.Where("digest_receipts.user_id = ?", user.ID)
-	}).Where("user_id = ? AND uuid = ? ", user.ID, digestUUID).First(&digest)
+	conn := db.Where("user_id = ? AND uuid = ? ", user.ID, digestUUID)
+	conn = preloadDigest(conn, user.ID)
+	conn = conn.First(&digest)
+
 	if conn.RecordNotFound() {
-		HandleError(w, "digest not found", nil, http.StatusNotFound)
+		RespondNotFound(w)
 		return
 	} else if err := conn.Error; err != nil {
 		HandleError(w, "finding digest", err, http.StatusInternalServerError)
 		return
 	}
 
+	// mark as read
 	receipt := database.DigestReceipt{
 		UserID:   user.ID,
 		DigestID: digest.ID,
@@ -120,7 +135,7 @@ SELECT t1.digest_id FROM
 	FROM digests
 	LEFT JOIN digest_receipts ON digest_receipts.digest_id = digests.id
 	WHERE digests.user_id = ?
-	GROUP BY digests.id
+	GROUP BY digests.id, digests.created_at
 	ORDER BY digests.created_at DESC
 ) AS t1
 %s

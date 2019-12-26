@@ -22,8 +22,6 @@
 @import '../../App/rem';
 
 .wrapper {
-  text-align: right;
-
   @include breakpoint(lg) {
     height: rem(48px);
     border-radius: rem(4px);

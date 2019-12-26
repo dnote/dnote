@@ -26,30 +26,36 @@ import (
 
 // Digest is a presented digest
 type Digest struct {
-	UUID           string          `json:"uuid"`
-	Version        int             `json:"version"`
-	RepetitionRule RepetitionRule  `json:"repetition_rule"`
-	Notes          []Note          `json:"notes"`
-	Receipts       []DigestReceipt `json:"receipts"`
-	CreatedAt      time.Time       `json:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at"`
+	UUID           string         `json:"uuid"`
+	Version        int            `json:"version"`
+	RepetitionRule RepetitionRule `json:"repetition_rule"`
+	Notes          []DigestNote   `json:"notes"`
+	IsRead         bool           `json:"is_read"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
-// PresentDigests presetns digests
-func PresentDigests(digests []database.Digest) []Digest {
-	ret := []Digest{}
+// DigestNote is a presented note inside a digest
+type DigestNote struct {
+	Note
+	IsReviewed bool `json:"is_reviewed"`
+}
 
-	for _, digest := range digests {
-		p := Digest{
-			UUID:           digest.UUID,
-			Version:        digest.Version,
-			RepetitionRule: PresentRepetitionRule(digest.Rule),
-			Receipts:       PresentDigestReceipts(digest.Receipts),
-			CreatedAt:      digest.CreatedAt,
-			UpdatedAt:      digest.UpdatedAt,
-		}
+func presentDigestNote(note database.Note) DigestNote {
+	ret := DigestNote{
+		Note:       PresentNote(note),
+		IsReviewed: note.NoteReview.UUID != "",
+	}
 
-		ret = append(ret, p)
+	return ret
+}
+
+func presentDigestNotes(notes []database.Note) []DigestNote {
+	ret := []DigestNote{}
+
+	for _, note := range notes {
+		n := presentDigestNote(note)
+		ret = append(ret, n)
 	}
 
 	return ret
@@ -58,9 +64,25 @@ func PresentDigests(digests []database.Digest) []Digest {
 // PresentDigest presents a digest
 func PresentDigest(digest database.Digest) Digest {
 	ret := Digest{
-		UUID:     digest.UUID,
-		Notes:    PresentNotes(digest.Notes),
-		Receipts: PresentDigestReceipts(digest.Receipts),
+		UUID:           digest.UUID,
+		Notes:          presentDigestNotes(digest.Notes),
+		Version:        digest.Version,
+		RepetitionRule: PresentRepetitionRule(digest.Rule),
+		IsRead:         len(digest.Receipts) > 0,
+		CreatedAt:      digest.CreatedAt,
+		UpdatedAt:      digest.UpdatedAt,
+	}
+
+	return ret
+}
+
+// PresentDigests presetns digests
+func PresentDigests(digests []database.Digest) []Digest {
+	ret := []Digest{}
+
+	for _, digest := range digests {
+		p := PresentDigest(digest)
+		ret = append(ret, p)
 	}
 
 	return ret

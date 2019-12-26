@@ -27,7 +27,7 @@ import styles from './BookList.scss';
 function Placeholder() {
   const ret = [];
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 8; i++) {
     ret.push(<BookHolder key={i} />);
   }
 

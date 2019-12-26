@@ -22,12 +22,19 @@
 @import '../../App/font';
 
 .frame {
-  // margin: 0 rem(12px);
-  @include breakpoint(sm) {
-    // margin: 0 rem(20px);
-  }
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
   background: white;
+
+  &.collapsed {
+    .book-label {
+      // control the coloro of ellipsis when overflown
+      color: $light-gray;
+    }
+
+    .book-label a {
+      color: $light-gray;
+    }
+  }
 }
 
 .header {
@@ -47,35 +54,17 @@
   vertical-align: middle;
 }
 
-.book-label {
-  @include font-size('medium');
-  font-weight: 600;
-  display: inline-block;
-  margin-left: rem(12px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  max-width: rem(200px);
-  @include breakpoint(sm) {
-    max-width: rem(200px);
-  }
-  @include breakpoint(md) {
-    max-width: rem(420px);
-  }
-  @include breakpoint(lg) {
-    max-width: rem(600px);
-  }
-
-  .book-label-link {
-    color: inherit;
-  }
+.content-wrapper {
+  padding: rem(12px) rem(16px);
 }
 
 .content {
   word-wrap: break-word;
-  padding: rem(12px) rem(16px);
   word-break: break-all;
+}
+
+.collapsed-content {
+  color: $light-gray;
 }
 
 .footer {
@@ -87,10 +76,28 @@
 }
 
 .ts {
-  color: $note-footer-text-color;
+  color: $light-gray;
 }
 
 .match {
   display: inline-block;
   background: #f7f77d;
+}
+
+.book-label {
+  @include font-size('medium');
+  font-weight: 600;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: $black;
+
+  a {
+    color: inherit;
+
+    &:hover {
+      color: inherit;
+    }
+  }
 }

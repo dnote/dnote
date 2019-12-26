@@ -49,6 +49,7 @@ func InitSchema(db *gorm.DB) {
 		DigestNote{},
 		RepetitionRule{},
 		DigestReceipt{},
+		NoteReview{},
 	).Error; err != nil {
 		panic(err)
 	}

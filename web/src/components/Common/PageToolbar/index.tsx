@@ -18,40 +18,28 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import { Location } from 'history';
 
-import Paginator from './Paginator';
 import styles from './index.scss';
 
 type Position = 'top' | 'bottom';
 
 interface Props {
-  perPage: number;
-  total: number;
-  currentPage: number;
-  getPath: (page: number) => Location;
   position?: Position;
+  wrapperClassName?: string;
 }
 
 const PageToolbar: React.FunctionComponent<Props> = ({
   position,
-  perPage,
-  total,
-  currentPage,
-  getPath
+  wrapperClassName,
+  children
 }) => {
   return (
     <div
-      className={classnames(styles.wrapper, {
+      className={classnames(styles.wrapper, wrapperClassName, {
         [styles.bottom]: position === 'bottom'
       })}
     >
-      <Paginator
-        perPage={perPage}
-        total={total}
-        currentPage={currentPage}
-        getPath={getPath}
-      />
+      {children}
     </div>
   );
 };

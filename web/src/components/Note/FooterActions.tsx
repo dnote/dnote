@@ -24,16 +24,22 @@ import { getNoteEditPath } from 'web/libs/paths';
 import styles from './FooterActions.scss';
 
 interface Props {
+  isOwner: boolean;
   noteUUID: string;
   onShareModalOpen: () => void;
   onDeleteModalOpen: () => void;
 }
 
 const FooterActions: React.FunctionComponent<Props> = ({
+  isOwner,
   noteUUID,
   onShareModalOpen,
   onDeleteModalOpen
 }) => {
+  if (!isOwner) {
+    return null;
+  }
+
   return (
     <div className={styles.actions}>
       <button

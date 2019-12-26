@@ -77,15 +77,17 @@ func getBalancedNotes(db *gorm.DB, rule database.RepetitionRule) ([]database.Not
 	t1 := now.AddDate(0, 0, -3).UnixNano()
 	t2 := now.AddDate(0, 0, -7).UnixNano()
 
+	baseConn := db.Where("notes.deleted IS NOT true")
+
 	// Get notes into three buckets with different threshold values
 	var stage1, stage2, stage3 []database.Note
-	if err := getNotes(db, db.Where("notes.added_on > ?", t1), rule, &stage1); err != nil {
+	if err := getNotes(db, baseConn.Where("notes.added_on > ?", t1), rule, &stage1); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 1")
 	}
-	if err := getNotes(db, db.Where("notes.added_on > ? AND notes.added_on < ?", t2, t1), rule, &stage2); err != nil {
+	if err := getNotes(db, baseConn.Where("notes.added_on > ? AND notes.added_on < ?", t2, t1), rule, &stage2); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 2")
 	}
-	if err := getNotes(db, db.Where("notes.added_on < ?", t2), rule, &stage3); err != nil {
+	if err := getNotes(db, baseConn.Where("notes.added_on < ?", t2), rule, &stage3); err != nil {
 		return nil, errors.Wrap(err, "Failed to get notes with threshold 3")
 	}
 

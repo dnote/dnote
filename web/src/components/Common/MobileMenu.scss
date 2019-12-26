@@ -65,6 +65,10 @@
   &:hover {
     color: $white;
   }
+
+  &.active {
+    color: $active;
+  }
 }
 
 .item {

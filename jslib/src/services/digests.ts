@@ -18,22 +18,43 @@
 
 import { getHttpClient, HttpClientConfig } from '../helpers/http';
 import { getPath } from '../helpers/url';
-import { DigestData } from '../operations/types';
-import { RepetitionRuleRespData } from './repetitionRules';
+import { DigestData, DigestNoteData } from '../operations/types';
+import { mapNote } from './notes';
 
-export interface FetchAllResponse {
-  total: number;
-  items: {
-    uuid: string;
-    version: number;
-    repetition_rule: RepetitionRuleRespData;
-    created_at: string;
-    updated_at: string;
-    receipts: {
-      created_at: string;
-      updated_at: string;
-    }[];
-  }[];
+function mapDigestNote(item): DigestNoteData {
+  const note = mapNote(item);
+
+  return {
+    ...note,
+    isReviewed: item.is_reviewed
+  };
+}
+
+// mapDigest maps the presented digest response to DigestData
+function mapDigest(item): DigestData {
+  return {
+    uuid: item.uuid,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    version: item.version,
+    notes: item.notes.map(mapDigestNote),
+    repetitionRule: {
+      uuid: item.repetition_rule.uuid,
+      title: item.repetition_rule.title,
+      enabled: item.repetition_rule.enabled,
+      hour: item.repetition_rule.hour,
+      minute: item.repetition_rule.minute,
+      bookDomain: item.repetition_rule.book_domain,
+      frequency: item.repetition_rule.frequency,
+      books: item.repetition_rule.books,
+      lastActive: item.repetition_rule.last_active,
+      nextActive: item.repetition_rule.next_active,
+      noteCount: item.repetition_rule.note_count,
+      createdAt: item.repetition_rule.created_at,
+      updatedAt: item.repetition_rule.updated_at
+    },
+    isRead: item.is_read
+  };
 }
 
 export interface FetchAllResult {
@@ -45,50 +66,21 @@ export default function init(config: HttpClientConfig) {
   const client = getHttpClient(config);
 
   return {
-    fetch: (digestUUID: string) => {
+    fetch: (digestUUID: string): Promise<DigestData> => {
       const endpoint = `/digests/${digestUUID}`;
 
-      return client.get(endpoint);
+      return client.get(endpoint).then(mapDigest);
     },
 
-    fetchAll: ({ page }): Promise<FetchAllResult> => {
+    fetchAll: ({ page, status }): Promise<FetchAllResult> => {
       const path = '/digests';
 
-      const endpoint = getPath(path, { page });
+      const endpoint = getPath(path, { page, status });
 
-      return client.get<FetchAllResponse>(endpoint).then(res => {
+      return client.get(endpoint).then(res => {
         return {
           total: res.total,
-          items: res.items.map(item => {
-            return {
-              uuid: item.uuid,
-              createdAt: item.created_at,
-              updatedAt: item.updated_at,
-              version: item.version,
-              notes: [],
-              repetitionRule: {
-                uuid: item.repetition_rule.uuid,
-                title: item.repetition_rule.title,
-                enabled: item.repetition_rule.enabled,
-                hour: item.repetition_rule.hour,
-                minute: item.repetition_rule.minute,
-                bookDomain: item.repetition_rule.book_domain,
-                frequency: item.repetition_rule.frequency,
-                books: item.repetition_rule.books,
-                lastActive: item.repetition_rule.last_active,
-                nextActive: item.repetition_rule.next_active,
-                noteCount: item.repetition_rule.note_count,
-                createdAt: item.repetition_rule.created_at,
-                updatedAt: item.repetition_rule.updated_at
-              },
-              receipts: item.receipts.map(receipt => {
-                return {
-                  createdAt: receipt.created_at,
-                  updatedAt: receipt.updated_at
-                };
-              })
-            };
-          })
+          items: res.items.map(mapDigest)
         };
       });
     }

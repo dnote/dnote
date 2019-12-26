@@ -29,7 +29,7 @@ type ButtonType = 'button' | 'submit' | 'reset';
 interface Props {
   type: ButtonType;
   kind: string;
-  size: string;
+  size?: string;
   children: React.ReactNode;
   id?: string;
   className?: string;

@@ -20,10 +20,10 @@
 // The response from services need to conform to this interface.
 export interface NoteData {
   uuid: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   content: string;
-  added_on: number;
+  addedOn: number;
   public: boolean;
   usn: number;
   book: {
@@ -94,7 +94,11 @@ export interface DigestData {
   createdAt: string;
   updatedAt: string;
   version: number;
-  notes: NoteData[];
-  receipts: ReceiptData[];
+  notes: DigestNoteData[];
+  isRead: boolean;
   repetitionRule: RepetitionRuleData;
+}
+
+export interface DigestNoteData extends NoteData {
+  isReviewed: boolean;
 }

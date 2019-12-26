@@ -26,11 +26,11 @@
   position: relative;
   border-bottom: 1px solid $border-color;
 
-  &.first {
+  &:first-child {
     border-top-left-radius: rem(4px);
     border-top-right-radius: rem(4px);
   }
-  &.last {
+  &:last-child {
     border-bottom-left-radius: rem(4px);
     border-bottom-right-radius: rem(4px);
   }

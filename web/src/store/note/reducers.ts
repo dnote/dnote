@@ -28,10 +28,10 @@ import {
 const initialState: NoteState = {
   data: {
     uuid: '',
-    created_at: '',
-    updated_at: '',
+    createdAt: '',
+    updatedAt: '',
     content: '',
-    added_on: 0,
+    addedOn: 0,
     public: false,
     usn: 0,
     book: {

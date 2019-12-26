@@ -51,14 +51,14 @@ export function resetDigests() {
   };
 }
 
-export function getDigests(page: number) {
+export function getDigests(params: { page: number; status: string }) {
   return async dispatch => {
     try {
       dispatch(startFetchingDigests());
 
-      const res = await operations.digests.fetchAll(page);
+      const res = await operations.digests.fetchAll(params);
 
-      dispatch(receiveDigests(res.total, res.items, page));
+      dispatch(receiveDigests(res.total, res.items, params.page));
     } catch (err) {
       console.log('Error fetching digests', err.stack);
       dispatch(receiveError(err.message));

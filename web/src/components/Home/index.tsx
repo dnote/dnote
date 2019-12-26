@@ -32,7 +32,9 @@ import HeadData from './HeadData';
 import { useDispatch, useSelector } from '../../store';
 import { getNotes } from '../../store/notes';
 import PageToolbar from '../Common/PageToolbar';
+import Paginator from '../Common/PageToolbar/Paginator';
 import Flash from '../Common/Flash';
+import styles from './Home.scss';
 
 // PER_PAGE is the number of results per page in the response from the backend implementation's API.
 // Currently it is fixed.
@@ -86,17 +88,19 @@ const Home: React.FunctionComponent<Props> = ({ location }) => {
         Error getting notes: {notes.errorMessage}
       </Flash>
 
-      <PageToolbar
-        perPage={PER_PAGE}
-        total={notes.total}
-        currentPage={filters.page}
-        getPath={(page: number) => {
-          return getHomePath({
-            ...filters.queries,
-            page
-          });
-        }}
-      />
+      <PageToolbar wrapperClassName={styles.toolbar}>
+        <Paginator
+          perPage={PER_PAGE}
+          total={notes.total}
+          currentPage={filters.page}
+          getPath={(page: number) => {
+            return getHomePath({
+              ...filters.queries,
+              page
+            });
+          }}
+        />
+      </PageToolbar>
 
       <NoteGroupList
         groups={groups}

@@ -21,12 +21,54 @@ import { getHttpClient, HttpClientConfig } from '../helpers/http';
 import { NoteData } from '../operations/types';
 import { Filters } from '../helpers/filters';
 
+export interface PresentedNote {
+  uuid: string;
+  content: string;
+  updated_at: string;
+  created_at: string;
+  user: {
+    name: '';
+    uuid: '';
+  };
+  public: boolean;
+  book: {
+    label: '';
+    uuid: '';
+  };
+  usn: number;
+  added_on: number;
+}
+
+export function mapNote(item: PresentedNote): NoteData {
+  return {
+    uuid: item.uuid,
+    content: item.content,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    public: item.public,
+    user: {
+      name: item.user.name,
+      uuid: item.user.uuid
+    },
+    book: {
+      label: item.book.label,
+      uuid: item.book.uuid
+    },
+    usn: item.usn,
+    addedOn: item.added_on
+  };
+}
+
 export interface CreateParams {
   book_uuid: string;
   content: string;
 }
 
 export interface CreateResponse {
+  result: PresentedNote;
+}
+
+export interface CreateResult {
   result: NoteData;
 }
 
@@ -36,12 +78,22 @@ export interface UpdateParams {
   public?: boolean;
 }
 
-export interface UpdateNoteResp {
+export interface UpdateResponse {
+  status: number;
+  result: PresentedNote;
+}
+
+export interface UpdateResult {
   status: number;
   result: NoteData;
 }
 
 export interface FetchResponse {
+  notes: PresentedNote[];
+  total: number;
+}
+
+export interface FetchResult {
   notes: NoteData[];
   total: number;
 }
@@ -50,20 +102,32 @@ export interface FetchOneQuery {
   q?: string;
 }
 
-type FetchOneResponse = NoteData;
+type FetchOneResponse = PresentedNote;
+type FetchOneResult = NoteData;
 
 export default function init(config: HttpClientConfig) {
   const client = getHttpClient(config);
 
   return {
-    create: (params: CreateParams, opts = {}): Promise<CreateResponse> => {
-      return client.post<CreateResponse>('/v3/notes', params, opts);
+    create: (params: CreateParams, opts = {}): Promise<CreateResult> => {
+      return client
+        .post<CreateResponse>('/v3/notes', params, opts)
+        .then(res => {
+          return {
+            result: mapNote(res.result)
+          };
+        });
     },
 
-    update: (noteUUID: string, params: UpdateParams) => {
+    update: (noteUUID: string, params: UpdateParams): Promise<UpdateResult> => {
       const endpoint = `/v3/notes/${noteUUID}`;
 
-      return client.patch<UpdateNoteResp>(endpoint, params);
+      return client.patch<UpdateResponse>(endpoint, params).then(res => {
+        return {
+          status: res.status,
+          result: mapNote(res.result)
+        };
+      });
     },
 
     remove: (noteUUID: string) => {
@@ -72,7 +136,7 @@ export default function init(config: HttpClientConfig) {
       return client.del(endpoint, {});
     },
 
-    fetch: (filters: Filters) => {
+    fetch: (filters: Filters): Promise<FetchResult> => {
       const params: any = {
         page: filters.page
       };
@@ -87,16 +151,21 @@ export default function init(config: HttpClientConfig) {
 
       const endpoint = getPath('/notes', params);
 
-      return client.get<FetchResponse>(endpoint, {});
+      return client.get<FetchResponse>(endpoint, {}).then(res => {
+        return {
+          total: res.total,
+          notes: res.notes.map(mapNote)
+        };
+      });
     },
 
     fetchOne: (
       noteUUID: string,
       params: FetchOneQuery
-    ): Promise<FetchOneResponse> => {
+    ): Promise<FetchOneResult> => {
       const endpoint = getPath(`/notes/${noteUUID}`, params);
 
-      return client.get<FetchOneResponse>(endpoint, {});
+      return client.get<FetchOneResponse>(endpoint, {}).then(mapNote);
     },
 
     classicFetch: () => {

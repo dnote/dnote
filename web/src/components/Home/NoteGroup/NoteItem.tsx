@@ -86,9 +86,9 @@ const NoteItem: React.FunctionComponent<Props> = ({ note, filters }) => {
 
             <Time
               id={`${note.uuid}-ts`}
-              text={timeAgo(nanosecToMillisec(note.added_on))}
-              mobileText={timeAgo(nanosecToMillisec(note.added_on))}
-              ms={nanosecToMillisec(note.added_on)}
+              text={timeAgo(nanosecToMillisec(note.addedOn))}
+              mobileText={timeAgo(nanosecToMillisec(note.addedOn))}
+              ms={nanosecToMillisec(note.addedOn)}
               wrapperClassName={styles.ts}
             />
           </div>

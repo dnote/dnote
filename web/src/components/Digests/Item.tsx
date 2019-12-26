@@ -10,21 +10,16 @@ import styles from './Item.scss';
 
 interface Props {
   item: DigestData;
-  isFirst: boolean;
-  isLast: boolean;
 }
 
-const Item: React.SFC<Props> = ({ item, isFirst, isLast }) => {
+const Item: React.FunctionComponent<Props> = ({ item }) => {
   const createdAt = new Date(item.createdAt);
-  const isRead = item.receipts.length > 0;
 
   return (
     <li
       className={classnames(styles.wrapper, {
-        [styles.first]: isFirst,
-        [styles.last]: isLast,
-        [styles.read]: isRead,
-        [styles.unread]: !isRead
+        [styles.read]: item.isRead,
+        [styles.unread]: !item.isRead
       })}
     >
       <Link to={getDigestPath(item.uuid)} className={styles.link}>

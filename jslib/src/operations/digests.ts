@@ -23,8 +23,8 @@ export default function init(c: HttpClientConfig) {
   const digestsService = initDigestsService(c);
 
   return {
-    fetchAll: (page: number) => {
-      return digestsService.fetchAll({ page });
+    fetchAll: params => {
+      return digestsService.fetchAll(params);
     },
 
     fetch: (noteUUID: string) => {
