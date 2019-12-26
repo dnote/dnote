@@ -16,12 +16,24 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/rem';
+@import '../App/font';
 
-interface Props {}
+.actions {
+  display: flex;
+}
 
-const Actions: React.FunctionComponent<Props> = () => {
-  return <div>Actions</div>;
-};
+.action {
+  color: $note-footer-text-color;
 
-export default Actions;
+  &:hover {
+    color: $link-hover;
+    text-decoration: underline;
+  }
+
+  & ~ & {
+    margin-left: rem(12px);
+  }
+}

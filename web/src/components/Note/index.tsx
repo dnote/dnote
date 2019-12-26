@@ -20,7 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 
 import { parseSearchString } from 'jslib/helpers/url';
-import Content from './Content';
+import Content from '../Common/Note';
 import Flash from '../Common/Flash';
 import { getNote } from '../../store/note';
 import Placeholder from './Placeholder';
@@ -28,6 +28,7 @@ import { useDispatch, useSelector, ReduxDispatch } from '../../store';
 import DeleteModal from './DeleteModal';
 import ShareModal from './ShareModal';
 import HeaderData from './HeaderData';
+import FooterActions from './FooterActions';
 import styles from './index.scss';
 
 interface Match {
@@ -78,12 +79,17 @@ const Note: React.FunctionComponent<Props> = ({ match, location }) => {
       <div className="container mobile-nopadding page page-mobile-full">
         {note.isFetched ? (
           <Content
-            onDeleteModalOpen={() => {
-              setIsDeleteModalOpen(true);
-            }}
-            onShareModalOpen={() => {
-              setIsShareModalOpen(true);
-            }}
+            footerActions={
+              <FooterActions
+                noteUUID={note.data.uuid}
+                onDeleteModalOpen={() => {
+                  setIsDeleteModalOpen(true);
+                }}
+                onShareModalOpen={() => {
+                  setIsShareModalOpen(true);
+                }}
+              />
+            }
           />
         ) : (
           <Placeholder />
