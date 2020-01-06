@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -114,59 +115,12 @@ func parseGetDigestsParams(r *http.Request) (getDigestsParams, error) {
 	}, nil
 }
 
-func queryDigestIDs(db *gorm.DB, p getDigestsParams, userID, offset, perPage int) ([]int, error) {
-	var whereClause string
-	if p.status == "unread" {
-		whereClause = "WHERE t1.receipt_count = 0"
-	} else if p.status == "read" {
-		whereClause = "WHERE t1.receipt_count > 0"
-	}
-
-	query := fmt.Sprintf(`
-SELECT t1.digest_id FROM
-(
-	SELECT
-		digests.id AS digest_id,
-		COUNT(digest_receipts.id) AS receipt_count
-	FROM digests
-	LEFT JOIN digest_receipts ON digest_receipts.digest_id = digests.id
-	WHERE digests.user_id = ?
-	GROUP BY digests.id, digests.created_at
-	ORDER BY digests.created_at DESC
-) AS t1
-%s
-OFFSET ?
-LIMIT ?;
-`, whereClause)
-
-	ret := []int{}
-	rows, err := db.Debug().Raw(query, userID, offset, perPage).Rows()
-	if err != nil {
-		return nil, errors.Wrap(err, "getting rows")
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var id int
-		if err := rows.Scan(&id); err != nil {
-			return []int{}, errors.Wrap(err, "scanning row")
-		}
-
-		ret = append(ret, id)
-	}
-
-	return ret, nil
-
-}
-
 func (a *API) getDigests(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
 		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
-
-	db := a.App.DB
 
 	params, err := parseGetDigestsParams(r)
 	if err != nil {
@@ -176,26 +130,22 @@ func (a *API) getDigests(w http.ResponseWriter, r *http.Request) {
 
 	perPage := 30
 	offset := (params.page - 1) * perPage
+	p := app.GetDigestsParam{
+		UserID:  user.ID,
+		Offset:  offset,
+		PerPage: perPage,
+		Status:  params.status,
+		Order:   "created_at DESC",
+	}
 
-	IDs, err := queryDigestIDs(db, params, user.ID, offset, perPage)
+	digests, err := a.App.GetDigests(p)
 	if err != nil {
-		HandleError(w, "querying digest IDs", err, http.StatusInternalServerError)
+		HandleError(w, "querying digests", err, http.StatusInternalServerError)
 		return
 	}
 
-	var digests []database.Digest
-	conn := db.Debug().
-		Where("id IN (?)", IDs).
-		Order("created_at DESC").
-		Preload("Rule").Preload("Receipts").
-		Find(&digests)
-	if err := conn.Error; err != nil && !conn.RecordNotFound() {
-		HandleError(w, "finding digests", err, http.StatusInternalServerError)
-		return
-	}
-
-	var total int
-	if err := db.Model(database.Digest{}).Where("user_id = ?", user.ID).Count(&total).Error; err != nil {
+	total, err := a.App.CountDigests(p)
+	if err != nil {
 		HandleError(w, "counting digests", err, http.StatusInternalServerError)
 		return
 	}
