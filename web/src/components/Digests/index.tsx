@@ -37,7 +37,8 @@ function useFetchDigests(params: { page: number; status: Status }) {
   useEffect(() => {
     if (
       !prevParams ||
-      prevParams.page !== params.page || prevParams.status !== params.status
+      prevParams.page !== params.page ||
+      prevParams.status !== params.status
     ) {
       dispatch(getDigests(params));
     }

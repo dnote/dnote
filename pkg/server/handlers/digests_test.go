@@ -28,7 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-func TestGetDigest(t *testing.T) {
+func TestGetDigest_Permission(t *testing.T) {
 	defer testutils.ClearData()
 
 	// Setup
@@ -68,6 +68,35 @@ func TestGetDigest(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 	})
+}
+
+func TestGetDigest_Receipt(t *testing.T) {
+	defer testutils.ClearData()
+
+	// Setup
+	server := MustNewServer(t, nil)
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	digest := database.Digest{
+		UserID: user.ID,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&digest), "preparing digest")
+
+	// multiple requests should create at most one receipt
+	for i := 0; i < 3; i++ {
+		// Execute and test
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/digests/%s", digest.UUID), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+		var receiptCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.DigestReceipt{}).Count(&receiptCount), "counting receipts")
+		assert.Equal(t, receiptCount, 1, "counting receipt")
+
+		var receipt database.DigestReceipt
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&receipt), "finding receipt")
+	}
 }
 
 func TestGetDigests(t *testing.T) {

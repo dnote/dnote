@@ -170,6 +170,10 @@ button:disabled {
   cursor: pointer;
 }
 
+.button-no-padding {
+  padding: 0;
+}
+
 .button-link {
   color: $link;
 

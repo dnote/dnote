@@ -18,7 +18,7 @@
 
 import { getHttpClient, HttpClientConfig } from '../helpers/http';
 
-export interface CreateNoteReviewPayload {
+export interface CreateDeleteNoteReviewPayload {
   digestUUID: string;
   noteUUID: string;
 }
@@ -30,7 +30,7 @@ export default function init(config: HttpClientConfig) {
     create: ({
       digestUUID,
       noteUUID
-    }: CreateNoteReviewPayload): Promise<void> => {
+    }: CreateDeleteNoteReviewPayload): Promise<void> => {
       const endpoint = '/note_review';
       const payload = {
         digest_uuid: digestUUID,
@@ -40,10 +40,17 @@ export default function init(config: HttpClientConfig) {
       return client.post(endpoint, payload);
     },
 
-    remove: (noteUUID: string): Promise<void> => {
-      const endpoint = `/note_review/${noteUUID}`;
+    remove: ({
+      digestUUID,
+      noteUUID
+    }: CreateDeleteNoteReviewPayload): Promise<void> => {
+      const endpoint = '/note_review';
+      const payload = {
+        digest_uuid: digestUUID,
+        note_uuid: noteUUID
+      };
 
-      return client.del(endpoint);
+      return client.del(endpoint, payload);
     }
   };
 }

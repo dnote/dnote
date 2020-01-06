@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import { pluralize } from 'web/libs/string';
 import { DigestData, DigestNoteData } from 'jslib/operations/types';
@@ -61,7 +61,7 @@ const Content: React.FunctionComponent<Props> = ({ digest }) => {
   const viewedCount = getViewedCount(digest.notes);
 
   return (
-    <div className={styles.header}>
+    <Fragment>
       <div>
         <h1 className="page-heading">{getDigestTitle(digest)}</h1>
         <div className={styles.meta}>
@@ -79,7 +79,7 @@ const Content: React.FunctionComponent<Props> = ({ digest }) => {
       </div>
 
       <Progress total={digest.notes.length} current={viewedCount} />
-    </div>
+    </Fragment>
   );
 };
 

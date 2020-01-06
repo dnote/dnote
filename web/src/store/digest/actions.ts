@@ -103,7 +103,7 @@ export const setDigestNoteReviewed = ({
 }): ThunkAction<void> => {
   return dispatch => {
     if (!isReviewed) {
-      return services.noteReviews.remove(noteUUID).then(() => {
+      return services.noteReviews.remove({ noteUUID, digestUUID }).then(() => {
         dispatch(setNoteReviewed(noteUUID, false));
       });
     }

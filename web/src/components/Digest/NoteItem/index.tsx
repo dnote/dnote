@@ -56,7 +56,12 @@ const NoteItem: React.FunctionComponent<Props> = ({ note, onSetReviewed }) => {
           </Fragment>
         }
         footerActions={
-          <Link className={styles.action} to={getNotePath(note.uuid)}>
+          <Link
+            className={styles.action}
+            to={getNotePath(note.uuid)}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             Go to note ›
           </Link>
         }

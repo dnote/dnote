@@ -35,18 +35,20 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
-  padding-bottom: rem(20px);
-  padding-top: rem(20px);
   z-index: 1;
+  margin-bottom: rem(20px);
 
-  @include breakpoint(lg) {
+  padding-top: rem(12px);
+
+  @include breakpoint(md) {
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-end;
-
-    margin-top: rem(-20px);
     background-color: transparent;
+  }
+
+  @include breakpoint(lg) {
+    padding-top: 0;
   }
 }
 
@@ -57,7 +59,12 @@
     background-color: $white;
     position: sticky;
     top: $header-height;
-    // box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.18);
+
+    .header {
+      padding-top: rem(12px);
+      padding-bottom: rem(12px);
+      margin-bottom: 0;
+    }
   }
 }

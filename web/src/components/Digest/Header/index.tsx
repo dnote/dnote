@@ -31,7 +31,7 @@ interface Props {
   digest: DigestData;
 }
 
-const stickyThresholdY = 0;
+const stickyThresholdY = 24;
 
 function checkSticky(y: number): boolean {
   return y > stickyThresholdY;
@@ -42,12 +42,11 @@ const Header: React.FunctionComponent<Props> = ({ digest, isFetched }) => {
 
   function handleScroll() {
     const y = getScrollYPos();
-
     const nextSticky = checkSticky(y);
 
-    if (nextSticky && !isSticky) {
+    if (nextSticky) {
       setIsSticky(true);
-    } else if (!nextSticky && isSticky) {
+    } else if (!nextSticky) {
       setIsSticky(false);
     }
   }
@@ -60,8 +59,10 @@ const Header: React.FunctionComponent<Props> = ({ digest, isFetched }) => {
         [styles['header-sticky']]: isSticky
       })}
     >
-      <div className="container">
-        {isFetched ? <Content digest={digest} /> : <Placeholder />}
+      <div className="container mobile-fw">
+        <div className={styles.header}>
+          {isFetched ? <Content digest={digest} /> : <Placeholder />}
+        </div>
       </div>
     </div>
   );

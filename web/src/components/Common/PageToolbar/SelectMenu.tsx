@@ -38,9 +38,10 @@ interface Props {
 
   disabled?: boolean;
   wrapperClassName?: string;
+  triggerClassName?: string;
 }
 
-const StatusFilter: React.FunctionComponent<Props> = ({
+const SelectMenu: React.FunctionComponent<Props> = ({
   defaultCurrentOptionIdx,
   options,
   optRefs,
@@ -53,7 +54,8 @@ const StatusFilter: React.FunctionComponent<Props> = ({
   menuId,
   alignment,
   direction,
-  wrapperClassName
+  wrapperClassName,
+  triggerClassName
 }) => {
   return (
     <Menu
@@ -66,13 +68,15 @@ const StatusFilter: React.FunctionComponent<Props> = ({
       triggerId={triggerId}
       menuId={menuId}
       triggerContent={
-        <div className={styles['trigger-content']}>
+        <div
+          className={classnames(styles['trigger-content'], triggerClassName)}
+        >
           {triggerText}
           <span className="dropdown-caret" />
         </div>
       }
       headerContent={<div className={styles.header}>{headerText}</div>}
-      triggerClassName={classnames(styles.trigger, {
+      triggerClassName={classnames(styles.trigger, triggerClassName, {
         [styles['trigger-active']]: isOpen
       })}
       contentClassName={styles.content}
@@ -83,4 +87,4 @@ const StatusFilter: React.FunctionComponent<Props> = ({
   );
 };
 
-export default StatusFilter;
+export default SelectMenu;

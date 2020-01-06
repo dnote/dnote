@@ -24,13 +24,14 @@ import { Location } from 'history';
 import { DigestNoteData } from 'jslib/operations/types';
 import { parseSearchString } from 'jslib/helpers/url';
 import { usePrevious } from 'web/libs/hooks';
-import { Sort, SearchParams } from './types';
+import { Sort, Status, SearchParams } from './types';
 import { getDigest } from '../../store/digest';
 import { useDispatch, useSelector } from '../../store';
 import Header from './Header';
 import Toolbar from './Toolbar';
 import NoteList from './NoteList';
 import Flash from '../Common/Flash';
+import ClearSearchBar from './ClearSearchBar';
 import styles from './Digest.scss';
 
 function useFetchData(digestUUID: string) {
@@ -57,9 +58,20 @@ interface Match {
 
 interface Props extends RouteComponentProps<Match> {}
 
-function getNotes(notes: DigestNoteData[], sort: string): DigestNoteData[] {
-  return notes.concat().sort((i, j) => {
-    if (sort === Sort.Oldest) {
+function getNotes(notes: DigestNoteData[], p: SearchParams): DigestNoteData[] {
+  const filtered = notes.filter(note => {
+    if (p.status === Status.Reviewed) {
+      return note.isReviewed;
+    }
+    if (p.status === Status.Unreviewed) {
+      return !note.isReviewed;
+    }
+
+    return true;
+  });
+
+  return filtered.concat().sort((i, j) => {
+    if (p.sort === Sort.Oldest) {
       return new Date(i.createdAt).getTime() - new Date(j.createdAt).getTime();
     }
 
@@ -77,8 +89,18 @@ function parseSearchParams(location: Location): SearchParams {
     sort = Sort.Newest;
   }
 
+  let status: Status;
+  if (searchObj.status === Status.Unreviewed) {
+    status = Status.Unreviewed;
+  } else if (searchObj.status === Status.Reviewed) {
+    status = Status.Reviewed;
+  } else {
+    status = Status.All;
+  }
+
   return {
     sort,
+    status,
     books: []
   };
 }
@@ -95,7 +117,7 @@ const Digest: React.FunctionComponent<Props> = ({ location, match }) => {
   });
 
   const params = parseSearchParams(location);
-  const notes = getNotes(digest.data.notes, params.sort);
+  const notes = getNotes(digest.data.notes, params);
 
   return (
     <div className="page page-mobile-full">
@@ -105,13 +127,20 @@ const Digest: React.FunctionComponent<Props> = ({ location, match }) => {
 
       <Header digest={digest.data} isFetched={digest.isFetched} />
 
-      <div className="container mobile-nopadding">
+      <div className="container mobile-fw">
         <Toolbar
           digestUUID={digest.data.uuid}
           sort={params.sort}
+          status={params.status}
           isFetched={digest.isFetched}
         />
+      </div>
 
+      <div className="container mobile-fw">
+        <ClearSearchBar params={params} digestUUID={digest.data.uuid} />
+      </div>
+
+      <div className="container mobile-nopadding">
         <Flash
           kind="danger"
           when={digest.errorMessage !== null}

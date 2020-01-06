@@ -24,16 +24,27 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/gorilla/mux"
-	// "github.com/dnote/dnote/pkg/server/operations"
-	// 	"github.com/dnote/dnote/pkg/server/presenters"
-	// "github.com/jinzhu/gorm"
-	// "github.com/pkg/errors"
+	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 )
 
 type createNoteReviewParams struct {
 	DigestUUID string `json:"digest_uuid"`
 	NoteUUID   string `json:"note_uuid"`
+}
+
+func getDigestByUUID(db *gorm.DB, uuid string) (*database.Digest, error) {
+	var ret database.Digest
+	conn := db.Where("uuid = ?", uuid).First(&ret)
+
+	if conn.RecordNotFound() {
+		return nil, nil
+	}
+	if err := conn.Error; err != nil {
+		return nil, errors.Wrap(err, "finding digest")
+	}
+
+	return &ret, nil
 }
 
 func (a *API) createNoteReview(w http.ResponseWriter, r *http.Request) {
@@ -50,30 +61,28 @@ func (a *API) createNoteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := a.App.DB
-
-	var digest database.Digest
-	conn := db.Where("uuid = ? AND user_id = ?", params.DigestUUID, user.ID).First(&digest)
-	if conn.RecordNotFound() {
+	digest, err := a.App.GetUserDigestByUUID(user.ID, params.DigestUUID)
+	if digest == nil {
 		http.Error(w, "digest not found for the given uuid", http.StatusBadRequest)
 		return
-	} else if err := conn.Error; err != nil {
+	}
+	if err != nil {
 		HandleError(w, "finding digest", err, http.StatusInternalServerError)
 		return
 	}
 
-	var note database.Note
-	conn2 := db.Where("uuid = ? AND user_id = ?", params.NoteUUID, user.ID).First(&note)
-	if conn2.RecordNotFound() {
+	note, err := a.App.GetUserNoteByUUID(user.ID, params.NoteUUID)
+	if note == nil {
 		http.Error(w, "note not found for the given uuid", http.StatusBadRequest)
 		return
-	} else if err := conn.Error; err != nil {
+	}
+	if err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
 	var nr database.NoteReview
-	if err := db.FirstOrCreate(&nr, database.NoteReview{
+	if err := a.App.DB.Debug().FirstOrCreate(&nr, database.NoteReview{
 		UserID:   user.ID,
 		DigestID: digest.ID,
 		NoteID:   note.ID,
@@ -83,6 +92,11 @@ func (a *API) createNoteReview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type deleteNoteReviewParams struct {
+	DigestUUID string `json:"digest_uuid"`
+	NoteUUID   string `json:"note_uuid"`
+}
+
 func (a *API) deleteNoteReview(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
@@ -90,23 +104,37 @@ func (a *API) deleteNoteReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vars := mux.Vars(r)
-	noteReviewUUID := vars["noteReviewUUID"]
+	var params deleteNoteReviewParams
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		HandleError(w, "decoding params", err, http.StatusInternalServerError)
+		return
+	}
 
 	db := a.App.DB
 
-	var note database.Note
-	conn2 := db.Where("uuid = ? AND user_id = ?", noteReviewUUID, user.ID).First(&note)
-	if conn2.RecordNotFound() {
+	note, err := a.App.GetUserNoteByUUID(user.ID, params.NoteUUID)
+	if note == nil {
 		http.Error(w, "note not found for the given uuid", http.StatusBadRequest)
 		return
-	} else if err := conn2.Error; err != nil {
+	}
+	if err != nil {
 		HandleError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
+	digest, err := a.App.GetUserDigestByUUID(user.ID, params.DigestUUID)
+	if digest == nil {
+		http.Error(w, "digest not found for the given uuid", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		HandleError(w, "finding digest", err, http.StatusInternalServerError)
+		return
+	}
+
 	var nr database.NoteReview
-	conn := db.Where("note_id = ? AND user_id = ?", note.ID, user.ID).First(&nr)
+	conn := db.Where("note_id = ? AND digest_id = ? AND user_id = ?", note.ID, digest.ID, user.ID).First(&nr)
 	if conn.RecordNotFound() {
 		http.Error(w, "no record found", http.StatusBadRequest)
 		return

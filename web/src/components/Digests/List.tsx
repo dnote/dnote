@@ -20,6 +20,7 @@ import React from 'react';
 import classnames from 'classnames';
 
 import { DigestData } from 'jslib/operations/types';
+import { getRange } from 'jslib/helpers/arr';
 import Item from './Item';
 import Placeholder from './Placeholder';
 import styles from './List.scss';
@@ -38,8 +39,8 @@ const List: React.FunctionComponent<Props> = ({
   if (isFetching) {
     return (
       <div className={styles.wrapper}>
-        {[...Array(10)].map(() => {
-          return <Placeholder />;
+        {getRange(10).map(key => {
+          return <Placeholder key={key} />;
         })}
       </div>
     );

@@ -163,3 +163,18 @@ func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (d
 
 	return note, nil
 }
+
+// GetUserNoteByUUID retrives a digest by the uuid for the given user
+func (a *App) GetUserNoteByUUID(userID int, uuid string) (*database.Note, error) {
+	var ret database.Note
+	conn := a.DB.Where("user_id = ? AND uuid = ?", userID, uuid).First(&ret)
+
+	if conn.RecordNotFound() {
+		return nil, nil
+	}
+	if err := conn.Error; err != nil {
+		return nil, errors.Wrap(err, "finding digest")
+	}
+
+	return &ret, nil
+}

@@ -16,21 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Sort is a set of possible values for sort query parameters
-export enum Sort {
-  Newest = '',
-  Oldest = 'created-asc'
-}
+// // getRange returns an array with an incrementing integers from
+// 1 to the given number. e.g.  [1, 2, 3, ..., 10]
+export function getRange(n: number): number[] {
+  const ret = [];
 
-// Status is a set of possible values for status query parameters
-export enum Status {
-  All = '',
-  Unreviewed = 'unreviewed',
-  Reviewed = 'reviewed'
-}
+  for (let i = 1; i <= n; i++) {
+    ret.push(i);
+  }
 
-export interface SearchParams {
-  sort: Sort;
-  status: Status;
-  books: string[];
+  return ret;
 }

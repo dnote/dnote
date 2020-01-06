@@ -24,12 +24,24 @@
 
 .wrapper {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   margin-top: rem(12px);
+
+  @include breakpoint(md) {
+    justify-content: flex-end;
+  }
 
   @include breakpoint(lg) {
     padding: 0 rem(16px);
     margin-top: 0;
   }
+}
+
+.active-menu-trigger {
+  font-weight: 600;
+}
+
+.menu-trigger ~ .menu-trigger {
+  margin-left: rem(12px);
 }

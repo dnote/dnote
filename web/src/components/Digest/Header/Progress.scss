@@ -23,7 +23,6 @@
 @import '../../App/rem';
 
 .wrapper {
-  margin-bottom: rem(8px);
   margin-top: rem(4px);
 
   display: flex;
@@ -33,6 +32,7 @@
   @include breakpoint(md) {
     width: rem(220px);
     margin-top: rem(0);
+    margin-bottom: rem(8px);
 
     display: initial;
     align-items: initial;
@@ -68,4 +68,8 @@
 
 .caption {
   @include font-size('small');
+
+  &.caption-strong {
+    font-weight: 600;
+  }
 }

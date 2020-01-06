@@ -17,37 +17,38 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-import PageToolbar from '../../Common/PageToolbar';
-import SortMenu from './SortMenu';
-import StatusMenu from './StatusMenu';
-import { Sort, Status } from '../types';
-import styles from './Toolbar.scss';
+import { getDigestPath } from 'web/libs/paths';
+import { SearchParams } from './types';
+import CloseIcon from '../Icons/Close';
+import styles from './ClearSearchBar.scss';
 
 interface Props {
+  params: SearchParams;
   digestUUID: string;
-  sort: Sort;
-  status: Status;
-  isFetched: boolean;
 }
 
-const Toolbar: React.FunctionComponent<Props> = ({
-  digestUUID,
-  sort,
-  status,
-  isFetched
+const ClearSearchBar: React.FunctionComponent<Props> = ({
+  params,
+  digestUUID
 }) => {
-  return (
-    <PageToolbar wrapperClassName={styles.wrapper}>
-      <StatusMenu
-        digestUUID={digestUUID}
-        status={status}
-        disabled={!isFetched}
-      />
+  const isActive = params.sort !== '' || params.status !== '';
 
-      <SortMenu digestUUID={digestUUID} sort={sort} disabled={!isFetched} />
-    </PageToolbar>
+  if (!isActive) {
+    return null;
+  }
+
+  return (
+    <div className={styles.wrapper}>
+      <Link className={styles.button} to={getDigestPath(digestUUID)}>
+        <CloseIcon width={20} height={20} />
+        <span className={styles.text}>
+          Clear the current filters, and sorts
+        </span>
+      </Link>
+    </div>
   );
 };
 
-export default Toolbar;
+export default ClearSearchBar;

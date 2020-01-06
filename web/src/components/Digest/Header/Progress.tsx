@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import classnames from 'classnames';
 
 import { pluralize } from 'web/libs/string';
 import styles from './Progress.scss';
@@ -28,7 +29,7 @@ interface Props {
 
 function calcPercentage(current: number, total: number): number {
   if (total === 0) {
-    return 0;
+    return 100;
   }
 
   return (current / total) * 100;
@@ -43,16 +44,27 @@ function getCaption(current, total): string {
 }
 
 const Progress: React.FunctionComponent<Props> = ({ total, current }) => {
+  const isComplete = current === total;
   const perc = calcPercentage(current, total);
   const width = `${perc}%`;
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.caption}>
+      <div
+        className={classnames(styles.caption, {
+          [styles['caption-strong']]: isComplete
+        })}
+      >
         {getCaption(current, total)}{' '}
         <span className={styles.perc}>({perc.toFixed(0)}%)</span>
       </div>
-      <div className={styles['bar-wrapper']}>
+      <div
+        className={styles['bar-wrapper']}
+        role="progressbar"
+        aria-valuenow={perc}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div className={styles.bar} style={{ width }} />
       </div>
     </div>

@@ -71,11 +71,7 @@ func (a *API) getDigest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// mark as read
-	receipt := database.DigestReceipt{
-		UserID:   user.ID,
-		DigestID: digest.ID,
-	}
-	if err := db.Save(&receipt).Error; err != nil {
+	if _, err := a.App.MarkDigestRead(digest, user); err != nil {
 		log.ErrorWrap(err, fmt.Sprintf("marking digest as read for %s", digest.UUID))
 	}
 

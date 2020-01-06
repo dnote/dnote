@@ -20,57 +20,57 @@ import React, { useState, useRef } from 'react';
 import { Link, withRouter, RouteComponentProps } from 'react-router-dom';
 import classnames from 'classnames';
 
-import { parseSearchString } from 'jslib/helpers/url';
 import { getDigestPath } from 'web/libs/paths';
+import { parseSearchString } from 'jslib/helpers/url';
 import { blacklist } from 'jslib/helpers/obj';
 import SelectMenu from '../../Common/PageToolbar/SelectMenu';
 import selectMenuStyles from '../../Common/PageToolbar/SelectMenu.scss';
-import { Sort } from '../types';
+import { Status } from '../types';
 import styles from './Toolbar.scss';
 
 interface Props extends RouteComponentProps {
   digestUUID: string;
-  sort: Sort;
+  status: Status;
   disabled?: boolean;
 }
 
-const SortMenu: React.FunctionComponent<Props> = ({
+const StatusMenu: React.FunctionComponent<Props> = ({
   digestUUID,
-  sort,
+  status,
   disabled,
   location
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const optRefs = [useRef(null), useRef(null)];
+  const optRefs = [useRef(null), useRef(null), useRef(null)];
   const searchObj = parseSearchString(location.search);
 
   const options = [
     {
-      name: 'newest',
+      name: 'all',
       value: (
         <Link
           role="menuitem"
           className={selectMenuStyles.link}
-          to={getDigestPath(digestUUID, blacklist(searchObj, ['sort']))}
+          to={getDigestPath(digestUUID, blacklist(searchObj, ['status']))}
           onClick={() => {
             setIsOpen(false);
           }}
           ref={optRefs[0]}
           tabIndex={-1}
         >
-          Newest
+          All
         </Link>
       )
     },
     {
-      name: 'oldest',
+      name: 'unreviewed',
       value: (
         <Link
           role="menuitem"
           className={selectMenuStyles.link}
           to={getDigestPath(digestUUID, {
             ...searchObj,
-            sort: Sort.Oldest
+            status: Status.Unreviewed
           })}
           onClick={() => {
             setIsOpen(false);
@@ -78,22 +78,45 @@ const SortMenu: React.FunctionComponent<Props> = ({
           ref={optRefs[1]}
           tabIndex={-1}
         >
-          Oldest
+          Unreviewed
+        </Link>
+      )
+    },
+    {
+      name: 'reviewed',
+      value: (
+        <Link
+          role="menuitem"
+          className={selectMenuStyles.link}
+          to={getDigestPath(digestUUID, {
+            ...searchObj,
+            status: Status.Reviewed
+          })}
+          onClick={() => {
+            setIsOpen(false);
+          }}
+          ref={optRefs[2]}
+          tabIndex={-1}
+        >
+          Reviewed
         </Link>
       )
     }
   ];
 
-  const isActive = sort === Sort.Oldest;
+  const isActive = status === Status.Reviewed || status === Status.Unreviewed;
 
   let defaultCurrentOptionIdx: number;
-  let sortText: string;
-  if (sort === Sort.Oldest) {
+  let statusText: string;
+  if (status === Status.Reviewed) {
+    defaultCurrentOptionIdx = 2;
+    statusText = 'Reviewed';
+  } else if (status === Status.Unreviewed) {
     defaultCurrentOptionIdx = 1;
-    sortText = 'Oldest';
+    statusText = 'Unreviewed';
   } else {
     defaultCurrentOptionIdx = 0;
-    sortText = 'Newest';
+    statusText = 'All';
   }
 
   return (
@@ -105,17 +128,17 @@ const SortMenu: React.FunctionComponent<Props> = ({
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       optRefs={optRefs}
-      triggerId="sort-menu-trigger"
-      menuId="sort-menu"
-      headerText="Sort by"
+      triggerId="status-menu-trigger"
+      menuId="status-menu"
+      headerText="Filter by status"
       triggerClassName={classnames('button-no-padding', {
         [styles['active-menu-trigger']]: isActive
       })}
-      triggerText={`Sort: ${sortText}`}
+      triggerText={` Status: ${statusText} `}
       alignment="right"
       direction="bottom"
     />
   );
 };
 
-export default withRouter(SortMenu);
+export default withRouter(StatusMenu);
