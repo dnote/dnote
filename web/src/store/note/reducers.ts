@@ -57,7 +57,8 @@ export default function(
       return {
         ...state,
         isFetching: true,
-        isFetched: false
+        isFetched: false,
+        errorMessage: null
       };
     }
     case ERROR: {
@@ -72,8 +73,7 @@ export default function(
         ...state,
         data: action.data.note,
         isFetching: false,
-        isFetched: true,
-        errorMessage: null
+        isFetched: true
       };
     }
     case RESET: {

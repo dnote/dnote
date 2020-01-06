@@ -64,6 +64,7 @@ export default function(
     case START_FETCHING: {
       return {
         ...state,
+        errorMessage: null,
         isFetching: true,
         isFetched: false
       };
@@ -80,8 +81,7 @@ export default function(
         ...state,
         data: action.data.digest,
         isFetching: false,
-        isFetched: true,
-        errorMessage: null
+        isFetched: true
       };
     }
     case SET_NOTE_REVIEWED: {

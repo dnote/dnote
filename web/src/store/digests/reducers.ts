@@ -42,6 +42,7 @@ export default function(
     case START_FETCHING: {
       return {
         ...state,
+        errorMessage: null,
         isFetching: true,
         isFetched: false
       };
