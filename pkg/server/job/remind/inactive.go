@@ -152,7 +152,7 @@ func (c *Context) process(info inactiveUserInfo) error {
 		return errors.Wrap(err, "executing inactive email template")
 	}
 
-	if err := c.EmailBackend.Queue("Your knowledge base stopped growing", sender, []string{info.email}, mailer.EmailKindHTML, body); err != nil {
+	if err := c.EmailBackend.Queue("Your knowledge base stopped growing", sender, []string{info.email}, mailer.EmailKindText, body); err != nil {
 		return errors.Wrap(err, "queueing email")
 	}
 
