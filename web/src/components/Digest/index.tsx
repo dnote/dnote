@@ -151,6 +151,7 @@ const Digest: React.FunctionComponent<Props> = ({ location, match }) => {
       <div className="container mobile-nopadding">
         <NoteList
           digest={digest.data}
+          params={params}
           notes={notes}
           isFetched={digest.isFetched}
           isFetching={digest.isFetching}
