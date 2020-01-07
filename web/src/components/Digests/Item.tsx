@@ -40,7 +40,11 @@ const Item: React.FunctionComponent<Props> = ({ item }) => {
         [styles.unread]: !item.isRead
       })}
     >
-      <Link to={getDigestPath(item.uuid)} className={styles.link}>
+      <Link
+        id={`digest-item-${item.uuid}`}
+        to={getDigestPath(item.uuid)}
+        className={styles.link}
+      >
         <span className={styles.title}>
           {item.repetitionRule.title} #{item.version}
         </span>

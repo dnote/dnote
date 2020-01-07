@@ -67,7 +67,8 @@ const NoteList: React.FunctionComponent<Props> = ({
       <Helmet>
         <title>{`${getDigestTitle(digest)} - Digest`}</title>
       </Helmet>
-      <ul className={styles.list}>
+
+      <ul id="T-digest-note-list" className={styles.list}>
         {notes.map(note => {
           return (
             <NoteItem
