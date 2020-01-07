@@ -35,6 +35,10 @@
 .holder {
   animation: holderPulse 800ms infinite;
   background: #f4f4f4;
+
+  &.holder-dark {
+    background: #e6e6e6;
+  }
 }
 
 input[type='text']:disabled,
@@ -42,7 +46,7 @@ input[type='email']:disabled,
 input[type='number']:disabled,
 input[type='password']:disabled,
 textarea:disabled {
-  background-color: $light-gray;
+  background-color: $lighter-gray;
   cursor: not-allowed;
 }
 
@@ -166,10 +170,14 @@ html body {
 
 .page-header {
   margin-top: rem(20px);
-  margin-bottom: rem(20px);
+
+  &.page-header-full {
+    margin-bottom: rem(20px);
+  }
 
   @include breakpoint(lg) {
-    padding: 0;
+    // padding: 0;
+    margin-bottom: rem(20px);
     margin-top: 0;
   }
 }
@@ -199,7 +207,7 @@ html body {
   &:disabled,
   &.form-select-disabled {
     background-image: url('data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAABAAAAAUCAYAAACEYr13AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAEKSURBVHgBzVTNDYIwFC4NB46OwAi4gY7gETgoE6gTGCcwTgAJ4efGCLCBjMAIXrmA3yOhQazQhJj4JQ0v7fte3/e1hbFfIk3TYxzHp6kc7dtCFEUW5/xBcdM0a9d1S1kel00mSWKCnIkkxDSnXADIMYYEU9O0zPf91WwB6L6NyB3atrUMw7hNFkCbFyROmXYYmypMDMNwo+t6ztSwtW27oEAXrXBuwu2rCht+WPgU7C8gPCBzYOBKhQS5FTwIKBYeQFeJoWyiKNYH5Co6OCuQr/0JdBuPVyElQCd7GRMb3B3HebsHHzexrmvyQvZwqjFZWsDzvCc62BFhSGYD3UMsfs6ToKOd+6EsxgtrtWLW4gUN3AAAAABJRU5ErkJggg==');
-    background-color: $light-gray;
+    background-color: $lighter-gray;
   }
 }
 
@@ -213,4 +221,15 @@ html body {
 
 .page-heading {
   @include font-size('x-large');
+}
+
+.dropdown-caret {
+  display: inline-block;
+  vertical-align: middle;
+  border-top-width: 4px;
+  border-top-style: solid;
+  border-right: 4px solid transparent;
+  border-bottom: 0 solid transparent;
+  border-left: 4px solid transparent;
+  margin-left: rem(8px);
 }

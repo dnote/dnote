@@ -56,12 +56,10 @@ func getExpectedNotePayload(n database.Note, b database.Book, u database.User) p
 }
 
 func TestGetNotes(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()
@@ -168,12 +166,10 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestGetNote(t *testing.T) {
-
 	defer testutils.ClearData()
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-
 		Clock: clock.NewMock(),
 	})
 	defer server.Close()

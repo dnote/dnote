@@ -28,6 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -51,8 +52,7 @@ type BuildEmailParams struct {
 
 // BuildEmail builds an email for the spaced repetition
 func BuildEmail(db *gorm.DB, emailTmpl mailer.Templates, p BuildEmailParams) (string, string, error) {
-	date := p.Now.Format("Jan 02 2006")
-	subject := fmt.Sprintf("%s %s", p.Rule.Title, date)
+	subject := fmt.Sprintf("%s #%d", p.Rule.Title, p.Digest.Version)
 	tok, err := mailer.GetToken(db, p.User, database.TokenTypeRepetition)
 	if err != nil {
 		return "", "", errors.Wrap(err, "getting email frequency token")
@@ -86,16 +86,14 @@ func BuildEmail(db *gorm.DB, emailTmpl mailer.Templates, p BuildEmailParams) (st
 	}
 
 	tmplData := mailer.DigestTmplData{
-		Subject:           subject,
-		NoteInfo:          noteInfos,
-		ActiveBookCount:   bookCount,
-		ActiveNoteCount:   len(p.Digest.Notes),
 		EmailSessionToken: tok.Value,
+		DigestUUID:        p.Digest.UUID,
+		DigestVersion:     p.Digest.Version,
 		RuleUUID:          p.Rule.UUID,
 		RuleTitle:         p.Rule.Title,
 		WebURL:            os.Getenv("WebURL"),
 	}
-	body, err := emailTmpl.Execute(mailer.EmailTypeDigest, mailer.EmailKindHTML, tmplData)
+	body, err := emailTmpl.Execute(mailer.EmailTypeDigest, mailer.EmailKindText, tmplData)
 	if err != nil {
 		return "", "", errors.Wrap(err, "executing digest email template")
 	}
@@ -124,13 +122,9 @@ func build(tx *gorm.DB, rule database.RepetitionRule) (database.Digest, error) {
 		return database.Digest{}, errors.Wrap(err, "getting notes")
 	}
 
-	digest := database.Digest{
-		RuleID: rule.ID,
-		UserID: rule.UserID,
-		Notes:  notes,
-	}
-	if err := tx.Save(&digest).Error; err != nil {
-		return database.Digest{}, errors.Wrap(err, "saving digest")
+	digest, err := operations.CreateDigest(tx, rule, notes)
+	if err != nil {
+		return database.Digest{}, errors.Wrap(err, "creating digest")
 	}
 
 	return digest, nil

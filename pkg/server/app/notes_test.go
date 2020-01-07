@@ -260,127 +260,44 @@ func TestDeleteNote(t *testing.T) {
 	}
 }
 
-func TestGetNote(t *testing.T) {
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
-
+func TestDeleteNote_DigestNotes(t *testing.T) {
 	defer testutils.ClearData()
 
-	b1 := database.Book{
-		UserID: user.ID,
-		Label:  "js",
-	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-
-	privateNote := database.Note{
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "privateNote content",
-		Deleted:  false,
-		Public:   false,
-	}
-	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
-
-	publicNote := database.Note{
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "privateNote content",
-		Deleted:  false,
-		Public:   true,
-	}
-	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing privateNote")
-
-	var privateNoteRecord, publicNoteRecord database.Note
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", privateNote.UUID).Preload("Book").Preload("User").First(&privateNoteRecord), "finding privateNote")
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).Preload("Book").Preload("User").First(&publicNoteRecord), "finding publicNote")
-
-	testCases := []struct {
-		name         string
-		user         database.User
-		note         database.Note
-		expectedOK   bool
-		expectedNote database.Note
-	}{
-		{
-			name:         "owner accessing private note",
-			user:         user,
-			note:         privateNote,
-			expectedOK:   true,
-			expectedNote: privateNoteRecord,
-		},
-		{
-			name:         "non-owner accessing private note",
-			user:         anotherUser,
-			note:         privateNote,
-			expectedOK:   false,
-			expectedNote: database.Note{},
-		},
-		{
-			name:         "non-owner accessing public note",
-			user:         anotherUser,
-			note:         publicNote,
-			expectedOK:   true,
-			expectedNote: publicNoteRecord,
-		},
-		{
-			name:         "guest accessing private note",
-			user:         database.User{},
-			note:         privateNote,
-			expectedOK:   false,
-			expectedNote: database.Note{},
-		},
-		{
-			name:         "guest accessing public note",
-			user:         database.User{},
-			note:         publicNote,
-			expectedOK:   true,
-			expectedNote: publicNoteRecord,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			a := NewTest(nil)
-			note, ok, err := GetNote(a.DB, tc.note.UUID, tc.user)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "executing"))
-			}
-
-			assert.Equal(t, ok, tc.expectedOK, "ok mismatch")
-			assert.DeepEqual(t, note, tc.expectedNote, "note mismatch")
-		})
-	}
-}
-
-func TestGetNote_nonexistent(t *testing.T) {
 	user := testutils.SetupUserData()
 
-	defer testutils.ClearData()
-
-	b1 := database.Book{
-		UserID: user.ID,
-		Label:  "js",
-	}
+	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-
-	n1UUID := "4fd19336-671e-4ff3-8f22-662b80e22edc"
-	n1 := database.Note{
-		UUID:     n1UUID,
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "n1 content",
-		Deleted:  false,
-		Public:   false,
-	}
+	n1 := database.Note{UserID: user.ID, Deleted: false, Body: "n1", BookUUID: b1.UUID}
 	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+	n2 := database.Note{UserID: user.ID, Deleted: false, Body: "n2", BookUUID: b1.UUID}
+	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
+
+	d1 := database.Digest{UserID: user.ID}
+	testutils.MustExec(t, testutils.DB.Save(&d1), "preparing d1")
+	dn1 := database.DigestNote{NoteID: n1.ID, DigestID: d1.ID}
+	testutils.MustExec(t, testutils.DB.Save(&dn1), "preparing dn1")
+	dn2 := database.DigestNote{NoteID: n2.ID, DigestID: d1.ID}
+	testutils.MustExec(t, testutils.DB.Save(&dn2), "preparing dn2")
 
 	a := NewTest(nil)
-	nonexistentUUID := "4fd19336-671e-4ff3-8f22-662b80e22edd"
-	note, ok, err := GetNote(a.DB, nonexistentUUID, user)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "executing"))
-	}
 
-	assert.Equal(t, ok, false, "ok mismatch")
-	assert.DeepEqual(t, note, database.Note{}, "note mismatch")
+	tx := testutils.DB.Begin()
+	if _, err := a.DeleteNote(tx, user, n1); err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "deleting note"))
+	}
+	tx.Commit()
+
+	var noteCount, digestNoteCount int
+	var dn2Record database.DigestNote
+
+	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	testutils.MustExec(t, testutils.DB.Model(&database.DigestNote{}).Count(&digestNoteCount), "counting digest_notes")
+
+	assert.Equal(t, noteCount, 2, "note count mismatch")
+	assert.Equal(t, digestNoteCount, 1, "digest_notes count mismatch")
+
+	testutils.MustExec(t, testutils.DB.Where("id = ?", dn2.ID).First(&dn2Record), "finding dn2")
+	assert.Equal(t, dn2Record.NoteID, dn2.NoteID, "dn2 NoteID mismatch")
+	assert.Equal(t, dn2Record.DigestID, dn2.DigestID, "dn2 DigestID mismatch")
 }

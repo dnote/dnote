@@ -23,6 +23,7 @@ import initNotesService from './notes';
 import initPaymentService from './payment';
 import initDigestsService from './digests';
 import initRepetitionRulesService from './repetitionRules';
+import initNoteReviews from './noteReviews';
 
 // init initializes service helpers with the given http configuration
 // and returns an object of all services.
@@ -33,6 +34,7 @@ export default function initServices(c: HttpClientConfig) {
   const paymentService = initPaymentService(c);
   const digestsService = initDigestsService(c);
   const repetitionRulesService = initRepetitionRulesService(c);
+  const noteReviewsService = initNoteReviews(c);
 
   return {
     users: usersService,
@@ -40,6 +42,7 @@ export default function initServices(c: HttpClientConfig) {
     notes: notesService,
     payment: paymentService,
     digests: digestsService,
-    repetitionRules: repetitionRulesService
+    repetitionRules: repetitionRulesService,
+    noteReviews: noteReviewsService
   };
 }

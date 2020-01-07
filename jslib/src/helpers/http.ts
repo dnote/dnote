@@ -84,9 +84,10 @@ function put(path: string, data: any, options = {}) {
   });
 }
 
-function del(path: string, options = {}) {
-  return request(path, {
+function del<T>(path: string, data: any, options = {}) {
+  return request<T>(path, {
     method: 'DELETE',
+    body: JSON.stringify(data),
     ...options
   });
 }
@@ -127,8 +128,8 @@ export function getHttpClient(c: HttpClientConfig) {
     put: (path: string, data, options = {}) => {
       return put(transformPath(path), data, options);
     },
-    del: (path: string, options = {}) => {
-      return del(transformPath(path), options);
+    del: <T = any>(path: string, data = {}, options = {}) => {
+      return del<T>(transformPath(path), data, options);
     }
   };
 }

@@ -93,10 +93,6 @@ func NewTemplates(srcDir *string) Templates {
 		box = packr.New("emailTemplates", "./templates/src")
 	}
 
-	weeklyDigestHTML, err := initHTMLTmpl(box, EmailTypeDigest)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing weekly digest template"))
-	}
 	welcomeText, err := initTextTmpl(box, EmailTypeWelcome)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing welcome template"))
@@ -121,15 +117,19 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
+	digestText, err := initTextTmpl(box, EmailTypeDigest)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing digest template"))
+	}
 
 	T := Templates{}
-	T.set(EmailTypeDigest, EmailKindHTML, weeklyDigestHTML)
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
 	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
 	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
 	T.set(EmailTypeSubscriptionConfirmation, EmailKindText, subscriptionConfirmationText)
+	T.set(EmailTypeDigest, EmailKindText, digestText)
 
 	return T
 }

@@ -29,6 +29,8 @@ import route from './route/reducers';
 import notes from './notes/reducers';
 import filters from './filters/reducers';
 import repetitionRules from './repetitionRules/reducers';
+import digests from './digests/reducers';
+import digest from './digest/reducers';
 
 const rootReducer = combineReducers({
   auth,
@@ -40,6 +42,8 @@ const rootReducer = combineReducers({
   ui,
   route,
   filters,
+  digests,
+  digest,
   repetitionRules
 });
 

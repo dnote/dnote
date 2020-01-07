@@ -18,7 +18,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import {
   SettingSections,
@@ -61,17 +61,22 @@ const MobileMenu: React.FunctionComponent<Props> = ({ onDismiss, isOpen }) => {
 
         <ul className={classnames('list-unstyled', styles.list)}>
           <li className={styles.item}>
-            <Link
+            <NavLink
+              activeClassName={styles.active}
               className={styles.link}
               to={getSettingsPath(SettingSections.account)}
             >
               Settings
-            </Link>
+            </NavLink>
           </li>
           <li className={styles.item}>
-            <Link className={styles.link} to={getRepetitionsPath()}>
+            <NavLink
+              activeClassName={styles.active}
+              className={styles.link}
+              to={getRepetitionsPath()}
+            >
               Repetition
-            </Link>
+            </NavLink>
           </li>
           <li className={styles.item}>
             <form

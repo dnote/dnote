@@ -49,11 +49,9 @@ func NewNoteInfo(note database.Note, stage int) DigestNoteInfo {
 
 // DigestTmplData is a template data for digest emails
 type DigestTmplData struct {
-	Subject           string
-	NoteInfo          []DigestNoteInfo
-	ActiveBookCount   int
-	ActiveNoteCount   int
 	EmailSessionToken string
+	DigestUUID        string
+	DigestVersion     int
 	RuleUUID          string
 	RuleTitle         string
 	WebURL            string

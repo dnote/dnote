@@ -35,7 +35,7 @@ function getTitle(note: NoteState): string {
     return 'Note';
   }
 
-  return `Note: ${note.data.book.label} (${formatAddedOn(note.data.added_on)})`;
+  return `Note: ${note.data.book.label} (${formatAddedOn(note.data.addedOn)})`;
 }
 
 interface Props {

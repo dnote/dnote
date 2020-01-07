@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { Fragment, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import classnames from 'classnames';
 
 import { KEYCODE_UP, KEYCODE_DOWN } from 'jslib/helpers/keyboard';
@@ -44,12 +44,12 @@ const Content: React.FunctionComponent<ContentProps> = ({
   headerContent
 }) => {
   return (
-    <Fragment>
-      {headerContent}
+    <div>
+      <header>{headerContent}</header>
       <ul
         id={menuId}
-        className="list-unstyled"
         role="menu"
+        className="list-unstyled"
         ref={el => {
           setContentEl(el);
         }}
@@ -62,7 +62,7 @@ const Content: React.FunctionComponent<ContentProps> = ({
           );
         })}
       </ul>
-    </Fragment>
+    </div>
   );
 };
 
@@ -73,7 +73,7 @@ interface MenuProps {
   optRefs: React.MutableRefObject<any>[];
   triggerContent: React.ReactNode;
   triggerClassName?: string;
-  contentClassName: string;
+  contentClassName?: string;
   alignment: Alignment;
   direction: Direction;
   headerContent?: React.ReactNode;
@@ -81,6 +81,7 @@ interface MenuProps {
   menuId: string;
   triggerId: string;
   disabled?: boolean;
+  defaultCurrentOptionIdx?: number;
 }
 
 const Menu: React.FunctionComponent<MenuProps> = ({
@@ -97,9 +98,12 @@ const Menu: React.FunctionComponent<MenuProps> = ({
   wrapperClassName,
   menuId,
   triggerId,
-  disabled
+  disabled,
+  defaultCurrentOptionIdx = 0
 }) => {
-  const [currentOptionIdx, setCurrentOptionIdx] = useState(0);
+  const [currentOptionIdx, setCurrentOptionIdx] = useState(
+    defaultCurrentOptionIdx
+  );
   const [contentEl, setContentEl] = useState(null);
 
   useEffect(() => {
@@ -111,9 +115,9 @@ const Menu: React.FunctionComponent<MenuProps> = ({
         el.focus();
       }
     } else {
-      setCurrentOptionIdx(0);
+      setCurrentOptionIdx(defaultCurrentOptionIdx);
     }
-  }, [isOpen, currentOptionIdx, optRefs]);
+  }, [isOpen, currentOptionIdx, defaultCurrentOptionIdx, optRefs]);
 
   useEventListener(contentEl, 'keydown', e => {
     const { keyCode } = e;
@@ -173,7 +177,7 @@ const Menu: React.FunctionComponent<MenuProps> = ({
         );
       }}
       contentClassName={classnames(styles.content, contentClassName)}
-      wrapperClassName={wrapperClassName}
+      wrapperClassName={classnames(styles.wrapper, wrapperClassName)}
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       alignment={alignment}

@@ -17,7 +17,7 @@
  */
 
 import { nanosecToMillisec } from '../helpers/time';
-import { NoteData } from '../../../jslib/src/operations/types';
+import { NoteData, UserData } from '../../../jslib/src/operations/types';
 
 export interface NotesGroupData {
   year: number;
@@ -59,7 +59,7 @@ export function groupNotes(notes: NoteData[]): NotesGroupData[] {
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
 
-    const date = new Date(nanosecToMillisec(note.added_on));
+    const date = new Date(nanosecToMillisec(note.addedOn));
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
 
@@ -84,4 +84,9 @@ export function groupNotes(notes: NoteData[]): NotesGroupData[] {
   }
 
   return ret;
+}
+
+// checkOwner checks if the given note belongs to the given user
+export function checkOwner(note: NoteData, user: UserData): boolean {
+  return note.user.uuid === user.uuid;
 }

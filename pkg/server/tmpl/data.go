@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
 )
 
@@ -57,7 +57,7 @@ func (a AppShell) newNotePage(r *http.Request, noteUUID string) (notePage, error
 		return notePage{}, errors.Wrap(err, "authenticating with session")
 	}
 
-	note, ok, err := app.GetNote(a.DB, noteUUID, user)
+	note, ok, err := operations.GetNote(a.DB, noteUUID, user)
 
 	if !ok {
 		return notePage{}, ErrNotFound

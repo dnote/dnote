@@ -88,13 +88,16 @@ const Content: React.FunctionComponent = () => {
             Go to settings.
           </Link>
         </Flash>
-        <RepetitionList
-          isFetching={repetitionRules.isFetching}
-          isFetched={repetitionRules.isFetched}
-          items={repetitionRules.data}
-          setRuleUUIDToDelete={setRuleUUIDToDelete}
-          pro={user.pro}
-        />
+
+        <div className={styles.content}>
+          <RepetitionList
+            isFetching={repetitionRules.isFetching}
+            isFetched={repetitionRules.isFetched}
+            items={repetitionRules.data}
+            setRuleUUIDToDelete={setRuleUUIDToDelete}
+            pro={user.pro}
+          />
+        </div>
       </div>
 
       <DeleteRepetitionRuleModal

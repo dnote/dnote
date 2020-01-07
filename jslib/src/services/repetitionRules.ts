@@ -16,11 +16,9 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { BookData, RepetitionRuleData, BookDomain } from '../operations/types';
+import { RepetitionRuleData, BookDomain } from '../operations/types';
 import { getHttpClient, HttpClientConfig } from '../helpers/http';
 import { getPath } from '../helpers/url';
-
-export type FetchResponse = RepetitionRuleData[];
 
 export interface CreateParams {
   title: string;
@@ -35,23 +33,7 @@ export interface CreateParams {
 
 export type UpdateParams = Partial<CreateParams>;
 
-export interface RepetitionRuleRespData {
-  uuid: string;
-  title: string;
-  enabled: boolean;
-  hour: number;
-  minute: number;
-  book_domain: BookDomain;
-  frequency: number;
-  books: BookData[];
-  note_count: number;
-  last_active: number;
-  next_active: number;
-  created_at: string;
-  updated_at: string;
-}
-
-function mapData(d: RepetitionRuleRespData): RepetitionRuleData {
+function mapData(d): RepetitionRuleData {
   return {
     uuid: d.uuid,
     title: d.title,
@@ -77,35 +59,31 @@ export default function init(config: HttpClientConfig) {
       const path = `/repetition_rules/${uuid}`;
       const endpoint = getPath(path, queries);
 
-      return client.get<RepetitionRuleRespData>(endpoint).then(resp => {
+      return client.get(endpoint).then(resp => {
         return mapData(resp);
       });
     },
     fetchAll: (): Promise<RepetitionRuleData[]> => {
       const endpoint = '/repetition_rules';
 
-      return client.get<RepetitionRuleRespData[]>(endpoint).then(resp => {
+      return client.get(endpoint).then(resp => {
         return resp.map(mapData);
       });
     },
     create: (params: CreateParams) => {
       const endpoint = '/repetition_rules';
 
-      return client
-        .post<RepetitionRuleRespData>(endpoint, params)
-        .then(resp => {
-          return mapData(resp);
-        });
+      return client.post(endpoint, params).then(resp => {
+        return mapData(resp);
+      });
     },
     update: (uuid: string, params: UpdateParams, queries = {}) => {
       const path = `/repetition_rules/${uuid}`;
       const endpoint = getPath(path, queries);
 
-      return client
-        .patch<RepetitionRuleRespData>(endpoint, params)
-        .then(resp => {
-          return mapData(resp);
-        });
+      return client.patch(endpoint, params).then(resp => {
+        return mapData(resp);
+      });
     },
     remove: (uuid: string) => {
       const endpoint = `/repetition_rules/${uuid}`;

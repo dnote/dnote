@@ -39,7 +39,8 @@
 input.input {
   width: 100%;
 
-  @include breakpoint(lg) {
+  // Use custom breakpoint to optimize input width depending on the screen size
+  @media screen and (min-width: 1280px) {
     width: rem(480px);
   }
 }

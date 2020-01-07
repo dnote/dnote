@@ -40,12 +40,23 @@ export function escapesRegExp(s: string) {
 
 // pluralize pluralizes the given singular noun depending on the given count
 // by naively concatenating a suffix 's'.
-export function pluralize(singular: string, count: number): string {
-  if (count === 1) {
-    return singular;
+export function pluralize(
+  singular: string,
+  quantity: number,
+  showQuantity?: boolean
+): string {
+  let noun;
+  if (quantity === 1) {
+    noun = singular;
+  } else {
+    noun = `${singular}s`;
   }
 
-  return `${singular}s`;
+  if (showQuantity) {
+    return `${quantity} ${noun}`;
+  }
+
+  return noun;
 }
 
 // addOrdinalSuffix append appropriate suffix to the given number to

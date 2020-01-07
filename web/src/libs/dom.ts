@@ -120,3 +120,7 @@ export function selectTextInputValue(
   const len = el.value.length;
   el.setSelectionRange(0, len);
 }
+
+export function getScrollYPos(): number {
+  return window.pageYOffset || document.documentElement.scrollTop;
+}

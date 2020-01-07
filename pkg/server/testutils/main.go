@@ -80,10 +80,10 @@ func ClearData() {
 		panic(errors.Wrap(err, "Failed to clear accounts"))
 	}
 	if err := DB.Delete(&database.Token{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
 	if err := DB.Delete(&database.EmailPreference{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear reset_tokens"))
+		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
 	if err := DB.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
@@ -91,8 +91,17 @@ func ClearData() {
 	if err := DB.Delete(&database.Digest{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear digests"))
 	}
-	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
+	if err := DB.Delete(&database.DigestNote{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear digests"))
+	}
+	if err := DB.Delete(&database.DigestReceipt{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear digest receipts"))
+	}
+	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear repetition rules"))
+	}
+	if err := DB.Delete(&database.NoteReview{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear note review"))
 	}
 }
 

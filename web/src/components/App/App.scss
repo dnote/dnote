@@ -24,7 +24,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: $light-gray;
+  background: $lighter-gray;
   min-height: calc(100vh - #{$header-height} - #{$footer-height});
   margin-bottom: $footer-height;
 

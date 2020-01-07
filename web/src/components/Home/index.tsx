@@ -26,12 +26,19 @@ import {
   Filters,
   checkFilterEqual
 } from 'jslib/helpers/filters';
+import { getHomePath } from 'web/libs/paths';
 import NoteGroupList from './NoteGroup/List';
 import HeadData from './HeadData';
 import { useDispatch, useSelector } from '../../store';
 import { getNotes } from '../../store/notes';
-import TopActions from './Actions/Top';
+import PageToolbar from '../Common/PageToolbar';
+import Paginator from '../Common/PageToolbar/Paginator';
 import Flash from '../Common/Flash';
+import styles from './Home.scss';
+
+// PER_PAGE is the number of results per page in the response from the backend implementation's API.
+// Currently it is fixed.
+const PER_PAGE = 30;
 
 interface Props extends RouteComponentProps {}
 
@@ -81,15 +88,25 @@ const Home: React.FunctionComponent<Props> = ({ location }) => {
         Error getting notes: {notes.errorMessage}
       </Flash>
 
-      <TopActions />
+      <PageToolbar wrapperClassName={styles.toolbar}>
+        <Paginator
+          perPage={PER_PAGE}
+          total={notes.total}
+          currentPage={filters.page}
+          getPath={(page: number) => {
+            return getHomePath({
+              ...filters.queries,
+              page
+            });
+          }}
+        />
+      </PageToolbar>
 
       <NoteGroupList
         groups={groups}
         filters={filters}
         isFetched={notes.isFetched}
       />
-
-      {notes.data.length > 10 && <TopActions position="bottom" />}
     </div>
   );
 };
