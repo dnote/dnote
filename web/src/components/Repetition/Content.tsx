@@ -77,12 +77,16 @@ const Content: React.FunctionComponent = () => {
       </div>
 
       <div className="container mobile-nopadding">
-        <Flash when={!user.pro} kind="warning">
+        <Flash when={!user.pro} kind="warning" wrapperClassName={styles.flash}>
           Repetitions are not enabled on your plan.{' '}
           <Link to={getSubscriptionPath()}>Upgrade here.</Link>
         </Flash>
 
-        <Flash when={user.pro && !user.emailVerified} kind="warning">
+        <Flash
+          when={user.pro && !user.emailVerified}
+          kind="warning"
+          wrapperClassName={styles.flash}
+        >
           Please verify your email address in order to receive digests.{' '}
           <Link to={getSettingsPath(SettingSections.account)}>
             Go to settings.

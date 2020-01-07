@@ -22,6 +22,7 @@ import classnames from 'classnames';
 import { DigestData } from 'jslib/operations/types';
 import { getRange } from 'jslib/helpers/arr';
 import Item from './Item';
+import Empty from './Empty';
 import Placeholder from './Placeholder';
 import styles from './List.scss';
 
@@ -47,6 +48,10 @@ const List: React.FunctionComponent<Props> = ({
   }
   if (!isFetched) {
     return null;
+  }
+
+  if (items.length === 0) {
+    return <Empty />;
   }
 
   return (

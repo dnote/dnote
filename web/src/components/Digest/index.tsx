@@ -79,24 +79,22 @@ function getNotes(notes: DigestNoteData[], p: SearchParams): DigestNoteData[] {
   });
 }
 
+const statusMap = {
+  [Status.All]: Status.All,
+  [Status.Reviewed]: Status.Reviewed,
+  [Status.Unreviewed]: Status.Unreviewed
+};
+
+const sortMap = {
+  [Sort.Newest]: Sort.Newest,
+  [Sort.Oldest]: Sort.Oldest
+};
+
 function parseSearchParams(location: Location): SearchParams {
   const searchObj = parseSearchString(location.search);
 
-  let sort: Sort;
-  if (searchObj.sort === Sort.Oldest) {
-    sort = Sort.Oldest;
-  } else {
-    sort = Sort.Newest;
-  }
-
-  let status: Status;
-  if (searchObj.status === Status.Unreviewed) {
-    status = Status.Unreviewed;
-  } else if (searchObj.status === Status.Reviewed) {
-    status = Status.Reviewed;
-  } else {
-    status = Status.All;
-  }
+  const status = statusMap[searchObj.status] || Status.Unreviewed;
+  const sort = sortMap[searchObj.sort] || Sort.Newest;
 
   return {
     sort,
@@ -153,6 +151,7 @@ const Digest: React.FunctionComponent<Props> = ({ location, match }) => {
       <div className="container mobile-nopadding">
         <NoteList
           digest={digest.data}
+          params={params}
           notes={notes}
           isFetched={digest.isFetched}
           isFetching={digest.isFetching}

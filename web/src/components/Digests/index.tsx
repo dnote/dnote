@@ -17,10 +17,11 @@
  */
 
 import React, { useEffect } from 'react';
-import { RouteComponentProps } from 'react-router-dom';
+import { Link, RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 
 import { usePrevious } from 'web/libs/hooks';
+import { getSubscriptionPath } from 'web/libs/paths';
 import { parseSearchString } from 'jslib/helpers/url';
 import { useDispatch, useSelector } from '../../store';
 import { getDigests } from '../../store/digests';
@@ -28,6 +29,7 @@ import { Status } from './types';
 import Flash from '../Common/Flash';
 import List from './List';
 import Toolbar from './Toolbar';
+import styles from './Digests.scss';
 
 function useFetchDigests(params: { page: number; status: Status }) {
   const dispatch = useDispatch();
@@ -48,9 +50,10 @@ function useFetchDigests(params: { page: number; status: Status }) {
 interface Props extends RouteComponentProps {}
 
 const Digests: React.FunctionComponent<Props> = ({ location }) => {
-  const { digests } = useSelector(state => {
+  const { user, digests } = useSelector(state => {
     return {
-      digests: state.digests
+      digests: state.digests,
+      user: state.auth.user.data
     };
   });
   const { page, status } = parseSearchString(location.search);
@@ -69,9 +72,20 @@ const Digests: React.FunctionComponent<Props> = ({ location }) => {
         <div className="page-header">
           <h1 className="page-heading">Digests</h1>
         </div>
+      </div>
 
-        <Flash kind="danger" when={Boolean(digests.errorMessage)}>
+      <div className="container mobile-nopadding">
+        <Flash
+          kind="danger"
+          when={Boolean(digests.errorMessage)}
+          wrapperClassName={styles.flash}
+        >
           Error getting digests: {digests.errorMessage}
+        </Flash>
+
+        <Flash when={!user.pro} kind="warning" wrapperClassName={styles.flash}>
+          Digests are not enabled on your plan.{' '}
+          <Link to={getSubscriptionPath()}>Upgrade here.</Link>
         </Flash>
       </div>
 

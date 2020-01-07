@@ -32,6 +32,7 @@ interface Props {
   closeOnEscapeKeydown?: boolean;
   contentClassName?: string;
   alignment?: Alignment;
+  alignmentMd?: Alignment;
   triggerEl?: HTMLElement;
   wrapperEl?: any;
   hasBorder?: boolean;
@@ -45,6 +46,7 @@ const PopoverContent: React.FunctionComponent<Props> = ({
   wrapperEl,
   children,
   alignment,
+  alignmentMd,
   direction,
   hasBorder,
   closeOnOutsideClick,
@@ -135,6 +137,12 @@ const PopoverContent: React.FunctionComponent<Props> = ({
         [styles['right-align']]: alignment === 'right',
         [styles['top-align']]: alignment === 'top',
         [styles['bottom-align']]: alignment === 'bottom',
+
+        [styles['left-align-md']]: alignmentMd === 'left',
+        [styles['right-align-md']]: alignmentMd === 'right',
+        [styles['top-align-md']]: alignmentMd === 'top',
+        [styles['bottom-align-md']]: alignmentMd === 'bottom',
+
         // direction
         [styles['top-direction']]: direction === 'top',
         [styles['bottom-direction']]: direction === 'bottom',

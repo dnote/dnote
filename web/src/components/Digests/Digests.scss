@@ -16,21 +16,16 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Sort is a set of possible values for sort query parameters
-export enum Sort {
-  Newest = '',
-  Oldest = 'created-asc'
-}
+@import '../App/responsive';
+@import '../App/theme';
+@import '../App/variables';
+@import '../App/font';
+@import '../App/rem';
 
-// Status is a set of possible values for status query parameters
-export enum Status {
-  Unreviewed = '',
-  Reviewed = 'reviewed',
-  All = 'all'
-}
+.flash {
+  margin-top: rem(20px);
 
-export interface SearchParams {
-  sort: Sort;
-  status: Status;
-  books: string[];
+  @include breakpoint(lg) {
+    margin-top: 0;
+  }
 }

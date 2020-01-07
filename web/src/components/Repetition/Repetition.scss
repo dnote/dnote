@@ -30,3 +30,11 @@
 .content {
   margin-top: rem(20px);
 }
+
+.flash {
+  margin-top: rem(20px);
+
+  @include breakpoint(lg) {
+    margin-top: 0;
+  }
+}

@@ -75,6 +75,7 @@ interface MenuProps {
   triggerClassName?: string;
   contentClassName?: string;
   alignment: Alignment;
+  alignmentMd?: Alignment;
   direction: Direction;
   headerContent?: React.ReactNode;
   wrapperClassName?: string;
@@ -93,6 +94,7 @@ const Menu: React.FunctionComponent<MenuProps> = ({
   triggerClassName,
   contentClassName,
   alignment,
+  alignmentMd,
   direction,
   headerContent,
   wrapperClassName,
@@ -181,6 +183,7 @@ const Menu: React.FunctionComponent<MenuProps> = ({
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       alignment={alignment}
+      alignmentMd={alignmentMd}
       direction={direction}
       renderContent={() => {
         return (

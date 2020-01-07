@@ -29,22 +29,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
-
-func preloadDigest(conn *gorm.DB, userID int) *gorm.DB {
-	return conn.
-		Preload("Notes", func(db *gorm.DB) *gorm.DB {
-			return db.Order("notes.created_at DESC")
-		}).
-		Preload("Notes.Book").
-		Preload("Notes.NoteReview").
-		Preload("Rule").
-		Preload("Receipts", func(db *gorm.DB) *gorm.DB {
-			return db.Where("digest_receipts.user_id = ?", userID)
-		})
-}
 
 func (a *API) getDigest(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
@@ -56,17 +42,18 @@ func (a *API) getDigest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	digestUUID := vars["digestUUID"]
 
-	db := a.App.DB
-
-	var digest database.Digest
-	conn := db.Where("user_id = ? AND uuid = ? ", user.ID, digestUUID)
-	conn = preloadDigest(conn, user.ID)
-	conn = conn.First(&digest)
-
-	if conn.RecordNotFound() {
+	d, err := a.App.GetUserDigestByUUID(user.ID, digestUUID)
+	if d == nil {
 		RespondNotFound(w)
 		return
-	} else if err := conn.Error; err != nil {
+	}
+	if err != nil {
+		HandleError(w, "finding digest", err, http.StatusInternalServerError)
+		return
+	}
+
+	digest, err := a.App.PreloadDigest(*d)
+	if err != nil {
 		HandleError(w, "finding digest", err, http.StatusInternalServerError)
 		return
 	}

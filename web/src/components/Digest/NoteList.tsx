@@ -26,11 +26,14 @@ import { useDispatch } from '../../store';
 import { setDigestNoteReviewed } from '../../store/digest';
 import Placeholder from '../Common/Note/Placeholder';
 import NoteItem from './NoteItem';
+import Empty from './Empty';
+import { SearchParams } from './types';
 import styles from './Digest.scss';
 
 interface Props {
   notes: DigestNoteData[];
   digest: DigestData;
+  params: SearchParams;
   isFetched: boolean;
   isFetching: boolean;
 }
@@ -38,6 +41,7 @@ interface Props {
 const NoteList: React.FunctionComponent<Props> = ({
   isFetched,
   isFetching,
+  params,
   notes,
   digest
 }) => {
@@ -60,6 +64,10 @@ const NoteList: React.FunctionComponent<Props> = ({
   }
   if (!isFetched) {
     return null;
+  }
+
+  if (notes.length === 0) {
+    return <Empty params={params} />;
   }
 
   return (

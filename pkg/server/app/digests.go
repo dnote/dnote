@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -175,6 +176,30 @@ func (a *App) GetDigests(p GetDigestsParam) ([]database.Digest, error) {
 		Find(&ret)
 	if err := conn.Error; err != nil && !conn.RecordNotFound() {
 		return nil, errors.Wrap(err, "finding digests")
+	}
+
+	return ret, nil
+}
+
+// PreloadDigest preloads associations for the given digest. It returns a new digest.
+func (a *App) PreloadDigest(d database.Digest) (database.Digest, error) {
+	var ret database.Digest
+
+	conn := a.DB.Where("id = ?", d.ID).
+		Preload("Notes", func(db *gorm.DB) *gorm.DB {
+			return db.Order("notes.created_at DESC")
+		}).
+		Preload("Notes.Book").
+		Preload("Notes.NoteReview", func(db *gorm.DB) *gorm.DB {
+			return db.Where("note_reviews.digest_id = ?", d.ID)
+		}).
+		Preload("Rule").
+		Preload("Receipts", func(db *gorm.DB) *gorm.DB {
+			return db.Where("digest_receipts.user_id = ?", d.UserID)
+		}).First(&ret)
+
+	if err := conn.Error; err != nil {
+		return ret, errors.Wrap(err, "preloading")
 	}
 
 	return ret, nil
