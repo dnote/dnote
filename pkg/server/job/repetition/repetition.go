@@ -158,7 +158,7 @@ func (c Context) notify(now time.Time, user database.User, digest database.Diges
 		return errors.Wrap(err, "getting sender email")
 	}
 
-	if err := c.EmailBackend.Queue(subject, sender, []string{account.Email.String}, mailer.EmailKindHTML, body); err != nil {
+	if err := c.EmailBackend.Queue(subject, sender, []string{account.Email.String}, mailer.EmailKindText, body); err != nil {
 		return errors.Wrap(err, "queueing email")
 	}
 
