@@ -46,7 +46,7 @@ const StatusMenu: React.FunctionComponent<Props> = ({
 
   const options = [
     {
-      name: 'all',
+      name: 'unreviewed',
       value: (
         <Link
           role="menuitem"
@@ -56,26 +56,6 @@ const StatusMenu: React.FunctionComponent<Props> = ({
             setIsOpen(false);
           }}
           ref={optRefs[0]}
-          tabIndex={-1}
-        >
-          All
-        </Link>
-      )
-    },
-    {
-      name: 'unreviewed',
-      value: (
-        <Link
-          role="menuitem"
-          className={selectMenuStyles.link}
-          to={getDigestPath(digestUUID, {
-            ...searchObj,
-            status: Status.Unreviewed
-          })}
-          onClick={() => {
-            setIsOpen(false);
-          }}
-          ref={optRefs[1]}
           tabIndex={-1}
         >
           Unreviewed
@@ -95,28 +75,48 @@ const StatusMenu: React.FunctionComponent<Props> = ({
           onClick={() => {
             setIsOpen(false);
           }}
-          ref={optRefs[2]}
+          ref={optRefs[1]}
           tabIndex={-1}
         >
           Reviewed
         </Link>
       )
+    },
+    {
+      name: 'all',
+      value: (
+        <Link
+          role="menuitem"
+          className={selectMenuStyles.link}
+          to={getDigestPath(digestUUID, {
+            ...searchObj,
+            status: Status.All
+          })}
+          onClick={() => {
+            setIsOpen(false);
+          }}
+          ref={optRefs[2]}
+          tabIndex={-1}
+        >
+          All
+        </Link>
+      )
     }
   ];
 
-  const isActive = status === Status.Reviewed || status === Status.Unreviewed;
+  const isActive = status === Status.Reviewed || status === Status.All;
 
   let defaultCurrentOptionIdx: number;
   let statusText: string;
   if (status === Status.Reviewed) {
-    defaultCurrentOptionIdx = 2;
-    statusText = 'Reviewed';
-  } else if (status === Status.Unreviewed) {
     defaultCurrentOptionIdx = 1;
-    statusText = 'Unreviewed';
+    statusText = 'Reviewed';
+  } else if (status === Status.All) {
+    defaultCurrentOptionIdx = 2;
+    statusText = 'All';
   } else {
     defaultCurrentOptionIdx = 0;
-    statusText = 'All';
+    statusText = 'Unreviewed';
   }
 
   return (
@@ -134,7 +134,7 @@ const StatusMenu: React.FunctionComponent<Props> = ({
       triggerClassName={classnames('button-no-padding', {
         [styles['active-menu-trigger']]: isActive
       })}
-      triggerText={` Status: ${statusText} `}
+      triggerText={`Status: ${statusText}`}
       alignment="right"
       direction="bottom"
     />

@@ -24,9 +24,9 @@ export enum Sort {
 
 // Status is a set of possible values for status query parameters
 export enum Status {
-  All = '',
-  Unreviewed = 'unreviewed',
-  Reviewed = 'reviewed'
+  Unreviewed = '',
+  Reviewed = 'reviewed',
+  All = 'all'
 }
 
 export interface SearchParams {
