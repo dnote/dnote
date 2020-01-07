@@ -135,7 +135,8 @@ const StatusMenu: React.FunctionComponent<Props> = ({
         [styles['active-menu-trigger']]: isActive
       })}
       triggerText={`Status: ${statusText}`}
-      alignment="right"
+      alignment="left"
+      alignmentMd="right"
       direction="bottom"
     />
   );

@@ -34,8 +34,8 @@ interface Props {
   headerText: string;
   menuId: string;
   alignment: Alignment;
+  alignmentMd?: Alignment;
   direction: Direction;
-
   disabled?: boolean;
   wrapperClassName?: string;
   triggerClassName?: string;
@@ -53,6 +53,7 @@ const SelectMenu: React.FunctionComponent<Props> = ({
   triggerId,
   menuId,
   alignment,
+  alignmentMd,
   direction,
   wrapperClassName,
   triggerClassName
@@ -82,6 +83,7 @@ const SelectMenu: React.FunctionComponent<Props> = ({
       contentClassName={styles.content}
       wrapperClassName={wrapperClassName}
       alignment={alignment}
+      alignmentMd={alignmentMd}
       direction={direction}
     />
   );

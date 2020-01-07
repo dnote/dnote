@@ -20,7 +20,7 @@ import React, { useRef } from 'react';
 import classnames from 'classnames';
 
 import PopoverContent from './PopoverContent';
-import styles from './Popover.module.scss';
+import styles from './Popover.scss';
 import { Alignment, Direction } from './types';
 
 interface Props {
@@ -29,6 +29,7 @@ interface Props {
   renderTrigger: (any) => React.ReactNode;
   renderContent: () => any;
   alignment: Alignment;
+  alignmentMd?: Alignment;
   direction: Direction;
   contentHasBorder?: boolean;
   hasArrow?: boolean;
@@ -46,6 +47,7 @@ const Popover: React.FunctionComponent<Props> = ({
   isOpen,
   setIsOpen,
   alignment,
+  alignmentMd,
   direction,
   renderTrigger,
   contentId,
@@ -83,6 +85,7 @@ const Popover: React.FunctionComponent<Props> = ({
           wrapperEl={wrapperRef.current}
           triggerEl={triggerRef.current}
           alignment={alignment}
+          alignmentMd={alignmentMd}
           direction={direction}
           contentId={contentId}
           hasBorder={contentHasBorder}
