@@ -82,7 +82,7 @@ func (a *API) createNoteReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var nr database.NoteReview
-	if err := a.App.DB.Debug().FirstOrCreate(&nr, database.NoteReview{
+	if err := a.App.DB.FirstOrCreate(&nr, database.NoteReview{
 		UserID:   user.ID,
 		DigestID: digest.ID,
 		NoteID:   note.ID,

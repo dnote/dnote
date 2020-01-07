@@ -67,7 +67,7 @@ func TestCreateNoteReview(t *testing.T) {
 		assert.Equalf(t, noteReviewCount, 1, "counting note_review")
 
 		var noteReviewRecord database.NoteReview
-		testutils.MustExec(t, testutils.DB.Debug().Where("user_id = ? AND note_id = ? AND digest_id = ?", user.ID, n1.ID, d1.ID).First(&noteReviewRecord), "finding note_review record")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND note_id = ? AND digest_id = ?", user.ID, n1.ID, d1.ID).First(&noteReviewRecord), "finding note_review record")
 	}
 }
 
