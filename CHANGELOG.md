@@ -23,6 +23,7 @@ None
 #### Fixed
 
 - Send inactive reminders with a correct email type (#385)
+- Wrap words in note content (#389)
 
 ### 0.3.4 - 2019-12-24
 
