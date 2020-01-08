@@ -14,6 +14,16 @@ The following log documents the history of the server project.
 
 None
 
+### 0.4.0 - 2020-01-08
+
+#### Added
+
+- A web-based digest (#380)
+
+#### Fixed
+
+- Send inactive reminders with a correct email type (#385)
+
 ### 0.3.4 - 2019-12-24
 
 #### Added
