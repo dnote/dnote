@@ -1,56 +1,40 @@
 ![Dnote](assets/logo.png)
 =========================
 
-Dnote is a simple personal knowledge base.
-
 [![Build Status](https://travis-ci.org/dnote/dnote.svg?branch=master)](https://travis-ci.org/dnote/dnote)
 
-## What is Dnote?
+[Dnote](https://www.getdnote.com) is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command-line interface, browser extension, web client, or an IDE plugin.
 
-Dnote is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command line interface, browser extension, web client, or an IDE plugin.
+It also offers a seamless **multi-device sync**, and **automated spaced repetition** to retain your memory. For more information, please see [features](https://www.getdnote.com/pricing).
 
-It also offers a seamless **multi device sync**, and **automated spaced repetition** to retain your memory.
+![Dnote web application running on various devices](assets/devices.png "Dnote web application running on various devices")
 
-For more details, see the [download page](https://www.getdnote.com/download) and [features](https://www.getdnote.com/pricing).
+## Get Started
 
-![A demo of Dnote CLI](assets/cli.gif)
+The quickest way to try Dnote is to use the hosted version at https://app.getdnote.com
 
-## Quick install
+Alternatively, you can self-host a Dnote server by either [using Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md) or [using a binary](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).
 
-The quickest way to try Dnote is to install the command line interface.
+## Dnote clients
 
-### Install with Homebrew
+You can use the following client programs to interact with Dnote:
 
-On macOS, you can install using Homebrew:
+* [Command line interface](https://github.com/dnote/dnote/blob/master/pkg/cli/README.md)
+* Chrome browser extension
+* Firefox addon
+* [Web interface](https://app.getdnote.com)
+* Atom plugin
 
-```sh
-brew tap dnote/dnote
-brew install dnote
+For the installation guide, please see the [download page](https://www.getdnote.com/download).
 
-# to upgrade to the latest version
-brew upgrade dnote
-```
+## What is a personal knowledge base?
 
-### Install with script
-
-You can use the installation script to install the latest version:
-
-    curl -s https://raw.githubusercontent.com/dnote/dnote/master/pkg/cli/install.sh | sh
-
-In some cases, you might need an elevated permission:
-
-    curl -s https://raw.githubusercontent.com/dnote/dnote/master/pkg/cli/install.sh | sudo sh
-
-### Install with tarball
-
-You can download the binary for your platform manually from the [releases page](https://github.com/dnote/dnote/releases).
-
-## Personal knowledge base
+A personal knowledge base is a tool used to capture the knowledge of an individual and retrieve it later.
 
 Dnote is great for building a personal knowledge base because:
 
-* It is fully open source.
-* Your data is stored locally first and in a SQLite format which is [suitable for continued accessibility](https://www.sqlite.org/locrsf.html).
+* [It is fully open-source](https://www.getdnote.com/blog/open-sourcing-dnote).
+* You own your data locally using a SQLite format which is [suitable for continued accessibility](https://www.sqlite.org/locrsf.html).
 * It provides a way of instantly capturing new lessons without distracting you.
 * It automates spaced repetition to help you retain your memory.
 
