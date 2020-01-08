@@ -19,7 +19,6 @@
 /* eslint-disable react/no-danger */
 
 import React from 'react';
-import classnames from 'classnames';
 
 import { NoteData } from 'jslib/operations/types';
 import { excerpt } from 'web/libs/string';
@@ -77,7 +76,7 @@ const Content: React.SFC<Props> = ({ note, collapsed }) => {
         </div>
       ) : (
         <div
-          className={classnames('markdown-body', styles.content)}
+          className="markdown-body"
           dangerouslySetInnerHTML={{
             __html: formatContent(note.content)
           }}

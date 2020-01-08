@@ -14,7 +14,7 @@ The following log documents the history of the server project.
 
 None
 
-### 0.4.0 - 2020-01-08
+### 0.4.0 - 2020-01-09
 
 #### Added
 
@@ -23,6 +23,7 @@ None
 #### Fixed
 
 - Send inactive reminders with a correct email type (#385)
+- Wrap words in note content (#389)
 
 ### 0.3.4 - 2019-12-24
 
