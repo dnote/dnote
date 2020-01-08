@@ -14,7 +14,7 @@ The following log documents the history of the server project.
 
 None
 
-### 0.4.0 - 2020-01-08
+### 0.4.0 - 2020-01-09
 
 #### Added
 
