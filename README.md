@@ -3,17 +3,19 @@
 
 [![Build Status](https://travis-ci.org/dnote/dnote.svg?branch=master)](https://travis-ci.org/dnote/dnote)
 
-[Dnote](https://www.getdnote.com) is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a command-line interface, browser extension, web client, or an IDE plugin.
+[Dnote](https://www.getdnote.com) is a lightweight personal knowledge base. The main design goal is to **keep you focused** by providing a way of swiftly capturing new information **without having to switch environment**. To that end, you can use Dnote as a [command-line interface](https://github.com/dnote/dnote/blob/master/pkg/cli/README.md), browser extension, web client, or an IDE plugin.
 
 It also offers a seamless **multi-device sync**, and **automated spaced repetition** to retain your memory. For more information, please see [features](https://www.getdnote.com/pricing).
 
-![Dnote web application running on various devices](assets/devices.png "Dnote web application running on various devices")
+![A demo of Dnote command line interface](assets/cli.gif "Dnote command line interface")
 
 ## Get Started
 
 The quickest way to try Dnote is to use the hosted version at https://app.getdnote.com
 
 Alternatively, you can self-host a Dnote server by either [using Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md) or [using a binary](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).
+
+![Dnote web application running on various devices](assets/devices.png "Dnote web application running on various devices")
 
 ## Dnote clients
 
