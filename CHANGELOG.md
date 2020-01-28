@@ -12,7 +12,7 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
-None
+- Remove spaced repetition
 
 ### 0.4.0 - 2020-01-09
 

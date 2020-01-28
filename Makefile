@@ -31,12 +31,10 @@ endif
 ifeq ($(CI), true)
 	@(cd ${currentDir} && npm install --unsafe-perm=true)
 	@(cd ${currentDir}/web && npm install --unsafe-perm=true)
-	@(cd ${currentDir}/browser && npm install --unsafe-perm=true)
 	@(cd ${currentDir}/jslib && npm install --unsafe-perm=true)
 else
 	@(cd ${currentDir} && npm install)
 	@(cd ${currentDir}/web && npm install)
-	@(cd ${currentDir}/browser && npm install)
 	@(cd ${currentDir}/jslib && npm install)
 endif
 .PHONY: install-js
@@ -44,7 +42,6 @@ endif
 lint:
 	@(cd ${currentDir}/web && npm run lint)
 	@(cd ${currentDir}/jslib && npm run lint)
-	@(cd ${currentDir}/browser && npm run lint)
 .PHONY: lint
 
 ## test
@@ -185,5 +182,4 @@ clean:
 clean-dep:
 	@rm -rf ${currentDir}/web/node_modules
 	@rm -rf ${currentDir}/jslib/node_modules
-	@rm -rf ${currentDir}/browser/node_modules
 .PHONY: clean-dep
