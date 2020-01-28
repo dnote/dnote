@@ -42,8 +42,6 @@ var (
 	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
-	// EmailTypeInactiveReminder represents an inactivity reminder email
-	EmailTypeInactiveReminder = "inactive"
 	// EmailTypeSubscriptionConfirmation represents an inactivity reminder email
 	EmailTypeSubscriptionConfirmation = "subscription_confirmation"
 )
@@ -109,10 +107,6 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	inactiveReminderText, err := initTextTmpl(box, EmailTypeInactiveReminder)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing password reset template"))
-	}
 	subscriptionConfirmationText, err := initTextTmpl(box, EmailTypeSubscriptionConfirmation)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
@@ -127,7 +121,6 @@ func NewTemplates(srcDir *string) Templates {
 	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
-	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
 	T.set(EmailTypeSubscriptionConfirmation, EmailKindText, subscriptionConfirmationText)
 	T.set(EmailTypeDigest, EmailKindText, digestText)
 

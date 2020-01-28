@@ -20,7 +20,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -393,241 +392,241 @@ func TestUpdateEmail(t *testing.T) {
 	})
 }
 
-func TestUpdateEmailPreference(t *testing.T) {
-	t.Run("with login", func(t *testing.T) {
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, false)
-
-		// Execute
-		dat := `{"inactive_reminder": true}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding account")
-		assert.Equal(t, preference.InactiveReminder, true, "preference mismatch")
-	})
-
-	t.Run("with an unused token", func(t *testing.T) {
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, false)
-		tok := database.Token{
-			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
-			Value:  "someTokenValue",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-
-		// Execute
-		dat := `{"inactive_reminder": true}`
-		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var preference database.EmailPreference
-		var preferenceCount int
-		var token database.Token
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
-		testutils.MustExec(t, testutils.DB.Where("id = ?", tok.ID).First(&token), "failed to find token")
-
-		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
-		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
-		assert.NotEqual(t, token.UsedAt, (*time.Time)(nil), "token should have been used")
-	})
-
-	t.Run("with nonexistent token", func(t *testing.T) {
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
-		tok := database.Token{
-			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
-			Value:  "someTokenValue",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-
-		dat := `{"inactive_reminder": false}`
-		url := fmt.Sprintf("/account/email-preference?token=%s", "someNonexistentToken")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
-
-		// Execute
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
-	})
-
-	t.Run("with expired token", func(t *testing.T) {
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
-
-		usedAt := time.Now().Add(-11 * time.Minute)
-		tok := database.Token{
-			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
-			Value:  "someTokenValue",
-			UsedAt: &usedAt,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-
-		// Execute
-		dat := `{"inactive_reminder": false}`
-		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
-	})
-
-	t.Run("with a used but unexpired token", func(t *testing.T) {
-
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
-		usedAt := time.Now().Add(-9 * time.Minute)
-		tok := database.Token{
-			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
-			Value:  "someTokenValue",
-			UsedAt: &usedAt,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-
-		dat := `{"inactive_reminder": false}`
-		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
-
-		// Execute
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.InactiveReminder, false, "InactiveReminder mismatch")
-	})
-
-	t.Run("no user and no token", func(t *testing.T) {
-
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
-
-		// Execute
-		dat := `{"inactive_reminder": false}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
-	})
-
-	t.Run("create a record if not exists", func(t *testing.T) {
-
-		defer testutils.ClearData()
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-
-			Clock: clock.NewMock(),
-		})
-		defer server.Close()
-
-		u := testutils.SetupUserData()
-		tok := database.Token{
-			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
-			Value:  "someTokenValue",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-
-		// Execute
-		dat := `{"inactive_reminder": false}`
-		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var preferenceCount int
-		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
-		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
-
-		var preference database.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		assert.Equal(t, preference.InactiveReminder, false, "email mismatch")
-	})
-}
+// func TestUpdateEmailPreference(t *testing.T) {
+// 	t.Run("with login", func(t *testing.T) {
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, false)
+//
+// 		// Execute
+// 		dat := `{"inactive_reminder": true}`
+// 		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
+// 		res := testutils.HTTPAuthDo(t, req, u)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding account")
+// 		assert.Equal(t, preference.InactiveReminder, true, "preference mismatch")
+// 	})
+//
+// 	t.Run("with an unused token", func(t *testing.T) {
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, false)
+// 		tok := database.Token{
+// 			UserID: u.ID,
+// 			Type:   database.TokenTypeEmailPreference,
+// 			Value:  "someTokenValue",
+// 		}
+// 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+//
+// 		// Execute
+// 		dat := `{"inactive_reminder": true}`
+// 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
+// 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+//
+// 		var preference database.EmailPreference
+// 		var preferenceCount int
+// 		var token database.Token
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
+// 		testutils.MustExec(t, testutils.DB.Where("id = ?", tok.ID).First(&token), "failed to find token")
+//
+// 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
+// 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
+// 		assert.NotEqual(t, token.UsedAt, (*time.Time)(nil), "token should have been used")
+// 	})
+//
+// 	t.Run("with nonexistent token", func(t *testing.T) {
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, true)
+// 		tok := database.Token{
+// 			UserID: u.ID,
+// 			Type:   database.TokenTypeEmailPreference,
+// 			Value:  "someTokenValue",
+// 		}
+// 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+//
+// 		dat := `{"inactive_reminder": false}`
+// 		url := fmt.Sprintf("/account/email-preference?token=%s", "someNonexistentToken")
+// 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+//
+// 		// Execute
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
+// 	})
+//
+// 	t.Run("with expired token", func(t *testing.T) {
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+//
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, true)
+//
+// 		usedAt := time.Now().Add(-11 * time.Minute)
+// 		tok := database.Token{
+// 			UserID: u.ID,
+// 			Type:   database.TokenTypeEmailPreference,
+// 			Value:  "someTokenValue",
+// 			UsedAt: &usedAt,
+// 		}
+// 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+//
+// 		// Execute
+// 		dat := `{"inactive_reminder": false}`
+// 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
+// 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
+// 	})
+//
+// 	t.Run("with a used but unexpired token", func(t *testing.T) {
+//
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+//
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, true)
+// 		usedAt := time.Now().Add(-9 * time.Minute)
+// 		tok := database.Token{
+// 			UserID: u.ID,
+// 			Type:   database.TokenTypeEmailPreference,
+// 			Value:  "someTokenValue",
+// 			UsedAt: &usedAt,
+// 		}
+// 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+//
+// 		dat := `{"inactive_reminder": false}`
+// 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
+// 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+//
+// 		// Execute
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		assert.Equal(t, preference.InactiveReminder, false, "InactiveReminder mismatch")
+// 	})
+//
+// 	t.Run("no user and no token", func(t *testing.T) {
+//
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+//
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		testutils.SetupEmailPreferenceData(u, true)
+//
+// 		// Execute
+// 		dat := `{"inactive_reminder": false}`
+// 		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
+// 	})
+//
+// 	t.Run("create a record if not exists", func(t *testing.T) {
+//
+// 		defer testutils.ClearData()
+//
+// 		// Setup
+// 		server := MustNewServer(t, &app.App{
+//
+// 			Clock: clock.NewMock(),
+// 		})
+// 		defer server.Close()
+//
+// 		u := testutils.SetupUserData()
+// 		tok := database.Token{
+// 			UserID: u.ID,
+// 			Type:   database.TokenTypeEmailPreference,
+// 			Value:  "someTokenValue",
+// 		}
+// 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+//
+// 		// Execute
+// 		dat := `{"inactive_reminder": false}`
+// 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
+// 		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+// 		res := testutils.HTTPDo(t, req)
+//
+// 		// Test
+// 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+//
+// 		var preferenceCount int
+// 		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
+// 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
+//
+// 		var preference database.EmailPreference
+// 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+// 		assert.Equal(t, preference.InactiveReminder, false, "email mismatch")
+// 	})
+// }
 
 func TestGetEmailPreference(t *testing.T) {
 	defer testutils.ClearData()
@@ -654,10 +653,9 @@ func TestGetEmailPreference(t *testing.T) {
 	}
 
 	expected := presenters.EmailPreference{
-		InactiveReminder: pref.InactiveReminder,
-		ProductUpdate:    pref.ProductUpdate,
-		CreatedAt:        presenters.FormatTS(pref.CreatedAt),
-		UpdatedAt:        presenters.FormatTS(pref.UpdatedAt),
+		ProductUpdate: pref.ProductUpdate,
+		CreatedAt:     presenters.FormatTS(pref.CreatedAt),
+		UpdatedAt:     presenters.FormatTS(pref.UpdatedAt),
 	}
 	assert.DeepEqual(t, got, expected, "payload mismatch")
 }

@@ -30,7 +30,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
-	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/web"
 	"github.com/jinzhu/gorm"
@@ -121,28 +120,12 @@ func initApp() app.App {
 	}
 }
 
-func runJob(a app.App) error {
-	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
-	if err != nil {
-		return errors.Wrap(err, "getting a job runner")
-	}
-	if err := jobRunner.Do(); err != nil {
-		return errors.Wrap(err, "running job")
-	}
-
-	return nil
-}
-
 func startCmd() {
 	app := initApp()
 	defer app.DB.Close()
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
-	}
-
-	if err := runJob(app); err != nil {
-		panic(errors.Wrap(err, "running job"))
 	}
 
 	srv, err := initServer(app)

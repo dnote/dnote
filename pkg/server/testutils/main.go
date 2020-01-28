@@ -88,21 +88,6 @@ func ClearData() {
 	if err := DB.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
-	if err := DB.Delete(&database.Digest{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
-	if err := DB.Delete(&database.DigestNote{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
-	if err := DB.Delete(&database.DigestReceipt{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digest receipts"))
-	}
-	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear repetition rules"))
-	}
-	if err := DB.Delete(&database.NoteReview{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear note review"))
-	}
 }
 
 // SetupUserData creates and returns a new user for testing purposes
@@ -182,10 +167,9 @@ func SetupSession(t *testing.T, user database.User) database.Session {
 }
 
 // SetupEmailPreferenceData creates and returns a new email frequency for a user
-func SetupEmailPreferenceData(user database.User, inactiveReminder bool) database.EmailPreference {
+func SetupEmailPreferenceData(user database.User) database.EmailPreference {
 	frequency := database.EmailPreference{
-		UserID:           user.ID,
-		InactiveReminder: inactiveReminder,
+		UserID: user.ID,
 	}
 
 	if err := DB.Save(&frequency).Error; err != nil {

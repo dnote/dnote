@@ -37,14 +37,9 @@ import Books from './components/Books';
 import Subscription from './components/Subscription';
 import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
-import Repetition from './components/Repetition';
-import NewRepetition from './components/Repetition/New';
-import EditRepetition from './components/Repetition/Edit';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import EmailPreference from './components/EmailPreference';
-import Digests from './components/Digests';
-import Digest from './components/Digest';
 
 // paths
 import {
@@ -64,12 +59,7 @@ import {
   prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
-  repetitionsPathDef,
-  newRepetitionRulePathDef,
-  editRepetitionRulePathDef,
-  emailPreferencePathDef,
-  digestsPathDef,
-  digestPathDef
+  emailPreferencePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -89,9 +79,6 @@ const AuthenticatedSubscriptionCheckout = userOnly(
   Checkout,
   getJoinPath().pathname
 );
-const AuthenticatedRepetition = userOnly(Repetition);
-const AuthenticatedNewRepetition = userOnly(NewRepetition);
-const AuthenticatedEditRepetition = userOnly(EditRepetition);
 
 const routes = [
   {
@@ -170,34 +157,9 @@ const routes = [
     component: GuestPasswordResetConfirm
   },
   {
-    path: repetitionsPathDef,
-    exact: true,
-    component: AuthenticatedRepetition
-  },
-  {
-    path: newRepetitionRulePathDef,
-    exact: true,
-    component: AuthenticatedNewRepetition
-  },
-  {
-    path: editRepetitionRulePathDef,
-    exact: true,
-    component: AuthenticatedEditRepetition
-  },
-  {
     path: emailPreferencePathDef,
     exact: true,
     component: EmailPreference
-  },
-  {
-    path: digestsPathDef,
-    exact: true,
-    component: Digests
-  },
-  {
-    path: digestPathDef,
-    exact: true,
-    component: Digest
   },
   {
     component: NotFound

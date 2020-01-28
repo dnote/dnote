@@ -49,25 +49,6 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 	return nil
 }
 
-func createDefaultRepetitionRule(user database.User, tx *gorm.DB) error {
-	r := database.RepetitionRule{
-		Title:      "Default repetition - all books",
-		UserID:     user.ID,
-		Enabled:    false,
-		Hour:       20,
-		Minute:     30,
-		Frequency:  604800000,
-		BookDomain: database.BookDomainAll,
-		Books:      []database.Book{},
-		NoteCount:  20,
-	}
-	if err := tx.Save(&r).Error; err != nil {
-		return errors.Wrap(err, "inserting repetition rule")
-	}
-
-	return nil
-}
-
 // CreateUser creates a user
 func (a *App) CreateUser(email, password string) (database.User, error) {
 	tx := a.DB.Begin()
@@ -110,10 +91,6 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 	if err := createEmailPreference(user, tx); err != nil {
 		tx.Rollback()
 		return database.User{}, errors.Wrap(err, "creating email preference")
-	}
-	if err := createDefaultRepetitionRule(user, tx); err != nil {
-		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "creating default repetition rule")
 	}
 	if err := a.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()

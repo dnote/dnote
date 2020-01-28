@@ -26,17 +26,11 @@ import { useDispatch } from '../../../store';
 import styles from './Form.scss';
 
 enum Action {
-  setInactiveReminder,
   setProductUpdate
 }
 
 function formReducer(state, action): EmailPrefData {
   switch (action.type) {
-    case Action.setInactiveReminder:
-      return {
-        ...state,
-        inactiveReminder: action.data
-      };
     case Action.setProductUpdate:
       return {
         ...state,
@@ -92,31 +86,6 @@ const Form: React.FunctionComponent<Props> = ({
 
   return (
     <form id="T-notifications-form" onSubmit={handleSubmit}>
-      <div className={styles.section}>
-        <h3 className={styles.heading}>Alerts</h3>
-        <p className={styles.subtext}>Email me when:</p>
-        <ul className="list-unstyled">
-          <li>
-            <input
-              type="checkbox"
-              id="inactive-reminder"
-              checked={formState.inactiveReminder}
-              onChange={e => {
-                const { checked } = e.target;
-
-                formDispatch({
-                  type: Action.setInactiveReminder,
-                  data: checked
-                });
-              }}
-            />
-            <label className={styles.label} htmlFor="inactive-reminder">
-              I stop learning new things
-            </label>
-          </li>
-        </ul>
-      </div>
-
       <div className={styles.section}>
         <h3 className={styles.heading}>News</h3>
 

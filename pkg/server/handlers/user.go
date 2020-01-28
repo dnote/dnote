@@ -240,16 +240,7 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 type emailPreferernceParams struct {
-	InactiveReminder *bool `json:"inactive_reminder"`
-	ProductUpdate    *bool `json:"product_update"`
-}
-
-func (p emailPreferernceParams) getInactiveReminder() bool {
-	if p.InactiveReminder == nil {
-		return false
-	}
-
-	return *p.InactiveReminder
+	ProductUpdate *bool `json:"product_update"`
 }
 
 func (p emailPreferernceParams) getProductUpdate() bool {
@@ -281,9 +272,6 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 
 	tx := a.App.DB.Begin()
 
-	if params.InactiveReminder != nil {
-		pref.InactiveReminder = params.getInactiveReminder()
-	}
 	if params.ProductUpdate != nil {
 		pref.ProductUpdate = params.getProductUpdate()
 	}

@@ -26,19 +26,17 @@ import (
 
 // EmailPreference is a presented email digest
 type EmailPreference struct {
-	InactiveReminder bool      `json:"inactive_reminder"`
-	ProductUpdate    bool      `json:"product_update"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ProductUpdate bool      `json:"product_update"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // PresentEmailPreference presents a digest
 func PresentEmailPreference(p database.EmailPreference) EmailPreference {
 	ret := EmailPreference{
-		InactiveReminder: p.InactiveReminder,
-		ProductUpdate:    p.ProductUpdate,
-		CreatedAt:        FormatTS(p.CreatedAt),
-		UpdatedAt:        FormatTS(p.UpdatedAt),
+		ProductUpdate: p.ProductUpdate,
+		CreatedAt:     FormatTS(p.CreatedAt),
+		UpdatedAt:     FormatTS(p.UpdatedAt),
 	}
 
 	return ret
