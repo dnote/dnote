@@ -60,6 +60,7 @@ type Note struct {
 	Deleted    bool       `json:"-" gorm:"default:false"`
 	Encrypted  bool       `json:"-" gorm:"default:false"`
 	NoteReview NoteReview `json:"-"`
+	Client     string     `gorm:"index"`
 }
 
 // User is a model for a user
