@@ -90,7 +90,7 @@ func TestCreateNote(t *testing.T) {
 			})
 
 			tx := testutils.DB.Begin()
-			if _, err := a.CreateNote(user, b1.UUID, "note content", tc.addedOn, tc.editedOn, false); err != nil {
+			if _, err := a.CreateNote(user, b1.UUID, "note content", tc.addedOn, tc.editedOn, false, ""); err != nil {
 				tx.Rollback()
 				t.Fatal(errors.Wrap(err, "deleting note"))
 			}
