@@ -24,7 +24,7 @@ import * as filtersLib from 'jslib/helpers/filters';
 import * as queriesLib from 'jslib/helpers/queries';
 import { getSearchDest } from 'web/libs/search';
 import { usePrevious } from 'web/libs/hooks';
-import { useFilters } from '../../../store';
+import { useFilters, useSelector } from '../../../store';
 import SearchInput from '../../Common/SearchInput';
 import AdvancedPanel from './AdvancedPanel';
 import styles from './SearchBar.scss';
@@ -66,6 +66,12 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
     setExpanded(false);
   };
 
+  const { user } = useSelector(state => {
+    return {
+      user: state.auth.user.data
+    };
+  });
+
   return (
     <div className={styles.wrapper}>
       <form
@@ -80,6 +86,7 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
           placeholder="Search notes"
           wrapperClassName={styles['input-wrapper']}
           inputClassName={classnames(styles.input, ' text-input-small')}
+          disabled={!user.pro}
           value={value}
           onChange={e => {
             const val = e.target.value;
@@ -107,7 +114,7 @@ const SearchBar: React.FunctionComponent<Props> = ({ location, history }) => {
         </button>
       </form>
 
-      {expanded && <AdvancedPanel onDismiss={onDismiss} />}
+      {expanded && <AdvancedPanel onDismiss={onDismiss} disabled={!user.pro} />}
     </div>
   );
 };

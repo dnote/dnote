@@ -29,6 +29,7 @@ import styles from './AdvancedPanel.scss';
 interface Props {
   value: string;
   setValue: (string) => void;
+  disabled: boolean;
 }
 
 // getCurrentTerm returns the current term in the comma separated
@@ -112,7 +113,11 @@ function useSetSuggestionVisibility(
   }, [setIsOpen, triggerRef, inputValue, prevInputValue]);
 }
 
-const BookSearch: React.FunctionComponent<Props> = ({ value, setValue }) => {
+const BookSearch: React.FunctionComponent<Props> = ({
+  value,
+  setValue,
+  disabled
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIdx, setFocusedIdx] = useState(0);
   const [focusedOptEl, setFocusedOptEl] = useState(null);
@@ -136,7 +141,7 @@ const BookSearch: React.FunctionComponent<Props> = ({ value, setValue }) => {
     focusedIdx,
     setFocusedIdx,
     onKeydownSelect: appendBook,
-    disabled: !isOpen
+    disabled: !isOpen || disabled
   });
   useScrollToFocused({
     shouldScroll: true,
@@ -162,6 +167,7 @@ const BookSearch: React.FunctionComponent<Props> = ({ value, setValue }) => {
             styles.input
           )}
           value={value}
+          disabled={disabled}
           onChange={e => {
             const val = e.target.value;
 

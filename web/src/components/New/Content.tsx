@@ -18,7 +18,6 @@
 
 import classnames from 'classnames';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
-import Helmet from 'react-helmet';
 import { Prompt, RouteComponentProps, withRouter } from 'react-router-dom';
 import { focusTextarea } from 'web/libs/dom';
 import { useFocus } from 'web/libs/hooks/dom';
@@ -73,10 +72,6 @@ const New: React.FunctionComponent<Props> = ({
 
   return (
     <Fragment>
-      <Helmet>
-        <title>New</title>
-      </Helmet>
-
       <div
         className={classnames(
           'page page-mobile-full container mobile-nopadding',

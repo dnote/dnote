@@ -20,6 +20,7 @@ import React, { useEffect, useState, Fragment } from 'react';
 
 import { getBooks } from '../../store/books';
 import { useDispatch } from '../../store';
+import PayWall from '../Common/PayWall';
 import Content from './Content';
 import Flash from '../Common/Flash';
 import HeadData from './HeadData';
@@ -36,20 +37,22 @@ const Books: React.FunctionComponent = () => {
     <Fragment>
       <HeadData />
 
-      <div className="page page-mobile-full">
-        <div className="container mobile-nopadding">
-          <Flash
-            kind="success"
-            when={Boolean(successMessage)}
-            onDismiss={() => {
-              setSuccessMessage('');
-            }}
-          >
-            {successMessage}
-          </Flash>
+      <PayWall>
+        <div className="page page-mobile-full">
+          <div className="container mobile-nopadding">
+            <Flash
+              kind="success"
+              when={Boolean(successMessage)}
+              onDismiss={() => {
+                setSuccessMessage('');
+              }}
+            >
+              {successMessage}
+            </Flash>
+          </div>
+          <Content setSuccessMessage={setSuccessMessage} />;
         </div>
-        <Content setSuccessMessage={setSuccessMessage} />;
-      </div>
+      </PayWall>
     </Fragment>
   );
 };

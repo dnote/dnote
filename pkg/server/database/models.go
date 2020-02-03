@@ -115,7 +115,7 @@ type Notification struct {
 type EmailPreference struct {
 	Model
 	UserID           int  `gorm:"index" json:"-"`
-	InactiveReminder bool `json:"inactive_reminder" gorm:"default:true"`
+	InactiveReminder bool `json:"inactive_reminder" gorm:"default:false"`
 	ProductUpdate    bool `json:"product_update" gorm:"default:true"`
 }
 

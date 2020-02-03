@@ -34,7 +34,6 @@ import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
 import Books from './components/Books';
-import Subscription from './components/Subscription';
 import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
 import Repetition from './components/Repetition';
@@ -57,7 +56,6 @@ import {
   noteNewPathDef,
   settingsPathDef,
   subscriptionsPathDef,
-  subscriptionsCheckoutPathDef,
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   getJoinPath,
@@ -81,10 +79,6 @@ const GuestLogin = guestOnly(Login);
 const GuestPasswordResetRequest = guestOnly(PasswordResetRequest);
 const GuestPasswordResetConfirm = guestOnly(PasswordResetConfirm);
 const AuthenticatedSettings = userOnly(Settings);
-const AuthenticatedSubscription = userOnly(
-  Subscription,
-  getJoinPath().pathname
-);
 const AuthenticatedSubscriptionCheckout = userOnly(
   Checkout,
   getJoinPath().pathname
@@ -131,11 +125,6 @@ const routes = [
   },
   {
     path: subscriptionsPathDef,
-    exact: true,
-    component: AuthenticatedSubscription
-  },
-  {
-    path: subscriptionsCheckoutPathDef,
     exact: true,
     component: AuthenticatedSubscriptionCheckout
   },

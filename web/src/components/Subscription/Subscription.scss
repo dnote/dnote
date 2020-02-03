@@ -99,32 +99,3 @@
     flex-direction: row;
   }
 }
-
-.pro-plan {
-  order: 0;
-  @include breakpoint(md) {
-    order: initial;
-  }
-}
-.core-plan {
-  order: 1;
-  @include breakpoint(md) {
-    order: initial;
-  }
-}
-
-.feature-bold {
-  font-weight: 600;
-}
-
-.bottom {
-  padding-top: rem(20px);
-}
-
-.pro-prelude {
-  padding: 0 rem(8px);
-}
-
-.pro-feature-list {
-  margin-top: rem(12px);
-}

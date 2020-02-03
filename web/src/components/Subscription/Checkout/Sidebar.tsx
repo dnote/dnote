@@ -29,13 +29,12 @@ const perks = [
   {
     id: 'hosted',
     icon: <ServerIcon width={16} height={16} fill="#4d4d8b" />,
-    value:
-      'Maximize your memory retention and become the best learner you can be'
+    value: 'Fully hosted and managed'
   },
   {
     id: 'support',
     icon: <GlobeIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Support the Dnote community and development'
+    value: 'Support the Dnote community and ongoing development'
   }
 ];
 
@@ -57,7 +56,7 @@ function Sidebar({ isReady, transacting }) {
         </ul>
 
         <div className={styles['price-wrapper']}>
-          <strong className={styles.price}>$3.00</strong>
+          <strong className={styles.price}>USD 5.00</strong>
           <div className={styles.interval}>/ month</div>
         </div>
 
