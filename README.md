@@ -20,7 +20,7 @@ brew install dnote
 
 On Linux or macOS, you can use the installation script:
 
-    curl -s https://getdnote.com/install | sh
+    curl -s https://www.getdnote.com/install | sh
 
 Otherwise, you can download the binary for your platform manually from the [releases page](https://github.com/dnote/dnote/releases).
 
