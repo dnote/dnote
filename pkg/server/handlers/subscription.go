@@ -41,7 +41,7 @@ import (
 	"github.com/stripe/stripe-go/webhook"
 )
 
-var proPlanID = "plan_EpgsEvY27pajfo"
+var proPlanID = "plus"
 
 func getOrCreateStripeCustomer(tx *gorm.DB, user database.User) (*stripe.Customer, error) {
 	if user.StripeCustomerID != "" {

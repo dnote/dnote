@@ -30,7 +30,6 @@ export const loginPathDef = '/login';
 export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
-export const subscriptionsCheckoutPathDef = '/subscriptions/checkout';
 export const prefEditRepetitionPathDef =
   '/preferences/repetitions/:repetitionUUID';
 export const verifyEmailPathDef = '/verify-email/:token';
@@ -60,7 +59,6 @@ export const noFooterPaths = [
   loginPathDef,
   joinPathDef,
   subscriptionsPathDef,
-  subscriptionsCheckoutPathDef,
   prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
@@ -68,10 +66,7 @@ export const noFooterPaths = [
   passwordResetConfirmPathDef,
   emailPreferencePathDef
 ];
-export const subscriptionPaths = [
-  subscriptionsPathDef,
-  subscriptionsCheckoutPathDef
-];
+export const subscriptionPaths = [subscriptionsPathDef];
 
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
@@ -212,10 +207,6 @@ export function getLoginPath(searchObj = {}): Location {
 
 export function getSubscriptionPath(searchObj = {}): Location {
   return getLocation({ pathname: subscriptionsPathDef, searchObj });
-}
-
-export function getSubscriptionCheckoutPath(searchObj = {}): Location {
-  return getLocation({ pathname: subscriptionsCheckoutPathDef, searchObj });
 }
 
 export function getPasswordResetRequestPath(searchObj = {}): Location {

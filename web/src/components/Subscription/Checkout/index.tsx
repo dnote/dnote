@@ -18,9 +18,12 @@
 
 import React from 'react';
 import { StripeProvider, Elements } from 'react-stripe-elements';
+import { Redirect } from 'react-router-dom';
 
 import { useScript } from 'web/libs/hooks';
+import { getHomePath } from '../../../libs/paths';
 import CheckoutForm from './Form';
+import { useSelector } from '../../../store/hooks';
 
 const Checkout: React.FunctionComponent = () => {
   const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
@@ -30,6 +33,17 @@ const Checkout: React.FunctionComponent = () => {
   let stripe = null;
   if (stripeLoaded) {
     stripe = (window as any).Stripe(key);
+  }
+
+  const { user, userFetched } = useSelector(state => {
+    return {
+      user: state.auth.user.data,
+      userFetched: state.auth.user.isFetched
+    };
+  });
+
+  if (userFetched && user.pro) {
+    return <Redirect to={getHomePath()} />;
   }
 
   return (

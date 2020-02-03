@@ -17,11 +17,10 @@
  */
 
 import React, { useEffect } from 'react';
-import { Link, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps } from 'react-router-dom';
 import Helmet from 'react-helmet';
 
 import { usePrevious } from 'web/libs/hooks';
-import { getSubscriptionPath } from 'web/libs/paths';
 import { parseSearchString } from 'jslib/helpers/url';
 import { useDispatch, useSelector } from '../../store';
 import { getDigests } from '../../store/digests';
@@ -50,7 +49,7 @@ function useFetchDigests(params: { page: number; status: Status }) {
 interface Props extends RouteComponentProps {}
 
 const Digests: React.FunctionComponent<Props> = ({ location }) => {
-  const { user, digests } = useSelector(state => {
+  const { digests } = useSelector(state => {
     return {
       digests: state.digests,
       user: state.auth.user.data
@@ -83,9 +82,9 @@ const Digests: React.FunctionComponent<Props> = ({ location }) => {
           Error getting digests: {digests.errorMessage}
         </Flash>
 
-        <Flash when={!user.pro} kind="warning" wrapperClassName={styles.flash}>
-          Digests are not enabled on your plan.{' '}
-          <Link to={getSubscriptionPath()}>Upgrade here.</Link>
+        <Flash kind="danger" wrapperClassName={styles.flash}>
+          Spaced repetition is deprecated and will be removed in the next major
+          release.
         </Flash>
       </div>
 

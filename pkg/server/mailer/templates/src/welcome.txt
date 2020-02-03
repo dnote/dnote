@@ -1,6 +1,6 @@
 Hi, welcome to Dnote.
 
-Dnote is a simple personal knowledge base just for you. It helps you quickly capture new information and retain them.
+Dnote is a simple command-line notebook.
 
 YOUR ACCOUNT
 
@@ -11,6 +11,6 @@ SOURCE CODE
 
 Dnote is open source and you can see the source code at https://github.com/dnote/dnote
 
-Feel free to reply anytime. Thanks for using my software.
+Feel free to reply anytime. Thanks for using Dnote.
 
 - Sung (Maker of Dnote)

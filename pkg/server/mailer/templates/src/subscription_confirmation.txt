@@ -1,10 +1,12 @@
 Hi, thanks for signing up for Dnote Pro.
 
-Dnote Pro is your own simple personal knowledge base that helps you retain new information.
+Now you can take your notes with you wherever you go!
+
+* Synchronize data among an unlimited number of machines.
+* Access notes anywhere via the web interface.
 
 Your account is "{{ .AccountEmail }}". Log in at {{ .WebURL }}/login
 
-I appreciate your support. It makes it possible to develop Dnote and help learners around the world.
-Thank you for using my software.
+Thank you for using Dnote. Your support makes it possible to develop it for developers around the world.
 
 - Sung (Maker of Dnote)

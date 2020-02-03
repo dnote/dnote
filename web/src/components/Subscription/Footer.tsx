@@ -23,9 +23,11 @@ import styles from './Subscription.scss';
 interface Props {}
 
 const Footer: React.FunctionComponent<Props> = () => {
+  const year = new Date().getFullYear();
+
   return (
     <footer className={styles.footer}>
-      &copy; 2019 Monomax Software Pty Ltd
+      &copy; {year} Monomax Software Pty Ltd
     </footer>
   );
 };

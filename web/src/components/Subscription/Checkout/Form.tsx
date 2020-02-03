@@ -146,7 +146,7 @@ const Form: React.FunctionComponent<Props> = ({
         <div className="row">
           <div className="col-12 col-lg-7 col-xl-8">
             <div className={styles['content-wrapper']}>
-              <h1 className={styles.heading}>You are almost there.</h1>
+              <h1 className={styles.heading}>Welcome to Dnote Pro.</h1>
 
               <div className={styles.content}>
                 <NameOnCardInput

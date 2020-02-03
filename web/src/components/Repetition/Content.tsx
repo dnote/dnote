@@ -22,7 +22,6 @@ import classnames from 'classnames';
 import {
   getNewRepetitionPath,
   getSettingsPath,
-  getSubscriptionPath,
   SettingSections,
   repetitionsPathDef
 } from 'web/libs/paths';
@@ -77,9 +76,9 @@ const Content: React.FunctionComponent = () => {
       </div>
 
       <div className="container mobile-nopadding">
-        <Flash when={!user.pro} kind="warning" wrapperClassName={styles.flash}>
-          Repetitions are not enabled on your plan.{' '}
-          <Link to={getSubscriptionPath()}>Upgrade here.</Link>
+        <Flash kind="danger" wrapperClassName={styles.flash}>
+          Spaced repetition is deprecated and will be removed in the next major
+          release.
         </Flash>
 
         <Flash

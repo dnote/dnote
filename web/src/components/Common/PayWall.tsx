@@ -48,7 +48,7 @@ const PayWall: React.FunctionComponent<Props> = ({
     <div className={classnames(styles.wrapper, wrapperClassName)}>
       <LockIcon width="64" height="64" />
 
-      <h1 className={styles.lead}>Unlock Dnote Pro to get started.</h1>
+      <h1 className={styles.lead}>Please unlock Dnote Cloud to use.</h1>
 
       <div className={styles.actions}>
         <Link
@@ -57,14 +57,6 @@ const PayWall: React.FunctionComponent<Props> = ({
         >
           Get started
         </Link>
-        {/*
-          <Link
-            to={getHomePath({})}
-            className="button button-normal button-first-outline "
-          >
-            Live demo
-          </Link>
-         */}
       </div>
     </div>
   );

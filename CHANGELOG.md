@@ -12,7 +12,8 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
-None
+- Deprecate the digests
+- Deprecate the repetition rules
 
 ### 0.4.0 - 2020-01-09
 

@@ -131,6 +131,8 @@ verify_checksum() {
 }
 
 install_dnote() {
+  sudo_cmd=""
+
   os=$(uname_os)
   arch=$(uname_arch)
 
@@ -147,6 +149,18 @@ install_dnote() {
   tmpdir="$(mktemp -d)"
   bindir=${bindir:-/usr/local/bin}
 
+  if hash sudo 2>/dev/null; then
+    sudo_cmd="sudo"
+    echo "You need a root privilege to install Dnote binary to $bindir"
+
+    if ! is_command "$sudo_cmd"; then
+      print_error "command not found: sudo. You need a root privilege to continue the installation."
+      exit 1;
+    fi
+  fi
+
+  # create destination directory if not exists
+  $sudo_cmd mkdir -p "$bindir"
 
   # get the latest version
   resp=$(http_get "https://api.github.com/repos/$owner/$repo/releases")
@@ -181,12 +195,11 @@ install_dnote() {
   print_step "Inflating the binary."
   (cd "${tmpdir}" && tar -xzf "${tarball}")
 
-  install -d "${bindir}"
-  install "${tmpdir}/${binary}" "${bindir}/"
+  $sudo_cmd install -d "${bindir}"
+  $sudo_cmd install "${tmpdir}/${binary}" "${bindir}/"
 
   print_success "dnote v${version} was successfully installed in $bindir."
 }
-
 
 exit_error() {
   # shellcheck disable=SC2181

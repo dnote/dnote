@@ -17,10 +17,12 @@
  */
 
 import React, { Fragment, useEffect } from 'react';
+import Helmet from 'react-helmet';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { getEditorSessionkey } from 'web/libs/editor';
 import { useDispatch, useSelector } from '../../store';
 import { createSession } from '../../store/editor';
+import PayWall from '../Common/PayWall';
 import Content from './Content';
 
 interface Props extends RouteComponentProps {}
@@ -52,8 +54,14 @@ const New: React.FunctionComponent<Props> = () => {
 
   return (
     <Fragment>
+      <Helmet>
+        <title>New</title>
+      </Helmet>
+
       {session !== undefined && (
-        <Content editor={session} persisted={editor.persisted} />
+        <PayWall>
+          <Content editor={session} persisted={editor.persisted} />
+        </PayWall>
       )}
     </Fragment>
   );

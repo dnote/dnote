@@ -30,6 +30,7 @@ import styles from './AdvancedPanel.scss';
 
 interface Props extends RouteComponentProps {
   onDismiss: () => void;
+  disabled: boolean;
 }
 
 // quoteFilters surrounds a filter term with a pair of double quotation marks, effectively
@@ -105,6 +106,7 @@ function encodeBookStr(s: string): string[] {
 
 const AdvancedPanel: React.FunctionComponent<Props> = ({
   onDismiss,
+  disabled,
   history,
   location
 }) => {
@@ -137,9 +139,9 @@ const AdvancedPanel: React.FunctionComponent<Props> = ({
       closeOnOutsideClick
     >
       <form className={styles.form} onSubmit={handleSubmit}>
-        <WordsSearch words={words} setWords={setWords} />
+        <WordsSearch words={words} setWords={setWords} disabled={disabled} />
 
-        <BookSearch value={books} setValue={setBooks} />
+        <BookSearch value={books} setValue={setBooks} disabled={disabled} />
 
         <Button
           type="submit"
@@ -147,6 +149,7 @@ const AdvancedPanel: React.FunctionComponent<Props> = ({
           size="normal"
           stretch
           className={styles.submit}
+          disabled={disabled}
         >
           Search
         </Button>

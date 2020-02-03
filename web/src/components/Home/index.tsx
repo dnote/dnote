@@ -34,6 +34,7 @@ import { getNotes } from '../../store/notes';
 import PageToolbar from '../Common/PageToolbar';
 import Paginator from '../Common/PageToolbar/Paginator';
 import Flash from '../Common/Flash';
+import PayWall from '../Common/PayWall';
 import styles from './Home.scss';
 
 // PER_PAGE is the number of results per page in the response from the backend implementation's API.
@@ -102,11 +103,13 @@ const Home: React.FunctionComponent<Props> = ({ location }) => {
         />
       </PageToolbar>
 
-      <NoteGroupList
-        groups={groups}
-        filters={filters}
-        isFetched={notes.isFetched}
-      />
+      <PayWall>
+        <NoteGroupList
+          groups={groups}
+          filters={filters}
+          isFetched={notes.isFetched}
+        />
+      </PayWall>
     </div>
   );
 };
