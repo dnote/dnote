@@ -36,7 +36,7 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=1.12.x
+goVersion=1.13.x
 
 get_binary_name() {
   platform=$1
@@ -57,7 +57,7 @@ build() {
 
   # build binary
   destDir="$outputDir/$platform-$arch"
-  ldflags="-X main.apiEndpoint=https://api.dnote.io -X main.versionTag=$version"
+  ldflags="-X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=$version"
   tags="fts5"
 
   mkdir -p "$destDir"
