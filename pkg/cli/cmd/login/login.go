@@ -127,7 +127,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return errors.New("Password is empty")
 		}
 
-		log.Debug("Logging in with email: %s and password (length %d)\n", email, len(password))
+		log.Debug("Logging in with email: %s and password: (length %d)\n", email, len(password))
 
 		err = Do(ctx, email, password)
 		if errors.Cause(err) == client.ErrInvalidLogin {
