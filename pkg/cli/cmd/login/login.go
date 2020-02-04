@@ -35,6 +35,8 @@ import (
 var example = `
   dnote login`
 
+var usernameFlag, passwordFlag string
+
 // NewCmd returns a new login command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
@@ -43,6 +45,10 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Example: example,
 		RunE:    newRun(ctx),
 	}
+
+	f := cmd.Flags()
+	f.StringVarP(&usernameFlag, "username", "u", "", "email address for authentication")
+	f.StringVarP(&passwordFlag, "password", "p", "", "password for authentication")
 
 	return cmd
 }
@@ -72,26 +78,58 @@ func Do(ctx context.DnoteCtx, email, password string) error {
 	return nil
 }
 
+func getUsername() (string, error) {
+	if usernameFlag != "" {
+		return usernameFlag, nil
+	}
+
+	var email string
+	if err := ui.PromptInput("email", &email); err != nil {
+		return "", errors.Wrap(err, "getting email input")
+	}
+	if email == "" {
+		return "", errors.New("Email is empty")
+	}
+
+	return email, nil
+}
+
+func getPassword() (string, error) {
+	if passwordFlag != "" {
+		return passwordFlag, nil
+	}
+
+	var password string
+	if err := ui.PromptPassword("password", &password); err != nil {
+		return "", errors.Wrap(err, "getting password input")
+	}
+	if password == "" {
+		return "", errors.New("Password is empty")
+	}
+
+	return password, nil
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		log.Plain("Welcome to Dnote Pro (https://www.getdnote.com).\n")
 
-		var email, password string
-		if err := ui.PromptInput("email", &email); err != nil {
+		email, err := getUsername()
+		if err != nil {
 			return errors.Wrap(err, "getting email input")
 		}
-		if email == "" {
-			return errors.New("Email is empty")
-		}
 
-		if err := ui.PromptPassword("password", &password); err != nil {
+		password, err := getPassword()
+		if err != nil {
 			return errors.Wrap(err, "getting password input")
 		}
 		if password == "" {
 			return errors.New("Password is empty")
 		}
 
-		err := Do(ctx, email, password)
+		log.Debug("Logging in with email: %s and password (length %d)\n", email, len(password))
+
+		err = Do(ctx, email, password)
 		if errors.Cause(err) == client.ErrInvalidLogin {
 			log.Error("wrong login\n")
 			return nil
