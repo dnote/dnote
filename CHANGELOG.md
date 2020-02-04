@@ -12,8 +12,14 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
+#### Changed
+
 - Deprecate the digests
 - Deprecate the repetition rules
+
+#### Fixed
+
+- Fix refocusing to the end of the textarea input
 
 ### 0.4.0 - 2020-01-09
 
