@@ -45,7 +45,7 @@ function useInitFocus({ bookLabel, content, textareaRef, setTriggerFocus }) {
     } else {
       const textareaEl = textareaRef.current;
 
-      if (textareaEl) {
+      if (textareaEl && document.activeElement !== textareaEl) {
         focusTextarea(textareaEl);
       }
     }
