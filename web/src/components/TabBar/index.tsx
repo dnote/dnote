@@ -20,15 +20,9 @@ import React from 'react';
 import classnames from 'classnames';
 import { withRouter, RouteComponentProps, Link } from 'react-router-dom';
 
-import {
-  checkCurrentPathIn,
-  digestPathDef,
-  digestsPathDef
-} from 'web/libs/paths';
 import Item from './Item';
 import NoteIcon from '../Icons/Note';
 import BookIcon from '../Icons/Book';
-import DashboardIcon from '../Icons/Dashboard';
 import DotsIcon from '../Icons/Dots';
 import HomeIcon from '../Icons/Home';
 import styles from './TabBar.scss';
@@ -56,9 +50,6 @@ const TabBar: React.FunctionComponent<Props> = ({
 }) => {
   const isHomeActive = !isMobileMenuOpen && location.pathname === '/';
   const isBookActive = !isMobileMenuOpen && location.pathname === '/books';
-  const isDigestsActive =
-    !isMobileMenuOpen &&
-    checkCurrentPathIn(location, [digestPathDef, digestsPathDef]);
   const isNewActive = !isMobileMenuOpen && location.pathname === '/new';
 
   return (
@@ -102,22 +93,6 @@ const TabBar: React.FunctionComponent<Props> = ({
               fill={getFill(isNewActive)}
             />
             <span className={styles.label}>New</span>
-          </Link>
-        </Item>
-
-        <Item>
-          <Link
-            to="/digests"
-            className={classnames(styles.link, {
-              [styles.active]: isDigestsActive
-            })}
-          >
-            <DashboardIcon
-              width={16}
-              height={16}
-              fill={getFill(isDigestsActive)}
-            />
-            <span className={styles.label}>Digests</span>
           </Link>
         </Item>
 
