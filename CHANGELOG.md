@@ -133,7 +133,7 @@ The following log documents the history of the server project.
 
 The following log documentes the history of the CLI project
 
-### 0.11.0 - 2020-02-04
+### 0.11.0 - 2020-02-05
 
 #### Added
 
