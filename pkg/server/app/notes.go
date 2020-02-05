@@ -27,7 +27,7 @@ import (
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
 // It returns the created note.
-func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool, origin string) (database.Note, error) {
+func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool, client string) (database.Note, error) {
 	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
@@ -65,7 +65,7 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 		Body:      content,
 		Public:    public,
 		Encrypted: false,
-		Client:    origin,
+		Client:    client,
 	}
 	if err := tx.Create(&note).Error; err != nil {
 		tx.Rollback()

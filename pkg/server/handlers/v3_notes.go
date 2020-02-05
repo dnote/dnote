@@ -195,8 +195,8 @@ func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	origin := r.Header.Get("Origin")
-	note, err := a.App.CreateNote(user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false, origin)
+	client := getClientType(r)
+	note, err := a.App.CreateNote(user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false, client)
 	if err != nil {
 		HandleError(w, "creating note", err, http.StatusInternalServerError)
 		return

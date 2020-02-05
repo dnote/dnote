@@ -61,13 +61,20 @@ func validatePassword(password string) error {
 	return nil
 }
 
-func getClientType(origin string) string {
+func getClientType(r *http.Request) string {
+	origin := r.Header.Get("Origin")
+
 	if strings.HasPrefix(origin, "moz-extension://") {
 		return "firefox-extension"
 	}
 
 	if strings.HasPrefix(origin, "chrome-extension://") {
 		return "chrome-extension"
+	}
+
+	userAgent := r.Header.Get("User-Agent")
+	if strings.HasPrefix(userAgent, "Go-http-client") {
+		return "cli"
 	}
 
 	return "web"
