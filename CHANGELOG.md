@@ -139,6 +139,12 @@ The following log documents the history of the server project.
 
 The following log documentes the history of the CLI project
 
+### 0.11.0 - 2020-02-05
+
+#### Added
+
+- Allow to pass credentials through flags while logging in (#403)
+
 ### 0.10.0 - 2019-09-30
 
 #### Removed
