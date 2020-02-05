@@ -3,9 +3,9 @@
 # build.sh compiles dnote binary for target platforms. It is resonsible for creating
 # distributable files that can be released by a human or a script.
 #
-# It can either cross-compile for different platforms using xgo, simply target a specific
+# It can either cross-compile for different platforms using xgo, or simply target a specific
 # platform. Set GOOS and GOARCH environment variables to disable xgo and instead
-# compile for a specific platform.
+# compile locally for a specific platform.
 #
 # use:
 # ./scripts/build.sh 0.4.8
@@ -18,6 +18,11 @@ version=$1
 projectDir="$dir/../.."
 basedir="$projectDir/pkg/cli"
 outputDir="$projectDir/build/cli"
+
+# xgo has issues when using modules
+# https://github.com/karalabe/xgo/issues/176
+# bypass it by copying the project inside a GOPATH
+goPathBasedir="$GOPATH/src/github.com/dnote/dnote"
 
 command_exists () {
   command -v "$1" >/dev/null 2>&1;
@@ -76,7 +81,9 @@ build() {
       -ldflags "$ldflags" \
       --tags "$tags" \
       --dest="$destDir" \
-      "$basedir"
+      -x \
+      -v \
+      "$goPathBasedir/pkg/cli"
   fi
 
   binaryName=$(get_binary_name "$platform")
@@ -99,7 +106,10 @@ build() {
 
 if [ -z "$GOOS" ] && [ -z "$GOARCH" ]; then
   # fetch tool
-  go get -u github.com/karalabe/xgo
+  go get -u github.com/dnote/xgo
+
+  rm -rf "$GOPATH/src/github.com/dnote/dnote"
+  cp -R  "$projectDir" "$goPathBasedir"
 
   build linux amd64
   build darwin amd64

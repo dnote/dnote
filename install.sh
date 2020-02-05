@@ -2,7 +2,7 @@
 #
 # This script installs Dnote into your PATH (/usr/bin/local)
 # Use it like this:
-# $ curl https://raw.githubusercontent.com/dnote/dnote/master/cli/install.sh | sh
+# $ curl https://raw.githubusercontent.com/dnote/dnote/master/install.sh | sh
 #
 
 set -eu
