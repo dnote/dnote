@@ -145,10 +145,7 @@ endif
 
 	@echo "===> releading on Homebrew"
 	@(cd "${cliHomebrewDir}" && \
-		./release.sh \
-			"$(version)" \
-			"${shasum -a 256 "${cliOutputDir}/dnote_$(version)_darwin_amd64.tar.gz" | cut -d ' ' -f 1}" \
-	)
+		./release.sh "$(version)" "${cliOutputDir}/dnote_$(version)_darwin_amd64.tar.gz")
 .PHONY: release-cli
 
 release-server:
