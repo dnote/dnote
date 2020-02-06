@@ -61,8 +61,6 @@
 }
 
 .price-wrapper {
-  // display: flex;
-  // align-items: baseline;
   margin-top: rem(16px);
 }
 
@@ -79,11 +77,11 @@
 
 .interval-label {
   @include font-size('x-small');
-  width: 76px;
-  text-align: center;
+  font-weight: 600;
+  color: $gray;
 
   &.active {
-    font-weight: 600;
+    color: $black;
   }
 }
 
@@ -95,4 +93,26 @@
 
 .interval-toggle {
   margin: 0 rem(8px);
+}
+
+.summary-wrapper {
+  margin-top: rem(20px);
+}
+
+.summary-heading {
+  @include font-size('small');
+}
+
+.summary-row {
+  margin-top: rem(4px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.summary-amount {
+  font-weight: 600;
+}
+.summary-breakdown {
+  @include font-size('small');
+  color: $gray;
 }

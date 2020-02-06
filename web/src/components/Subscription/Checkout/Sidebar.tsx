@@ -21,7 +21,7 @@ import classnames from 'classnames';
 
 import Button from '../../Common/Button';
 import Toggle, { ToggleKind } from '../../Common/Toggle';
-
+import PaymentSummary from './PaymentSummary';
 import styles from './Sidebar.scss';
 
 interface Props {
@@ -85,6 +85,8 @@ function Sidebar({ isReady, transacting, yearly, setYearly }) {
             Bill yearly
           </button>
         </div>
+
+        <PaymentSummary yearly={yearly} />
 
         <Button
           id="T-purchase-button"
