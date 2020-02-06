@@ -10,16 +10,16 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
-### Unreleased
+### 0.5.0 - 2020-02-06
 
 #### Changed
 
-- Deprecate the digests
-- Deprecate the repetition rules
+- **Deprecated** the digest and digest emails (#397)
+- **Deprecated** the repetition rules (#397)
 
 #### Fixed
 
-- Fix refocusing to the end of the textarea input
+- Fix refocusing to the end of the textarea input (#405)
 
 ### 0.4.0 - 2020-01-09
 
