@@ -126,6 +126,11 @@ const Digest: React.FunctionComponent<Props> = ({ location, match }) => {
       <Header digest={digest.data} isFetched={digest.isFetched} />
 
       <div className="container mobile-fw">
+        <Flash kind="danger" wrapperClassName={styles.flash}>
+          Spaced repetition is deprecated and will be removed in the next major
+          release.
+        </Flash>
+
         <Toolbar
           digestUUID={digest.data.uuid}
           sort={params.sort}
