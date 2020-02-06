@@ -7,6 +7,7 @@ require (
 	github.com/aymerick/douceur v0.2.0
 	github.com/dnote/actions v0.2.0
 	github.com/dnote/color v1.7.0
+	github.com/dnote/xgo v0.0.0-20200205013105-40be7d6d43ff // indirect
 	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/gobuffalo/packr/v2 v2.7.1
 	github.com/google/go-cmp v0.3.1
