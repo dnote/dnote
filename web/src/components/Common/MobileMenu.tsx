@@ -20,11 +20,7 @@ import React from 'react';
 import classnames from 'classnames';
 import { NavLink } from 'react-router-dom';
 
-import {
-  SettingSections,
-  getSettingsPath,
-  getRepetitionsPath
-} from 'web/libs/paths';
+import { SettingSections, getSettingsPath } from 'web/libs/paths';
 import services from 'web/libs/services';
 import styles from './MobileMenu.scss';
 import CloseIcon from '../Icons/Close';
@@ -67,15 +63,6 @@ const MobileMenu: React.FunctionComponent<Props> = ({ onDismiss, isOpen }) => {
               to={getSettingsPath(SettingSections.account)}
             >
               Settings
-            </NavLink>
-          </li>
-          <li className={styles.item}>
-            <NavLink
-              activeClassName={styles.active}
-              className={styles.link}
-              to={getRepetitionsPath()}
-            >
-              Repetition
             </NavLink>
           </li>
           <li className={styles.item}>
