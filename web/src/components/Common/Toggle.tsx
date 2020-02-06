@@ -23,9 +23,16 @@ import styles from './Toggle.scss';
 interface Props {
   checked: boolean;
   onChange: (boolean) => void;
-  label: React.ReactNode;
+  label?: React.ReactNode;
   id?: string;
   disabled?: boolean;
+  wrapperClassName?: string;
+  kind: string;
+}
+
+export enum ToggleKind {
+  first = 'first',
+  green = 'green'
 }
 
 const Toggle: React.FunctionComponent<Props> = ({
@@ -33,13 +40,17 @@ const Toggle: React.FunctionComponent<Props> = ({
   checked,
   onChange,
   disabled,
-  label
+  label,
+  wrapperClassName,
+  kind
 }) => {
   return (
-    <div>
+    <div className={wrapperClassName}>
       <label
         htmlFor={id}
         className={classnames(styles.label, {
+          [styles.first]: kind === ToggleKind.first,
+          [styles.green]: kind === ToggleKind.green,
           [styles.enabled]: checked,
           [styles.disabled]: !checked
         })}

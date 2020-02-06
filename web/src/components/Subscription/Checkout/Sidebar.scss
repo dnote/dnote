@@ -40,22 +40,29 @@
   @include font-size('x-large');
   font-weight: 600;
 }
+.plan-desc {
+  color: $gray;
+  @include font-size('regular');
+}
 
 .price {
-  @include font-size('3x-large');
+  @include font-size('4x-large');
   font-weight: 600;
+  display: inline-block;
 }
 
 .interval {
-  @include font-size('large');
+  @include font-size('small');
+  display: inline-block;
   text-transform: uppercase;
   font-weight: 600;
   margin-left: rem(4px);
+  color: $light-gray;
 }
 
 .price-wrapper {
-  display: flex;
-  align-items: baseline;
+  // display: flex;
+  // align-items: baseline;
   margin-top: rem(16px);
 }
 
@@ -64,32 +71,28 @@
 }
 
 .assurance {
-  @include font-size('medium');
+  @include font-size('regular');
   font-weight: 600;
   margin-top: rem(20px);
   text-align: center;
 }
 
-.perks {
-  margin-top: rem(12px);
-}
-.perk-value {
-  @include font-size('regular');
-  margin-left: rem(8px);
-}
-.perk-item {
-  display: flex;
-  flex-shrink: 1;
+.interval-label {
+  @include font-size('x-small');
+  width: 76px;
+  text-align: center;
 
-  &:not(:first-child) {
-    margin-top: rem(4px);
+  &.active {
+    font-weight: 600;
   }
 }
 
-.perk-icon {
-  flex-shrink: 0;
+.interval-toggle-wrapper {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   margin-top: rem(4px);
+}
+
+.interval-toggle {
+  margin: 0 rem(8px);
 }

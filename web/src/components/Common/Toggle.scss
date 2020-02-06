@@ -24,7 +24,6 @@
 .label {
   display: flex;
   align-items: center;
-  margin-left: rem(12px);
   margin-bottom: 0;
 
   input[type='checkbox'] {
@@ -38,12 +37,26 @@
     box-shadow: 0 0 8px #5e9ed6;
   }
 
-  &.enabled {
-    color: $green;
+  &.first {
+    &.enabled {
+      color: $first;
 
-    .toggle {
-      background-color: $green;
+      .toggle {
+        background-color: $first;
+      }
     }
+  }
+  &.green {
+    &.enabled {
+      color: $green;
+
+      .toggle {
+        background-color: $green;
+      }
+    }
+  }
+
+  &.enabled {
     .indicator {
       transform: translateX(15px);
     }

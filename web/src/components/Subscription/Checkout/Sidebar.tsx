@@ -20,44 +20,70 @@ import React from 'react';
 import classnames from 'classnames';
 
 import Button from '../../Common/Button';
-import ServerIcon from '../../Icons/Server';
-import GlobeIcon from '../../Icons/Globe';
+import Toggle, { ToggleKind } from '../../Common/Toggle';
 
 import styles from './Sidebar.scss';
 
-const perks = [
-  {
-    id: 'hosted',
-    icon: <ServerIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Fully hosted and managed'
-  },
-  {
-    id: 'support',
-    icon: <GlobeIcon width={16} height={16} fill="#4d4d8b" />,
-    value: 'Support the Dnote community and ongoing development'
-  }
-];
+interface Props {
+  isReady: boolean;
+  transacting: boolean;
+  yearly: boolean;
+  setYearly: (boolean) => null;
+}
 
-function Sidebar({ isReady, transacting }) {
+function Sidebar({ isReady, transacting, yearly, setYearly }) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
-        <div className={styles['plan-name']}>Pro</div>
-
-        <ul className={classnames('list-unstyled', styles.perks)}>
-          {perks.map(perk => {
-            return (
-              <li key={perk.id} className={styles['perk-item']}>
-                <div className={styles['perk-icon']}>{perk.icon}</div>
-                <div className={styles['perk-value']}>{perk.value}</div>
-              </li>
-            );
-          })}
-        </ul>
+        <div className={styles['plan-name']}>Dnote Pro</div>
+        <p className={styles['plan-desc']}>Fully hosted and managed</p>
 
         <div className={styles['price-wrapper']}>
-          <strong className={styles.price}>USD 5.00</strong>
+          <strong className={styles.price}>$5.00</strong>
           <div className={styles.interval}>/ month</div>
+        </div>
+
+        <div className={styles['interval-toggle-wrapper']}>
+          <button
+            type="button"
+            onClick={() => {
+              setYearly(false);
+            }}
+            className={classnames(
+              'button-no-ui button-no-padding',
+              styles['interval-label'],
+              {
+                [styles.active]: !yearly
+              }
+            )}
+          >
+            Bill monthly
+          </button>
+          <Toggle
+            id="T-note-public-toggle"
+            checked={yearly}
+            onChange={() => {
+              setYearly(!yearly);
+            }}
+            disabled={transacting}
+            wrapperClassName={styles['interval-toggle']}
+            kind={ToggleKind.first}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setYearly(true);
+            }}
+            className={classnames(
+              'button-no-ui button-no-padding',
+              styles['interval-label'],
+              {
+                [styles.active]: yearly
+              }
+            )}
+          >
+            Bill yearly
+          </button>
         </div>
 
         <Button
@@ -76,7 +102,7 @@ function Sidebar({ isReady, transacting }) {
         </Button>
       </div>
 
-      <p className={styles.assurance}>You can cancel your plan any time.</p>
+      <p className={styles.assurance}>You can cancel auto-renewal any time.</p>
     </div>
   );
 }
