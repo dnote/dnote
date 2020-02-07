@@ -16,8 +16,10 @@ var (
 	ErrDBMissingName = errors.New("DB Name is empty")
 	// ErrDBMissingUser is an error for an incomplete configuration missing the user
 	ErrDBMissingUser = errors.New("DB User is empty")
-	// ErrWebURLInvalid is an error for an incomplete configuration missing the user
+	// ErrWebURLInvalid is an error for an incomplete configuration with invalid web url
 	ErrWebURLInvalid = errors.New("Invalid WebURL")
+	// ErrPortInvalid is an error for an incomplete configuration with invalid port
+	ErrPortInvalid = errors.New("Invalid Port")
 )
 
 // PostgresConfig holds the postgres connection configuration.
@@ -109,6 +111,9 @@ func (c *Config) SetOnPremise(val bool) {
 func validate(c Config) error {
 	if _, err := url.ParseRequestURI(c.WebURL); err != nil {
 		return errors.Wrapf(ErrWebURLInvalid, "provided: '%s'", c.WebURL)
+	}
+	if c.Port == "" {
+		return ErrPortInvalid
 	}
 
 	if c.DB.Host == "" {

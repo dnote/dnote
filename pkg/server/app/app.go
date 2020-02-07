@@ -40,13 +40,6 @@ var (
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 )
 
-// Config is an application configuration
-type Config struct {
-	WebURL              string
-	OnPremise           bool
-	DisableRegistration bool
-}
-
 // App is an application context
 type App struct {
 	DB               *gorm.DB
