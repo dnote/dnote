@@ -35,7 +35,7 @@ const NameOnCard: React.FunctionComponent<Props> = ({
   labelClassName
 }) => {
   return (
-    <div className={classnames(containerClassName)}>
+    <div className={containerClassName}>
       <label htmlFor="name-on-card" className="label-full">
         <span className={classnames(labelClassName)}>Name on Card</span>
         <input

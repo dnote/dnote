@@ -43,8 +43,12 @@
 }
 
 .heading {
-  @include font-size('3x-large');
-  font-weight: 400;
+  @include font-size('2x-large');
+
+  @include breakpoint(lg) {
+    @include font-size('3x-large');
+  }
+  font-weight: 600;
 }
 
 .content-wrapper {

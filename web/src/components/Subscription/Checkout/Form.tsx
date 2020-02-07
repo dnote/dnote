@@ -54,6 +54,7 @@ const Form: React.FunctionComponent<Props> = ({
   const [transacting, setTransacting] = useState(false);
   const [errMessage, setErrMessage] = useState('');
   const dispatch = useDispatch();
+  const [yearly, setYearly] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -86,6 +87,7 @@ const Form: React.FunctionComponent<Props> = ({
       }
 
       await services.payment.createSubscription({
+        yearly,
         source,
         country: billingCountry
       });
@@ -144,7 +146,7 @@ const Form: React.FunctionComponent<Props> = ({
         </Flash>
 
         <div className="row">
-          <div className="col-12 col-lg-7 col-xl-8">
+          <div className="col-12 col-md-6 col-xl-6 offset-xl-1">
             <div className={styles['content-wrapper']}>
               <h1 className={styles.heading}>Welcome to Dnote Pro.</h1>
 
@@ -173,8 +175,13 @@ const Form: React.FunctionComponent<Props> = ({
             </div>
           </div>
 
-          <div className="col-12 col-lg-5 col-xl-4">
-            <Sidebar isReady={cardElementLoaded} transacting={transacting} />
+          <div className="col-12 col-md-6 col-xl-4">
+            <Sidebar
+              isReady={cardElementLoaded}
+              transacting={transacting}
+              yearly={yearly}
+              setYearly={setYearly}
+            />
           </div>
         </div>
       </form>

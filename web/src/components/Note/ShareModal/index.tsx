@@ -27,7 +27,7 @@ import { receiveNote } from '../../../store/note';
 import Button from '../../Common/Button';
 import Flash from '../../Common/Flash';
 import Modal, { Body, Header } from '../../Common/Modal';
-import Toggle from '../../Common/Toggle';
+import Toggle, { ToggleKind } from '../../Common/Toggle';
 import CopyButton from './CopyButton';
 import styles from './ShareModal.scss';
 
@@ -129,6 +129,7 @@ const ShareModal: React.FunctionComponent<Props> = ({
 
           <Toggle
             id="T-note-public-toggle"
+            kind={ToggleKind.green}
             checked={note.public}
             onChange={handleToggle}
             disabled={inProgress}
