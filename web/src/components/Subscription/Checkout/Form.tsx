@@ -87,6 +87,7 @@ const Form: React.FunctionComponent<Props> = ({
       }
 
       await services.payment.createSubscription({
+        yearly,
         source,
         country: billingCountry
       });

@@ -16,7 +16,7 @@ const PaymentSummary: React.SFC<Props> = ({ yearly }) => {
 
   let breakdown;
   if (yearly) {
-    breakdown = '$4.00 x 12 months';
+    breakdown = '$4.00 x 12 months (-20%)';
   } else {
     breakdown = '';
   }

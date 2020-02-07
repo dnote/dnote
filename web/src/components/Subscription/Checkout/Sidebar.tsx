@@ -22,6 +22,7 @@ import classnames from 'classnames';
 import Button from '../../Common/Button';
 import Toggle, { ToggleKind } from '../../Common/Toggle';
 import PaymentSummary from './PaymentSummary';
+import Price from './Price';
 import styles from './Sidebar.scss';
 
 interface Props {
@@ -38,10 +39,7 @@ function Sidebar({ isReady, transacting, yearly, setYearly }) {
         <div className={styles['plan-name']}>Dnote Pro</div>
         <p className={styles['plan-desc']}>Fully hosted and managed</p>
 
-        <div className={styles['price-wrapper']}>
-          <strong className={styles.price}>$5.00</strong>
-          <div className={styles.interval}>/ month</div>
-        </div>
+        <Price yearly={yearly} />
 
         <div className={styles['interval-toggle-wrapper']}>
           <button
@@ -60,7 +58,7 @@ function Sidebar({ isReady, transacting, yearly, setYearly }) {
             Bill monthly
           </button>
           <Toggle
-            id="T-note-public-toggle"
+            id="T-yearly-toggle"
             checked={yearly}
             onChange={() => {
               setYearly(!yearly);

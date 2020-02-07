@@ -41,8 +41,6 @@ import (
 	"github.com/stripe/stripe-go/webhook"
 )
 
-var proPlanID = "plus"
-
 func getOrCreateStripeCustomer(tx *gorm.DB, user database.User) (*stripe.Customer, error) {
 	if user.StripeCustomerID != "" {
 		c, err := customer.Get(user.StripeCustomerID, nil)
@@ -121,6 +119,7 @@ func createCustomerSubscription(customerID, planID string) (*stripe.Subscription
 }
 
 type createSubPayload struct {
+	Yearly  bool          `json:"yearly"`
 	Source  stripe.Source `json:"source"`
 	Country string        `json:"country"`
 }
@@ -169,7 +168,14 @@ func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := createCustomerSubscription(customer.ID, proPlanID); err != nil {
+	var planID string
+	if payload.Yearly {
+		planID = os.Getenv("StripeYearlyPlanID")
+	} else {
+		planID = os.Getenv("StripeMonthlyPlanID")
+	}
+
+	if _, err := createCustomerSubscription(customer.ID, planID); err != nil {
 		tx.Rollback()
 		HandleError(w, "creating subscription", err, http.StatusInternalServerError)
 		return

@@ -22,8 +22,9 @@ export default function init(config: HttpClientConfig) {
   const client = getHttpClient(config);
 
   return {
-    createSubscription: ({ source, country }) => {
+    createSubscription: ({ yearly, source, country }) => {
       const payload = {
+        yearly,
         source,
         country
       };
