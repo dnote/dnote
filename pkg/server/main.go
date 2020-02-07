@@ -114,11 +114,11 @@ func initApp(c config.Config) app.App {
 }
 
 func runJob(a app.App) error {
-	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
+	runner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
 	if err != nil {
 		return errors.Wrap(err, "getting a job runner")
 	}
-	if err := jobRunner.Do(); err != nil {
+	if err := runner.Do(); err != nil {
 		return errors.Wrap(err, "running job")
 	}
 

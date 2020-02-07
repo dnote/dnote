@@ -50,6 +50,7 @@ var DB *gorm.DB
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() {
 	c := config.Load()
+	fmt.Println(c.DB.GetConnectionStr())
 	db := database.Open(c)
 
 	database.InitSchema(db)
