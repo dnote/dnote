@@ -34,7 +34,7 @@ const PaymentSummary: React.SFC<Props> = ({ yearly }) => {
   return (
     <p className={styles['schedule-summary']}>
       Your {adj} plan starts on {startDate}
-      at {cost} per {interval} and will renews on after a {interval}. Cancel
+      at {cost} per {interval} and will renew after a {interval}. Cancel
       auto-renewal any time.
     </p>
   );
