@@ -146,7 +146,7 @@ const Form: React.FunctionComponent<Props> = ({
         </Flash>
 
         <div className="row">
-          <div className="col-12 col-lg-7 col-xl-6 offset-xl-2">
+          <div className="col-12 col-md-6 col-xl-6 offset-xl-1">
             <div className={styles['content-wrapper']}>
               <h1 className={styles.heading}>Welcome to Dnote Pro.</h1>
 
@@ -175,7 +175,7 @@ const Form: React.FunctionComponent<Props> = ({
             </div>
           </div>
 
-          <div className="col-12 col-lg-5 col-xl-4">
+          <div className="col-12 col-md-6 col-xl-4">
             <Sidebar
               isReady={cardElementLoaded}
               transacting={transacting}

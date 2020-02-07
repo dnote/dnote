@@ -23,6 +23,7 @@ import Button from '../../Common/Button';
 import Toggle, { ToggleKind } from '../../Common/Toggle';
 import PaymentSummary from './PaymentSummary';
 import Price from './Price';
+import ScheduleSummary from './ScheduleSummary';
 import styles from './Sidebar.scss';
 
 interface Props {
@@ -103,6 +104,8 @@ function Sidebar({ isReady, transacting, yearly, setYearly }) {
       </div>
 
       <p className={styles.assurance}>You can cancel auto-renewal any time.</p>
+
+      <ScheduleSummary yearly={yearly} />
     </div>
   );
 }

@@ -22,7 +22,7 @@ const PaymentSummary: React.SFC<Props> = ({ yearly }) => {
   }
 
   return (
-    <div className={styles['summary-wrapper']}>
+    <div id="T-payment-summary" className={styles['summary-wrapper']}>
       <h2 className={styles['summary-heading']}>Payment summary</h2>
 
       <div className={styles['summary-row']}>

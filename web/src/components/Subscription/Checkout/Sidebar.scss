@@ -23,17 +23,17 @@
 @import '../../App/rem';
 
 .wrapper {
-  margin-top: rem(20px);
+  margin: rem(52px) 0;
 
-  @include breakpoint(lg) {
-    margin-top: 0;
+  @include breakpoint(md) {
+    margin: 0;
   }
 }
 
 .header {
   border: 1px solid $border-color;
   border-top: rem(20px) solid $third;
-  padding: rem(16px) rem(32px);
+  padding: rem(28px) rem(28px);
 }
 
 .plan-name {
@@ -80,6 +80,12 @@
   font-weight: 600;
   margin-top: rem(20px);
   text-align: center;
+}
+
+.schedule-summary {
+  @include font-size('small');
+  text-align: center;
+  color: $gray;
 }
 
 .interval-label {
