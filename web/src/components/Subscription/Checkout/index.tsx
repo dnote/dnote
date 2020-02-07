@@ -27,6 +27,9 @@ import CheckoutForm from './Form';
 
 const Checkout: React.FunctionComponent = () => {
   const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
+  const [paypalLoaded, paypalLoadError] = useScript(
+    `https://www.paypal.com/sdk/js?client-id=${__PAYPAL_CLIENT_ID__}`
+  );
 
   const key = `${__STRIPE_PUBLIC_KEY__}`;
 

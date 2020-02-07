@@ -30,12 +30,21 @@ module.exports = ({ production = false, test = false } = {}) => {
     stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
   }
 
+  let paypalClientID;
+  if (test) {
+    paypalClientID =
+      'AR3QRJuMdHc3korILtegw4QMbCGoRhIR3E-zygzAvuvGS0QdRi0_M1mofZi6QTC1Y5NvWEBhQ3SN6T78';
+  } else {
+    paypalClientID = 'unknown';
+  }
+
   const cdnUrl = 'https://cdn.getdnote.com';
   const version = process.env.VERSION;
 
   const compileTimeConstantForMinification = {
     __ROOT_URL__: JSON.stringify(rootUrl),
     __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey),
+    __PAYPAL_CLIENT_ID__: JSON.stringify(paypalClientID),
     __CDN_URL__: JSON.stringify(cdnUrl),
     __VERSION__: JSON.stringify(version)
   };
