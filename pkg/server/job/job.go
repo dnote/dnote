@@ -22,7 +22,7 @@ import (
 	slog "log"
 
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/job/remind"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -51,11 +51,11 @@ type Runner struct {
 	Clock        clock.Clock
 	EmailTmpl    mailer.Templates
 	EmailBackend mailer.Backend
-	Config       app.Config
+	Config       config.Config
 }
 
 // NewRunner returns a new runner
-func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, config app.Config) (Runner, error) {
+func NewRunner(db *gorm.DB, c clock.Clock, t mailer.Templates, b mailer.Backend, config config.Config) (Runner, error) {
 	ret := Runner{
 		DB:           db,
 		EmailTmpl:    t,

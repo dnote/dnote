@@ -26,14 +26,13 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/stripe/stripe-go"
@@ -50,13 +49,9 @@ var DB *gorm.DB
 // InitTestDB establishes connection pool with the test database specified by
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() {
-	db := dbconn.Open(dbconn.Config{
-		Host:     os.Getenv("DBHost"),
-		Port:     os.Getenv("DBPort"),
-		Name:     os.Getenv("DBName"),
-		User:     os.Getenv("DBUser"),
-		Password: os.Getenv("DBPassword"),
-	})
+	c := config.Load()
+	db := database.Open(c)
+
 	database.InitSchema(db)
 
 	DB = db

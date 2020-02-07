@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/pkg/errors"
 )
@@ -30,7 +31,7 @@ import (
 var defaultSender = "sung@getdnote.com"
 
 // GetSenderEmail returns the sender email
-func (c Config) GetSenderEmail(want string) (string, error) {
+func GetSenderEmail(c config.Config, want string) (string, error) {
 	if !c.OnPremise {
 		return want, nil
 	}
@@ -59,7 +60,7 @@ func getDomainFromURL(rawURL string) (string, error) {
 	return domain, nil
 }
 
-func getNoreplySender(c Config) (string, error) {
+func getNoreplySender(c config.Config) (string, error) {
 	domain, err := getDomainFromURL(c.WebURL)
 	if err != nil {
 		return "", errors.Wrap(err, "parsing web url")
@@ -79,7 +80,7 @@ func (a *App) SendVerificationEmail(email, tokenValue string) error {
 		return errors.Wrapf(err, "executing reset verification template for %s", email)
 	}
 
-	from, err := a.Config.GetSenderEmail(defaultSender)
+	from, err := GetSenderEmail(a.Config, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -101,7 +102,7 @@ func (a *App) SendWelcomeEmail(email string) error {
 		return errors.Wrapf(err, "executing reset verification template for %s", email)
 	}
 
-	from, err := a.Config.GetSenderEmail(defaultSender)
+	from, err := GetSenderEmail(a.Config, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -124,7 +125,7 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 		return errors.Wrapf(err, "executing reset password template for %s", email)
 	}
 
-	from, err := a.Config.GetSenderEmail(defaultSender)
+	from, err := GetSenderEmail(a.Config, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -146,7 +147,7 @@ func (a *App) SendPasswordResetAlertEmail(email string) error {
 		return errors.Wrapf(err, "executing reset password alert template for %s", email)
 	}
 
-	from, err := a.Config.GetSenderEmail(defaultSender)
+	from, err := GetSenderEmail(a.Config, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -168,7 +169,7 @@ func (a *App) SendSubscriptionConfirmationEmail(email string) error {
 		return errors.Wrapf(err, "executing subscription confirmation template for %s", email)
 	}
 
-	from, err := a.Config.GetSenderEmail(defaultSender)
+	from, err := GetSenderEmail(a.Config, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}

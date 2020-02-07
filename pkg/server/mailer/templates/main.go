@@ -21,11 +21,10 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
@@ -167,13 +166,8 @@ type Context struct {
 }
 
 func main() {
-	db := dbconn.Open(dbconn.Config{
-		Host:     os.Getenv("DBHost"),
-		Port:     os.Getenv("DBPort"),
-		Name:     os.Getenv("DBName"),
-		User:     os.Getenv("DBUser"),
-		Password: os.Getenv("DBPassword"),
-	})
+	c := config.Load()
+	db := database.Open(c)
 	defer db.Close()
 
 	log.Println("Email template development server running on http://127.0.0.1:2300")

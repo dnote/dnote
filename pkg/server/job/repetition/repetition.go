@@ -25,6 +25,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -39,7 +40,7 @@ type Context struct {
 	Clock        clock.Clock
 	EmailTmpl    mailer.Templates
 	EmailBackend mailer.Backend
-	Config       app.Config
+	Config       config.Config
 }
 
 // BuildEmailParams is the params for building an email
@@ -153,7 +154,7 @@ func (c Context) notify(now time.Time, user database.User, digest database.Diges
 		return errors.Wrap(err, "making email")
 	}
 
-	sender, err := c.Config.GetSenderEmail("noreply@getdnote.com")
+	sender, err := app.GetSenderEmail(c.Config, "noreply@getdnote.com")
 	if err != nil {
 		return errors.Wrap(err, "getting sender email")
 	}

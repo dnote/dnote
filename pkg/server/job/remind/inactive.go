@@ -21,6 +21,7 @@ package remind
 import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -34,7 +35,7 @@ type Context struct {
 	Clock        clock.Clock
 	EmailTmpl    mailer.Templates
 	EmailBackend mailer.Backend
-	Config       app.Config
+	Config       config.Config
 }
 
 type inactiveUserInfo struct {
@@ -137,7 +138,7 @@ func (c *Context) process(info inactiveUserInfo) error {
 		return nil
 	}
 
-	sender, err := c.Config.GetSenderEmail("noreply@getdnote.com")
+	sender, err := app.GetSenderEmail(c.Config, "noreply@getdnote.com")
 	if err != nil {
 		return errors.Wrap(err, "getting sender email")
 	}

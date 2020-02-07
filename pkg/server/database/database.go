@@ -19,6 +19,7 @@
 package database
 
 import (
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/jinzhu/gorm"
 
 	// Use postgres
@@ -53,4 +54,14 @@ func InitSchema(db *gorm.DB) {
 	).Error; err != nil {
 		panic(err)
 	}
+}
+
+// Open initializes the database connection
+func Open(c config.Config) *gorm.DB {
+	db, err := gorm.Open(c.DB.GetConnectionStr())
+	if err != nil {
+		panic(err)
+	}
+
+	return db
 }

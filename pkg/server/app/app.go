@@ -20,6 +20,7 @@ package app
 
 import (
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -53,7 +54,7 @@ type App struct {
 	StripeAPIBackend stripe.Backend
 	EmailTemplates   mailer.Templates
 	EmailBackend     mailer.Backend
-	Config           Config
+	Config           config.Config
 }
 
 // Validate validates the app configuration
