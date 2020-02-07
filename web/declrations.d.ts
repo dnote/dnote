@@ -18,6 +18,7 @@
 
 // declaration.d.ts
 declare module '*.scss';
+declare module '*.png';
 
 // globals defined by webpack-define-plugin
 declare const __STRIPE_PUBLIC_KEY__: string;

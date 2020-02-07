@@ -72,7 +72,6 @@
 }
 
 .purchase-button {
-  margin-top: rem(20px);
 }
 
 .assurance {
@@ -128,4 +127,8 @@
 .summary-breakdown {
   @include font-size('small');
   color: $gray;
+}
+
+.paypal-button-container {
+  margin-top: rem(12px);
 }

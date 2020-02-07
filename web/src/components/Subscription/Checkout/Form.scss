@@ -51,6 +51,11 @@
   font-weight: 600;
 }
 
+.instruction {
+  margin-top: rem(8px);
+  font-weight: 600;
+}
+
 .content-wrapper {
   @include breakpoint(lg) {
     padding-right: rem(52px);
@@ -69,4 +74,51 @@
 
 .label {
   @include font-size('medium');
+}
+
+.method-wrapper {
+  margin-top: rem(20px);
+  display: flex;
+
+  @include breakpoint(lg) {
+    display: block;
+  }
+
+  .method {
+    @include font-size('regular');
+    width: 152px;
+    padding-left: 0;
+    padding-right: 0;
+    flex: 1;
+    font-weight: 600;
+    color: $gray;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    @include breakpoint(lg) {
+      width: 200px;
+      flex: auto;
+    }
+
+    input {
+      display: none;
+    }
+  }
+
+  label.method-active {
+    border-color: $first;
+  }
+
+  .method-text {
+    margin-left: rem(8px);
+  }
+}
+
+.stripe-logo {
+  margin-top: rem(12px);
+}
+
+.paypal-logo {
+  width: 80px;
 }

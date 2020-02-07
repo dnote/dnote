@@ -28,8 +28,10 @@ import CheckoutForm from './Form';
 const Checkout: React.FunctionComponent = () => {
   const [stripeLoaded, stripeLoadError] = useScript('https://js.stripe.com/v3');
   const [paypalLoaded, paypalLoadError] = useScript(
-    `https://www.paypal.com/sdk/js?client-id=${__PAYPAL_CLIENT_ID__}`
+    `https://www.paypal.com/sdk/js?client-id=${__PAYPAL_CLIENT_ID__}&vault=true`
   );
+
+  console.log(paypalLoaded);
 
   const key = `${__STRIPE_PUBLIC_KEY__}`;
 
@@ -52,7 +54,10 @@ const Checkout: React.FunctionComponent = () => {
   return (
     <StripeProvider stripe={stripe}>
       <Elements>
-        <CheckoutForm stripeLoadError={stripeLoadError} />
+        <CheckoutForm
+          stripeLoadError={stripeLoadError}
+          paypalLoadError={paypalLoadError}
+        />
       </Elements>
     </StripeProvider>
   );

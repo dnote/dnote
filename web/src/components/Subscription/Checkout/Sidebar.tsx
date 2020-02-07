@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import classnames from 'classnames';
 
 import Button from '../../Common/Button';
@@ -24,6 +24,7 @@ import Toggle, { ToggleKind } from '../../Common/Toggle';
 import PaymentSummary from './PaymentSummary';
 import Price from './Price';
 import ScheduleSummary from './ScheduleSummary';
+import { PaymentMethod } from './helpers';
 import styles from './Sidebar.scss';
 
 interface Props {
@@ -31,9 +32,31 @@ interface Props {
   transacting: boolean;
   yearly: boolean;
   setYearly: (boolean) => null;
+  paymentMethod: PaymentMethod;
 }
 
-function Sidebar({ isReady, transacting, yearly, setYearly }) {
+const paypalButtonNodeID = 'paypal-button-container';
+
+function Sidebar({ isReady, transacting, yearly, setYearly, paymentMethod }) {
+  useEffect(() => {
+    if (paymentMethod === PaymentMethod.PayPal) {
+      (window as any).paypal
+        .Buttons({
+          style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            label: 'paypal'
+          }
+        })
+        .render(`#${paypalButtonNodeID}`);
+    } else {
+      const node = document.getElementById(paypalButtonNodeID);
+
+      node.innerHTML = '';
+    }
+  }, [paymentMethod]);
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
@@ -87,20 +110,27 @@ function Sidebar({ isReady, transacting, yearly, setYearly }) {
 
         <PaymentSummary yearly={yearly} />
 
-        <Button
-          id="T-purchase-button"
-          type="submit"
-          kind="first"
-          size="normal"
-          className={classnames(
-            'button button-large button-third button-stretch',
-            styles['purchase-button']
-          )}
-          disabled={transacting}
-          isBusy={transacting || !isReady}
-        >
-          Purchase Dnote Pro
-        </Button>
+        <div
+          id={paypalButtonNodeID}
+          className={styles['paypal-button-container']}
+        />
+
+        {paymentMethod === PaymentMethod.CreditCard && (
+          <Button
+            id="T-purchase-button"
+            type="submit"
+            kind="first"
+            size="normal"
+            className={classnames(
+              'button button-large button-third button-stretch',
+              styles['purchase-button']
+            )}
+            disabled={transacting}
+            isBusy={transacting || !isReady}
+          >
+            Purchase Dnote Pro
+          </Button>
+        )}
       </div>
 
       <p className={styles.assurance}>You can cancel auto-renewal any time.</p>

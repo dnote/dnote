@@ -27,6 +27,7 @@ import services from 'web/libs/services';
 import { getHomePath } from 'web/libs/paths';
 import Sidebar from './Sidebar';
 import Flash from '../../Common/Flash';
+import CreditCardIcon from '../../Icons/CreditCard';
 import { getCurrentUser } from '../../../store/auth';
 import { useDispatch } from '../../../store';
 import { setMessage } from '../../../store/ui';
@@ -34,17 +35,21 @@ import NameOnCardInput from '../../Common/PaymentInput/NameOnCard';
 import CardInput from '../../Common/PaymentInput/Card';
 import Footer from '../Footer';
 import CountryInput from '../../Common/PaymentInput/Country';
+import { PaymentMethod } from './helpers';
+import PaymentMethodComponent from './PaymentMethod';
 import styles from './Form.scss';
 
 interface Props extends RouteComponentProps {
   stripe: any;
   stripeLoadError: string;
+  paypalLoadError: string;
   history: History;
 }
 
 const Form: React.FunctionComponent<Props> = ({
   stripe,
   stripeLoadError,
+  paypalLoadError,
   history
 }) => {
   const [nameOnCard, setNameOnCard] = useState('');
@@ -55,6 +60,7 @@ const Form: React.FunctionComponent<Props> = ({
   const [errMessage, setErrMessage] = useState('');
   const dispatch = useDispatch();
   const [yearly, setYearly] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(PaymentMethod.CreditCard);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -142,36 +148,77 @@ const Form: React.FunctionComponent<Props> = ({
           kind="danger"
           wrapperClassName={styles.flash}
         >
-          Failed to load stripe. {stripeLoadError}
+          Failed to load Stripe. {stripeLoadError}
+        </Flash>
+        <Flash
+          when={paypalLoadError !== ''}
+          kind="danger"
+          wrapperClassName={styles.flash}
+        >
+          Failed to load PayPal. {paypalLoadError}
         </Flash>
 
         <div className="row">
           <div className="col-12 col-md-6 col-xl-6 offset-xl-1">
             <div className={styles['content-wrapper']}>
               <h1 className={styles.heading}>Welcome to Dnote Pro.</h1>
+              <p className={styles.instruction}>
+                Please complete payment details.
+              </p>
 
-              <div className={styles.content}>
-                <NameOnCardInput
-                  value={nameOnCard}
-                  onUpdate={setNameOnCard}
-                  containerClassName={styles['input-row']}
-                  labelClassName={styles.label}
-                />
+              <div className={styles['method-wrapper']}>
+                <PaymentMethodComponent
+                  method={PaymentMethod.CreditCard}
+                  isActive={paymentMethod === PaymentMethod.CreditCard}
+                  setMethod={setPaymentMethod}
+                >
+                  <CreditCardIcon width={20} height={20} fill="gray" />
+                  <span className={styles['method-text']}>Credit card</span>
+                </PaymentMethodComponent>
 
-                <CardInput
-                  cardElementRef={cardElementRef}
-                  setCardElementLoaded={setCardElementLoaded}
-                  containerClassName={styles['input-row']}
-                  labelClassName={styles.label}
-                />
-
-                <CountryInput
-                  value={billingCountry}
-                  onUpdate={setBillingCountry}
-                  containerClassName={styles['input-row']}
-                  labelClassName={styles.label}
-                />
+                <PaymentMethodComponent
+                  method={PaymentMethod.PayPal}
+                  isActive={paymentMethod === PaymentMethod.PayPal}
+                  setMethod={setPaymentMethod}
+                >
+                  <img
+                    src="/static/paypal.png"
+                    alt="PayPal"
+                    className={styles['paypal-logo']}
+                  />
+                </PaymentMethodComponent>
               </div>
+
+              {paymentMethod === PaymentMethod.CreditCard && (
+                <div className={styles.content}>
+                  <NameOnCardInput
+                    value={nameOnCard}
+                    onUpdate={setNameOnCard}
+                    containerClassName={styles['input-row']}
+                    labelClassName={styles.label}
+                  />
+
+                  <CardInput
+                    cardElementRef={cardElementRef}
+                    setCardElementLoaded={setCardElementLoaded}
+                    containerClassName={styles['input-row']}
+                    labelClassName={styles.label}
+                  />
+
+                  <CountryInput
+                    value={billingCountry}
+                    onUpdate={setBillingCountry}
+                    containerClassName={styles['input-row']}
+                    labelClassName={styles.label}
+                  />
+
+                  <img
+                    src="/static/stripe.png"
+                    alt="Stripe"
+                    className={styles['stripe-logo']}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -181,6 +228,7 @@ const Form: React.FunctionComponent<Props> = ({
               transacting={transacting}
               yearly={yearly}
               setYearly={setYearly}
+              paymentMethod={paymentMethod}
             />
           </div>
         </div>

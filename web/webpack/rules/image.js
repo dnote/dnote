@@ -18,12 +18,15 @@
 
 const PATHS = require('../paths');
 
-module.exports = ({ limit = 10000 } = {}) => ({
+module.exports = () => ({
   test: /\.(bmp|gif|jpg|jpeg|png|svg)$/,
   use: [
     {
-      loader: 'url-loader',
-      options: { name: '[hash].[ext]', limit }
+      loader: 'file-loader',
+      options: {
+        publicPath: PATHS.public,
+        outputPath: PATHS.public
+      }
     }
   ]
 });
