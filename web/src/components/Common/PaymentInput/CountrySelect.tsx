@@ -23,7 +23,7 @@ import classnames from 'classnames';
 
 import { countries } from 'web/libs/countries';
 
-import styles from './CountrySelect.module.scss';
+import styles from './CountrySelect.scss';
 
 interface Props {
   id: string;

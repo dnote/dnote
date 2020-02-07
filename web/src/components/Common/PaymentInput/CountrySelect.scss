@@ -28,7 +28,7 @@
 select.select {
   // match the height of the stripe element with other inputs
   padding: rem(7px) rem(12px);
-
+  border-radius: 0;
   border: 2px solid $border-color;
   background-color: #ffffff;
   -webkit-font-smoothing: antialiased;
