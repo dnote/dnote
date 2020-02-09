@@ -23,12 +23,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/dbconn"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -91,21 +90,18 @@ func initServer(a app.App) (*http.ServeMux, error) {
 	return mux, nil
 }
 
-func initDB() *gorm.DB {
-	db := dbconn.Open(dbconn.Config{
-		Host:     os.Getenv("DBHost"),
-		Port:     os.Getenv("DBPort"),
-		Name:     os.Getenv("DBName"),
-		User:     os.Getenv("DBUser"),
-		Password: os.Getenv("DBPassword"),
-	})
+func initDB(c config.Config) *gorm.DB {
+	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
+	if err != nil {
+		panic(errors.Wrap(err, "opening database connection"))
+	}
 	database.InitSchema(db)
 
 	return db
 }
 
-func initApp() app.App {
-	db := initDB()
+func initApp(c config.Config) app.App {
+	db := initDB(c)
 
 	return app.App{
 		DB:               db,
@@ -113,20 +109,16 @@ func initApp() app.App {
 		StripeAPIBackend: nil,
 		EmailTemplates:   mailer.NewTemplates(nil),
 		EmailBackend:     &mailer.SimpleBackendImplementation{},
-		Config: app.Config{
-			WebURL:              os.Getenv("WebURL"),
-			OnPremise:           true,
-			DisableRegistration: os.Getenv("DisableRegistration") == "true",
-		},
+		Config:           c,
 	}
 }
 
 func runJob(a app.App) error {
-	jobRunner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
+	runner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
 	if err != nil {
 		return errors.Wrap(err, "getting a job runner")
 	}
-	if err := jobRunner.Do(); err != nil {
+	if err := runner.Do(); err != nil {
 		return errors.Wrap(err, "running job")
 	}
 
@@ -134,7 +126,9 @@ func runJob(a app.App) error {
 }
 
 func startCmd() {
-	app := initApp()
+	c := config.Load()
+
+	app := initApp(c)
 	defer app.DB.Close()
 
 	if err := database.Migrate(app.DB); err != nil {

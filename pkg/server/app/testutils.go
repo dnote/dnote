@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
@@ -29,6 +30,8 @@ import (
 // NewTest returns an app for a testing environment
 func NewTest(appParams *App) App {
 	emailTmplDir := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
+	c := config.Load()
+	c.SetOnPremise(false)
 
 	a := App{
 		DB:               testutils.DB,
@@ -36,10 +39,7 @@ func NewTest(appParams *App) App {
 		EmailTemplates:   mailer.NewTemplates(&emailTmplDir),
 		EmailBackend:     &testutils.MockEmailbackendImplementation{},
 		StripeAPIBackend: nil,
-		Config: Config{
-			OnPremise: false,
-			WebURL:    os.Getenv("WebURL"),
-		},
+		Config:           c,
 	}
 
 	// Allow to override with appParams

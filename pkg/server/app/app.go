@@ -20,6 +20,7 @@ package app
 
 import (
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -39,13 +40,6 @@ var (
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 )
 
-// Config is an application configuration
-type Config struct {
-	WebURL              string
-	OnPremise           bool
-	DisableRegistration bool
-}
-
 // App is an application context
 type App struct {
 	DB               *gorm.DB
@@ -53,7 +47,7 @@ type App struct {
 	StripeAPIBackend stripe.Backend
 	EmailTemplates   mailer.Templates
 	EmailBackend     mailer.Backend
-	Config           Config
+	Config           config.Config
 }
 
 // Validate validates the app configuration

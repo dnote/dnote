@@ -28,6 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -95,14 +96,15 @@ func TestRegister(t *testing.T) {
 		t.Run(fmt.Sprintf("register %s %s", tc.email, tc.password), func(t *testing.T) {
 			defer testutils.ClearData()
 
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+
 			// Setup
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			server := MustNewServer(t, &app.App{
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
-				Config: app.Config{
-					OnPremise: tc.onPremise,
-				},
+				Config:       c,
 			})
 			defer server.Close()
 
@@ -235,12 +237,13 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 func TestRegisterDisabled(t *testing.T) {
 	defer testutils.ClearData()
 
+	c := config.Load()
+	c.DisableRegistration = true
+
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: app.Config{
-			DisableRegistration: true,
-		},
+		Clock:  clock.NewMock(),
+		Config: c,
 	})
 	defer server.Close()
 

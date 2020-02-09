@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
@@ -43,13 +44,14 @@ func TestSendVerificationEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+			c.WebURL = "http://example.com"
+
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
 				EmailBackend: &emailBackend,
-				Config: Config{
-					OnPremise: tc.onPremise,
-					WebURL:    "http://example.com",
-				},
+				Config:       c,
 			})
 
 			if err := a.SendVerificationEmail("alice@example.com", "mockTokenValue"); err != nil {
@@ -80,13 +82,14 @@ func TestSendWelcomeEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+			c.WebURL = "http://example.com"
+
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
 				EmailBackend: &emailBackend,
-				Config: Config{
-					OnPremise: tc.onPremise,
-					WebURL:    "http://example.com",
-				},
+				Config:       c,
 			})
 
 			if err := a.SendWelcomeEmail("alice@example.com"); err != nil {
@@ -117,13 +120,14 @@ func TestSendPasswordResetEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+			c.WebURL = "http://example.com"
+
 			emailBackend := testutils.MockEmailbackendImplementation{}
 			a := NewTest(&App{
 				EmailBackend: &emailBackend,
-				Config: Config{
-					OnPremise: tc.onPremise,
-					WebURL:    "http://example.com",
-				},
+				Config:       c,
 			})
 
 			if err := a.SendPasswordResetEmail("alice@example.com", "mockTokenValue"); err != nil {
@@ -138,13 +142,14 @@ func TestSendPasswordResetEmail(t *testing.T) {
 }
 
 func TestSendSubscriptionConfirmationEmail(t *testing.T) {
+	c := config.Load()
+	c.SetOnPremise(false)
+	c.WebURL = "http://example.com"
+
 	emailBackend := testutils.MockEmailbackendImplementation{}
 	a := NewTest(&App{
 		EmailBackend: &emailBackend,
-		Config: Config{
-			OnPremise: false,
-			WebURL:    "http://example.com",
-		},
+		Config:       c,
 	})
 
 	if err := a.SendSubscriptionConfirmationEmail("alice@example.com"); err != nil {
@@ -179,12 +184,11 @@ func TestGetSenderEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("on premise %t candidate %s", tc.onPremise, tc.candidate), func(t *testing.T) {
-			c := Config{
-				OnPremise: tc.onPremise,
-				WebURL:    tc.webURL,
-			}
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+			c.WebURL = tc.webURL
 
-			got, err := c.GetSenderEmail(tc.candidate)
+			got, err := GetSenderEmail(c, tc.candidate)
 			if err != nil {
 				t.Fatal(err, "failed to perform")
 			}

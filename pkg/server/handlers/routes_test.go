@@ -28,6 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -691,6 +692,11 @@ func TestNotSupportedVersions(t *testing.T) {
 }
 
 func TestNewRouter_AppValidate(t *testing.T) {
+	c := config.Load()
+
+	configWithoutWebURL := config.Load()
+	configWithoutWebURL.WebURL = ""
+
 	testCases := []struct {
 		app         app.App
 		expectedErr error
@@ -702,9 +708,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   mailer.Templates{},
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
-				Config: app.Config{
-					WebURL: "http://mock.url",
-				},
+				Config:           c,
 			},
 			expectedErr: nil,
 		},
@@ -715,9 +719,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   mailer.Templates{},
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
-				Config: app.Config{
-					WebURL: "http://mock.url",
-				},
+				Config:           c,
 			},
 			expectedErr: app.ErrEmptyDB,
 		},
@@ -728,9 +730,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   mailer.Templates{},
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
-				Config: app.Config{
-					WebURL: "http://mock.url",
-				},
+				Config:           c,
 			},
 			expectedErr: app.ErrEmptyClock,
 		},
@@ -741,9 +741,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   nil,
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
-				Config: app.Config{
-					WebURL: "http://mock.url",
-				},
+				Config:           c,
 			},
 			expectedErr: app.ErrEmptyEmailTemplates,
 		},
@@ -754,9 +752,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   mailer.Templates{},
 				EmailBackend:     nil,
-				Config: app.Config{
-					WebURL: "http://mock.url",
-				},
+				Config:           c,
 			},
 			expectedErr: app.ErrEmptyEmailBackend,
 		},
@@ -767,9 +763,7 @@ func TestNewRouter_AppValidate(t *testing.T) {
 				StripeAPIBackend: nil,
 				EmailTemplates:   mailer.Templates{},
 				EmailBackend:     &testutils.MockEmailbackendImplementation{},
-				Config: app.Config{
-					WebURL: "",
-				},
+				Config:           configWithoutWebURL,
 			},
 			expectedErr: app.ErrEmptyWebURL,
 		},

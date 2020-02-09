@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -45,12 +46,13 @@ func TestCreateUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosting %t", tc.onPremise), func(t *testing.T) {
+			c := config.Load()
+			c.SetOnPremise(tc.onPremise)
+
 			defer testutils.ClearData()
 
 			a := NewTest(&App{
-				Config: Config{
-					OnPremise: tc.onPremise,
-				},
+				Config: c,
 			})
 			if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
