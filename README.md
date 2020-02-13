@@ -30,6 +30,10 @@ The quickest way to experience the Dnote server is to use [Dnote Cloud](https://
 
 Or you can install it on your server by [using Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md), or [using a binary](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).
 
+## Documentation
+
+Please see [Dnote wiki](https://github.com/dnote/dnote/wiki) for the documentation.
+
 ## See Also
 
 - [Homepage](https://www.getdnote.com)
