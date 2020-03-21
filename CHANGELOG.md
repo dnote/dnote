@@ -13,6 +13,7 @@ The following log documents the history of the server project.
 ### Unreleased
 
 - Remove the deprecated features related to digests and repetition rules.
+- Remove the migration for the deprecated, encrypted Dnote.
 
 ### 0.5.0 - 2020-02-06
 
