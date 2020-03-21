@@ -51,7 +51,8 @@ func TestMain(m *testing.M) {
 
 func TestInit(t *testing.T) {
 	// Execute
-	testutils.RunDnoteCmd(t, opts, binaryName)
+	// run an arbitrary command "view" due to https://github.com/spf13/cobra/issues/1056
+	testutils.RunDnoteCmd(t, opts, binaryName, "view")
 	defer testutils.RemoveDir(t, opts.HomeDir)
 
 	db := database.OpenTestDB(t, opts.DnoteDir)
