@@ -25,8 +25,6 @@ const (
 	TokenTypeEmailVerification = "email_verification"
 	// TokenTypeEmailPreference is a type of a token for updating email preference
 	TokenTypeEmailPreference = "email_preference"
-	// TokenTypeRepetition is a type of a token for viewing and editing repetition rules
-	TokenTypeRepetition = "repetition_rules"
 )
 
 const (

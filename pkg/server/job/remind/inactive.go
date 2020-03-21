@@ -143,17 +143,22 @@ func (c *Context) process(info inactiveUserInfo) error {
 		return errors.Wrap(err, "getting sender email")
 	}
 
+	tok, err := mailer.GetToken(c.DB, info.userID, database.TokenTypeEmailPreference)
+	if err != nil {
+		return errors.Wrap(err, "getting email token")
+	}
+
 	tmplData := mailer.InactiveReminderTmplData{
 		WebURL:         c.Config.WebURL,
 		SampleNoteUUID: info.sampleNoteUUID,
-		Token:          "blah",
+		Token:          tok.Value,
 	}
 	body, err := c.EmailTmpl.Execute(mailer.EmailTypeInactiveReminder, mailer.EmailKindText, tmplData)
 	if err != nil {
 		return errors.Wrap(err, "executing inactive email template")
 	}
 
-	if err := c.EmailBackend.Queue("Your knowledge base stopped growing", sender, []string{info.email}, mailer.EmailKindText, body); err != nil {
+	if err := c.EmailBackend.Queue("Your Dnote stopped growing", sender, []string{info.email}, mailer.EmailKindText, body); err != nil {
 		return errors.Wrap(err, "queueing email")
 	}
 

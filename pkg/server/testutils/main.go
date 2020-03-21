@@ -84,21 +84,6 @@ func ClearData() {
 	if err := DB.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
-	if err := DB.Delete(&database.Digest{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
-	if err := DB.Delete(&database.DigestNote{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digests"))
-	}
-	if err := DB.Delete(&database.DigestReceipt{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear digest receipts"))
-	}
-	if err := DB.Delete(&database.RepetitionRule{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear repetition rules"))
-	}
-	if err := DB.Delete(&database.NoteReview{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear note review"))
-	}
 }
 
 // SetupUserData creates and returns a new user for testing purposes

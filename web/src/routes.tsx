@@ -29,21 +29,15 @@ import Join from './components/Join';
 import Settings from './components/Settings';
 import NotFound from './components/Common/NotFound';
 import VerifyEmail from './components/VerifyEmail';
-import PreferenceEditRepetition from './components/Preferences/Repetitions';
 import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
 import Books from './components/Books';
 import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
-import Repetition from './components/Repetition';
-import NewRepetition from './components/Repetition/New';
-import EditRepetition from './components/Repetition/Edit';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import EmailPreference from './components/EmailPreference';
-import Digests from './components/Digests';
-import Digest from './components/Digest';
 
 // paths
 import {
@@ -59,15 +53,9 @@ import {
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   getJoinPath,
-  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
-  repetitionsPathDef,
-  newRepetitionRulePathDef,
-  editRepetitionRulePathDef,
-  emailPreferencePathDef,
-  digestsPathDef,
-  digestPathDef
+  emailPreferencePathDef
 } from './libs/paths';
 
 const AuthenticatedHome = userOnly(Home);
@@ -83,9 +71,6 @@ const AuthenticatedSubscriptionCheckout = userOnly(
   Checkout,
   getJoinPath().pathname
 );
-const AuthenticatedRepetition = userOnly(Repetition);
-const AuthenticatedNewRepetition = userOnly(NewRepetition);
-const AuthenticatedEditRepetition = userOnly(EditRepetition);
 
 const routes = [
   {
@@ -134,11 +119,6 @@ const routes = [
     component: VerifyEmail
   },
   {
-    path: prefEditRepetitionPathDef,
-    exact: true,
-    component: PreferenceEditRepetition
-  },
-  {
     path: noteNewPathDef,
     exact: true,
     component: AuthenticatedNew
@@ -159,34 +139,9 @@ const routes = [
     component: GuestPasswordResetConfirm
   },
   {
-    path: repetitionsPathDef,
-    exact: true,
-    component: AuthenticatedRepetition
-  },
-  {
-    path: newRepetitionRulePathDef,
-    exact: true,
-    component: AuthenticatedNewRepetition
-  },
-  {
-    path: editRepetitionRulePathDef,
-    exact: true,
-    component: AuthenticatedEditRepetition
-  },
-  {
     path: emailPreferencePathDef,
     exact: true,
     component: EmailPreference
-  },
-  {
-    path: digestsPathDef,
-    exact: true,
-    component: Digests
-  },
-  {
-    path: digestPathDef,
-    exact: true,
-    component: Digest
   },
   {
     component: NotFound

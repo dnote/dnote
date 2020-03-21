@@ -21,60 +21,14 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/job/repetition"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/pkg/errors"
 )
-
-func (c Context) digestHandler(w http.ResponseWriter, r *http.Request) {
-	db := c.DB
-
-	q := r.URL.Query()
-	digestUUID := q.Get("digest_uuid")
-	if digestUUID == "" {
-		http.Error(w, errors.New("Please provide digest_uuid query param").Error(), http.StatusBadRequest)
-		return
-	}
-
-	var user database.User
-	if err := db.First(&user).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "Failed to find user").Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var digest database.Digest
-	if err := db.Where("uuid = ?", digestUUID).Preload("Notes").First(&digest).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding digest").Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var rule database.RepetitionRule
-	if err := db.Where("id = ?", digest.RuleID).First(&rule).Error; err != nil {
-		http.Error(w, errors.Wrap(err, "finding digest").Error(), http.StatusInternalServerError)
-		return
-	}
-
-	now := time.Now()
-	_, body, err := repetition.BuildEmail(db, c.Tmpl, repetition.BuildEmailParams{
-		Now:    now,
-		User:   user,
-		Digest: digest,
-		Rule:   rule,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write([]byte(body))
-}
 
 func (c Context) passwordResetHandler(w http.ResponseWriter, r *http.Request) {
 	data := mailer.EmailResetPasswordTmplData{
@@ -176,7 +130,6 @@ func main() {
 	ctx := Context{DB: db, Tmpl: tmpl}
 
 	http.HandleFunc("/", ctx.homeHandler)
-	http.HandleFunc("/digest", ctx.digestHandler)
 	http.HandleFunc("/email-verification", ctx.emailVerificationHandler)
 	http.HandleFunc("/password-reset", ctx.passwordResetHandler)
 	http.HandleFunc("/password-reset-alert", ctx.passwordResetAlertHandler)

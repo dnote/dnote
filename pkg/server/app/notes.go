@@ -157,11 +157,6 @@ func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (d
 		return note, errors.Wrap(err, "deleting note")
 	}
 
-	// Delete associations
-	if err := tx.Where("note_id = ?", note.ID).Delete(&database.DigestNote{}).Error; err != nil {
-		return note, errors.Wrap(err, "deleting digest_notes")
-	}
-
 	return note, nil
 }
 

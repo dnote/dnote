@@ -21,9 +21,6 @@ import initUsersService from './users';
 import initBooksService from './books';
 import initNotesService from './notes';
 import initPaymentService from './payment';
-import initDigestsService from './digests';
-import initRepetitionRulesService from './repetitionRules';
-import initNoteReviews from './noteReviews';
 
 // init initializes service helpers with the given http configuration
 // and returns an object of all services.
@@ -32,17 +29,11 @@ export default function initServices(c: HttpClientConfig) {
   const booksService = initBooksService(c);
   const notesService = initNotesService(c);
   const paymentService = initPaymentService(c);
-  const digestsService = initDigestsService(c);
-  const repetitionRulesService = initRepetitionRulesService(c);
-  const noteReviewsService = initNoteReviews(c);
 
   return {
     users: usersService,
     books: booksService,
     notes: notesService,
-    payment: paymentService,
-    digests: digestsService,
-    repetitionRules: repetitionRulesService,
-    noteReviews: noteReviewsService
+    payment: paymentService
   };
 }
