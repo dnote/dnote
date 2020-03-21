@@ -40,10 +40,10 @@ func generateRandomToken(bits int) (string, error) {
 
 // GetToken returns an token of the given kind for the user
 // by first looking up any unused record and creating one if none exists.
-func GetToken(db *gorm.DB, user database.User, kind string) (database.Token, error) {
+func GetToken(db *gorm.DB, userID int, kind string) (database.Token, error) {
 	var tok database.Token
 	conn := db.
-		Where("user_id = ? AND type =? AND used_at IS NULL", user.ID, kind).
+		Where("user_id = ? AND type =? AND used_at IS NULL", userID, kind).
 		First(&tok)
 
 	tokenVal, err := generateRandomToken(16)
@@ -53,7 +53,7 @@ func GetToken(db *gorm.DB, user database.User, kind string) (database.Token, err
 
 	if conn.RecordNotFound() {
 		tok = database.Token{
-			UserID: user.ID,
+			UserID: userID,
 			Type:   kind,
 			Value:  tokenVal,
 		}

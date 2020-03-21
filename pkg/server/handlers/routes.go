@@ -352,15 +352,6 @@ func (a *API) NewRouter() (*mux.Router, error) {
 		{"GET", "/notes", a.auth(a.getNotes, nil), false},
 		{"GET", "/notes/{noteUUID}", a.getNote, true},
 		{"GET", "/calendar", a.auth(a.getCalendar, nil), true},
-		{"GET", "/repetition_rules", a.auth(a.getRepetitionRules, nil), true},
-		{"GET", "/repetition_rules/{repetitionRuleUUID}", a.tokenAuth(a.getRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"POST", "/repetition_rules", a.auth(a.createRepetitionRule, &proOnly), true},
-		{"PATCH", "/repetition_rules/{repetitionRuleUUID}", a.tokenAuth(a.updateRepetitionRule, database.TokenTypeRepetition, &proOnly), true},
-		{"DELETE", "/repetition_rules/{repetitionRuleUUID}", a.auth(a.deleteRepetitionRule, &proOnly), true},
-		{"GET", "/digests/{digestUUID}", a.auth(a.getDigest, nil), true},
-		{"GET", "/digests", a.auth(a.getDigests, nil), true},
-		{"POST", "/note_review", a.auth(a.createNoteReview, nil), true},
-		{"DELETE", "/note_review", a.auth(a.deleteNoteReview, nil), true},
 
 		// migration of classic users
 		{"GET", "/classic/presignin", cors(a.classicPresignin), true},

@@ -36,8 +36,6 @@ var (
 	EmailTypeResetPassword = "reset_password"
 	// EmailTypeResetPasswordAlert represents a password change notification email
 	EmailTypeResetPasswordAlert = "reset_password_alert"
-	// EmailTypeDigest represents a weekly digest email
-	EmailTypeDigest = "digest"
 	// EmailTypeEmailVerification represents an email verification email
 	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
@@ -117,10 +115,6 @@ func NewTemplates(srcDir *string) Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	digestText, err := initTextTmpl(box, EmailTypeDigest)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing digest template"))
-	}
 
 	T := Templates{}
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
@@ -129,7 +123,6 @@ func NewTemplates(srcDir *string) Templates {
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
 	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
 	T.set(EmailTypeSubscriptionConfirmation, EmailKindText, subscriptionConfirmationText)
-	T.set(EmailTypeDigest, EmailKindText, digestText)
 
 	return T
 }

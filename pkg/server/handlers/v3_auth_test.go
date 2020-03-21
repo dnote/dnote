@@ -130,10 +130,6 @@ func TestRegister(t *testing.T) {
 			assert.Equal(t, user.StripeCustomerID, "", "StripeCustomerID mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
-			var repetitionRuleCount int
-			testutils.MustExec(t, testutils.DB.Model(&database.RepetitionRule{}).Where("user_id = ?", account.UserID).Count(&repetitionRuleCount), "counting repetition rules")
-			assert.Equal(t, repetitionRuleCount, 1, "repetitionRuleCount mismatch")
-
 			// welcome email
 			assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
 			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{tc.email}, "email to mismatch")

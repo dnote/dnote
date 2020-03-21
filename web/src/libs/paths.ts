@@ -30,25 +30,16 @@ export const loginPathDef = '/login';
 export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
-export const prefEditRepetitionPathDef =
-  '/preferences/repetitions/:repetitionUUID';
 export const verifyEmailPathDef = '/verify-email/:token';
 export const classicMigrationPathDef = '/classic/:step?';
 export const passwordResetRequestPathDef = '/password-reset';
 export const passwordResetConfirmPathDef = '/password-reset/:token';
-export const repetitionsPathDef = '/repetition';
-export const repetitionPathDef = '/repetition/:repetitionUUID';
-export const newRepetitionRulePathDef = '/repetition/new';
-export const editRepetitionRulePathDef = '/repetition/:repetitionUUID/edit';
 export const emailPreferencePathDef = '/email-preferences';
-export const digestsPathDef = '/digests';
-export const digestPathDef = '/digests/:digestUUID';
 
 // layout definitions
 export const noHeaderPaths = [
   loginPathDef,
   joinPathDef,
-  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
@@ -59,7 +50,6 @@ export const noFooterPaths = [
   loginPathDef,
   joinPathDef,
   subscriptionsPathDef,
-  prefEditRepetitionPathDef,
   verifyEmailPathDef,
   classicMigrationPathDef,
   passwordResetRequestPathDef,
@@ -132,27 +122,6 @@ export function getBooksPath(searchObj = {}): Location {
   return getLocation({ pathname: booksPathDef, searchObj });
 }
 
-export function getRepetitionsPath(searchObj = {}): Location {
-  return getLocation({ pathname: repetitionsPathDef, searchObj });
-}
-
-export function getDigestsPath(searchObj = {}): Location {
-  return getLocation({ pathname: digestsPathDef, searchObj });
-}
-
-export function getDigestPath(digestUUID: string, searchObj = {}): Location {
-  const path = `/digests/${digestUUID}`;
-
-  return getLocation({
-    pathname: path,
-    searchObj
-  });
-}
-
-export function getNewRepetitionPath(searchObj = {}): Location {
-  return getLocation({ pathname: newRepetitionRulePathDef, searchObj });
-}
-
 export function populateParams(pathDef: string, params: any) {
   const parts = pathDef.split('/');
 
@@ -171,13 +140,6 @@ export function populateParams(pathDef: string, params: any) {
   }
 
   return builder.join('/');
-}
-
-export function getEditRepetitionPath(uuid: string, searchObj = {}): Location {
-  const pathname = populateParams(editRepetitionRulePathDef, {
-    repetitionUUID: uuid
-  });
-  return getLocation({ pathname, searchObj });
 }
 
 export function getNotePath(noteUUID: string, searchObj = {}): Location {
