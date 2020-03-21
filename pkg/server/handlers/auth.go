@@ -38,18 +38,14 @@ type Session struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
 	Pro           bool   `json:"pro"`
-	Classic       bool   `json:"classic"`
 }
 
 func makeSession(user database.User, account database.Account) Session {
-	classic := account.AuthKeyHash != ""
-
 	return Session{
 		UUID:          user.UUID,
 		Pro:           user.Cloud,
 		Email:         account.Email.String,
 		EmailVerified: account.EmailVerified,
-		Classic:       classic,
 	}
 }
 
@@ -103,11 +99,6 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := conn.Error; err != nil {
 		HandleError(w, errors.Wrap(err, "finding account").Error(), nil, http.StatusInternalServerError)
-		return
-	}
-
-	if account.AuthKeyHash != "" {
-		http.Error(w, "Please migrate your account from Dnote classic before resetting password", http.StatusBadRequest)
 		return
 	}
 

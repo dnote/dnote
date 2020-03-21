@@ -129,8 +129,7 @@ export function getCurrentUser(
               uuid: '',
               email: '',
               emailVerified: false,
-              pro: false,
-              classic: false
+              pro: false
             })
           );
           return;

@@ -59,12 +59,6 @@ export interface UpdateEmailPreferenceParams {
   productUpdate?: boolean;
 }
 
-export interface classicPresigninPayload {
-  key: string;
-  expiresAt: number;
-  cipherKeyEnc: string;
-}
-
 export interface ResetPasswordParams {
   token: string;
   password: string;
@@ -76,12 +70,7 @@ export interface GetMeResponse {
     email: string;
     email_verified: boolean;
     pro: boolean;
-    classic: boolean;
   };
-}
-
-export interface classicSetPasswordPayload {
-  password: string;
 }
 
 export default function init(config: HttpClientConfig) {
@@ -207,8 +196,7 @@ export default function init(config: HttpClientConfig) {
           uuid: user.uuid,
           email: user.email,
           emailVerified: user.email_verified,
-          pro: user.pro,
-          classic: user.classic
+          pro: user.pro
         };
       });
     },
@@ -217,35 +205,6 @@ export default function init(config: HttpClientConfig) {
       const payload = { token, password };
 
       return client.patch('/reset-password', payload);
-    },
-
-    // classic
-    classicPresignin: ({ email }) => {
-      return client.get(`/classic/presignin?email=${email}`);
-    },
-
-    classicSignin: ({ email, authKey }): Promise<classicPresigninPayload> => {
-      const payload = { email, auth_key: authKey };
-
-      return client.post<any>('/classic/signin', payload).then(resp => {
-        return {
-          key: resp.key,
-          expiresAt: resp.expires_at,
-          cipherKeyEnc: resp.cipher_key_enc
-        };
-      });
-    },
-
-    classicSetPassword: ({ password }: classicSetPasswordPayload) => {
-      const payload = {
-        password
-      };
-
-      return client.patch<any>('/classic/set-password', payload);
-    },
-
-    classicCompleteMigrate: () => {
-      return client.patch('/classic/migrate', '');
     }
   };
 }

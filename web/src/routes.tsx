@@ -33,7 +33,6 @@ import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
 import Books from './components/Books';
-import Classic from './components/Classic';
 import Checkout from './components/Subscription/Checkout';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
@@ -54,7 +53,6 @@ import {
   passwordResetConfirmPathDef,
   getJoinPath,
   verifyEmailPathDef,
-  classicMigrationPathDef,
   emailPreferencePathDef
 } from './libs/paths';
 
@@ -122,11 +120,6 @@ const routes = [
     path: noteNewPathDef,
     exact: true,
     component: AuthenticatedNew
-  },
-  {
-    path: classicMigrationPathDef,
-    exact: true,
-    component: Classic
   },
   {
     path: passwordResetRequestPathDef,
