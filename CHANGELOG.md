@@ -10,6 +10,10 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
+### Unreleased
+
+- Remove the deprecated features related to digests and repetition rules.
+
 ### 0.5.0 - 2020-02-06
 
 #### Changed
