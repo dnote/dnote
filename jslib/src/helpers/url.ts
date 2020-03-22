@@ -135,8 +135,10 @@ export function getReferrer(location: Location): string {
     return decodeURIComponent(referrer);
   }
 
-  if (location.state && location.state.referrer) {
-    return location.state.referrer;
+  const s = location.state as any;
+
+  if (s && s.referrer) {
+    return s.referrer;
   }
 
   return '';

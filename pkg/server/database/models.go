@@ -72,26 +72,15 @@ type User struct {
 	LastLoginAt      *time.Time `json:"-"`
 	MaxUSN           int        `json:"-" gorm:"default:0"`
 	Cloud            bool       `json:"-" gorm:"default:false"`
-	APIKey           string     `json:"-" gorm:"index"`                 // Deprecated
-	Name             string     `json:"name"`                           // Deprecated
-	Encrypted        bool       `json:"encrypted" gorm:"default:false"` // Deprecated
 }
 
 // Account is a model for an account
 type Account struct {
 	Model
-	UserID             int    `gorm:"index"`
-	AccountID          string // Deprecated
-	Nickname           string // Deprecated
-	Provider           string // Deprecated
-	Email              NullString
-	EmailVerified      bool       `gorm:"default:false"`
-	Password           NullString // Deprecated
-	ClientKDFIteration int
-	ServerKDFIteration int
-	AuthKeyHash        string
-	Salt               string
-	CipherKeyEnc       string
+	UserID        int `gorm:"index"`
+	Email         NullString
+	EmailVerified bool `gorm:"default:false"`
+	Password      NullString
 }
 
 // Token is a model for a token

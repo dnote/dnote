@@ -31,7 +31,6 @@ export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
 export const subscriptionsPathDef = '/subscriptions';
 export const verifyEmailPathDef = '/verify-email/:token';
-export const classicMigrationPathDef = '/classic/:step?';
 export const passwordResetRequestPathDef = '/password-reset';
 export const passwordResetConfirmPathDef = '/password-reset/:token';
 export const emailPreferencePathDef = '/email-preferences';
@@ -41,7 +40,6 @@ export const noHeaderPaths = [
   loginPathDef,
   joinPathDef,
   verifyEmailPathDef,
-  classicMigrationPathDef,
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   emailPreferencePathDef
@@ -51,7 +49,6 @@ export const noFooterPaths = [
   joinPathDef,
   subscriptionsPathDef,
   verifyEmailPathDef,
-  classicMigrationPathDef,
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   emailPreferencePathDef
@@ -188,20 +185,6 @@ export enum SettingSections {
 
 export function getSettingsPath(section: SettingSections) {
   return `/settings/${section}`;
-}
-
-export enum ClassicMigrationSteps {
-  login = 'login',
-  setPassword = 'set-password',
-  decrypt = 'decrypt'
-}
-
-export function getClassicMigrationPath(step: ClassicMigrationSteps) {
-  if (step === ClassicMigrationSteps.login) {
-    return '/classic';
-  }
-
-  return `/classic/${step}`;
 }
 
 // checkCurrentPath checks if the current path is the given path

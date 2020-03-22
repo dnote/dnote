@@ -49,7 +49,6 @@ func getExpectedNotePayload(n database.Note, b database.Book, u database.User) p
 			Label: b.Label,
 		},
 		User: presenters.NoteUser{
-			Name: u.Name,
 			UUID: u.UUID,
 		},
 	}

@@ -89,9 +89,7 @@ func ClearData() {
 // SetupUserData creates and returns a new user for testing purposes
 func SetupUserData() database.User {
 	user := database.User{
-		APIKey: "test-api-key",
-		Name:   "user-name",
-		Cloud:  true,
+		Cloud: true,
 	}
 
 	if err := DB.Save(&user).Error; err != nil {
@@ -115,31 +113,6 @@ func SetupAccountData(user database.User, email, password string) database.Accou
 		panic(errors.Wrap(err, "Failed to hash password"))
 	}
 	account.Password = database.ToNullString(string(hashedPassword))
-
-	if err := DB.Save(&account).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to prepare account"))
-	}
-
-	return account
-}
-
-// SetupClassicAccountData creates and returns a new account for the user
-func SetupClassicAccountData(user database.User, email string) database.Account {
-	// email: alice@example.com
-	// password: pass1234
-	// masterKey: WbUvagj9O6o1Z+4+7COjo7Uqm4MD2QE9EWFXne8+U+8=
-	// authKey: /XCYisXJ6/o+vf6NUEtmrdYzJYPz+T9oAUCtMpOjhzc=
-	account := database.Account{
-		UserID:             user.ID,
-		Salt:               "Et0joOigYjdgHBKMN/ijxg==",
-		AuthKeyHash:        "SeN3PMz4H/7q9lINB+VPKpygexAuK68wO8pDAgQ4OOQ=",
-		CipherKeyEnc:       "f7aFFCh7YS1WlHEOxAmDfs8rUQQoX5tr8AB7ZJQaTYCEM8NhAZCbQTsjFgKOf5iPQhhkm8eDAgPNTuhO",
-		ClientKDFIteration: 100000,
-		ServerKDFIteration: 100000,
-	}
-	if email != "" {
-		account.Email = database.ToNullString(email)
-	}
 
 	if err := DB.Save(&account).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare account"))

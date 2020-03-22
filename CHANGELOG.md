@@ -10,9 +10,16 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
-### Unreleased
+### 1.0.0 - 2020-03-22
 
-- Remove the deprecated features related to digests and repetition rules.
+#### Fixed
+
+- Fix unsubscribe link from the inactive reminder (#433)
+
+#### Removed
+
+- Remove the deprecated features related to digests and repetition rules (#432)
+- Remove the migration for the deprecated, encrypted Dnote (#433)
 
 ### 0.5.0 - 2020-02-06
 

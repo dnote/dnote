@@ -46,7 +46,6 @@ export interface UserData {
   email: string;
   emailVerified: boolean;
   pro: boolean;
-  classic: boolean;
 }
 
 export type BookData = {

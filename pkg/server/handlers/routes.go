@@ -353,13 +353,6 @@ func (a *API) NewRouter() (*mux.Router, error) {
 		{"GET", "/notes/{noteUUID}", a.getNote, true},
 		{"GET", "/calendar", a.auth(a.getCalendar, nil), true},
 
-		// migration of classic users
-		{"GET", "/classic/presignin", cors(a.classicPresignin), true},
-		{"POST", "/classic/signin", cors(a.classicSignin), true},
-		{"PATCH", "/classic/migrate", a.auth(a.classicMigrate, &proOnly), true},
-		{"GET", "/classic/notes", a.auth(a.classicGetNotes, nil), true},
-		{"PATCH", "/classic/set-password", a.auth(a.classicSetPassword, nil), true},
-
 		// v3
 		{"GET", "/v3/sync/fragment", cors(a.auth(a.GetSyncFragment, &proOnly)), false},
 		{"GET", "/v3/sync/state", cors(a.auth(a.GetSyncState, &proOnly)), false},
