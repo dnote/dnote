@@ -12,7 +12,7 @@ services:
     restart: always
 
   dnote:
-    image: dnote/dnote
+    image: dnote/dnote:1.0.1
     environment:
       GO_ENV: PRODUCTION
       DBSkipSSL: "true"
@@ -22,6 +22,7 @@ services:
       DBUser: dnote
       DBPassword: dnote
       WebURL: localhost:3000
+      OnPremise: "true"
       SmtpHost:
       SmtpPort:
       SmtpUsername:

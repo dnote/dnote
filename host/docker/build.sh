@@ -10,4 +10,4 @@ tarballName="dnote_server_${version}_linux_amd64.tar.gz"
 # copy over the build artifact to the Docker build context
 cp "$projectDir/build/server/$tarballName" "$dir"
 
-docker build -t dnote/dnote:"$version" --build-arg tarballName="$tarballName" .
+docker build --network=host -t dnote/dnote:"$version" --build-arg tarballName="$tarballName" .

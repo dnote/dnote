@@ -10,6 +10,10 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
+### 1.0.1 - 2020-03-29
+
+- Fix fresh install running migrations against tables that no longer exists.
+
 ### 1.0.0 - 2020-03-22
 
 #### Fixed
@@ -20,6 +24,10 @@ The following log documents the history of the server project.
 
 - Remove the deprecated features related to digests and repetition rules (#432)
 - Remove the migration for the deprecated, encrypted Dnote (#433)
+
+#### Changed
+
+- Please set `OnPremise` environment to `true` in order to automatically use the Pro version.
 
 ### 0.5.0 - 2020-02-06
 
