@@ -25,6 +25,10 @@ The following log documents the history of the server project.
 - Remove the deprecated features related to digests and repetition rules (#432)
 - Remove the migration for the deprecated, encrypted Dnote (#433)
 
+#### Changed
+
+- Please set `OnPremise` environment to `true` in order to automatically use the Pro version.
+
 ### 0.5.0 - 2020-02-06
 
 #### Changed
