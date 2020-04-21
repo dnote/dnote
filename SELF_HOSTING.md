@@ -77,6 +77,30 @@ server {
 sudo service nginx reload
 ```
 
+### Configure Apache2
+
+1. Install Apache2 and install/enable mod_proxy.
+2. Create a new file in `/etc/apache2/sites-available/dnote.conf` with the following contents:
+
+```
+<VirtualHost *:80>
+    ServerName notes.example.com
+
+    ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:3000/ keepalive=On
+    ProxyPassReverse / http://127.0.0.1:3000/
+    RequestHeader set X-Forwarded-HTTPS "0"
+</VirtualHost>
+```
+
+3. Enable the dnote site and restart the Apache2 service by running the following:
+
+```
+a2ensite dnote
+sudo service apache2 restart
+```
+
 Now you can access the Dnote frontend application on `/`, and the API on `/api`.
 
 ### Configure TLS by using LetsEncrypt
