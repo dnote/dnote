@@ -358,18 +358,19 @@ func TestLocalMigration1(t *testing.T) {
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
+	var a1DataRaw, a2DataRaw, a3DataRaw string
 	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
-		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
+		&a1.Schema, &a1.Type, &a1DataRaw, &a1.Timestamp)
 	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
-		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
+		&a2.Schema, &a2.Type, &a2DataRaw, &a2.Timestamp)
 	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
-		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
+		&a3.Schema, &a3.Type, &a3DataRaw, &a3.Timestamp)
 
 	var a1Data actions.AddBookDataV1
 	var a2Data, a3Data actions.EditNoteDataV3
-	testutils.MustUnmarshalJSON(t, a1.Data, &a1Data)
-	testutils.MustUnmarshalJSON(t, a2.Data, &a2Data)
-	testutils.MustUnmarshalJSON(t, a3.Data, &a3Data)
+	testutils.MustUnmarshalJSON(t, []byte(a1DataRaw), &a1Data)
+	testutils.MustUnmarshalJSON(t, []byte(a2DataRaw), &a2Data)
+	testutils.MustUnmarshalJSON(t, []byte(a3DataRaw), &a3Data)
 
 	assert.Equal(t, a1.Schema, 1, "a1 schema mismatch")
 	assert.Equal(t, a1.Type, "add_book", "a1 type mismatch")
@@ -442,18 +443,19 @@ func TestLocalMigration2(t *testing.T) {
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
+	var a1DataRaw, a2DataRaw, a3DataRaw string
 	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
-		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
+		&a1.Schema, &a1.Type, &a1DataRaw, &a1.Timestamp)
 	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
-		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
+		&a2.Schema, &a2.Type, &a2DataRaw, &a2.Timestamp)
 	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
-		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
+		&a3.Schema, &a3.Type, &a3DataRaw, &a3.Timestamp)
 
 	var a1Data actions.AddNoteDataV2
 	var a2Data, a3Data actions.EditNoteDataV3
-	testutils.MustUnmarshalJSON(t, a1.Data, &a1Data)
-	testutils.MustUnmarshalJSON(t, a2.Data, &a2Data)
-	testutils.MustUnmarshalJSON(t, a3.Data, &a3Data)
+	testutils.MustUnmarshalJSON(t, []byte(a1DataRaw), &a1Data)
+	testutils.MustUnmarshalJSON(t, []byte(a2DataRaw), &a2Data)
+	testutils.MustUnmarshalJSON(t, []byte(a3DataRaw), &a3Data)
 
 	assert.Equal(t, a1.Schema, 2, "a1 schema mismatch")
 	assert.Equal(t, a1.Type, "add_note", "a1 type mismatch")
@@ -521,18 +523,19 @@ func TestLocalMigration3(t *testing.T) {
 	assert.Equal(t, actionCount, 3, "action count mismatch")
 
 	var a1, a2, a3 actions.Action
+	var a1DataRaw, a2DataRaw, a3DataRaw string
 	database.MustScan(t, "getting action 1", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a1UUID),
-		&a1.Schema, &a1.Type, &a1.Data, &a1.Timestamp)
+		&a1.Schema, &a1.Type, &a1DataRaw, &a1.Timestamp)
 	database.MustScan(t, "getting action 2", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a2UUID),
-		&a2.Schema, &a2.Type, &a2.Data, &a2.Timestamp)
+		&a2.Schema, &a2.Type, &a2DataRaw, &a2.Timestamp)
 	database.MustScan(t, "getting action 3", db.QueryRow("SELECT schema, type, data, timestamp FROM actions WHERE uuid = ?", a3UUID),
-		&a3.Schema, &a3.Type, &a3.Data, &a3.Timestamp)
+		&a3.Schema, &a3.Type, &a3DataRaw, &a3.Timestamp)
 
 	var a1Data actions.AddNoteDataV2
 	var a2Data, a3Data actions.RemoveNoteDataV2
-	testutils.MustUnmarshalJSON(t, a1.Data, &a1Data)
-	testutils.MustUnmarshalJSON(t, a2.Data, &a2Data)
-	testutils.MustUnmarshalJSON(t, a3.Data, &a3Data)
+	testutils.MustUnmarshalJSON(t, []byte(a1DataRaw), &a1Data)
+	testutils.MustUnmarshalJSON(t, []byte(a2DataRaw), &a2Data)
+	testutils.MustUnmarshalJSON(t, []byte(a3DataRaw), &a3Data)
 
 	assert.Equal(t, a1.Schema, 2, "a1 schema mismatch")
 	assert.Equal(t, a1.Type, "add_note", "a1 type mismatch")
