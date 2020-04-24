@@ -45,7 +45,7 @@ func InitTestCtx(t *testing.T, dnoteDir string, dbOpts *database.TestDBOptions) 
 
 // TeardownTestCtx cleans up the test context
 func TeardownTestCtx(t *testing.T, ctx DnoteCtx) {
-	database.CloseTestDB(t, ctx.DB)
+	database.TeardownTestDB(t, ctx.DB)
 
 	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
 		t.Fatal(errors.Wrap(err, "removing test dnote directory"))

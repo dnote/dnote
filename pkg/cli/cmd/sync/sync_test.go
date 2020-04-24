@@ -109,7 +109,7 @@ func TestProcessFragments(t *testing.T) {
 func TestGetLastSyncAt(t *testing.T) {
 	// set up
 	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 	database.MustExec(t, "setting up last_sync_at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, 1541108743)
 
 	// exec
@@ -132,7 +132,7 @@ func TestGetLastSyncAt(t *testing.T) {
 func TestGetLastMaxUSN(t *testing.T) {
 	// set up
 	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 	database.MustExec(t, "setting up last_max_usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 20001)
 
 	// exec
@@ -179,7 +179,7 @@ func TestResolveLabel(t *testing.T) {
 		func() {
 			// set up
 			db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-			defer database.CloseTestDB(t, db)
+			defer database.TeardownTestDB(t, db)
 
 			database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b1-uuid", "js")
 			database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b2-uuid", "css_2")
@@ -209,7 +209,7 @@ func TestSyncDeleteNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		// execute
 		tx, err := db.Begin()
@@ -238,7 +238,7 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -308,7 +308,7 @@ func TestSyncDeleteNote(t *testing.T) {
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
@@ -364,7 +364,7 @@ func TestSyncDeleteBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b1-uuid", "b1-label")
 
 		var b1 database.Book
@@ -409,7 +409,7 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 12, true)
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -475,7 +475,7 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
@@ -541,7 +541,7 @@ func TestSyncDeleteBook(t *testing.T) {
 
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -593,7 +593,7 @@ func TestFullSyncNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
@@ -825,7 +825,7 @@ n1 body edited
 			func() {
 				// set up
 				db := database.InitTestDB(t, dbPath, nil)
-				defer database.CloseTestDB(t, db)
+				defer database.TeardownTestDB(t, db)
 
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
@@ -887,7 +887,7 @@ func TestFullSyncBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
@@ -1026,7 +1026,7 @@ func TestFullSyncBook(t *testing.T) {
 			func() {
 				// set up
 				db := database.InitTestDB(t, dbPath, nil)
-				defer database.CloseTestDB(t, db)
+				defer database.TeardownTestDB(t, db)
 
 				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
@@ -1079,7 +1079,7 @@ func TestStepSyncNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
@@ -1237,7 +1237,7 @@ n1 body edited
 			func() {
 				// set up
 				db := database.InitTestDB(t, dbPath, nil)
-				defer database.CloseTestDB(t, db)
+				defer database.TeardownTestDB(t, db)
 
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
@@ -1299,7 +1299,7 @@ func TestStepSyncBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
@@ -1422,7 +1422,7 @@ func TestStepSyncBook(t *testing.T) {
 			func() {
 				// set up
 				db := database.InitTestDB(t, dbPath, nil)
-				defer database.CloseTestDB(t, db)
+				defer database.TeardownTestDB(t, db)
 
 				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
@@ -1486,7 +1486,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("insert, no duplicates", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		// test
 		tx, err := db.Begin()
@@ -1530,7 +1530,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("insert, 1 duplicate", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 
 		// test
@@ -1582,7 +1582,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("insert, 3 duplicates", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "foo_2", true, false)
@@ -1651,7 +1651,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("update, no duplicates", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		// test
 		tx, err := db.Begin()
@@ -1698,7 +1698,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("update, 1 duplicate", func(t *testing.T) {
 		// set up
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
@@ -1752,7 +1752,7 @@ func TestMergeBook(t *testing.T) {
 	t.Run("update, 3 duplicate", func(t *testing.T) {
 		// set uj
 		db := database.InitTestDB(t, dbPath, nil)
-		defer database.CloseTestDB(t, db)
+		defer database.TeardownTestDB(t, db)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
@@ -2780,7 +2780,7 @@ n1 body edited
 		func() {
 			// set up
 			db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-			defer database.CloseTestDB(t, db)
+			defer database.TeardownTestDB(t, db)
 
 			database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 5, false)
 			database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b2UUID, "b2-label", 6, false)
@@ -2862,7 +2862,7 @@ n1 body edited
 func TestCheckBookPristine(t *testing.T) {
 	// set up
 	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 
 	database.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b1-uuid", "b1-label", 5, false)
 	database.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b2-uuid", "b2-label", 6, false)
@@ -3036,7 +3036,7 @@ func TestCheckBookInList(t *testing.T) {
 func TestCleanLocalNotes(t *testing.T) {
 	// set up
 	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
@@ -3108,7 +3108,7 @@ func TestCleanLocalNotes(t *testing.T) {
 func TestCleanLocalBooks(t *testing.T) {
 	// set up
 	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{

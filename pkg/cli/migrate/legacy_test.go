@@ -354,7 +354,7 @@ func TestMigrateToV7(t *testing.T) {
 func TestMigrateToV8(t *testing.T) {
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
 	db := database.InitTestDB(t, "../tmp/.dnote/dnote-test.db", &opts)
-	defer database.CloseTestDB(t, db)
+	defer database.TeardownTestDB(t, db)
 
 	ctx := context.DnoteCtx{HomeDir: "../tmp", DnoteDir: "../tmp/.dnote", DB: db}
 
