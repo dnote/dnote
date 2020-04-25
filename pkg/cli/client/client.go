@@ -42,6 +42,7 @@ var ErrInvalidLogin = errors.New("wrong credentials")
 var ErrContentTypeMismatch = errors.New("content type mismatch")
 
 var contentTypeApplicationJSON = "application/json"
+var contentTypeNone = ""
 
 // requestOptions contians options for requests
 type requestOptions struct {
@@ -549,7 +550,8 @@ func Signout(ctx context.DnoteCtx, sessionKey string) error {
 	}
 
 	opts := requestOptions{
-		HTTPClient: &hc,
+		HTTPClient:          &hc,
+		ExpectedContentType: &contentTypeNone,
 	}
 	_, err := doAuthorizedReq(ctx, "POST", "/v3/signout", "", &opts)
 	if err != nil {
