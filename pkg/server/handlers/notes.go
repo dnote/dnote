@@ -297,7 +297,7 @@ func getNotesBaseQuery(db *gorm.DB, userID int, q getNotesQuery) *gorm.DB {
 }
 
 func orderGetNotes(conn *gorm.DB) *gorm.DB {
-	return conn.Order("notes.added_on DESC, notes.id DESC")
+	return conn.Order("notes.updated_at DESC, notes.id DESC")
 }
 
 // escapeSearchQuery escapes the query for full text search

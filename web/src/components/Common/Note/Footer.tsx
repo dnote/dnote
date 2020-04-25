@@ -58,15 +58,16 @@ const Footer: React.FunctionComponent<Props> = ({
 
   return (
     <footer className={styles.footer}>
-      <Time
-        id="note-ts"
-        text={timeText}
-        ms={nanosecToMillisec(note.addedOn)}
-        wrapperClassName={styles.ts}
-        tooltipAlignment="left"
-        tooltipDirection="bottom"
-      />
-
+      <div className={styles.ts}>
+        <span className={styles['ts-lead']}>Last edit: </span>
+        <Time
+          id="note-ts"
+          text={timeText}
+          ms={nanosecToMillisec(note.addedOn)}
+          tooltipAlignment="left"
+          tooltipDirection="bottom"
+        />
+      </div>
       {actions}
     </footer>
   );

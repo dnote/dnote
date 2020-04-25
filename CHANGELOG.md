@@ -10,6 +10,12 @@ All notable changes to the projects under this repository will be documented in 
 
 The following log documents the history of the server project.
 
+### Unreleased
+
+#### Changed
+
+- Sort notes by last activity to make it easier to see the most recently accessed information.
+
 ### 1.0.1 - 2020-03-29
 
 - Fix fresh install running migrations against tables that no longer exists.

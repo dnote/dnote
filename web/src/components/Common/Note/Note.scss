@@ -73,6 +73,12 @@
 .ts {
   color: $light-gray;
 }
+.ts-lead {
+  display: none;
+  @include breakpoint(md) {
+    display: inline;
+  }
+}
 
 .match {
   display: inline-block;
