@@ -104,7 +104,7 @@ func checkVersion(ctx context.DnoteCtx) error {
 	if latestVersion == ctx.Version {
 		log.Success("you are up-to-date\n\n")
 	} else {
-		log.Infof("to upgrade, see https://github.com/dnote/dnote/pkg/cli/blob/master/README.md\n")
+		log.Infof("to upgrade, see https://github.com/dnote/dnote\n")
 	}
 
 	return nil
