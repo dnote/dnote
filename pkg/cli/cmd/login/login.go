@@ -19,6 +19,8 @@
 package login
 
 import (
+	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/client"
@@ -110,9 +112,47 @@ func getPassword() (string, error) {
 	return password, nil
 }
 
+func getBaseURL(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", errors.Wrap(err, "parsing url")
+	}
+
+	if u.Scheme == "" || u.Host == "" {
+		return "", nil
+	}
+
+	return fmt.Sprintf("%s://%s", u.Scheme, u.Host), nil
+}
+
+func getServerDisplayURL(ctx context.DnoteCtx) string {
+	if ctx.APIEndpoint == "https://api.getdnote.com" {
+		return "https://www.getdnote.com"
+	}
+
+	baseURL, err := getBaseURL(ctx.APIEndpoint)
+	if err != nil {
+		return ""
+	}
+
+	return baseURL
+}
+
+func getGreeting(ctx context.DnoteCtx) string {
+	base := "Welcome to Dnote Pro"
+
+	serverURL := getServerDisplayURL(ctx)
+	if serverURL == "" {
+		return fmt.Sprintf("%s\n", base)
+	}
+
+	return fmt.Sprintf("%s (%s)\n", base, serverURL)
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		log.Plain("Welcome to Dnote Pro (https://www.getdnote.com).\n")
+		greeting := getGreeting(ctx)
+		log.Plain(greeting)
 
 		email, err := getUsername()
 		if err != nil {

@@ -164,6 +164,16 @@ The following log documents the history of the server project.
 
 The following log documentes the history of the CLI project
 
+### Unreleased
+
+#### Fixed
+
+- Fix upgrade URL (#453)
+
+#### Changed
+
+- Display hostname of the self-hosted instance while logging in
+
 ### 0.11.0 - 2020-02-05
 
 #### Added
