@@ -2,7 +2,7 @@
 # shellcheck disable=SC1090,SC1091
 set -eux
 
-VERSION=10.15.0
+VERSION=12.16.2
 NVM_VERSION=v0.35.0
 
 # Install nvm
