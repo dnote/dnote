@@ -1134,6 +1134,7 @@ func TestRemoteMigration1(t *testing.T) {
 				},
 			}
 
+			w.Header().Set("Content-Type", "application/json")
 			if err := json.NewEncoder(w).Encode(res); err != nil {
 				t.Fatal(errors.Wrap(err, "encoding response"))
 			}
