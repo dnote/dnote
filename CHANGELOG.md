@@ -166,14 +166,18 @@ The following log documentes the history of the CLI project
 
 ### Unreleased
 
+None
+
+### 0.11.1 - 2020-04-25
+
 #### Fixed
 
 - Fix upgrade URL (#453)
 
 #### Changed
 
-- Display hostname of the self-hosted instance while logging in
-- Display helpful error if endpoint is misconfigured
+- Display hostname of the self-hosted instance while logging in (#454)
+- Display helpful error if endpoint is misconfigured (#455)
 
 ### 0.11.0 - 2020-02-05
 
