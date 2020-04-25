@@ -23,7 +23,7 @@ const initialState: AuthState = {
   sessionKeyExpiry: 0
 };
 
-export default function(
+export default function (
   state = initialState,
   action: AuthActionType
 ): AuthState {

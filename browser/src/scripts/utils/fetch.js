@@ -39,9 +39,7 @@ function parseJSON(response) {
 }
 
 function request(url, options) {
-  return fetch(url, options)
-    .then(checkStatus)
-    .then(parseJSON);
+  return fetch(url, options).then(checkStatus).then(parseJSON);
 }
 
 export function post(url, data, options = {}) {

@@ -31,7 +31,7 @@ const initialState: ComposerState = {
   bookLabel: ''
 };
 
-export default function(
+export default function (
   state = initialState,
   action: ComposerActionType
 ): ComposerState {
