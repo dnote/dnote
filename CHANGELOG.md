@@ -173,6 +173,7 @@ The following log documentes the history of the CLI project
 #### Changed
 
 - Display hostname of the self-hosted instance while logging in
+- Display helpful error if endpoint is misconfigured
 
 ### 0.11.0 - 2020-02-05
 
