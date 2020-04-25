@@ -38,9 +38,20 @@ import (
 // ErrInvalidLogin is an error for invalid credentials for login
 var ErrInvalidLogin = errors.New("wrong credentials")
 
+// ErrContentTypeMismatch is an error for invalid credentials for login
+var ErrContentTypeMismatch = errors.New("content type mismatch")
+
+var contentTypeApplicationJSON = "application/json"
+
 // requestOptions contians options for requests
 type requestOptions struct {
 	HTTPClient *http.Client
+	// ExpectedContentType is the Content-Type that the client is expecting from the server
+	ExpectedContentType *string
+}
+
+var defaultRequestOptions = requestOptions{
+	ExpectedContentType: &contentTypeApplicationJSON,
 }
 
 func getReq(ctx context.DnoteCtx, path, method, body string) (*http.Request, error) {
@@ -60,6 +71,22 @@ func getReq(ctx context.DnoteCtx, path, method, body string) (*http.Request, err
 	return req, nil
 }
 
+func getHTTPClient(options *requestOptions) http.Client {
+	if options != nil && options.HTTPClient != nil {
+		return *options.HTTPClient
+	}
+
+	return http.Client{}
+}
+
+func getExpectedContentType(options *requestOptions) string {
+	if options != nil && options.ExpectedContentType != nil {
+		return *options.ExpectedContentType
+	}
+
+	return contentTypeApplicationJSON
+}
+
 // checkRespErr checks if the given http response indicates an error. It returns a boolean indicating
 // if the response is an error, and a decoded error message.
 func checkRespErr(res *http.Response) error {
@@ -76,6 +103,17 @@ func checkRespErr(res *http.Response) error {
 	return errors.Errorf(`response %d "%s"`, res.StatusCode, strings.TrimRight(bodyStr, "\n"))
 }
 
+func checkContentType(res *http.Response, options *requestOptions) error {
+	expected := getExpectedContentType(options)
+
+	got := res.Header.Get("Content-Type")
+	if got != expected {
+		return errors.Wrapf(ErrContentTypeMismatch, "got: '%s' want: '%s'. Did you configure your endpoint correctly?", got, expected)
+	}
+
+	return nil
+}
+
 // doReq does a http request to the given path in the api endpoint
 func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOptions) (*http.Response, error) {
 	req, err := getReq(ctx, path, method, body)
@@ -85,20 +123,20 @@ func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOpti
 
 	log.Debug("HTTP request: %+v\n", req)
 
-	var hc http.Client
-	if options != nil && options.HTTPClient != nil {
-		hc = *options.HTTPClient
-	} else {
-		hc = http.Client{}
-	}
-
+	hc := getHTTPClient(options)
 	res, err := hc.Do(req)
 	if err != nil {
 		return res, errors.Wrap(err, "making http request")
 	}
 
+	log.Debug("HTTP response: %+v\n", res)
+
 	if err = checkRespErr(res); err != nil {
 		return res, errors.Wrap(err, "server responded with an error")
+	}
+
+	if err = checkContentType(res, options); err != nil {
+		return res, errors.Wrap(err, "unexpected Content-Type")
 	}
 
 	return res, nil
@@ -486,12 +524,11 @@ func Signin(ctx context.DnoteCtx, email, password string) (SigninResponse, error
 		return SigninResponse{}, errors.Wrap(err, "marshaling payload")
 	}
 	res, err := doReq(ctx, "POST", "/v3/signin", string(b), nil)
-	if err != nil {
-		return SigninResponse{}, errors.Wrap(err, "making http request")
-	}
 
 	if res.StatusCode == http.StatusUnauthorized {
 		return SigninResponse{}, ErrInvalidLogin
+	} else if err != nil {
+		return SigninResponse{}, errors.Wrap(err, "making http request")
 	}
 
 	var resp SigninResponse
