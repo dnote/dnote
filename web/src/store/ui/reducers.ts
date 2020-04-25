@@ -22,7 +22,7 @@ export const initialState: UIState = {
   message: {}
 };
 
-export default function(state = initialState, action: UIActionType): UIState {
+export default function (state = initialState, action: UIActionType): UIState {
   switch (action.type) {
     case SET_MESSAGE: {
       return {

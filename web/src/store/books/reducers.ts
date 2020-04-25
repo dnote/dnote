@@ -33,7 +33,7 @@ const initialState: BooksState = {
   errorMessage: ''
 };
 
-export default function(
+export default function (
   state = initialState,
   action: BooksActionType
 ): BooksState {

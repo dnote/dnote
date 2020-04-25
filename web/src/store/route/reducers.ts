@@ -27,7 +27,7 @@ export const initialState: RouteState = {
   }
 };
 
-export default function(
+export default function (
   state = initialState,
   action: RouteActionType
 ): RouteState {

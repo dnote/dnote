@@ -24,7 +24,7 @@ import { getPathFromLocation } from 'jslib//helpers/url';
 import { useSelector } from '../store';
 
 // userOnly returns a HOC that redirects to Login page if user is not logged in
-export default function(
+export default function (
   Component: React.ComponentType,
   guestPath: string = '/login'
 ) {

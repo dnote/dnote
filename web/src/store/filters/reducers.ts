@@ -32,7 +32,7 @@ const initialState: FiltersState = {
   page: 1
 };
 
-export default function(
+export default function (
   state = initialState,
   action: FilterActionType
 ): FiltersState {
