@@ -24,7 +24,7 @@ const initialState: SettingsState = {
   webUrl: config.defaultWebUrl
 };
 
-export default function(
+export default function (
   state = initialState,
   action: SettingsActionType
 ): SettingsState {

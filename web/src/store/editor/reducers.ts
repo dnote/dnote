@@ -33,7 +33,7 @@ const initialState: EditorState = {
   sessions: {}
 };
 
-export default function(
+export default function (
   state = initialState,
   action: EditorActionType
 ): EditorState {

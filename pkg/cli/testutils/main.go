@@ -210,7 +210,7 @@ func UserConfirm(stdin io.WriteCloser) error {
 func MustMarshalJSON(t *testing.T, v interface{}) []byte {
 	b, err := json.Marshal(v)
 	if err != nil {
-		t.Fatalf("%s: marshalling data", t.Name())
+		t.Fatalf("%s: marshalling data: %s", t.Name(), err.Error())
 	}
 
 	return b
@@ -221,7 +221,7 @@ func MustMarshalJSON(t *testing.T, v interface{}) []byte {
 func MustUnmarshalJSON(t *testing.T, data []byte, v interface{}) {
 	err := json.Unmarshal(data, v)
 	if err != nil {
-		t.Fatalf("%s: unmarshalling data", t.Name())
+		t.Fatalf("%s: unmarshalling data: %s", t.Name(), err.Error())
 	}
 }
 

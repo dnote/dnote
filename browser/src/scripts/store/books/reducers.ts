@@ -31,7 +31,7 @@ const initialState = {
   error: null
 };
 
-export default function(
+export default function (
   state = initialState,
   action: BooksActionType
 ): BooksState {

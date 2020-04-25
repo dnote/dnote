@@ -24,7 +24,7 @@ export const initialState: FormState = {
   }
 };
 
-export default function(
+export default function (
   state = initialState,
   action: FormActionType
 ): FormState {

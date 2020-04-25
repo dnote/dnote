@@ -105,7 +105,7 @@ type TestDBOptions struct {
 	SkipMigration bool
 }
 
-// InitTestDB opens a test database connection
+// InitTestDB initializes a test database and opens connection to it
 func InitTestDB(t *testing.T, dbPath string, options *TestDBOptions) *DB {
 	db, err := Open(dbPath)
 	if err != nil {
@@ -137,8 +137,8 @@ func InitTestDB(t *testing.T, dbPath string, options *TestDBOptions) *DB {
 	return db
 }
 
-// CloseTestDB closes the test database
-func CloseTestDB(t *testing.T, db *DB) {
+// TeardownTestDB closes the test database and removes the its file
+func TeardownTestDB(t *testing.T, db *DB) {
 	if err := db.Close(); err != nil {
 		t.Fatal(errors.Wrap(err, "closing database"))
 	}
@@ -148,7 +148,8 @@ func CloseTestDB(t *testing.T, db *DB) {
 	}
 }
 
-// OpenTestDB opens the database connection to the test database
+// OpenTestDB opens the database connection to a test database
+// without initializing any schema
 func OpenTestDB(t *testing.T, dnoteDir string) *DB {
 	dbPath := fmt.Sprintf("%s/%s", dnoteDir, consts.DnoteDBFileName)
 	db, err := Open(dbPath)

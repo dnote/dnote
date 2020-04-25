@@ -23,7 +23,7 @@ const initialState: LocationState = {
   state: {}
 };
 
-export default function(
+export default function (
   state = initialState,
   action: LocationActionType
 ): LocationState {

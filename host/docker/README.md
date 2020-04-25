@@ -22,3 +22,9 @@ docker-compose up -d
 Visit http://localhost:3000 in your browser to see Dnote running.
 
 Please see [the installation guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) for further configuration.
+
+## Supported platform
+
+Currently, the official Docker image for Dnote supports Linux running AMD64 CPU architecture.
+
+If you run ARM64, please install Dnote server by downloading a binary distribution by following [the guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).

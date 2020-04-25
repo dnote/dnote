@@ -35,7 +35,7 @@ function renderFallback(referrer?: string) {
 
 // guestOnly returns a HOC that renders the given component only if user is not
 // logged in
-export default function(Component: React.ComponentType): React.ComponentType {
+export default function (Component: React.ComponentType): React.ComponentType {
   interface Props extends RouteComponentProps {}
 
   const HOC: React.FunctionComponent<Props> = props => {

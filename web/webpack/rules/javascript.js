@@ -22,7 +22,7 @@ const createPlugins = () => {
   const ret = [
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-transform-react-constant-elements',
-    'react-hot-loader/babel'
+    'react-hot-loader/babel',
   ];
 
   return ret;
@@ -35,10 +35,10 @@ module.exports = () => {
       {
         useBuiltIns: 'entry',
         corejs: '3',
-        targets: '> 0.25%, not dead'
-      }
+        targets: '> 0.25%, not dead',
+      },
     ],
-    '@babel/preset-react'
+    '@babel/preset-react',
   ];
   const plugins = createPlugins();
 
@@ -48,24 +48,24 @@ module.exports = () => {
       loader: 'babel-loader',
       options: {
         presets,
-        plugins
+        plugins,
       },
-      exclude: PATHS.modules
+      exclude: PATHS.modules,
     },
     {
       test: /\.ts(x?)$/,
       exclude: /node_modules|_test\.ts(x)$/,
       use: [
         {
-          loader: 'ts-loader'
-        }
-      ]
+          loader: 'ts-loader',
+        },
+      ],
     },
     // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
     {
       enforce: 'pre',
       test: /\.js$/,
-      loader: 'source-map-loader'
-    }
+      loader: 'source-map-loader',
+    },
   ];
 };

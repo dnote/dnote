@@ -117,7 +117,7 @@ func TestNoteInsert(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			n := Note{
 				UUID:     tc.uuid,
@@ -263,7 +263,7 @@ func TestNoteUpdate(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			n1 := Note{
 				UUID:     tc.uuid,
@@ -360,7 +360,7 @@ func TestNoteUpdateUUID(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			n1 := Note{
 				UUID:     "n1-uuid",
@@ -415,7 +415,7 @@ func TestNoteUpdateUUID(t *testing.T) {
 func TestNoteExpunge(t *testing.T) {
 	// Setup
 	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer CloseTestDB(t, db)
+	defer TeardownTestDB(t, db)
 
 	n1 := Note{
 		UUID:     "n1-uuid",
@@ -541,7 +541,7 @@ func TestBookInsert(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			b := Book{
 				UUID:    tc.uuid,
@@ -622,7 +622,7 @@ func TestBookUpdate(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -701,7 +701,7 @@ func TestBookUpdateUUID(t *testing.T) {
 
 			// Setup
 			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer CloseTestDB(t, db)
+			defer TeardownTestDB(t, db)
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -752,7 +752,7 @@ func TestBookUpdateUUID(t *testing.T) {
 func TestBookExpunge(t *testing.T) {
 	// Setup
 	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer CloseTestDB(t, db)
+	defer TeardownTestDB(t, db)
 
 	b1 := Book{
 		UUID:    "b1-uuid",
@@ -807,7 +807,7 @@ func TestBookExpunge(t *testing.T) {
 func TestNoteFTS(t *testing.T) {
 	// set up
 	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer CloseTestDB(t, db)
+	defer TeardownTestDB(t, db)
 
 	// execute - insert
 	n := Note{

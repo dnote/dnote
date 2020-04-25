@@ -48,7 +48,7 @@ const initialState: NoteState = {
   errorMessage: null
 };
 
-export default function(
+export default function (
   state = initialState,
   action: NoteActionType
 ): NoteState {

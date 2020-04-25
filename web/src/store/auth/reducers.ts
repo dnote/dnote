@@ -212,7 +212,7 @@ function reducerSource(
   }
 }
 
-export default function(
+export default function (
   state = initialState,
   action: AuthActionType
 ): AuthState {
