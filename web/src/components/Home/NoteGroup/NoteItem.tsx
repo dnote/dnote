@@ -25,7 +25,7 @@ import { tokenize, TokenKind } from 'web/libs/fts/lexer';
 import { NoteData } from 'jslib/operations/types';
 import { excerpt } from 'web/libs/string';
 import { Filters } from 'jslib/helpers/filters';
-import { nanosecToMillisec, timeAgo } from '../../../helpers/time';
+import { timeAgo } from '../../../helpers/time';
 import Time from '../../Common/Time';
 import styles from './NoteItem.scss';
 
@@ -73,6 +73,8 @@ interface Props {
 }
 
 const NoteItem: React.FunctionComponent<Props> = ({ note, filters }) => {
+  const updatedAt = new Date(note.updatedAt).getTime();
+
   return (
     <li className={classnames('T-note-item', styles.wrapper, {})}>
       <Link
@@ -86,9 +88,9 @@ const NoteItem: React.FunctionComponent<Props> = ({ note, filters }) => {
 
             <Time
               id={`${note.uuid}-ts`}
-              text={timeAgo(nanosecToMillisec(note.addedOn))}
-              mobileText={timeAgo(nanosecToMillisec(note.addedOn))}
-              ms={nanosecToMillisec(note.addedOn)}
+              text={timeAgo(updatedAt)}
+              mobileText={timeAgo(updatedAt)}
+              ms={updatedAt}
               wrapperClassName={styles.ts}
             />
           </div>
