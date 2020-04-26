@@ -88,6 +88,7 @@ check_platform() {
   case "$platform" in
     darwin/amd64) found=0;;
     linux/amd64) found=0 ;;
+    linux/arm64) found=0 ;;
   esac
 
   return $found
