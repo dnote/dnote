@@ -16,7 +16,6 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { nanosecToMillisec } from '../helpers/time';
 import { NoteData, UserData } from '../../../jslib/src/operations/types';
 
 export interface NotesGroupData {
@@ -50,7 +49,7 @@ function makeGroup(
   };
 }
 
-// groupNotes groups the notes to note groups
+// groupNotes groups the notes to note groups based on the updated_at timestamp
 export function groupNotes(notes: NoteData[]): NotesGroupData[] {
   const ret: NotesGroupData[] = [];
 
@@ -59,7 +58,8 @@ export function groupNotes(notes: NoteData[]): NotesGroupData[] {
   for (let i = 0; i < notes.length; i++) {
     const note = notes[i];
 
-    const date = new Date(nanosecToMillisec(note.addedOn));
+    const updatedAt = new Date(note.updatedAt).getTime();
+    const date = new Date(updatedAt);
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth() + 1;
 
