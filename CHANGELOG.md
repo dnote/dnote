@@ -12,6 +12,10 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
+#### Fixed
+
+- Fix timeline grouping notes by added time rather than updated time.
+
 #### Changed
 
 - Sort notes by last activity to make it easier to see the most recently accessed information.
