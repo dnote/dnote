@@ -12,6 +12,10 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
+None
+
+### 1.0.3 2020-05-03
+
 #### Fixed
 
 - Fix timeline grouping notes by added time rather than updated time.
@@ -19,6 +23,12 @@ The following log documents the history of the server project.
 #### Changed
 
 - Sort notes by last activity to make it easier to see the most recently accessed information.
+
+### 1.0.2 2020-05-03
+
+#### Changed
+
+* Support arm64.
 
 ### 1.0.1 - 2020-03-29
 
