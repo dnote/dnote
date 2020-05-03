@@ -108,7 +108,7 @@ func getRootHandler(c Context) http.HandlerFunc {
 			if errors.Cause(err) == tmpl.ErrNotFound {
 				handlers.RespondNotFound(w)
 			} else {
-				handlers.HandleError(w, "executing app shell", err, http.StatusInternalServerError)
+				handlers.DoError(w, "executing app shell", err, http.StatusInternalServerError)
 			}
 			return
 		}

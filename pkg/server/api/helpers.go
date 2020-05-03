@@ -83,23 +83,3 @@ func (a *API) notSupported(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
 	return
 }
-
-// GetCredential extracts a session key from the request from the request header. Concretely,
-// it first looks at the 'Cookie' and then the 'Authorization' header. If no credential is found,
-// it returns an empty string.
-func GetCredential(r *http.Request) (string, error) {
-	ret, err := getSessionKeyFromCookie(r)
-	if err != nil {
-		return "", errors.Wrap(err, "getting session key from cookie")
-	}
-	if ret != "" {
-		return ret, nil
-	}
-
-	ret, err = getSessionKeyFromAuth(r)
-	if err != nil {
-		return "", errors.Wrap(err, "getting session key from Authorization header")
-	}
-
-	return ret, nil
-}

@@ -25,6 +25,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
@@ -53,25 +54,25 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var params updateNotePayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		HandleError(w, "decoding params", err, http.StatusInternalServerError)
+		handlers.DoError(w, "decoding params", err, http.StatusInternalServerError)
 		return
 	}
 
 	if ok := validateUpdateNotePayload(params); !ok {
-		HandleError(w, "Invalid payload", nil, http.StatusBadRequest)
+		handlers.DoError(w, "Invalid payload", nil, http.StatusBadRequest)
 		return
 	}
 
 	var note database.Note
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
-		HandleError(w, "finding note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -84,14 +85,14 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		tx.Rollback()
-		HandleError(w, "updating note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "updating note", err, http.StatusInternalServerError)
 		return
 	}
 
 	var book database.Book
 	if err := tx.Where("uuid = ? AND user_id = ?", note.BookUUID, user.ID).First(&book).Error; err != nil {
 		tx.Rollback()
-		HandleError(w, fmt.Sprintf("finding book %s to preload", note.BookUUID), err, http.StatusInternalServerError)
+		handlers.DoError(w, fmt.Sprintf("finding book %s to preload", note.BookUUID), err, http.StatusInternalServerError)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Result: presenters.PresentNote(note),
 	}
-	respondJSON(w, http.StatusOK, resp)
+	handlers.RespondJSON(w, http.StatusOK, resp)
 }
 
 type deleteNoteResp struct {
@@ -120,13 +121,13 @@ func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var note database.Note
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
-		HandleError(w, "finding note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -135,7 +136,7 @@ func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	n, err := a.App.DeleteNote(tx, user, note)
 	if err != nil {
 		tx.Rollback()
-		HandleError(w, "deleting note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "deleting note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -145,7 +146,7 @@ func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusNoContent,
 		Result: presenters.PresentNote(n),
 	}
-	respondJSON(w, http.StatusOK, resp)
+	handlers.RespondJSON(w, http.StatusOK, resp)
 }
 
 type createNotePayload struct {
@@ -172,33 +173,33 @@ type CreateNoteResp struct {
 func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var params createNotePayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
+		handlers.DoError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	err = validateCreateNotePayload(params)
 	if err != nil {
-		HandleError(w, "validating payload", err, http.StatusBadRequest)
+		handlers.DoError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
 	var book database.Book
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
-		HandleError(w, "finding book", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	client := getClientType(r)
 	note, err := a.App.CreateNote(user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false, client)
 	if err != nil {
-		HandleError(w, "creating note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "creating note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -209,7 +210,7 @@ func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 	resp := CreateNoteResp{
 		Result: presenters.PresentNote(note),
 	}
-	respondJSON(w, http.StatusCreated, resp)
+	handlers.RespondJSON(w, http.StatusCreated, resp)
 }
 
 // NotesOptions is a handler for OPTIONS endpoint for notes

@@ -70,7 +70,7 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			HandleError(w, "authenticating with session", err, http.StatusInternalServerError)
+			DoError(w, "authenticating with session", err, http.StatusInternalServerError)
 			return
 		}
 
@@ -103,7 +103,7 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 			// If token-based auth fails, fall back to session-based auth
 			user, ok, err = AuthWithSession(a.DB, r, p)
 			if err != nil {
-				HandleError(w, "authenticating with session", err, http.StatusInternalServerError)
+				DoError(w, "authenticating with session", err, http.StatusInternalServerError)
 				return
 			}
 

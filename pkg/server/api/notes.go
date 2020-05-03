@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
@@ -77,7 +78,7 @@ ts_headline('english_nostop', notes.body, plainto_tsquery('english_nostop', ?), 
 func respondWithNote(w http.ResponseWriter, note database.Note) {
 	presentedNote := presenters.PresentNote(note)
 
-	respondJSON(w, http.StatusOK, presentedNote)
+	handlers.RespondJSON(w, http.StatusOK, presentedNote)
 }
 
 func parseSearchQuery(q url.Values) string {
@@ -100,9 +101,9 @@ func getNoteBaseQuery(db *gorm.DB, noteUUID string, search string) *gorm.DB {
 }
 
 func (a *API) getNote(w http.ResponseWriter, r *http.Request) {
-	user, _, err := AuthWithSession(a.App.DB, r, nil)
+	user, _, err := handlers.AuthWithSession(a.App.DB, r, nil)
 	if err != nil {
-		HandleError(w, "authenticating", err, http.StatusInternalServerError)
+		handlers.DoError(w, "authenticating", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -111,11 +112,11 @@ func (a *API) getNote(w http.ResponseWriter, r *http.Request) {
 
 	note, ok, err := operations.GetNote(a.App.DB, noteUUID, user)
 	if !ok {
-		RespondNotFound(w)
+		handlers.RespondNotFound(w)
 		return
 	}
 	if err != nil {
-		HandleError(w, "finding note", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding note", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -138,7 +139,7 @@ type dateRange struct {
 func (a *API) getNotes(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	query := r.URL.Query()
@@ -157,7 +158,7 @@ func respondGetNotes(db *gorm.DB, userID int, query url.Values, w http.ResponseW
 
 	var total int
 	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
-		HandleError(w, "counting total", err, http.StatusInternalServerError)
+		handlers.DoError(w, "counting total", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -168,7 +169,7 @@ func respondGetNotes(db *gorm.DB, userID int, query url.Values, w http.ResponseW
 		conn = paginate(conn, q.Page)
 
 		if err := conn.Find(&notes).Error; err != nil {
-			HandleError(w, "finding notes", err, http.StatusInternalServerError)
+			handlers.DoError(w, "finding notes", err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -177,7 +178,7 @@ func respondGetNotes(db *gorm.DB, userID int, query url.Values, w http.ResponseW
 		Notes: presenters.PresentNotes(notes),
 		Total: total,
 	}
-	respondJSON(w, http.StatusOK, response)
+	handlers.RespondJSON(w, http.StatusOK, response)
 }
 
 type getNotesQuery struct {
@@ -308,16 +309,16 @@ func escapeSearchQuery(searchQuery string) string {
 func (a *API) legacyGetNotes(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var notes []database.Note
 	if err := a.App.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
-		HandleError(w, "finding notes", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}
 
 	presented := presenters.PresentNotes(notes)
-	respondJSON(w, http.StatusOK, presented)
+	handlers.RespondJSON(w, http.StatusOK, presented)
 }

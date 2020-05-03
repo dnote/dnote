@@ -69,7 +69,7 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 	var params signinPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		HandleError(w, "decoding payload", err, http.StatusInternalServerError)
+		handlers.DoError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 	if params.Email == "" || params.Password == "" {
@@ -83,7 +83,7 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
 		return
 	} else if conn.Error != nil {
-		HandleError(w, "getting user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "getting user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 	var user database.User
 	err = a.App.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
-		HandleError(w, "finding user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "finding user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -116,9 +116,9 @@ func (a *API) signoutOptions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) signout(w http.ResponseWriter, r *http.Request) {
-	key, err := getCredential(r)
+	key, err := handlers.GetCredential(r)
 	if err != nil {
-		HandleError(w, "getting credential", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "getting credential", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (a *API) signout(w http.ResponseWriter, r *http.Request) {
 
 	err = a.App.DeleteSession(key)
 	if err != nil {
-		HandleError(w, "deleting session", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "deleting session", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -164,7 +164,7 @@ func parseRegisterPaylaod(r *http.Request) (registerPayload, error) {
 
 func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	if a.App.Config.DisableRegistration {
-		respondForbidden(w)
+		handlers.RespondForbidden(w)
 		return
 	}
 
@@ -180,7 +180,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 
 	var count int
 	if err := a.App.DB.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
-		HandleError(w, "checking duplicate user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "checking duplicate user", err, http.StatusInternalServerError)
 		return
 	}
 	if count > 0 {
@@ -190,7 +190,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 
 	user, err := a.App.CreateUser(params.Email, params.Password)
 	if err != nil {
-		HandleError(w, "creating user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "creating user", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -206,7 +206,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 func (a *API) respondWithSession(db *gorm.DB, w http.ResponseWriter, userID int, statusCode int) {
 	session, err := a.App.CreateSession(userID)
 	if err != nil {
-		HandleError(w, "creating session", nil, http.StatusBadRequest)
+		handlers.DoError(w, "creating session", nil, http.StatusBadRequest)
 		return
 	}
 
@@ -220,7 +220,7 @@ func (a *API) respondWithSession(db *gorm.DB, w http.ResponseWriter, userID int,
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		HandleError(w, "encoding response", err, http.StatusInternalServerError)
+		handlers.DoError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }

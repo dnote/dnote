@@ -28,6 +28,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
@@ -128,18 +129,18 @@ type createSubPayload struct {
 func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	var account database.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		HandleError(w, "getting user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "getting user", err, http.StatusInternalServerError)
 		return
 	}
 
 	var payload createSubPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		HandleError(w, "decoding params", err, http.StatusBadRequest)
+		handlers.DoError(w, "decoding params", err, http.StatusBadRequest)
 		return
 	}
 
@@ -151,20 +152,20 @@ func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 			"billing_country": payload.Country,
 		}).Error; err != nil {
 		tx.Rollback()
-		HandleError(w, "updating user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "updating user", err, http.StatusInternalServerError)
 		return
 	}
 
 	customer, err := getOrCreateStripeCustomer(tx, user)
 	if err != nil {
 		tx.Rollback()
-		HandleError(w, "getting customer", err, http.StatusInternalServerError)
+		handlers.DoError(w, "getting customer", err, http.StatusInternalServerError)
 		return
 	}
 
 	if _, err = addCustomerSource(customer.ID, payload.Source.ID); err != nil {
 		tx.Rollback()
-		HandleError(w, "attaching source", err, http.StatusInternalServerError)
+		handlers.DoError(w, "attaching source", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -177,12 +178,12 @@ func (a *API) createSub(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := createCustomerSubscription(customer.ID, planID); err != nil {
 		tx.Rollback()
-		HandleError(w, "creating subscription", err, http.StatusInternalServerError)
+		handlers.DoError(w, "creating subscription", err, http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		HandleError(w, "committing a subscription transaction", err, http.StatusInternalServerError)
+		handlers.DoError(w, "committing a subscription transaction", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -233,21 +234,21 @@ func validateUpdateSubPayload(p updateSubPayload) error {
 func (a *API) updateSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
-		HandleError(w, "Customer does not exist", nil, http.StatusForbidden)
+		handlers.DoError(w, "Customer does not exist", nil, http.StatusForbidden)
 		return
 	}
 
 	var payload updateSubPayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		HandleError(w, "decoding params", err, http.StatusBadRequest)
+		handlers.DoError(w, "decoding params", err, http.StatusBadRequest)
 		return
 	}
 	if err := validateUpdateSubPayload(payload); err != nil {
-		HandleError(w, "invalid payload", err, http.StatusBadRequest)
+		handlers.DoError(w, "invalid payload", err, http.StatusBadRequest)
 		return
 	}
 
@@ -266,7 +267,7 @@ func (a *API) updateSub(w http.ResponseWriter, r *http.Request) {
 			statusCode = http.StatusInternalServerError
 		}
 
-		HandleError(w, fmt.Sprintf("during operation %s", payload.Op), err, statusCode)
+		handlers.DoError(w, fmt.Sprintf("during operation %s", payload.Op), err, statusCode)
 		return
 	}
 
@@ -296,7 +297,7 @@ func respondWithEmptySub(w http.ResponseWriter) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(emptyGetSubResponse); err != nil {
-		HandleError(w, "encoding response", err, http.StatusInternalServerError)
+		handlers.DoError(w, "encoding response", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -304,7 +305,7 @@ func respondWithEmptySub(w http.ResponseWriter) {
 func (a *API) getSub(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
@@ -319,7 +320,7 @@ func (a *API) getSub(w http.ResponseWriter, r *http.Request) {
 
 	if !i.Next() {
 		if err := i.Err(); err != nil {
-			HandleError(w, "fetching subscription", err, http.StatusInternalServerError)
+			handlers.DoError(w, "fetching subscription", err, http.StatusInternalServerError)
 			return
 		}
 
@@ -346,7 +347,7 @@ func (a *API) getSub(w http.ResponseWriter, r *http.Request) {
 		resp.Items = append(resp.Items, i)
 	}
 
-	respondJSON(w, http.StatusOK, resp)
+	handlers.RespondJSON(w, http.StatusOK, resp)
 }
 
 // GetStripeSourceResponse is a response for getStripeToken
@@ -360,7 +361,7 @@ type GetStripeSourceResponse struct {
 func respondWithEmptyStripeToken(w http.ResponseWriter) {
 	var resp GetStripeSourceResponse
 
-	respondJSON(w, http.StatusOK, resp)
+	handlers.RespondJSON(w, http.StatusOK, resp)
 }
 
 // getStripeCard retrieves card information from stripe and returns a stripe.Card
@@ -432,13 +433,13 @@ func validateUpdateStripeSourcePayload(p updateStripeSourcePayload) error {
 func (a *API) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var payload updateStripeSourcePayload
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		HandleError(w, "decoding params", err, http.StatusBadRequest)
+		handlers.DoError(w, "decoding params", err, http.StatusBadRequest)
 		return
 	}
 	if err := validateUpdateStripeSourcePayload(payload); err != nil {
@@ -453,32 +454,32 @@ func (a *API) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 			"billing_country": payload.Country,
 		}).Error; err != nil {
 		tx.Rollback()
-		HandleError(w, "updating user", err, http.StatusInternalServerError)
+		handlers.DoError(w, "updating user", err, http.StatusInternalServerError)
 		return
 	}
 
 	c, err := customer.Get(user.StripeCustomerID, nil)
 	if err != nil {
 		tx.Rollback()
-		HandleError(w, "retriving customer", err, http.StatusInternalServerError)
+		handlers.DoError(w, "retriving customer", err, http.StatusInternalServerError)
 		return
 	}
 
 	if _, err := removeCustomerSource(user.StripeCustomerID, c.DefaultSource.ID); err != nil {
 		tx.Rollback()
-		HandleError(w, "removing source", err, http.StatusInternalServerError)
+		handlers.DoError(w, "removing source", err, http.StatusInternalServerError)
 		return
 	}
 
 	if _, err := addCustomerSource(user.StripeCustomerID, payload.Source.ID); err != nil {
 		tx.Rollback()
-		HandleError(w, "attaching source", err, http.StatusInternalServerError)
+		handlers.DoError(w, "attaching source", err, http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		HandleError(w, "committing transaction", err, http.StatusInternalServerError)
+		handlers.DoError(w, "committing transaction", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -488,7 +489,7 @@ func (a *API) updateStripeSource(w http.ResponseWriter, r *http.Request) {
 func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 	if user.StripeCustomerID == "" {
@@ -498,7 +499,7 @@ func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 
 	c, err := customer.Get(user.StripeCustomerID, nil)
 	if err != nil {
-		HandleError(w, "fetching stripe customer", err, http.StatusInternalServerError)
+		handlers.DoError(w, "fetching stripe customer", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -509,7 +510,7 @@ func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 
 	cd, err := getStripeCard(user.StripeCustomerID, c.DefaultSource.ID)
 	if err != nil {
-		HandleError(w, "fetching stripe source", err, http.StatusInternalServerError)
+		handlers.DoError(w, "fetching stripe source", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -520,20 +521,20 @@ func (a *API) getStripeSource(w http.ResponseWriter, r *http.Request) {
 		ExpYear:  cd.ExpYear,
 	}
 
-	respondJSON(w, http.StatusOK, resp)
+	handlers.RespondJSON(w, http.StatusOK, resp)
 }
 
 func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		HandleError(w, "reading body", err, http.StatusServiceUnavailable)
+		handlers.DoError(w, "reading body", err, http.StatusServiceUnavailable)
 		return
 	}
 
 	webhookSecret := os.Getenv("StripeWebhookSecret")
 	event, err := webhook.ConstructEvent(body, req.Header.Get("Stripe-Signature"), webhookSecret)
 	if err != nil {
-		HandleError(w, "verifying stripe webhook signature", err, http.StatusBadRequest)
+		handlers.DoError(w, "verifying stripe webhook signature", err, http.StatusBadRequest)
 		return
 	}
 
@@ -542,7 +543,7 @@ func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 		{
 			var subscription stripe.Subscription
 			if json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-				HandleError(w, "unmarshaling payload", err, http.StatusBadRequest)
+				handlers.DoError(w, "unmarshaling payload", err, http.StatusBadRequest)
 				return
 			}
 
@@ -551,7 +552,7 @@ func (a *API) stripeWebhook(w http.ResponseWriter, req *http.Request) {
 	default:
 		{
 			msg := fmt.Sprintf("Unsupported webhook event type %s", event.Type)
-			HandleError(w, msg, err, http.StatusBadRequest)
+			handlers.DoError(w, msg, err, http.StatusBadRequest)
 			return
 		}
 	}

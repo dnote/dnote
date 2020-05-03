@@ -30,8 +30,7 @@ import (
 // with the given app paratmers
 func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 	api := NewTestAPI(appParams)
-
-	r, err := api.NewRouter()
+	r, err := NewRouter(&api)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "initializing server"))
 	}

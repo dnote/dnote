@@ -47,8 +47,8 @@ func UnsetSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &cookie)
 }
 
-// HandleError logs the error and responds with the given status code with a generic status text
-func HandleError(w http.ResponseWriter, msg string, err error, statusCode int) {
+// DoError logs the error and responds with the given status code with a generic status text
+func DoError(w http.ResponseWriter, msg string, err error, statusCode int) {
 	var message string
 	if err == nil {
 		message = msg
@@ -70,7 +70,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
-		HandleError(w, "encoding response", err, http.StatusInternalServerError)
+		DoError(w, "encoding response", err, http.StatusInternalServerError)
 	}
 }
 
