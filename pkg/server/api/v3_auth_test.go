@@ -127,7 +127,6 @@ func TestRegister(t *testing.T) {
 			var user database.User
 			testutils.MustExec(t, testutils.DB.Where("id = ?", account.UserID).First(&user), "finding user")
 			assert.Equal(t, user.Cloud, tc.expectedPro, "Cloud mismatch")
-			assert.Equal(t, user.StripeCustomerID, "", "StripeCustomerID mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
 			// welcome email

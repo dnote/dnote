@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
@@ -35,7 +34,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/stripe/stripe-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -221,20 +219,6 @@ func GetCookieByName(cookies []*http.Cookie, name string) *http.Cookie {
 	}
 
 	return ret
-}
-
-// CreateMockStripeBackend returns a mock stripe backend that uses
-// the given test server
-func CreateMockStripeBackend(ts *httptest.Server) stripe.Backend {
-	stripeMockBackend := stripe.GetBackendWithConfig(
-		stripe.APIBackend,
-		&stripe.BackendConfig{
-			URL:        ts.URL,
-			HTTPClient: ts.Client(),
-		},
-	)
-
-	return stripeMockBackend
 }
 
 // MustRespondJSON responds with the JSON-encoding of the given interface. If the encoding
