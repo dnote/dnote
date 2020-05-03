@@ -10,6 +10,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Route represents a single route
+type Route struct {
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
+	RateLimit   bool
+}
+
 // RespondForbidden responds with forbidden
 func RespondForbidden(w http.ResponseWriter) {
 	http.Error(w, "forbidden", http.StatusForbidden)

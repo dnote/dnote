@@ -34,12 +34,11 @@ func NewTest(appParams *App) App {
 	c.SetOnPremise(false)
 
 	a := App{
-		DB:               testutils.DB,
-		Clock:            clock.NewMock(),
-		EmailTemplates:   mailer.NewTemplates(&emailTmplDir),
-		EmailBackend:     &testutils.MockEmailbackendImplementation{},
-		StripeAPIBackend: nil,
-		Config:           c,
+		DB:             testutils.DB,
+		Clock:          clock.NewMock(),
+		EmailTemplates: mailer.NewTemplates(&emailTmplDir),
+		EmailBackend:   &testutils.MockEmailbackendImplementation{},
+		Config:         c,
 	}
 
 	// Allow to override with appParams
@@ -51,9 +50,6 @@ func NewTest(appParams *App) App {
 	}
 	if appParams != nil && appParams.EmailTemplates != nil {
 		a.EmailTemplates = appParams.EmailTemplates
-	}
-	if appParams != nil && appParams.StripeAPIBackend != nil {
-		a.StripeAPIBackend = appParams.StripeAPIBackend
 	}
 	if appParams != nil && appParams.Config.OnPremise {
 		a.Config.OnPremise = appParams.Config.OnPremise

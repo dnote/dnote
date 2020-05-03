@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package api
+package handlers
 
 import (
 	"net/http"
@@ -105,8 +105,8 @@ func lookupIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-// limit is a middleware to rate limit the handler
-func limit(next http.Handler) http.HandlerFunc {
+// Limit is a middleware to rate limit the handler
+func Limit(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		identifier := lookupIP(r)
 		limiter := getVisitor(identifier)

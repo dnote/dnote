@@ -24,7 +24,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/stripe/stripe-go"
 )
 
 var (
@@ -42,12 +41,11 @@ var (
 
 // App is an application context
 type App struct {
-	DB               *gorm.DB
-	Clock            clock.Clock
-	StripeAPIBackend stripe.Backend
-	EmailTemplates   mailer.Templates
-	EmailBackend     mailer.Backend
-	Config           config.Config
+	DB             *gorm.DB
+	Clock          clock.Clock
+	EmailTemplates mailer.Templates
+	EmailBackend   mailer.Backend
+	Config         config.Config
 }
 
 // Validate validates the app configuration

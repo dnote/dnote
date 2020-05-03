@@ -103,12 +103,11 @@ func initApp(c config.Config) app.App {
 	db := initDB(c)
 
 	return app.App{
-		DB:               db,
-		Clock:            clock.New(),
-		StripeAPIBackend: nil,
-		EmailTemplates:   mailer.NewTemplates(nil),
-		EmailBackend:     &mailer.SimpleBackendImplementation{},
-		Config:           c,
+		DB:             db,
+		Clock:          clock.New(),
+		EmailTemplates: mailer.NewTemplates(nil),
+		EmailBackend:   &mailer.SimpleBackendImplementation{},
+		Config:         c,
 	}
 }
 
