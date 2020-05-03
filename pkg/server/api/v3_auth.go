@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package handlers
+package api
 
 import (
 	"encoding/json"
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -47,20 +48,6 @@ func setSessionCookie(w http.ResponseWriter, key string, expires time.Time) {
 		Path:     "/",
 		HttpOnly: true,
 	}
-	http.SetCookie(w, &cookie)
-}
-
-func unsetSessionCookie(w http.ResponseWriter) {
-	expire := time.Now().Add(time.Hour * -24 * 30)
-	cookie := http.Cookie{
-		Name:     "id",
-		Value:    "",
-		Expires:  expire,
-		Path:     "/",
-		HttpOnly: true,
-	}
-
-	w.Header().Set("Cache-Control", "no-cache")
 	http.SetCookie(w, &cookie)
 }
 
@@ -146,7 +133,7 @@ func (a *API) signout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	unsetSessionCookie(w)
+	handlers.UnsetSessionCookie(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
