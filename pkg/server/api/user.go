@@ -29,6 +29,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/presenters"
+	"github.com/dnote/dnote/pkg/server/session"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -236,8 +237,8 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := makeSession(user, account)
-	handlers.RespondJSON(w, http.StatusOK, session)
+	s := session.New(user, account)
+	handlers.RespondJSON(w, http.StatusOK, s)
 }
 
 type emailPreferernceParams struct {

@@ -28,26 +28,15 @@ import (
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/session"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Session represents user session
-type Session struct {
-	UUID          string `json:"uuid"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Pro           bool   `json:"pro"`
-}
-
-func makeSession(user database.User, account database.Account) Session {
-	return Session{
-		UUID:          user.UUID,
-		Pro:           user.Cloud,
-		Email:         account.Email.String,
-		EmailVerified: account.EmailVerified,
-	}
+// GetMeResponse is the response for getMe endpoint
+type GetMeResponse struct {
+	User session.Session `json:"user"`
 }
 
 func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
@@ -63,14 +52,6 @@ func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session := makeSession(user, account)
-
-	response := struct {
-		User Session `json:"user"`
-	}{
-		User: session,
-	}
-
 	tx := a.App.DB.Begin()
 	if err := a.App.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
@@ -79,6 +60,9 @@ func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit()
 
+	response := GetMeResponse{
+		User: session.New(user, account),
+	}
 	handlers.RespondJSON(w, http.StatusOK, response)
 }
 
