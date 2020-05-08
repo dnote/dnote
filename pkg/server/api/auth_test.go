@@ -45,7 +45,7 @@ func TestGetMe(t *testing.T) {
 	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 	dat := `{"email": "alice@example.com"}`
-	req := testutils.MakeReq(server.URL, "POST", "/reset-token", dat)
+	req := testutils.MakeReq(server.URL, "GET", "/me", dat)
 
 	// Execute
 	res := testutils.HTTPAuthDo(t, req, u)
@@ -55,7 +55,8 @@ func TestGetMe(t *testing.T) {
 
 	var user database.User
 	testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
-	assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
+
+	assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
 }
 
 func TestCreateResetToken(t *testing.T) {

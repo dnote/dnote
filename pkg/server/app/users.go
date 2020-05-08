@@ -19,8 +19,6 @@
 package app
 
 import (
-	"time"
-
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
@@ -30,7 +28,7 @@ import (
 
 // TouchLastLoginAt updates the last login timestamp
 func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
-	t := time.Now()
+	t := a.Clock.Now()
 	if err := tx.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
 	}
