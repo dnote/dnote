@@ -55,7 +55,7 @@ func getExpectedNotePayload(n database.Note, b database.Book, u database.User) p
 }
 
 func TestGetNotes(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -165,7 +165,7 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestGetNote(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{

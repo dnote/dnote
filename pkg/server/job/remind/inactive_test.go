@@ -46,7 +46,7 @@ func getTestContext(c clock.Clock, be *testutils.MockEmailbackendImplementation)
 }
 
 func TestDoInactive(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	t1 := time.Now()
 
@@ -119,7 +119,7 @@ func TestDoInactive(t *testing.T) {
 }
 
 func TestDoInactive_Cooldown(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// setup sets up an inactive user
 	setup := func(t *testing.T, now time.Time, email string) database.User {

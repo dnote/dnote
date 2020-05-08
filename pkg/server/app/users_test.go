@@ -49,7 +49,7 @@ func TestCreateUser(t *testing.T) {
 			c := config.Load()
 			c.SetOnPremise(tc.onPremise)
 
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			a := NewTest(&App{
 				Config: c,

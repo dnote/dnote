@@ -46,7 +46,7 @@ func TestIncremenetUserUSN(t *testing.T) {
 	// set up
 	for idx, tc := range testCases {
 		func() {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))

@@ -57,29 +57,29 @@ func InitTestDB() {
 }
 
 // ClearData deletes all records from the database
-func ClearData() {
-	if err := DB.Delete(&database.Book{}).Error; err != nil {
+func ClearData(db *gorm.DB) {
+	if err := db.Delete(&database.Book{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear books"))
 	}
-	if err := DB.Delete(&database.Note{}).Error; err != nil {
+	if err := db.Delete(&database.Note{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notes"))
 	}
-	if err := DB.Delete(&database.Notification{}).Error; err != nil {
+	if err := db.Delete(&database.Notification{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notifications"))
 	}
-	if err := DB.Delete(&database.User{}).Error; err != nil {
+	if err := db.Delete(&database.User{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear users"))
 	}
-	if err := DB.Delete(&database.Account{}).Error; err != nil {
+	if err := db.Delete(&database.Account{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear accounts"))
 	}
-	if err := DB.Delete(&database.Token{}).Error; err != nil {
+	if err := db.Delete(&database.Token{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
-	if err := DB.Delete(&database.EmailPreference{}).Error; err != nil {
+	if err := db.Delete(&database.EmailPreference{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
-	if err := DB.Delete(&database.Session{}).Error; err != nil {
+	if err := db.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
 }

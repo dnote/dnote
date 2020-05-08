@@ -94,7 +94,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("register %s %s", tc.email, tc.password), func(t *testing.T) {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			c := config.Load()
 			c.SetOnPremise(tc.onPremise)
@@ -141,7 +141,7 @@ func TestRegister(t *testing.T) {
 
 func TestRegisterMissingParams(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -168,7 +168,7 @@ func TestRegisterMissingParams(t *testing.T) {
 
 	t.Run("missing password", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -195,7 +195,7 @@ func TestRegisterMissingParams(t *testing.T) {
 }
 
 func TestRegisterDuplicateEmail(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -230,7 +230,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 }
 
 func TestRegisterDisabled(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	c := config.Load()
 	c.DisableRegistration = true
@@ -261,7 +261,7 @@ func TestRegisterDisabled(t *testing.T) {
 
 func TestSignIn(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -291,7 +291,7 @@ func TestSignIn(t *testing.T) {
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -323,7 +323,7 @@ func TestSignIn(t *testing.T) {
 
 	t.Run("wrong email", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -355,7 +355,7 @@ func TestSignIn(t *testing.T) {
 
 	t.Run("nonexistent email", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -382,7 +382,7 @@ func TestSignIn(t *testing.T) {
 func TestSignout(t *testing.T) {
 	t.Run("authenticated", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		aliceUser := testutils.SetupUserData()
 		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
@@ -434,7 +434,7 @@ func TestSignout(t *testing.T) {
 
 	t.Run("unauthenticated", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		aliceUser := testutils.SetupUserData()
 		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")

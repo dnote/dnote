@@ -33,7 +33,7 @@ import (
 
 func TestGetMe(t *testing.T) {
 	testutils.InitTestDB()
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -60,7 +60,7 @@ func TestGetMe(t *testing.T) {
 
 func TestCreateResetToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -94,7 +94,7 @@ func TestCreateResetToken(t *testing.T) {
 
 	t.Run("nonexistent email", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -124,7 +124,7 @@ func TestCreateResetToken(t *testing.T) {
 func TestResetPassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -171,7 +171,7 @@ func TestResetPassword(t *testing.T) {
 
 	t.Run("nonexistent token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -210,7 +210,7 @@ func TestResetPassword(t *testing.T) {
 
 	t.Run("expired token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -248,7 +248,7 @@ func TestResetPassword(t *testing.T) {
 
 	t.Run("used token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -297,7 +297,7 @@ func TestResetPassword(t *testing.T) {
 
 	t.Run("using wrong type token: email_verification", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{

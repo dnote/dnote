@@ -35,7 +35,7 @@ import (
 
 func TestGetBooks(t *testing.T) {
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -115,7 +115,7 @@ func TestGetBooks(t *testing.T) {
 
 func TestGetBooksByName(t *testing.T) {
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -201,7 +201,7 @@ func TestDeleteBook(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
 
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{
@@ -352,7 +352,7 @@ func TestDeleteBook(t *testing.T) {
 
 func TestCreateBook(t *testing.T) {
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -412,7 +412,7 @@ func TestCreateBook(t *testing.T) {
 
 func TestCreateBookDuplicate(t *testing.T) {
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -492,7 +492,7 @@ func TestUpdateBook(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{

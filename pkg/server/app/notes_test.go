@@ -74,7 +74,7 @@ func TestCreateNote(t *testing.T) {
 
 	for idx, tc := range testCases {
 		func() {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
@@ -137,7 +137,7 @@ func TestUpdateNote(t *testing.T) {
 
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), "preparing user max_usn for test case")
@@ -212,7 +212,7 @@ func TestDeleteNote(t *testing.T) {
 
 	for idx, tc := range testCases {
 		func() {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))

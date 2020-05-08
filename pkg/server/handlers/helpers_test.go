@@ -181,7 +181,7 @@ func TestGetCredential(t *testing.T) {
 }
 
 func TestAuthMiddleware(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
 	session := database.Session{
@@ -294,7 +294,7 @@ func TestAuthMiddleware(t *testing.T) {
 }
 
 func TestAuthMiddleware_ProOnly(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
@@ -384,7 +384,7 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
 	tok := database.Token{
@@ -514,7 +514,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")

@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	testutils.InitTestDB()
 
 	code := m.Run()
-	testutils.ClearData()
+	testutils.ClearData(testutils.DB)
 
 	os.Exit(code)
 }

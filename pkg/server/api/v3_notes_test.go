@@ -32,7 +32,7 @@ import (
 
 func TestCreateNote(t *testing.T) {
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -237,7 +237,7 @@ func TestUpdateNote(t *testing.T) {
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{
@@ -333,7 +333,7 @@ func TestDeleteNote(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
 
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{

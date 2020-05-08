@@ -31,7 +31,7 @@ func TestGetNote(t *testing.T) {
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	b1 := database.Book{
 		UserID: user.ID,
@@ -121,7 +121,7 @@ func TestGetNote(t *testing.T) {
 func TestGetNote_nonexistent(t *testing.T) {
 	user := testutils.SetupUserData()
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	b1 := database.Book{
 		UserID: user.ID,

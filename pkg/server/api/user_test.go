@@ -38,7 +38,7 @@ import (
 func TestUpdatePassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -66,7 +66,7 @@ func TestUpdatePassword(t *testing.T) {
 
 	t.Run("old password mismatch", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -93,7 +93,7 @@ func TestUpdatePassword(t *testing.T) {
 
 	t.Run("password too short", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -121,7 +121,7 @@ func TestUpdatePassword(t *testing.T) {
 
 func TestCreateVerificationToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		emailBackend := testutils.MockEmailbackendImplementation{}
@@ -157,7 +157,7 @@ func TestCreateVerificationToken(t *testing.T) {
 
 	t.Run("already verified", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -191,7 +191,7 @@ func TestCreateVerificationToken(t *testing.T) {
 func TestVerifyEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -232,7 +232,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("used token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -276,7 +276,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("expired token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -318,7 +318,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("already verified", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -362,7 +362,7 @@ func TestVerifyEmail(t *testing.T) {
 
 func TestUpdateEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -395,7 +395,7 @@ func TestUpdateEmail(t *testing.T) {
 
 func TestUpdateEmailPreference(t *testing.T) {
 	t.Run("with login", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -420,7 +420,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 	})
 
 	t.Run("with an unused token", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -459,7 +459,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 	})
 
 	t.Run("with nonexistent token", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -492,7 +492,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 	})
 
 	t.Run("with expired token", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -529,7 +529,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 	t.Run("with a used but unexpired token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -566,7 +566,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 	t.Run("no user and no token", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -593,7 +593,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 	t.Run("create a record if not exists", func(t *testing.T) {
 
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -630,7 +630,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 }
 
 func TestGetEmailPreference(t *testing.T) {
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 	// Setup
 	server := MustNewServer(t, &app.App{
 
