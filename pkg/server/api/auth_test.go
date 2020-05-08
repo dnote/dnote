@@ -19,6 +19,8 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -27,7 +29,9 @@ import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/session"
 	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -41,22 +45,59 @@ func TestGetMe(t *testing.T) {
 	})
 	defer server.Close()
 
-	u := testutils.SetupUserData()
-	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+	u1 := testutils.SetupUserData()
+	a1 := testutils.SetupAccountData(u1, "alice@example.com", "somepassword")
 
-	dat := `{"email": "alice@example.com"}`
-	req := testutils.MakeReq(server.URL, "GET", "/me", dat)
+	u2 := testutils.SetupUserData()
+	testutils.MustExec(t, testutils.DB.Model(&u2).Update("cloud", false), "preparing u2 cloud")
+	a2 := testutils.SetupAccountData(u2, "bob@example.com", "somepassword")
 
-	// Execute
-	res := testutils.HTTPAuthDo(t, req, u)
+	testCases := []struct {
+		user        database.User
+		account     database.Account
+		expectedPro bool
+	}{
+		{
+			user:        u1,
+			account:     a1,
+			expectedPro: true,
+		},
+		{
+			user:        u2,
+			account:     a2,
+			expectedPro: false,
+		},
+	}
 
-	// Test
-	assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("user pro %t", tc.expectedPro), func(t *testing.T) {
+			// Execute
+			req := testutils.MakeReq(server.URL, "GET", "/me", "")
+			res := testutils.HTTPAuthDo(t, req, tc.user)
 
-	var user database.User
-	testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
+			// Test
+			assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-	assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
+			var payload GetMeResponse
+			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+				t.Fatal(errors.Wrap(err, "decoding payload"))
+			}
+
+			expectedPayload := GetMeResponse{
+				User: session.Session{
+					UUID:          tc.user.UUID,
+					Pro:           tc.expectedPro,
+					Email:         tc.account.Email.String,
+					EmailVerified: tc.account.EmailVerified,
+				},
+			}
+			assert.DeepEqual(t, payload, expectedPayload, "payload mismatch")
+
+			var user database.User
+			testutils.MustExec(t, testutils.DB.Where("id = ?", tc.user.ID).First(&user), "finding user")
+			assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
+		})
+	}
 }
 
 func TestCreateResetToken(t *testing.T) {

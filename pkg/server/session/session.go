@@ -16,7 +16,7 @@ type Session struct {
 func New(user database.User, account database.Account) Session {
 	return Session{
 		UUID:          user.UUID,
-		Pro:           true,
+		Pro:           user.Cloud,
 		Email:         account.Email.String,
 		EmailVerified: account.EmailVerified,
 	}
