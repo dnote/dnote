@@ -38,15 +38,13 @@ const Sidebar: React.FunctionComponent<Props> = () => {
             Account
           </NavLink>
         </li>
-        <li>
-          <NavLink
-            className={styles.item}
-            activeClassName={styles.active}
-            to={getSettingsPath(SettingSections.billing)}
-          >
-            Billing
-          </NavLink>
-        </li>
+        {__STANDALONE__ ? null : (
+          <li>
+            <a className={styles.item} href="/subscription/manage">
+              Billing
+            </a>
+          </li>
+        )}
         <li>
           <NavLink
             className={styles.item}

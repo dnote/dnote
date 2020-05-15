@@ -4,7 +4,7 @@ set -ex
 
 dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../.."
-isTest=${IS_TEST:-false}
+standalone=${STANDALONE:-true}
 
 set -u
 rm -rf "$basePath/web/public"
@@ -22,7 +22,7 @@ pushd "$basePath/web"
     "$basePath"/web/node_modules/.bin/webpack\
       --colors\
       --display-error-details\
-      --env.isTest="$isTest"\
+      --env.standalone="$standalone"\
       --config "$(realpath "$basePath/web/webpack/prod.config.js")"
 
   NODE_ENV=PRODUCTION \

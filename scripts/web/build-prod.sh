@@ -17,5 +17,6 @@ ASSET_BASE_URL="$assetBaseUrl" \
 ROOT_URL="$rootUrl" \
 PUBLIC_PATH="$publicPath" \
 COMPILED_PATH="$compiledPath" \
+STANDALONE=true \
 VERSION="$VERSION" \
   "$dir/build.sh"
