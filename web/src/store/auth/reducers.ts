@@ -22,21 +22,11 @@ import {
   AuthState,
   AuthActionType,
   UserData,
-  SubscriptionData,
-  SourceData,
   RECEIVE_EMAIL_PREFERENCE,
   RECEIVE_EMAIL_PREFERENCE_ERROR,
   START_FETCHING_USER,
   RECEIVE_USER,
-  RECEIVE_USER_ERROR,
-  RECEIVE_SUBSCRIPTION,
-  RECEIVE_SUBSCRIPTION_ERROR,
-  START_FETCHING_SUBSCRIPTION,
-  CLEAR_SUBSCRIPTION,
-  START_FETCHING_SOURCE,
-  RECEIVE_SOURCE,
-  CLEAR_SOURCE,
-  RECEIVE_SOURCE_ERROR
+  RECEIVE_USER_ERROR
 } from './type';
 
 export const initialState: AuthState = {
@@ -58,18 +48,6 @@ export const initialState: AuthState = {
       inactiveReminder: false,
       productUpdate: false
     },
-    errorMessage: ''
-  },
-  subscription: {
-    isFetching: false,
-    isFetched: false,
-    data: {},
-    errorMessage: ''
-  },
-  source: {
-    isFetching: false,
-    isFetched: false,
-    data: {},
     errorMessage: ''
   }
 };
@@ -140,78 +118,6 @@ function reducerEmailPreference(
   }
 }
 
-function reducerSubscription(
-  state = initialState.subscription,
-  action: AuthActionType
-): RemoteData<SubscriptionData> {
-  switch (action.type) {
-    case START_FETCHING_SUBSCRIPTION:
-      return {
-        ...state,
-        errorMessage: '',
-        isFetching: true,
-        isFetched: false
-      };
-    case RECEIVE_SUBSCRIPTION:
-      return {
-        ...state,
-        errorMessage: '',
-        isFetching: false,
-        isFetched: true,
-        data: action.data.subscription
-      };
-    case RECEIVE_SUBSCRIPTION_ERROR: {
-      return {
-        ...state,
-        isFetching: false,
-        isFetched: false,
-        errorMessage: action.data.errorMessage
-      };
-    }
-    case CLEAR_SUBSCRIPTION: {
-      return initialState.subscription;
-    }
-    default:
-      return state;
-  }
-}
-
-function reducerSource(
-  state = initialState.source,
-  action: AuthActionType
-): RemoteData<SourceData> {
-  switch (action.type) {
-    case START_FETCHING_SOURCE:
-      return {
-        ...state,
-        errorMessage: '',
-        isFetching: true,
-        isFetched: false
-      };
-    case RECEIVE_SOURCE:
-      return {
-        ...state,
-        errorMessage: '',
-        isFetching: false,
-        isFetched: true,
-        data: action.data.source
-      };
-    case RECEIVE_SOURCE_ERROR: {
-      return {
-        ...state,
-        isFetching: false,
-        isFetched: false,
-        errorMessage: action.data.errorMessage
-      };
-    }
-    case CLEAR_SOURCE: {
-      return initialState.source;
-    }
-    default:
-      return state;
-  }
-}
-
 export default function (
   state = initialState,
   action: AuthActionType
@@ -230,24 +136,6 @@ export default function (
       return {
         ...state,
         emailPreference: reducerEmailPreference(state.emailPreference, action)
-      };
-    }
-    case START_FETCHING_SUBSCRIPTION:
-    case RECEIVE_SUBSCRIPTION:
-    case CLEAR_SUBSCRIPTION:
-    case RECEIVE_SUBSCRIPTION_ERROR: {
-      return {
-        ...state,
-        subscription: reducerSubscription(state.subscription, action)
-      };
-    }
-    case START_FETCHING_SOURCE:
-    case RECEIVE_SOURCE:
-    case CLEAR_SOURCE:
-    case RECEIVE_SOURCE_ERROR: {
-      return {
-        ...state,
-        source: reducerSource(state.source, action)
       };
     }
     default:
