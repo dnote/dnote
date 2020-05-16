@@ -40,7 +40,7 @@ const Sidebar: React.FunctionComponent<Props> = () => {
         </li>
         {__STANDALONE__ ? null : (
           <li>
-            <a className={styles.item} href="/subscription/manage">
+            <a className={styles.item} href="/subscriptions/manage">
               Billing
             </a>
           </li>

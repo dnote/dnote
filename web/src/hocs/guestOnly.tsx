@@ -30,6 +30,12 @@ function renderFallback(referrer?: string) {
     destination = '/';
   }
 
+  // handle special cases
+  if (destination.indexOf('subscriptions') > -1) {
+    window.location.href = destination;
+    return null;
+  }
+
   return <Redirect to={{ pathname: destination }} />;
 }
 
