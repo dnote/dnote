@@ -21,6 +21,7 @@ import { EmailPrefData, UserData } from '../operations/types';
 
 export interface UpdateProfileParams {
   email: string;
+  password: string;
 }
 
 export interface UpdatePasswordParams {
@@ -83,9 +84,10 @@ export default function init(config: HttpClientConfig) {
       return client.patch('/account/profile', payload);
     },
 
-    updateProfile: ({ email }: UpdateProfileParams) => {
+    updateProfile: ({ email, password }: UpdateProfileParams) => {
       const payload = {
-        email
+        email,
+        password
       };
 
       return client.patch('/account/profile', payload);

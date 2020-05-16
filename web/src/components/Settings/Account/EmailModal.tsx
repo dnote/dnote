@@ -64,7 +64,8 @@ const EmailModal: React.FunctionComponent<Props> = ({
       }
 
       await services.users.updateProfile({
-        email: emailVal
+        email: emailVal,
+        password: passwordVal
       });
 
       await dispatch(getCurrentUser({ refresh: true }));

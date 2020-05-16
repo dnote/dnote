@@ -37,7 +37,8 @@ import (
 )
 
 type updateProfilePayload struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 // updateProfile updates user
@@ -48,6 +49,12 @@ func (a *API) updateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var account database.Account
+	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		handlers.DoError(w, "getting account", nil, http.StatusInternalServerError)
+		return
+	}
+
 	var params updateProfilePayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
@@ -55,16 +62,18 @@ func (a *API) updateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate
-	if len(params.Email) > 60 {
-		http.Error(w, "Email is too long", http.StatusBadRequest)
+	password := []byte(params.Password)
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
+		log.WithFields(log.Fields{
+			"user_id": user.ID,
+		}).Warn("invalid email update attempt")
+		http.Error(w, "Wrong password", http.StatusUnauthorized)
 		return
 	}
 
-	var account database.Account
-	err = a.App.DB.Where("user_id = ?", user.ID).First(&account).Error
-	if err != nil {
-		handlers.DoError(w, "finding account", err, http.StatusInternalServerError)
+	// Validate
+	if len(params.Email) > 60 {
+		http.Error(w, "Email is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -352,7 +361,7 @@ func (a *API) updatePassword(w http.ResponseWriter, r *http.Request) {
 
 	var account database.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		handlers.DoError(w, "getting user", nil, http.StatusInternalServerError)
+		handlers.DoError(w, "getting account", nil, http.StatusInternalServerError)
 		return
 	}
 

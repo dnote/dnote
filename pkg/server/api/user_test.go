@@ -37,7 +37,6 @@ import (
 
 func TestUpdatePassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -65,7 +64,6 @@ func TestUpdatePassword(t *testing.T) {
 	})
 
 	t.Run("old password mismatch", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -92,7 +90,6 @@ func TestUpdatePassword(t *testing.T) {
 	})
 
 	t.Run("password too short", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -376,7 +373,7 @@ func TestUpdateEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
 
 		// Execute
-		dat := `{"email": "alice-new@example.com"}`
+		dat := `{"email": "alice-new@example.com", "password": "pass1234"}`
 		req := testutils.MakeReq(server.URL, "PATCH", "/account/profile", dat)
 		res := testutils.HTTPAuthDo(t, req, u)
 
@@ -390,6 +387,37 @@ func TestUpdateEmail(t *testing.T) {
 
 		assert.Equal(t, account.Email.String, "alice-new@example.com", "email mismatch")
 		assert.Equal(t, account.EmailVerified, false, "EmailVerified mismatch")
+	})
+
+	t.Run("password mismatch", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		a.EmailVerified = true
+		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
+
+		// Execute
+		dat := `{"email": "alice-new@example.com", "password": "wrongpassword"}`
+		req := testutils.MakeReq(server.URL, "PATCH", "/account/profile", dat)
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
+
+		var user database.User
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+
+		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, account.EmailVerified, true, "EmailVerified mismatch")
 	})
 }
 
