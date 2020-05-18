@@ -18,13 +18,13 @@
     "@types/history": "^4.7.5",
     "history": "^4.10.1",
     "lodash": "^4.17.15",
-    "qs": "^6.9.3"
+    "qs": "^6.9.4"
   },
   "devDependencies": {
     "@types/jest": "^24.9.1",
     "jest": "^24.9.0",
     "prettier": "^1.19.1",
     "ts-jest": "^24.3.0",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.2"
   }
 }
