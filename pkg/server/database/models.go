@@ -65,13 +65,11 @@ type Note struct {
 // User is a model for a user
 type User struct {
 	Model
-	UUID             string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
-	StripeCustomerID string `json:"-"`
-	BillingCountry   string `json:"-"`
-	Account          Account
-	LastLoginAt      *time.Time `json:"-"`
-	MaxUSN           int        `json:"-" gorm:"default:0"`
-	Cloud            bool       `json:"-" gorm:"default:false"`
+	UUID        string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
+	Account     Account
+	LastLoginAt *time.Time `json:"-"`
+	MaxUSN      int        `json:"-" gorm:"default:0"`
+	Cloud       bool       `json:"-" gorm:"default:false"`
 }
 
 // Account is a model for an account
