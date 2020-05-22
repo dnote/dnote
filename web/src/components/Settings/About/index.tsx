@@ -45,7 +45,7 @@ const About: React.FunctionComponent<Props> = () => {
           <h2 className={styles['section-heading']}>Software</h2>
 
           <SettingRow name="Version" value={config.version} />
-          {user.pro && (
+          {!__STANDALONE__ && user.pro && (
             <SettingRow
               name="Support"
               value={<a href="mailto:sung@getdnote.com">sung@getdnote.com</a>}
