@@ -1,196 +1,168 @@
-/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
- *
- * This file is part of Dnote.
- *
- * Dnote is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Dnote is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package handlers
 
 import (
-	"encoding/json"
+	"context"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/token"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
-// Session represents user session
-type Session struct {
-	UUID          string `json:"uuid"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Pro           bool   `json:"pro"`
-}
+func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams) (database.User, database.Token, bool, error) {
+	var user database.User
+	var token database.Token
 
-func makeSession(user database.User, account database.Account) Session {
-	return Session{
-		UUID:          user.UUID,
-		Pro:           user.Cloud,
-		Email:         account.Email.String,
-		EmailVerified: account.EmailVerified,
-	}
-}
-
-func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
-	if !ok {
-		HandleError(w, "No authenticated user found", nil, http.StatusInternalServerError)
-		return
+	query := r.URL.Query()
+	tokenValue := query.Get("token")
+	if tokenValue == "" {
+		return user, token, false, nil
 	}
 
-	var account database.Account
-	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		HandleError(w, "finding account", err, http.StatusInternalServerError)
-		return
-	}
-
-	session := makeSession(user, account)
-
-	response := struct {
-		User Session `json:"user"`
-	}{
-		User: session,
-	}
-
-	tx := a.App.DB.Begin()
-	if err := a.App.TouchLastLoginAt(user, tx); err != nil {
-		tx.Rollback()
-		// In case of an error, gracefully continue to avoid disturbing the service
-		log.ErrorWrap(err, "error touching last_login_at")
-	}
-	tx.Commit()
-
-	respondJSON(w, http.StatusOK, response)
-}
-
-type createResetTokenPayload struct {
-	Email string `json:"email"`
-}
-
-func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
-	var params createResetTokenPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "invalid payload", http.StatusBadRequest)
-		return
-	}
-
-	var account database.Account
-	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
+	conn := db.Where("value = ? AND type = ?", tokenValue, tokenType).First(&token)
 	if conn.RecordNotFound() {
-		return
-	}
-	if err := conn.Error; err != nil {
-		HandleError(w, errors.Wrap(err, "finding account").Error(), nil, http.StatusInternalServerError)
-		return
+		return user, token, false, nil
+	} else if err := conn.Error; err != nil {
+		return user, token, false, errors.Wrap(err, "finding token")
 	}
 
-	resetToken, err := token.Create(a.App.DB, account.UserID, database.TokenTypeResetPassword)
-	if err != nil {
-		HandleError(w, errors.Wrap(err, "generating token").Error(), nil, http.StatusInternalServerError)
-		return
+	if token.UsedAt != nil && time.Since(*token.UsedAt).Minutes() > 10 {
+		return user, token, false, nil
 	}
 
-	if err := a.App.SendPasswordResetEmail(account.Email.String, resetToken.Value); err != nil {
-		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
-			respondInvalidSMTPConfig(w)
-		} else {
-			HandleError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
+	if err := db.Where("id = ?", token.UserID).First(&user).Error; err != nil {
+		return user, token, false, errors.Wrap(err, "finding user")
+	}
+
+	return user, token, true, nil
+}
+
+// Cors allows browser extensions to load resources
+func Cors(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+
+		// Allow browser extensions
+		if strings.HasPrefix(origin, "moz-extension://") || strings.HasPrefix(origin, "chrome-extension://") {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
-		return
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
-type resetPasswordPayload struct {
-	Password string `json:"password"`
-	Token    string `json:"token"`
+// AuthParams is the params for the authentication middleware
+type AuthParams struct {
+	ProOnly               bool
+	RedirectGuestsToLogin bool
 }
 
-func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
-	var params resetPasswordPayload
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-		http.Error(w, "invalid payload", http.StatusBadRequest)
-		return
-	}
+// Auth is an authentication middleware
+func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, ok, err := AuthWithSession(a.DB, r, p)
+		if !ok {
+			if p != nil && p.RedirectGuestsToLogin {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
 
-	var token database.Token
-	conn := a.App.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
-	if conn.RecordNotFound() {
-		http.Error(w, "invalid token", http.StatusBadRequest)
-		return
-	}
-	if err := conn.Error; err != nil {
-		HandleError(w, errors.Wrap(err, "finding token").Error(), nil, http.StatusInternalServerError)
-		return
-	}
+			RespondUnauthorized(w)
+			return
+		}
+		if err != nil {
+			DoError(w, "authenticating with session", err, http.StatusInternalServerError)
+			return
+		}
 
-	if token.UsedAt != nil {
-		http.Error(w, "invalid token", http.StatusBadRequest)
-		return
-	}
+		if p != nil && p.ProOnly {
+			if !user.Cloud {
+				RespondForbidden(w)
+				return
+			}
+		}
 
-	// Expire after 10 minutes
-	if time.Since(token.CreatedAt).Minutes() > 10 {
-		http.Error(w, "This link has been expired. Please request a new password reset link.", http.StatusGone)
-		return
-	}
+		ctx := context.WithValue(r.Context(), helpers.KeyUser, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
-	tx := a.App.DB.Begin()
+// TokenAuth is an authentication middleware with token
+func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParams) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, token, ok, err := authWithToken(a.DB, r, tokenType, p)
+		if err != nil {
+			// log the error and continue
+			log.ErrorWrap(err, "authenticating with token")
+		}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
-	if err != nil {
-		tx.Rollback()
-		HandleError(w, errors.Wrap(err, "hashing password").Error(), nil, http.StatusInternalServerError)
-		return
-	}
+		ctx := r.Context()
 
-	var account database.Account
-	if err := a.App.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
-		tx.Rollback()
-		HandleError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
-		return
-	}
+		if ok {
+			ctx = context.WithValue(ctx, helpers.KeyToken, token)
+		} else {
+			// If token-based auth fails, fall back to session-based auth
+			user, ok, err = AuthWithSession(a.DB, r, p)
+			if err != nil {
+				DoError(w, "authenticating with session", err, http.StatusInternalServerError)
+				return
+			}
 
-	if err := tx.Model(&account).Update("password", string(hashedPassword)).Error; err != nil {
-		tx.Rollback()
-		HandleError(w, errors.Wrap(err, "updating password").Error(), nil, http.StatusInternalServerError)
-		return
-	}
-	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
-		tx.Rollback()
-		HandleError(w, errors.Wrap(err, "updating password reset token").Error(), nil, http.StatusInternalServerError)
-		return
-	}
+			if !ok {
+				RespondUnauthorized(w)
+				return
+			}
+		}
 
-	tx.Commit()
+		if p != nil && p.ProOnly {
+			if !user.Cloud {
+				RespondForbidden(w)
+				return
+			}
+		}
 
+		ctx = context.WithValue(ctx, helpers.KeyUser, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// AuthWithSession performs user authentication with session
+func AuthWithSession(db *gorm.DB, r *http.Request, p *AuthParams) (database.User, bool, error) {
 	var user database.User
-	if err := a.App.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
-		HandleError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
-		return
+
+	sessionKey, err := GetCredential(r)
+	if err != nil {
+		return user, false, errors.Wrap(err, "getting credential")
+	}
+	if sessionKey == "" {
+		return user, false, nil
 	}
 
-	a.respondWithSession(a.App.DB, w, user.ID, http.StatusOK)
+	var session database.Session
+	conn := db.Where("key = ?", sessionKey).First(&session)
 
-	if err := a.App.SendPasswordResetAlertEmail(account.Email.String); err != nil {
-		log.ErrorWrap(err, "sending password reset email")
+	if conn.RecordNotFound() {
+		return user, false, nil
+	} else if err := conn.Error; err != nil {
+		return user, false, errors.Wrap(err, "finding session")
 	}
+
+	if session.ExpiresAt.Before(time.Now()) {
+		return user, false, nil
+	}
+
+	conn = db.Where("id = ?", session.UserID).First(&user)
+
+	if conn.RecordNotFound() {
+		return user, false, nil
+	} else if err := conn.Error; err != nil {
+		return user, false, errors.Wrap(err, "finding user from token")
+	}
+
+	return user, true, nil
 }

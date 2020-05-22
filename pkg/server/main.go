@@ -25,10 +25,10 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/api"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/web"
@@ -68,8 +68,7 @@ func initWebContext(db *gorm.DB) web.Context {
 }
 
 func initServer(a app.App) (*http.ServeMux, error) {
-	api := handlers.API{App: &a}
-	apiRouter, err := api.NewRouter()
+	apiRouter, err := api.NewRouter(&api.API{App: &a})
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing router")
 	}
@@ -104,12 +103,11 @@ func initApp(c config.Config) app.App {
 	db := initDB(c)
 
 	return app.App{
-		DB:               db,
-		Clock:            clock.New(),
-		StripeAPIBackend: nil,
-		EmailTemplates:   mailer.NewTemplates(nil),
-		EmailBackend:     &mailer.SimpleBackendImplementation{},
-		Config:           c,
+		DB:             db,
+		Clock:          clock.New(),
+		EmailTemplates: mailer.NewTemplates(nil),
+		EmailBackend:   &mailer.SimpleBackendImplementation{},
+		Config:         c,
 	}
 }
 

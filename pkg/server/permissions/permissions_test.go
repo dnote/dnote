@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	testutils.InitTestDB()
 
 	code := m.Run()
-	testutils.ClearData()
+	testutils.ClearData(testutils.DB)
 
 	os.Exit(code)
 }
@@ -40,7 +40,7 @@ func TestViewNote(t *testing.T) {
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
 
-	defer testutils.ClearData()
+	defer testutils.ClearData(testutils.DB)
 
 	b1 := database.Book{
 		UserID: user.ID,

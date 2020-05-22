@@ -33,7 +33,6 @@ import New from './components/New';
 import Edit from './components/Edit';
 import Note from './components/Note';
 import Books from './components/Books';
-import Checkout from './components/Subscription/Checkout';
 import PasswordResetRequest from './components/PasswordReset/Request';
 import PasswordResetConfirm from './components/PasswordReset/Confirm';
 import EmailPreference from './components/EmailPreference';
@@ -48,10 +47,8 @@ import {
   noteEditPathDef,
   noteNewPathDef,
   settingsPathDef,
-  subscriptionsPathDef,
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
-  getJoinPath,
   verifyEmailPathDef,
   emailPreferencePathDef
 } from './libs/paths';
@@ -65,10 +62,6 @@ const GuestLogin = guestOnly(Login);
 const GuestPasswordResetRequest = guestOnly(PasswordResetRequest);
 const GuestPasswordResetConfirm = guestOnly(PasswordResetConfirm);
 const AuthenticatedSettings = userOnly(Settings);
-const AuthenticatedSubscriptionCheckout = userOnly(
-  Checkout,
-  getJoinPath().pathname
-);
 
 const routes = [
   {
@@ -105,11 +98,6 @@ const routes = [
     path: settingsPathDef,
     exact: true,
     component: AuthenticatedSettings
-  },
-  {
-    path: subscriptionsPathDef,
-    exact: true,
-    component: AuthenticatedSubscriptionCheckout
   },
   {
     path: verifyEmailPathDef,

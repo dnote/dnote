@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
@@ -35,7 +34,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/stripe/stripe-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -59,29 +57,29 @@ func InitTestDB() {
 }
 
 // ClearData deletes all records from the database
-func ClearData() {
-	if err := DB.Delete(&database.Book{}).Error; err != nil {
+func ClearData(db *gorm.DB) {
+	if err := db.Delete(&database.Book{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear books"))
 	}
-	if err := DB.Delete(&database.Note{}).Error; err != nil {
+	if err := db.Delete(&database.Note{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notes"))
 	}
-	if err := DB.Delete(&database.Notification{}).Error; err != nil {
+	if err := db.Delete(&database.Notification{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notifications"))
 	}
-	if err := DB.Delete(&database.User{}).Error; err != nil {
+	if err := db.Delete(&database.User{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear users"))
 	}
-	if err := DB.Delete(&database.Account{}).Error; err != nil {
+	if err := db.Delete(&database.Account{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear accounts"))
 	}
-	if err := DB.Delete(&database.Token{}).Error; err != nil {
+	if err := db.Delete(&database.Token{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
-	if err := DB.Delete(&database.EmailPreference{}).Error; err != nil {
+	if err := db.Delete(&database.EmailPreference{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
-	if err := DB.Delete(&database.Session{}).Error; err != nil {
+	if err := db.Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
 }
@@ -168,8 +166,8 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 	return res
 }
 
-// HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
-func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
+// SetReqAuthHeader sets the authorization header in the given request for the given user
+func SetReqAuthHeader(t *testing.T, req *http.Request, user database.User) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		t.Fatal(errors.Wrap(err, "reading random bits"))
@@ -185,6 +183,11 @@ func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Respo
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session.Key))
+}
+
+// HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
+func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
+	SetReqAuthHeader(t, req, user)
 
 	return HTTPDo(t, req)
 
@@ -221,20 +224,6 @@ func GetCookieByName(cookies []*http.Cookie, name string) *http.Cookie {
 	}
 
 	return ret
-}
-
-// CreateMockStripeBackend returns a mock stripe backend that uses
-// the given test server
-func CreateMockStripeBackend(ts *httptest.Server) stripe.Backend {
-	stripeMockBackend := stripe.GetBackendWithConfig(
-		stripe.APIBackend,
-		&stripe.BackendConfig{
-			URL:        ts.URL,
-			HTTPClient: ts.Client(),
-		},
-	)
-
-	return stripeMockBackend
 }
 
 // MustRespondJSON responds with the JSON-encoding of the given interface. If the encoding

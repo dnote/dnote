@@ -29,7 +29,6 @@ export const booksPathDef = '/books';
 export const loginPathDef = '/login';
 export const joinPathDef = '/join';
 export const settingsPathDef = '/settings/:section';
-export const subscriptionsPathDef = '/subscriptions';
 export const verifyEmailPathDef = '/verify-email/:token';
 export const passwordResetRequestPathDef = '/password-reset';
 export const passwordResetConfirmPathDef = '/password-reset/:token';
@@ -47,13 +46,11 @@ export const noHeaderPaths = [
 export const noFooterPaths = [
   loginPathDef,
   joinPathDef,
-  subscriptionsPathDef,
   verifyEmailPathDef,
   passwordResetRequestPathDef,
   passwordResetConfirmPathDef,
   emailPreferencePathDef
 ];
-export const subscriptionPaths = [subscriptionsPathDef];
 
 // filterSearchObj filters the given search object and returns a new object
 function filterSearchObj(obj) {
@@ -162,10 +159,6 @@ export function getJoinPath(searchObj = {}): Location {
 
 export function getLoginPath(searchObj = {}): Location {
   return getLocation({ pathname: loginPathDef, searchObj });
-}
-
-export function getSubscriptionPath(searchObj = {}): Location {
-  return getLocation({ pathname: subscriptionsPathDef, searchObj });
 }
 
 export function getPasswordResetRequestPath(searchObj = {}): Location {

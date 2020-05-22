@@ -29,7 +29,7 @@ set +a
   COMPILED_PATH="$appPath"/compiled \
   PUBLIC_PATH="$appPath"/public \
   COMPILED_PATH="$basePath/web/compiled" \
-  IS_TEST=true \
+  STANDALONE=true \
   VERSION="$VERSION" \
   WEBPACK_HOST="0.0.0.0" \
     "$dir/webpack-dev.sh"

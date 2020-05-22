@@ -16,13 +16,12 @@ appPath="$basePath/web"
   ASSET_BASE_URL=$ASSET_BASE_URL \
   COMPILED_PATH=$COMPILED_PATH \
   PUBLIC_PATH=$PUBLIC_PATH \
-  IS_TEST=true \
     node "$dir/placeholder.js" &&
 
   ROOT_URL=$ROOT_URL \
   VERSION="$VERSION" \
   "$appPath"/node_modules/.bin/webpack-dev-server \
-    --env.isTest="$IS_TEST" \
+    --env.standalone="$STANDALONE" \
     --host "$WEBPACK_HOST" \
     --config "$appPath"/webpack/dev.config.js
 )

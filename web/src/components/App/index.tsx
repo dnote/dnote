@@ -31,8 +31,7 @@ import {
   homePathDef,
   noFooterPaths,
   noHeaderPaths,
-  notePathDef,
-  subscriptionPaths
+  notePathDef
 } from 'web/libs/paths';
 import render from '../../routes';
 import { useDispatch, useSelector } from '../../store';
@@ -45,7 +44,6 @@ import MobileMenu from '../Common/MobileMenu';
 import SystemMessage from '../Common/SystemMessage';
 import NormalHeader from '../Header/Normal';
 import NoteHeader from '../Header/Note';
-import SubscriptionHeader from '../Header/SubscriptionHeader';
 import Splash from '../Splash';
 import TabBar from '../TabBar';
 import './App.global.scss';
@@ -179,7 +177,6 @@ const App: React.FunctionComponent<Props> = ({ location }) => {
 
       <Switch>
         <Route path={noHeaderPaths} exact component={null} />
-        <Route path={subscriptionPaths} exact component={SubscriptionHeader} />
         <Route path={notePathDef} exact component={NoteHeader} />
         <Route path={homePathDef} component={NormalHeader} />
       </Switch>

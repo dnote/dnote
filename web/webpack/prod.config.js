@@ -22,7 +22,7 @@ const plugins = require('./plugins');
 const resolve = require('./resolve');
 
 module.exports = env => {
-  const isTest = env.isTest === 'true';
+  const standalone = env.standalone === 'true';
 
   return {
     mode: 'production',
@@ -38,7 +38,7 @@ module.exports = env => {
     resolve,
     plugins: plugins({
       production: true,
-      test: isTest
+      standalone
     }),
     optimization: {
       minimize: true

@@ -39,7 +39,7 @@ func TestCreate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("token type %s", tc.kind), func(t *testing.T) {
-			defer testutils.ClearData()
+			defer testutils.ClearData(testutils.DB)
 
 			// Set up
 			u := testutils.SetupUserData()

@@ -50,7 +50,7 @@ func TestAppShellExecute(t *testing.T) {
 	})
 
 	t.Run("note", func(t *testing.T) {
-		defer testutils.ClearData()
+		defer testutils.ClearData(testutils.DB)
 
 		user := testutils.SetupUserData()
 		b1 := database.Book{

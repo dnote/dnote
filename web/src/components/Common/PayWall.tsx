@@ -18,9 +18,7 @@
 
 import React, { Fragment } from 'react';
 import classnames from 'classnames';
-import { Link } from 'react-router-dom';
 
-import { getSubscriptionPath } from 'web/libs/paths';
 import LockIcon from '../Icons/Lock';
 import { useSelector } from '../../store';
 
@@ -51,12 +49,9 @@ const PayWall: React.FunctionComponent<Props> = ({
       <h1 className={styles.lead}>Please unlock Dnote Cloud to use.</h1>
 
       <div className={styles.actions}>
-        <Link
-          to={getSubscriptionPath()}
-          className="button button-normal button-first"
-        >
+        <a href="/subscriptions" className="button button-normal button-first">
           Get started
-        </Link>
+        </a>
       </div>
     </div>
   );

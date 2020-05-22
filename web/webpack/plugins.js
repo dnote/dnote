@@ -20,24 +20,16 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 
-module.exports = ({ production = false, test = false } = {}) => {
+module.exports = ({ production = false, standalone = true } = {}) => {
   const rootUrl = process.env.ROOT_URL;
-
-  let stripePublicKey;
-  if (test) {
-    stripePublicKey = 'pk_test_5926f65DQoIilZeNOiKydfoN';
-  } else {
-    stripePublicKey = 'pk_live_xvouPZFPDDBSIyMUSLZwkXfR';
-  }
-
   const cdnUrl = 'https://cdn.getdnote.com';
   const version = process.env.VERSION;
 
   const compileTimeConstantForMinification = {
     __ROOT_URL__: JSON.stringify(rootUrl),
-    __STRIPE_PUBLIC_KEY__: JSON.stringify(stripePublicKey),
     __CDN_URL__: JSON.stringify(cdnUrl),
-    __VERSION__: JSON.stringify(version)
+    __VERSION__: JSON.stringify(version),
+    __STANDALONE__: JSON.stringify(standalone)
   };
 
   if (!production) {

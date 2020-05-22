@@ -18,7 +18,7 @@
 
 import services from 'web/libs/services';
 import { EmailPrefData } from 'jslib/operations/types';
-import { UserData, SourceData, SubscriptionData } from './type';
+import { UserData } from './type';
 import { ThunkAction } from '../types';
 
 import {
@@ -27,27 +27,11 @@ import {
   START_FETCHING_USER,
   RECEIVE_USER,
   RECEIVE_USER_ERROR,
-  RECEIVE_SUBSCRIPTION,
-  RECEIVE_SUBSCRIPTION_ERROR,
-  START_FETCHING_SUBSCRIPTION,
-  CLEAR_SUBSCRIPTION,
-  START_FETCHING_SOURCE,
-  RECEIVE_SOURCE,
-  CLEAR_SOURCE,
-  RECEIVE_SOURCE_ERROR,
   StartFetchingUserAction,
   ReceiveUserAction,
   ReceiveUserErrorAction,
   ReceiveEmailPreferenceAction,
-  ReceiveEmailPreferenceErrorAction,
-  StartFetchingSubscriptionAction,
-  ReceiveSubscriptionAction,
-  ClearSubscriptionAction,
-  ReceiveSubscriptionErrorAction,
-  StartFetchingSourceAction,
-  ReceiveSourceAction,
-  ClearSourceAction,
-  ReceiveSourceErrorAction
+  ReceiveEmailPreferenceErrorAction
 } from './type';
 
 function startFetchingUser(): StartFetchingUserAction {
@@ -136,95 +120,6 @@ export function getCurrentUser(
         }
 
         dispatch(receiveUserError(err.message));
-      });
-  };
-}
-
-export function startFetchingSubscription(): StartFetchingSubscriptionAction {
-  return {
-    type: START_FETCHING_SUBSCRIPTION
-  };
-}
-
-export function receiveSubscription(subscription): ReceiveSubscriptionAction {
-  return {
-    type: RECEIVE_SUBSCRIPTION,
-    data: { subscription }
-  };
-}
-
-export function clearSubscription(): ClearSubscriptionAction {
-  return {
-    type: CLEAR_SUBSCRIPTION
-  };
-}
-
-export function receiveSubscriptionError(
-  errorMessage
-): ReceiveSubscriptionErrorAction {
-  return {
-    type: RECEIVE_SUBSCRIPTION_ERROR,
-    data: { errorMessage }
-  };
-}
-
-export function getSubscription(): ThunkAction<SubscriptionData> {
-  return dispatch => {
-    dispatch(startFetchingSubscription());
-
-    return services.payment
-      .getSubscription()
-      .then(subscription => {
-        dispatch(receiveSubscription(subscription));
-      })
-      .catch(err => {
-        console.log('error fetching subscription', err.message);
-        dispatch(receiveSubscriptionError(err.message));
-      });
-  };
-}
-
-export function startFetchingSource(): StartFetchingSourceAction {
-  return {
-    type: START_FETCHING_SOURCE
-  };
-}
-
-export function receiveSource(source): ReceiveSourceAction {
-  return {
-    type: RECEIVE_SOURCE,
-    data: { source }
-  };
-}
-
-export function clearSource(): ClearSourceAction {
-  return {
-    type: CLEAR_SOURCE
-  };
-}
-
-export function receiveSourceError(
-  errorMessage: string
-): ReceiveSourceErrorAction {
-  return {
-    type: RECEIVE_SOURCE_ERROR,
-    data: { errorMessage }
-  };
-}
-
-export function getSource(): ThunkAction<SourceData> {
-  return dispatch => {
-    dispatch(startFetchingSource());
-
-    return services.payment
-      .getSource()
-      .then(source => {
-        console.log('source', source);
-        dispatch(receiveSource(source));
-      })
-      .catch(err => {
-        console.log('error fetching source', err.message);
-        dispatch(receiveSourceError(err.message));
       });
   };
 }

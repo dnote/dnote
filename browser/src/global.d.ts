@@ -20,5 +20,6 @@
 
 // defined by webpack-define-plugin
 declare let __API_ENDPOINT__: string;
+declare let __STANDALONE__: string;
 declare let __WEB_URL__: string;
 declare let __VERSION__: string;
