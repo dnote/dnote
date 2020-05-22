@@ -20,13 +20,11 @@ import React from 'react';
 
 import { NoteData } from 'jslib/operations/types';
 import Time from '../../Common/Time';
-import { nanosecToMillisec } from '../../../helpers/time';
 import formatTime from '../../../helpers/time/format';
 import { timeAgo } from '../../../helpers/time';
 import styles from './Note.scss';
 
-function formatAddedOn(ts: number): string {
-  const ms = nanosecToMillisec(ts);
+function formatAddedOn(ms: number): string {
   const d = new Date(ms);
 
   return formatTime(d, '%MMMM %DD, %YYYY');
@@ -49,11 +47,13 @@ const Footer: React.FunctionComponent<Props> = ({
     return null;
   }
 
+  const updatedAt = new Date(note.updatedAt).getTime();
+
   let timeText;
   if (useTimeAgo) {
-    timeText = timeAgo(nanosecToMillisec(note.addedOn));
+    timeText = timeAgo(updatedAt);
   } else {
-    timeText = formatAddedOn(note.addedOn);
+    timeText = formatAddedOn(updatedAt);
   }
 
   return (
@@ -63,7 +63,7 @@ const Footer: React.FunctionComponent<Props> = ({
         <Time
           id="note-ts"
           text={timeText}
-          ms={nanosecToMillisec(note.addedOn)}
+          ms={updatedAt}
           tooltipAlignment="left"
           tooltipDirection="bottom"
         />
