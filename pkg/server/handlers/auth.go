@@ -58,7 +58,8 @@ func Cors(next http.HandlerFunc) http.HandlerFunc {
 
 // AuthParams is the params for the authentication middleware
 type AuthParams struct {
-	ProOnly bool
+	ProOnly               bool
+	RedirectGuestsToLogin bool
 }
 
 // Auth is an authentication middleware
@@ -66,6 +67,11 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok, err := AuthWithSession(a.DB, r, p)
 		if !ok {
+			if p != nil && p.RedirectGuestsToLogin {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
 			RespondUnauthorized(w)
 			return
 		}

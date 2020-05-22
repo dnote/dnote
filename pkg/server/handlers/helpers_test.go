@@ -383,6 +383,54 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 	})
 }
 
+func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
+	defer testutils.ClearData(testutils.DB)
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	a := &app.App{DB: testutils.DB}
+	server := httptest.NewServer(Auth(a, handler, &AuthParams{
+		RedirectGuestsToLogin: true,
+	}))
+
+	defer server.Close()
+
+	t.Run("guest", func(t *testing.T) {
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
+
+		// execute
+		res := testutils.HTTPDo(t, req)
+
+		// test
+		assert.Equal(t, res.StatusCode, http.StatusFound, "status code mismatch")
+		assert.Equal(t, res.Header.Get("Location"), "/login", "location header mismatch")
+	})
+
+	t.Run("logged in user", func(t *testing.T) {
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
+		session := database.Session{
+			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
+			UserID:    user.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 24),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+
+		// execute
+		res := testutils.HTTPAuthDo(t, req, user)
+		req.Header.Set("Authorization", session.Key)
+
+		// test
+		assert.Equal(t, res.StatusCode, http.StatusOK, "status code mismatch")
+		assert.Equal(t, res.Header.Get("Location"), "", "location header mismatch")
+	})
+
+}
+
 func TestTokenAuthMiddleWare(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
