@@ -12,7 +12,13 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
-None
+#### Removed
+
+- Remove unnecessary payment logic
+
+#### Fixed
+
+- Fix timestamp in the note content view
 
 ### 1.0.3 2020-05-03
 
