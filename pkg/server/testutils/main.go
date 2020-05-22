@@ -166,8 +166,8 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 	return res
 }
 
-// HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
-func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
+// SetReqAuthHeader sets the authorization header in the given request for the given user
+func SetReqAuthHeader(t *testing.T, req *http.Request, user database.User) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		t.Fatal(errors.Wrap(err, "reading random bits"))
@@ -183,6 +183,11 @@ func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Respo
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session.Key))
+}
+
+// HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
+func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
+	SetReqAuthHeader(t, req, user)
 
 	return HTTPDo(t, req)
 

@@ -87,6 +87,14 @@ func NotEqual(t *testing.T, a, b interface{}, message string) {
 	}
 }
 
+// NotEqualf fails a test if the actual matches the expected
+func NotEqualf(t *testing.T, a, b interface{}, message string) {
+	ok, m := checkEqual(a, b, message)
+	if ok {
+		t.Fatal(m)
+	}
+}
+
 // DeepEqual fails a test if the actual does not deeply equal the expected
 func DeepEqual(t *testing.T, a, b interface{}, message string) {
 	if cmp.Equal(a, b) {
