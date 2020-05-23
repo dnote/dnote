@@ -12,9 +12,13 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
+None
+
+### 1.0.4 2020-05-23
+
 #### Removed
 
-- Remove unnecessary payment logic
+- Simplify the bundle by removing unnecessary payment logic
 
 #### Fixed
 
