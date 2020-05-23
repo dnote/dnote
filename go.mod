@@ -9,7 +9,7 @@ require (
 	github.com/dnote/actions v0.2.0
 	github.com/dnote/color v1.7.0
 	github.com/gobuffalo/packr/v2 v2.8.0
-	github.com/google/go-cmp v0.4.0
+	github.com/google/go-cmp v0.4.1
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.1.1
@@ -30,9 +30,9 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
-	golang.org/x/net v0.0.0-20200513185701-a91f0712d120 // indirect
+	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200513112337-417ce2331b5c // indirect
+	golang.org/x/sys v0.0.0-20200519105757-fe76b779f299 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
