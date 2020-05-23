@@ -23,6 +23,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/crypt"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -49,8 +50,8 @@ func (a *App) CreateSession(userID int) (database.Session, error) {
 
 // DeleteUserSessions deletes all existing sessions for the given user. It effectively
 // invalidates all existing sessions.
-func (a *App) DeleteUserSessions(userID int) error {
-	if err := a.DB.Where("user_id = ?", userID).Delete(&database.Session{}).Error; err != nil {
+func (a *App) DeleteUserSessions(db *gorm.DB, userID int) error {
+	if err := db.Debug().Where("user_id = ?", userID).Delete(&database.Session{}).Error; err != nil {
 		return errors.Wrap(err, "deleting sessions")
 	}
 

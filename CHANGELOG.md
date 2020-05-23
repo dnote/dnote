@@ -19,6 +19,7 @@ The following log documents the history of the server project.
 #### Fixed
 
 - Fix timestamp in the note content view
+- Invalidate existing sessions when password is changed
 
 ### 1.0.3 2020-05-03
 
