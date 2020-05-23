@@ -165,6 +165,12 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := a.App.DeleteUserSessions(tx, account.UserID); err != nil {
+		tx.Rollback()
+		handlers.DoError(w, errors.Wrap(err, "deleting user sessions").Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
 	tx.Commit()
 
 	var user database.User

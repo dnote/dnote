@@ -165,7 +165,6 @@ func TestCreateResetToken(t *testing.T) {
 
 func TestResetPassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -193,6 +192,27 @@ func TestResetPassword(t *testing.T) {
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "newpassword"}`
 		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
+		s1 := database.Session{
+			Key:       "some-session-key-1",
+			UserID:    u.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&s1), "preparing user session 1")
+
+		s2 := &database.Session{
+			Key:       "some-session-key-2",
+			UserID:    u.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&s2), "preparing user session 2")
+
+		anotherUser := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Save(&database.Session{
+			Key:       "some-session-key-3",
+			UserID:    anotherUser.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}), "preparing anotherUser session 1")
+
 		// Execute
 		res := testutils.HTTPDo(t, req)
 
@@ -209,10 +229,23 @@ func TestResetPassword(t *testing.T) {
 		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
 		assert.Equal(t, passwordErr, nil, "Password mismatch")
 		assert.Equal(t, verificationToken.UsedAt, (*time.Time)(nil), "verificationToken UsedAt mismatch")
+
+		var s1Count, s2Count int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s1.ID).Count(&s1Count), "counting s1")
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s2.ID).Count(&s2Count), "counting s2")
+
+		assert.Equal(t, s1Count, 0, "s1 should have been deleted")
+		assert.Equal(t, s2Count, 0, "s2 should have been deleted")
+
+		var userSessionCount, anotherUserSessionCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", u.ID).Count(&userSessionCount), "counting user session")
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", anotherUser.ID).Count(&anotherUserSessionCount), "counting anotherUser session")
+
+		assert.Equal(t, userSessionCount, 1, "should have created a new user session")
+		assert.Equal(t, anotherUserSessionCount, 1, "anotherUser session count mismatch")
 	})
 
 	t.Run("nonexistent token", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -251,7 +284,6 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("expired token", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -289,7 +321,6 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("used token", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -338,7 +369,6 @@ func TestResetPassword(t *testing.T) {
 	})
 
 	t.Run("using wrong type token: email_verification", func(t *testing.T) {
-
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
