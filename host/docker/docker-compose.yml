@@ -12,7 +12,7 @@ services:
     restart: always
 
   dnote:
-    image: dnote/dnote:1.0.1
+    image: dnote/dnote:latest
     environment:
       GO_ENV: PRODUCTION
       DBSkipSSL: "true"
