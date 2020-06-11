@@ -10,7 +10,8 @@
     "package:firefox": "TARGET=firefox NODE_ENV=production gulp package",
     "watch:chrome": "TARGET=chrome NODE_ENV=development concurrently \"webpack --watch\" \"gulp watch\"  ",
     "watch:firefox": "TARGET=firefox NODE_ENV=development concurrently \"webpack --watch\" \"gulp watch\"  ",
-    "lint": "../node_modules/.bin/eslint ./src --ext .ts,.tsx,.js"
+    "lint": "../node_modules/.bin/eslint ./src --ext .ts,.tsx,.js",
+    "lint:fix": "../node_modules/.bin/eslint ./src --fix --ext .ts,.tsx,.js"
   },
   "author": "Monomax Software Pty Ltd",
   "license": "GPL-3.0-or-later",
