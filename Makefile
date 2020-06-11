@@ -47,6 +47,12 @@ lint:
 	@(cd ${currentDir}/browser && npm run lint)
 .PHONY: lint
 
+lint-fix:
+	@(cd ${currentDir}/web && npm run lint:fix)
+	@(cd ${currentDir}/jslib && npm run lint:fix)
+	@(cd ${currentDir}/browser && npm run lint:fix)
+.PHONY: lint
+
 ## test
 test: test-cli test-api test-web test-jslib
 .PHONY: test
