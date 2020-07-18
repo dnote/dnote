@@ -18,7 +18,7 @@
   "dependencies": {
     "@types/history": "^4.7.5",
     "history": "^4.10.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "qs": "^6.9.3"
   },
   "devDependencies": {
