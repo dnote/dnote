@@ -44,7 +44,9 @@
     "react/jsx-fragments": 0,
     "jsx-a11y/label-has-associated-control": 0,
     "no-empty": 0,
-    "import/extensions": 0
+    "import/extensions": 0,
+    "react/require-default-props": 0,
+    "react/default-props-match-prop-types": 0
   },
   "plugins": [
     "react", "react-hooks", "import", "prettier", "@typescript-eslint"

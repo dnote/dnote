@@ -45,8 +45,6 @@ import React from 'react';
 import { IconProps } from './types';
 
 interface Props extends IconProps {
-  title?: string;
-  desc?: string;
   ariaLabel?: string;
 }
 
