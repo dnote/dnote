@@ -30,7 +30,10 @@ import (
 
 func TestGetTmpContentPath(t *testing.T) {
 	t.Run("no collision", func(t *testing.T) {
-		ctx := context.InitTestCtx(t, "../tmp1", nil)
+		ctx := context.InitTestCtx(t, context.Dirs{
+			Data:  "../tmp",
+			Cache: "../tmp",
+		}, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
 		res, err := GetTmpContentPath(ctx)
@@ -38,16 +41,19 @@ func TestGetTmpContentPath(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
 
-		expected := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_0.md")
+		expected := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_0.md")
 		assert.Equal(t, res, expected, "filename did not match")
 	})
 
 	t.Run("one existing session", func(t *testing.T) {
 		// set up
-		ctx := context.InitTestCtx(t, "../tmp2", nil)
+		ctx := context.InitTestCtx(t, context.Dirs{
+			Data:  "../tmp2",
+			Cache: "../tmp2",
+		}, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		p := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_0.md")
+		p := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_0.md")
 		if _, err := os.Create(p); err != nil {
 			t.Fatal(errors.Wrap(err, "preparing the conflicting file"))
 		}
@@ -59,20 +65,23 @@ func TestGetTmpContentPath(t *testing.T) {
 		}
 
 		// test
-		expected := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_1.md")
+		expected := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_1.md")
 		assert.Equal(t, res, expected, "filename did not match")
 	})
 
 	t.Run("two existing sessions", func(t *testing.T) {
 		// set up
-		ctx := context.InitTestCtx(t, "../tmp3", nil)
+		ctx := context.InitTestCtx(t, context.Dirs{
+			Data:  "../tmp3",
+			Cache: "../tmp3",
+		}, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		p1 := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_0.md")
+		p1 := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_0.md")
 		if _, err := os.Create(p1); err != nil {
 			t.Fatal(errors.Wrap(err, "preparing the conflicting file"))
 		}
-		p2 := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_1.md")
+		p2 := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_1.md")
 		if _, err := os.Create(p2); err != nil {
 			t.Fatal(errors.Wrap(err, "preparing the conflicting file"))
 		}
@@ -84,7 +93,7 @@ func TestGetTmpContentPath(t *testing.T) {
 		}
 
 		// test
-		expected := fmt.Sprintf("%s/%s", ctx.DnoteDir, "DNOTE_TMPCONTENT_2.md")
+		expected := fmt.Sprintf("%s/%s", ctx.Dirs.Cache, "DNOTE_TMPCONTENT_2.md")
 		assert.Equal(t, res, expected, "filename did not match")
 	})
 }

@@ -30,16 +30,15 @@ import (
 )
 
 // InitTestCtx initializes a test context
-func InitTestCtx(t *testing.T, dnoteDir string, dbOpts *database.TestDBOptions) DnoteCtx {
-	dbPath := fmt.Sprintf("%s/%s", dnoteDir, consts.DnoteDBFileName)
+func InitTestCtx(t *testing.T, dirs Dirs, dbOpts *database.TestDBOptions) DnoteCtx {
+	dbPath := fmt.Sprintf("%s/%s", dirs.Data, consts.DnoteDBFileName)
 
 	db := database.InitTestDB(t, dbPath, dbOpts)
 
 	return DnoteCtx{
-		DB:       db,
-		DnoteDir: dnoteDir,
-		// Use a mock clock to test times
-		Clock: clock.NewMock(),
+		DB:    db,
+		Dirs:  dirs,
+		Clock: clock.NewMock(), // Use a mock clock to test times
 	}
 }
 
@@ -47,7 +46,7 @@ func InitTestCtx(t *testing.T, dnoteDir string, dbOpts *database.TestDBOptions) 
 func TeardownTestCtx(t *testing.T, ctx DnoteCtx) {
 	database.TeardownTestDB(t, ctx.DB)
 
-	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
+	if err := os.RemoveAll(ctx.Dirs.LegacyDnote); err != nil {
 		t.Fatal(errors.Wrap(err, "removing test dnote directory"))
 	}
 }

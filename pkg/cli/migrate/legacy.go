@@ -177,8 +177,8 @@ func performMigration(ctx context.DnoteCtx, migrationID int) error {
 
 // backupDnoteDir backs up the dnote directory to a temporary backup directory
 func backupDnoteDir(ctx context.DnoteCtx) error {
-	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
-	tmpPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.Dirs.Home)
+	tmpPath := fmt.Sprintf("%s/%s", ctx.Dirs.Home, backupDirName)
 
 	if err := utils.CopyDir(srcPath, tmpPath); err != nil {
 		return errors.Wrap(err, "Failed to copy the .dnote directory")
@@ -198,8 +198,8 @@ func restoreBackup(ctx context.DnoteCtx) error {
 		}
 	}()
 
-	srcPath := fmt.Sprintf("%s/.dnote", ctx.HomeDir)
-	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+	srcPath := fmt.Sprintf("%s/.dnote", ctx.Dirs.Home)
+	backupPath := fmt.Sprintf("%s/%s", ctx.Dirs.Home, backupDirName)
 
 	if err = os.RemoveAll(srcPath); err != nil {
 		return errors.Wrapf(err, "Failed to clear current dnote data at %s", backupPath)
@@ -213,7 +213,7 @@ func restoreBackup(ctx context.DnoteCtx) error {
 }
 
 func clearBackup(ctx context.DnoteCtx) error {
-	backupPath := fmt.Sprintf("%s/%s", ctx.HomeDir, backupDirName)
+	backupPath := fmt.Sprintf("%s/%s", ctx.Dirs.Home, backupDirName)
 
 	if err := os.RemoveAll(backupPath); err != nil {
 		return errors.Wrapf(err, "Failed to remove backup at %s", backupPath)
@@ -224,7 +224,7 @@ func clearBackup(ctx context.DnoteCtx) error {
 
 // getSchemaPath returns the path to the file containing schema info
 func getSchemaPath(ctx context.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, schemaFilename)
+	return fmt.Sprintf("%s/%s", ctx.Dirs.LegacyDnote, schemaFilename)
 }
 
 func readSchema(ctx context.DnoteCtx) (schema, error) {
@@ -485,7 +485,7 @@ var migrateToV8SystemKeyBookMark = "bookmark"
 
 // migrateToV1 deletes YAML archive if exists
 func migrateToV1(ctx context.DnoteCtx) error {
-	yamlPath := fmt.Sprintf("%s/%s", ctx.HomeDir, ".dnote-yaml-archived")
+	yamlPath := fmt.Sprintf("%s/%s", ctx.Dirs.Home, ".dnote-yaml-archived")
 	ok, err := utils.FileExists(yamlPath)
 	if err != nil {
 		return errors.Wrap(err, "checking if yaml file exists")
@@ -502,7 +502,7 @@ func migrateToV1(ctx context.DnoteCtx) error {
 }
 
 func migrateToV2(ctx context.DnoteCtx) error {
-	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
+	notePath := fmt.Sprintf("%s/dnote", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(notePath)
 	if err != nil {
@@ -558,8 +558,8 @@ func migrateToV2(ctx context.DnoteCtx) error {
 
 // migrateToV3 generates actions for existing dnote
 func migrateToV3(ctx context.DnoteCtx) error {
-	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
-	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+	notePath := fmt.Sprintf("%s/dnote", ctx.Dirs.LegacyDnote)
+	actionsPath := fmt.Sprintf("%s/actions", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(notePath)
 	if err != nil {
@@ -645,7 +645,7 @@ func getEditorCommand() string {
 }
 
 func migrateToV4(ctx context.DnoteCtx) error {
-	configPath := fmt.Sprintf("%s/dnoterc", ctx.DnoteDir)
+	configPath := fmt.Sprintf("%s/dnoterc", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(configPath)
 	if err != nil {
@@ -678,7 +678,7 @@ func migrateToV4(ctx context.DnoteCtx) error {
 
 // migrateToV5 migrates actions
 func migrateToV5(ctx context.DnoteCtx) error {
-	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+	actionsPath := fmt.Sprintf("%s/actions", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(actionsPath)
 	if err != nil {
@@ -748,7 +748,7 @@ func migrateToV5(ctx context.DnoteCtx) error {
 
 // migrateToV6 adds a 'public' field to notes
 func migrateToV6(ctx context.DnoteCtx) error {
-	notePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
+	notePath := fmt.Sprintf("%s/dnote", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(notePath)
 	if err != nil {
@@ -803,7 +803,7 @@ func migrateToV6(ctx context.DnoteCtx) error {
 // EditNoteDataV2. Due to a bug, edit logged actions with schema version '2'
 // but with a data of EditNoteDataV1. https://github.com/dnote/dnote/pkg/cli/issues/107
 func migrateToV7(ctx context.DnoteCtx) error {
-	actionPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+	actionPath := fmt.Sprintf("%s/actions", ctx.Dirs.LegacyDnote)
 
 	b, err := ioutil.ReadFile(actionPath)
 	if err != nil {
@@ -873,7 +873,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 	}
 
 	// 1. Migrate the the dnote file
-	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
+	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.Dirs.LegacyDnote)
 	b, err := ioutil.ReadFile(dnoteFilePath)
 	if err != nil {
 		return errors.Wrap(err, "reading the notes")
@@ -913,7 +913,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 	}
 
 	// 2. Migrate the actions file
-	actionsPath := fmt.Sprintf("%s/actions", ctx.DnoteDir)
+	actionsPath := fmt.Sprintf("%s/actions", ctx.Dirs.LegacyDnote)
 	b, err = ioutil.ReadFile(actionsPath)
 	if err != nil {
 		return errors.Wrap(err, "reading the actions")
@@ -938,7 +938,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 	}
 
 	// 3. Migrate the timestamps file
-	timestampsPath := fmt.Sprintf("%s/timestamps", ctx.DnoteDir)
+	timestampsPath := fmt.Sprintf("%s/timestamps", ctx.Dirs.LegacyDnote)
 	b, err = ioutil.ReadFile(timestampsPath)
 	if err != nil {
 		return errors.Wrap(err, "reading the timestamps")
@@ -980,7 +980,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 	if err := os.RemoveAll(timestampsPath); err != nil {
 		return errors.Wrap(err, "removing the timestamps file")
 	}
-	schemaPath := fmt.Sprintf("%s/schema", ctx.DnoteDir)
+	schemaPath := fmt.Sprintf("%s/schema", ctx.Dirs.LegacyDnote)
 	if err := os.RemoveAll(schemaPath); err != nil {
 		return errors.Wrap(err, "removing the schema file")
 	}

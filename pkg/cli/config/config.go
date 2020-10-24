@@ -36,7 +36,7 @@ type Config struct {
 
 // GetPath returns the path to the dnote config file
 func GetPath(ctx context.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, consts.ConfigFilename)
+	return fmt.Sprintf("%s/%s", ctx.Dirs.Config, consts.ConfigFilename)
 }
 
 // Read reads the config file

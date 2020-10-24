@@ -36,7 +36,6 @@ import (
 var binaryName = "test-dnote"
 
 var opts = testutils.RunDnoteCmdOptions{
-	HomeDir:  "./tmp",
 	DnoteDir: "./tmp/.dnote",
 }
 
@@ -53,7 +52,7 @@ func TestInit(t *testing.T) {
 	// Execute
 	// run an arbitrary command "view" due to https://github.com/spf13/cobra/issues/1056
 	testutils.RunDnoteCmd(t, opts, binaryName, "view")
-	defer testutils.RemoveDir(t, opts.HomeDir)
+	defer testutils.RemoveDir(t, opts.DnoteDir)
 
 	db := database.OpenTestDB(t, opts.DnoteDir)
 
@@ -104,7 +103,7 @@ func TestAddNote(t *testing.T) {
 	t.Run("new book", func(t *testing.T) {
 		// Set up and execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		db := database.OpenTestDB(t, opts.DnoteDir)
 
@@ -137,7 +136,7 @@ func TestAddNote(t *testing.T) {
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		// Test
 
@@ -178,7 +177,7 @@ func TestEditNote(t *testing.T) {
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-c", "foo bar")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -211,7 +210,7 @@ func TestEditNote(t *testing.T) {
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -245,7 +244,7 @@ func TestEditNote(t *testing.T) {
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux", "-c", "n2 body updated")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -281,7 +280,7 @@ func TestEditBook(t *testing.T) {
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "js", "-n", "js-edited")
-		defer testutils.RemoveDir(t, opts.HomeDir)
+		defer testutils.RemoveDir(t, opts.DnoteDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -344,7 +343,7 @@ func TestRemoveNote(t *testing.T) {
 			} else {
 				testutils.WaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "1")
 			}
-			defer testutils.RemoveDir(t, opts.HomeDir)
+			defer testutils.RemoveDir(t, opts.DnoteDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int
@@ -432,7 +431,7 @@ func TestRemoveBook(t *testing.T) {
 				testutils.WaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "js")
 			}
 
-			defer testutils.RemoveDir(t, opts.HomeDir)
+			defer testutils.RemoveDir(t, opts.DnoteDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int

@@ -64,7 +64,7 @@ func CopyFixture(t *testing.T, ctx context.DnoteCtx, fixturePath string, filenam
 		t.Fatal(errors.Wrap(err, "getting the absolute path for fixture"))
 	}
 
-	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
+	dp, err := filepath.Abs(filepath.Join(ctx.Dirs.LegacyDnote, filename))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting the absolute path dnote dir"))
 	}
@@ -77,7 +77,7 @@ func CopyFixture(t *testing.T, ctx context.DnoteCtx, fixturePath string, filenam
 
 // WriteFile writes a file with the given content and  filename inside the dnote dir
 func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
-	dp, err := filepath.Abs(filepath.Join(ctx.DnoteDir, filename))
+	dp, err := filepath.Abs(filepath.Join(ctx.Dirs.LegacyDnote, filename))
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +89,7 @@ func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
 
 // ReadFile reads the content of the file with the given name in dnote dir
 func ReadFile(ctx context.DnoteCtx, filename string) []byte {
-	path := filepath.Join(ctx.DnoteDir, filename)
+	path := filepath.Join(ctx.Dirs.LegacyDnote, filename)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -121,7 +121,11 @@ func NewDnoteCmd(opts RunDnoteCmdOptions, binaryName string, arg ...string) (*ex
 	}
 
 	cmd := exec.Command(binaryPath, arg...)
-	cmd.Env = []string{fmt.Sprintf("DNOTE_DIR=%s", opts.DnoteDir), fmt.Sprintf("DNOTE_HOME_DIR=%s", opts.HomeDir)}
+	cmd.Env = []string{
+		fmt.Sprintf("XDG_CONFIG_HOME=%s", opts.DnoteDir),
+		fmt.Sprintf("XDG_DATA_HOME=%s", opts.DnoteDir),
+		fmt.Sprintf("XDG_CACHE_HOME=%s", opts.DnoteDir),
+	}
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
 
@@ -131,7 +135,6 @@ func NewDnoteCmd(opts RunDnoteCmdOptions, binaryName string, arg ...string) (*ex
 // RunDnoteCmdOptions is an option for RunDnoteCmd
 type RunDnoteCmdOptions struct {
 	DnoteDir string
-	HomeDir  string
 }
 
 // RunDnoteCmd runs a dnote command
