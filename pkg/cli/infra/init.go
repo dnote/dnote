@@ -45,21 +45,26 @@ type RunEFunc func(*cobra.Command, []string) error
 
 func getDBPath() string {
 	dbPath := fmt.Sprintf("%s/%s", dirs.DataHome, consts.DnoteDBFileName)
-	ok, err := utils.FileExists(dbPath)
-	if ok {
+
+	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
+		return dbPath
+	}
+
+	legacyDnoteDir := getLegacyDnotePath(dirs.Home)
+	ok, err := utils.FileExists(legacyDnoteDir)
+	if !ok {
 		return dbPath
 	}
 
 	if err != nil {
-		log.Errorf(errors.Wrapf(err, "checking database file at %s", dbPath).Error())
+		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyDnoteDir).Error())
 	}
 
-	dnoteDir := getLegacyDnoteDir(dirs.Home)
-	return fmt.Sprintf("%s/%s", dnoteDir, consts.DnoteDBFileName)
+	return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
 }
 
 func newCtx(versionTag string) (context.DnoteCtx, error) {
-	dnoteDir := getLegacyDnoteDir(dirs.Home)
+	dnoteDir := getLegacyDnotePath(dirs.Home)
 	dirs := context.Dirs{
 		Home:        dirs.Home,
 		Config:      dirs.ConfigHome,
@@ -68,10 +73,10 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 		LegacyDnote: dnoteDir,
 	}
 
-	log.Debug("directories: home '%s' config '%s' data '%s' cache '%s'\n", dirs.Home, dirs.Config, dirs.Data, dirs.Cache)
-	dnoteDBPath := getDBPath()
+	dbPath := getDBPath()
+	log.Debug("paths: home '%s' config '%s' data '%s' cache '%s' db '%s'\n", dirs.Home, dirs.Config, dirs.Data, dirs.Cache, dbPath)
 
-	db, err := database.Open(dnoteDBPath)
+	db, err := database.Open(dbPath)
 	if err != nil {
 		return context.DnoteCtx{}, errors.Wrap(err, "conntecting to db")
 	}
@@ -156,9 +161,9 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	return ret, nil
 }
 
-// getLegacyDnoteDir returns a legacy dnote directory path placed under
+// getLegacyDnotePath returns a legacy dnote directory path placed under
 // the user's home directory
-func getLegacyDnoteDir(homeDir string) string {
+func getLegacyDnotePath(homeDir string) string {
 	var ret string
 
 	dnoteDirEnv := os.Getenv("DNOTE_DIR")

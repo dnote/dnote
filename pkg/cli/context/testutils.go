@@ -46,7 +46,13 @@ func InitTestCtx(t *testing.T, dirs Dirs, dbOpts *database.TestDBOptions) DnoteC
 func TeardownTestCtx(t *testing.T, ctx DnoteCtx) {
 	database.TeardownTestDB(t, ctx.DB)
 
-	if err := os.RemoveAll(ctx.Dirs.LegacyDnote); err != nil {
-		t.Fatal(errors.Wrap(err, "removing test dnote directory"))
+	if err := os.RemoveAll(ctx.Dirs.Data); err != nil {
+		t.Fatal(errors.Wrap(err, "removing test data directory"))
+	}
+	if err := os.RemoveAll(ctx.Dirs.Config); err != nil {
+		t.Fatal(errors.Wrap(err, "removing test config directory"))
+	}
+	if err := os.RemoveAll(ctx.Dirs.Cache); err != nil {
+		t.Fatal(errors.Wrap(err, "removing test cache directory"))
 	}
 }
