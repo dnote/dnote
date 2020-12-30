@@ -53,7 +53,7 @@ func checkLegacyPath(ctx context.DnoteCtx) (string, bool) {
 
 // GetPath returns the path to the dnote config file
 func GetPath(ctx context.DnoteCtx) string {
-	configPath := fmt.Sprintf("%s/%s", ctx.Paths.Config, consts.ConfigFilename)
+	configPath := fmt.Sprintf("%s/%s/%s", ctx.Paths.Config, consts.DnoteDirName, consts.ConfigFilename)
 
 	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
 		return configPath

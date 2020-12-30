@@ -58,7 +58,7 @@ func checkLegacyDBPath() (string, bool) {
 }
 
 func getDBPath(paths context.Paths) string {
-	dbPath := fmt.Sprintf("%s/%s", paths.Data, consts.DnoteDBFileName)
+	dbPath := fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
 
 	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
 		return dbPath
@@ -177,7 +177,7 @@ func getLegacyDnotePath(homeDir string) string {
 
 	dnoteDirEnv := os.Getenv("DNOTE_DIR")
 	if dnoteDirEnv == "" {
-		ret = fmt.Sprintf("%s/%s", homeDir, consts.DnoteDirName)
+		ret = fmt.Sprintf("%s/%s", homeDir, consts.LegacyDnoteDirName)
 	} else {
 		ret = dnoteDirEnv
 	}
