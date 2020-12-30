@@ -30,14 +30,14 @@ import (
 )
 
 // InitTestCtx initializes a test context
-func InitTestCtx(t *testing.T, dirs Dirs, dbOpts *database.TestDBOptions) DnoteCtx {
-	dbPath := fmt.Sprintf("%s/%s", dirs.Data, consts.DnoteDBFileName)
+func InitTestCtx(t *testing.T, paths Paths, dbOpts *database.TestDBOptions) DnoteCtx {
+	dbPath := fmt.Sprintf("%s/%s", paths.Data, consts.DnoteDBFileName)
 
 	db := database.InitTestDB(t, dbPath, dbOpts)
 
 	return DnoteCtx{
 		DB:    db,
-		Dirs:  dirs,
+		Paths: paths,
 		Clock: clock.NewMock(), // Use a mock clock to test times
 	}
 }
@@ -46,13 +46,13 @@ func InitTestCtx(t *testing.T, dirs Dirs, dbOpts *database.TestDBOptions) DnoteC
 func TeardownTestCtx(t *testing.T, ctx DnoteCtx) {
 	database.TeardownTestDB(t, ctx.DB)
 
-	if err := os.RemoveAll(ctx.Dirs.Data); err != nil {
+	if err := os.RemoveAll(ctx.Paths.Data); err != nil {
 		t.Fatal(errors.Wrap(err, "removing test data directory"))
 	}
-	if err := os.RemoveAll(ctx.Dirs.Config); err != nil {
+	if err := os.RemoveAll(ctx.Paths.Config); err != nil {
 		t.Fatal(errors.Wrap(err, "removing test config directory"))
 	}
-	if err := os.RemoveAll(ctx.Dirs.Cache); err != nil {
+	if err := os.RemoveAll(ctx.Paths.Cache); err != nil {
 		t.Fatal(errors.Wrap(err, "removing test cache directory"))
 	}
 }

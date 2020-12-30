@@ -43,29 +43,38 @@ import (
 // RunEFunc is a function type of dnote commands
 type RunEFunc func(*cobra.Command, []string) error
 
-func getDBPath() string {
-	dbPath := fmt.Sprintf("%s/%s", dirs.DataHome, consts.DnoteDBFileName)
-
-	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
-		return dbPath
-	}
-
+func checkLegacyDBPath() (string, bool) {
 	legacyDnoteDir := getLegacyDnotePath(dirs.Home)
 	ok, err := utils.FileExists(legacyDnoteDir)
-	if !ok {
-		return dbPath
+	if ok {
+		return legacyDnoteDir, true
 	}
 
 	if err != nil {
 		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyDnoteDir).Error())
 	}
 
-	return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
+	return "", false
+}
+
+func getDBPath(paths context.Paths) string {
+	dbPath := fmt.Sprintf("%s/%s", paths.Data, consts.DnoteDBFileName)
+
+	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
+		return dbPath
+	}
+
+	legacyDnoteDir, ok := checkLegacyDBPath()
+	if ok {
+		return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
+	}
+
+	return dbPath
 }
 
 func newCtx(versionTag string) (context.DnoteCtx, error) {
 	dnoteDir := getLegacyDnotePath(dirs.Home)
-	dirs := context.Dirs{
+	paths := context.Paths{
 		Home:        dirs.Home,
 		Config:      dirs.ConfigHome,
 		Data:        dirs.DataHome,
@@ -73,8 +82,8 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 		LegacyDnote: dnoteDir,
 	}
 
-	dbPath := getDBPath()
-	log.Debug("paths: home '%s' config '%s' data '%s' cache '%s' db '%s'\n", dirs.Home, dirs.Config, dirs.Data, dirs.Cache, dbPath)
+	dbPath := getDBPath(paths)
+	log.Debug("paths: home '%s' config '%s' data '%s' cache '%s' db '%s'\n", paths.Home, paths.Config, paths.Data, paths.Cache, dbPath)
 
 	db, err := database.Open(dbPath)
 	if err != nil {
@@ -82,7 +91,7 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 	}
 
 	ctx := context.DnoteCtx{
-		Dirs:    dirs,
+		Paths:   paths,
 		Version: versionTag,
 		DB:      db,
 	}
@@ -148,7 +157,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 
 	ret := context.DnoteCtx{
 
-		Dirs:             ctx.Dirs,
+		Paths:            ctx.Paths,
 		Version:          ctx.Version,
 		DB:               ctx.DB,
 		SessionKey:       sessionKey,
@@ -334,13 +343,13 @@ func initDir(path string) error {
 
 // initDnoteDir initializes missing directories that Dnote uses
 func initDnoteDir(ctx context.DnoteCtx) error {
-	if err := initDir(ctx.Dirs.Config); err != nil {
+	if err := initDir(ctx.Paths.Config); err != nil {
 		return errors.Wrap(err, "initializing config dir")
 	}
-	if err := initDir(ctx.Dirs.Data); err != nil {
+	if err := initDir(ctx.Paths.Data); err != nil {
 		return errors.Wrap(err, "initializing data dir")
 	}
-	if err := initDir(ctx.Dirs.Cache); err != nil {
+	if err := initDir(ctx.Paths.Cache); err != nil {
 		return errors.Wrap(err, "initializing cache dir")
 	}
 

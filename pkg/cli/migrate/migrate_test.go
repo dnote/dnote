@@ -37,7 +37,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var dirs context.Dirs = context.Dirs{
+var paths context.Paths = context.Paths{
 	Home:        "../../tmp",
 	Cache:       "../../tmp",
 	Config:      "../../tmp",
@@ -61,7 +61,7 @@ func TestExecute_bump_schema(t *testing.T) {
 		func() {
 			// set up
 			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, dirs, &opts)
+			ctx := context.InitTestCtx(t, paths, &opts)
 			defer context.TeardownTestCtx(t, ctx)
 
 			db := ctx.DB
@@ -118,7 +118,7 @@ func TestRun_nonfresh(t *testing.T) {
 		func() {
 			// set up
 			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, dirs, &opts)
+			ctx := context.InitTestCtx(t, paths, &opts)
 			defer context.TeardownTestCtx(t, ctx)
 
 			db := ctx.DB
@@ -198,7 +198,7 @@ func TestRun_fresh(t *testing.T) {
 		func() {
 			// set up
 			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, dirs, &opts)
+			ctx := context.InitTestCtx(t, paths, &opts)
 			defer context.TeardownTestCtx(t, ctx)
 
 			db := ctx.DB
@@ -272,7 +272,7 @@ func TestRun_up_to_date(t *testing.T) {
 		func() {
 			// set up
 			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, dirs, &opts)
+			ctx := context.InitTestCtx(t, paths, &opts)
 			defer context.TeardownTestCtx(t, ctx)
 
 			db := ctx.DB
@@ -327,7 +327,7 @@ func TestRun_up_to_date(t *testing.T) {
 func TestLocalMigration1(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -405,7 +405,7 @@ func TestLocalMigration1(t *testing.T) {
 func TestLocalMigration2(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -492,7 +492,7 @@ func TestLocalMigration2(t *testing.T) {
 func TestLocalMigration3(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -567,7 +567,7 @@ func TestLocalMigration3(t *testing.T) {
 func TestLocalMigration4(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -611,7 +611,7 @@ func TestLocalMigration4(t *testing.T) {
 func TestLocalMigration5(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-5-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -673,7 +673,7 @@ func TestLocalMigration5(t *testing.T) {
 func TestLocalMigration6(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-5-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -706,7 +706,7 @@ func TestLocalMigration6(t *testing.T) {
 func TestLocalMigration7_trash(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -739,7 +739,7 @@ func TestLocalMigration7_trash(t *testing.T) {
 func TestLocalMigration7_conflicts(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -772,7 +772,7 @@ func TestLocalMigration7_conflicts(t *testing.T) {
 func TestLocalMigration7_conflicts_dup(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -810,7 +810,7 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 func TestLocalMigration8(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-8-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -876,7 +876,7 @@ func TestLocalMigration8(t *testing.T) {
 func TestLocalMigration9(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-9-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -922,7 +922,7 @@ func TestLocalMigration9(t *testing.T) {
 func TestLocalMigration10(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-10-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -994,7 +994,7 @@ func TestLocalMigration10(t *testing.T) {
 func TestLocalMigration11(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-11-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	db := ctx.DB
@@ -1074,11 +1074,11 @@ func TestLocalMigration11(t *testing.T) {
 func TestLocalMigration12(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-12-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 
 	data := []byte("editor: vim")
-	path := fmt.Sprintf("%s/dnoterc", ctx.Dirs.LegacyDnote)
+	path := fmt.Sprintf("%s/dnoterc", ctx.Paths.LegacyDnote)
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
 	}
@@ -1111,7 +1111,7 @@ func TestLocalMigration12(t *testing.T) {
 func TestRemoteMigration1(t *testing.T) {
 	// set up
 	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/remote-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, dirs, &opts)
+	ctx := context.InitTestCtx(t, paths, &opts)
 	defer context.TeardownTestCtx(t, ctx)
 	testutils.Login(t, &ctx)
 

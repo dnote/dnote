@@ -24,8 +24,8 @@ import (
 	"github.com/dnote/dnote/pkg/clock"
 )
 
-// Dirs contains directory definitions
-type Dirs struct {
+// Paths contain directory definitions
+type Paths struct {
 	Home        string
 	Config      string
 	Data        string
@@ -35,7 +35,7 @@ type Dirs struct {
 
 // DnoteCtx is a context holding the information of the current runtime
 type DnoteCtx struct {
-	Dirs             Dirs
+	Paths            Paths
 	APIEndpoint      string
 	Version          string
 	DB               *database.DB

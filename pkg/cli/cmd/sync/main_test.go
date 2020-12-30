@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 )
 
-var dirs context.Dirs = context.Dirs{
+var paths context.Paths = context.Paths{
 	Home:   "../../tmp",
 	Cache:  "../../tmp",
 	Config: "../../tmp",
 	Data:   "../../tmp",
 }
 
-var dbPath = filepath.Join(dirs.Data, ".dnote.db")
+var dbPath = filepath.Join(paths.Data, ".dnote.db")

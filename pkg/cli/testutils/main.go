@@ -64,7 +64,7 @@ func CopyFixture(t *testing.T, ctx context.DnoteCtx, fixturePath string, filenam
 		t.Fatal(errors.Wrap(err, "getting the absolute path for fixture"))
 	}
 
-	dp, err := filepath.Abs(filepath.Join(ctx.Dirs.LegacyDnote, filename))
+	dp, err := filepath.Abs(filepath.Join(ctx.Paths.LegacyDnote, filename))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting the absolute path dnote dir"))
 	}
@@ -77,7 +77,7 @@ func CopyFixture(t *testing.T, ctx context.DnoteCtx, fixturePath string, filenam
 
 // WriteFile writes a file with the given content and  filename inside the dnote dir
 func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
-	dp, err := filepath.Abs(filepath.Join(ctx.Dirs.LegacyDnote, filename))
+	dp, err := filepath.Abs(filepath.Join(ctx.Paths.LegacyDnote, filename))
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +89,7 @@ func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
 
 // ReadFile reads the content of the file with the given name in dnote dir
 func ReadFile(ctx context.DnoteCtx, filename string) []byte {
-	path := filepath.Join(ctx.Dirs.LegacyDnote, filename)
+	path := filepath.Join(ctx.Paths.LegacyDnote, filename)
 
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
