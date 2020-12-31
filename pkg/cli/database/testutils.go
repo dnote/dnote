@@ -151,7 +151,7 @@ func TeardownTestDB(t *testing.T, db *DB) {
 // OpenTestDB opens the database connection to a test database
 // without initializing any schema
 func OpenTestDB(t *testing.T, dnoteDir string) *DB {
-	dbPath := fmt.Sprintf("%s/%s", dnoteDir, consts.DnoteDBFileName)
+	dbPath := fmt.Sprintf("%s/%s/%s", dnoteDir, consts.DnoteDirName, consts.DnoteDBFileName)
 	db, err := Open(dbPath)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "opening database connection to the test database"))

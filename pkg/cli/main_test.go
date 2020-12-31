@@ -35,8 +35,14 @@ import (
 
 var binaryName = "test-dnote"
 
+var testDir = "./tmp/.dnote"
+
 var opts = testutils.RunDnoteCmdOptions{
-	DnoteDir: "./tmp/.dnote",
+	Env: []string{
+		fmt.Sprintf("XDG_CONFIG_HOME=%s", testDir),
+		fmt.Sprintf("XDG_DATA_HOME=%s", testDir),
+		fmt.Sprintf("XDG_CACHE_HOME=%s", testDir),
+	},
 }
 
 func TestMain(m *testing.M) {
@@ -52,12 +58,12 @@ func TestInit(t *testing.T) {
 	// Execute
 	// run an arbitrary command "view" due to https://github.com/spf13/cobra/issues/1056
 	testutils.RunDnoteCmd(t, opts, binaryName, "view")
-	defer testutils.RemoveDir(t, opts.DnoteDir)
+	defer testutils.RemoveDir(t, testDir)
 
-	db := database.OpenTestDB(t, opts.DnoteDir)
+	db := database.OpenTestDB(t, testDir)
 
 	// Test
-	ok, err := utils.FileExists(opts.DnoteDir)
+	ok, err := utils.FileExists(testDir)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "checking if dnote dir exists"))
 	}
@@ -65,7 +71,7 @@ func TestInit(t *testing.T) {
 		t.Errorf("dnote directory was not initialized")
 	}
 
-	ok, err = utils.FileExists(fmt.Sprintf("%s/%s", opts.DnoteDir, consts.ConfigFilename))
+	ok, err = utils.FileExists(fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.ConfigFilename))
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "checking if dnote config exists"))
 	}
@@ -103,9 +109,9 @@ func TestAddNote(t *testing.T) {
 	t.Run("new book", func(t *testing.T) {
 		// Set up and execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
-		db := database.OpenTestDB(t, opts.DnoteDir)
+		db := database.OpenTestDB(t, testDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -131,12 +137,12 @@ func TestAddNote(t *testing.T) {
 
 	t.Run("existing book", func(t *testing.T) {
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 		testutils.Setup3(t, db)
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
 		// Test
 
@@ -172,12 +178,12 @@ func TestAddNote(t *testing.T) {
 func TestEditNote(t *testing.T) {
 	t.Run("content flag", func(t *testing.T) {
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 		testutils.Setup4(t, db)
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-c", "foo bar")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -205,12 +211,12 @@ func TestEditNote(t *testing.T) {
 
 	t.Run("book flag", func(t *testing.T) {
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 		testutils.Setup5(t, db)
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -239,12 +245,12 @@ func TestEditNote(t *testing.T) {
 
 	t.Run("book flag and content flag", func(t *testing.T) {
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 		testutils.Setup5(t, db)
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux", "-c", "n2 body updated")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -275,12 +281,12 @@ func TestEditNote(t *testing.T) {
 func TestEditBook(t *testing.T) {
 	t.Run("name flag", func(t *testing.T) {
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 		testutils.Setup1(t, db)
 
 		// Execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "js", "-n", "js-edited")
-		defer testutils.RemoveDir(t, opts.DnoteDir)
+		defer testutils.RemoveDir(t, testDir)
 
 		// Test
 		var noteCount, bookCount int
@@ -334,7 +340,7 @@ func TestRemoveNote(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("--yes=%t", tc.yesFlag), func(t *testing.T) {
 			// Setup
-			db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+			db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 			testutils.Setup2(t, db)
 
 			// Execute
@@ -343,7 +349,7 @@ func TestRemoveNote(t *testing.T) {
 			} else {
 				testutils.WaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "1")
 			}
-			defer testutils.RemoveDir(t, opts.DnoteDir)
+			defer testutils.RemoveDir(t, testDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int
@@ -421,7 +427,7 @@ func TestRemoveBook(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("--yes=%t", tc.yesFlag), func(t *testing.T) {
 			// Setup
-			db := database.InitTestDB(t, fmt.Sprintf("%s/%s", opts.DnoteDir, consts.DnoteDBFileName), nil)
+			db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
 			testutils.Setup2(t, db)
 
 			// Execute
@@ -431,7 +437,7 @@ func TestRemoveBook(t *testing.T) {
 				testutils.WaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "js")
 			}
 
-			defer testutils.RemoveDir(t, opts.DnoteDir)
+			defer testutils.RemoveDir(t, testDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int

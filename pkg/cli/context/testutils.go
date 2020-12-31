@@ -31,7 +31,7 @@ import (
 
 // InitTestCtx initializes a test context
 func InitTestCtx(t *testing.T, paths Paths, dbOpts *database.TestDBOptions) DnoteCtx {
-	dbPath := fmt.Sprintf("%s/%s", paths.Data, consts.DnoteDBFileName)
+	dbPath := fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
 
 	db := database.InitTestDB(t, dbPath, dbOpts)
 

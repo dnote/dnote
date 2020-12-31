@@ -22,7 +22,6 @@ package testutils
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -121,23 +120,20 @@ func NewDnoteCmd(opts RunDnoteCmdOptions, binaryName string, arg ...string) (*ex
 	}
 
 	cmd := exec.Command(binaryPath, arg...)
-	cmd.Env = []string{
-		fmt.Sprintf("XDG_CONFIG_HOME=%s", opts.DnoteDir),
-		fmt.Sprintf("XDG_DATA_HOME=%s", opts.DnoteDir),
-		fmt.Sprintf("XDG_CACHE_HOME=%s", opts.DnoteDir),
-		// Skip checking for the legacy directory to avoid writing in a real legacy path that might be present
-		// in the system that is running the test
-		"DISABLE_LEGACY_DNOTE_DIR=true",
-	}
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
+
+	// Skip checking for the legacy directory to avoid writing in a real legacy path that might be present
+	// in the system that is running the test
+	env := append(opts.Env, "DISABLE_LEGACY_DNOTE_DIR=true")
+	cmd.Env = env
 
 	return cmd, &stderr, &stdout, nil
 }
 
 // RunDnoteCmdOptions is an option for RunDnoteCmd
 type RunDnoteCmdOptions struct {
-	DnoteDir string
+	Env []string
 }
 
 // RunDnoteCmd runs a dnote command

@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -156,7 +157,6 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	}
 
 	ret := context.DnoteCtx{
-
 		Paths:            ctx.Paths,
 		Version:          ctx.Version,
 		DB:               ctx.DB,
@@ -173,16 +173,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 // getLegacyDnotePath returns a legacy dnote directory path placed under
 // the user's home directory
 func getLegacyDnotePath(homeDir string) string {
-	var ret string
-
-	dnoteDirEnv := os.Getenv("DNOTE_DIR")
-	if dnoteDirEnv == "" {
-		ret = fmt.Sprintf("%s/%s", homeDir, consts.LegacyDnoteDirName)
-	} else {
-		ret = dnoteDirEnv
-	}
-
-	return ret
+	return fmt.Sprintf("%s/%s", homeDir, consts.LegacyDnoteDirName)
 }
 
 // InitDB initializes the database.
@@ -343,13 +334,13 @@ func initDir(path string) error {
 
 // initDnoteDir initializes missing directories that Dnote uses
 func initDnoteDir(ctx context.DnoteCtx) error {
-	if err := initDir(ctx.Paths.Config); err != nil {
+	if err := initDir(filepath.Join(ctx.Paths.Config, consts.DnoteDirName)); err != nil {
 		return errors.Wrap(err, "initializing config dir")
 	}
-	if err := initDir(ctx.Paths.Data); err != nil {
+	if err := initDir(filepath.Join(ctx.Paths.Data, consts.DnoteDirName)); err != nil {
 		return errors.Wrap(err, "initializing data dir")
 	}
-	if err := initDir(ctx.Paths.Cache); err != nil {
+	if err := initDir(filepath.Join(ctx.Paths.Cache, consts.DnoteDirName)); err != nil {
 		return errors.Wrap(err, "initializing cache dir")
 	}
 
