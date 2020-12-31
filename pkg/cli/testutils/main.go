@@ -123,10 +123,7 @@ func NewDnoteCmd(opts RunDnoteCmdOptions, binaryName string, arg ...string) (*ex
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
 
-	// Skip checking for the legacy directory to avoid writing in a real legacy path that might be present
-	// in the system that is running the test
-	env := append(opts.Env, "DISABLE_LEGACY_DNOTE_DIR=true")
-	cmd.Env = env
+	cmd.Env = opts.Env
 
 	return cmd, &stderr, &stdout, nil
 }

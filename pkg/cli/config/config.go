@@ -21,7 +21,6 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -53,18 +52,12 @@ func checkLegacyPath(ctx context.DnoteCtx) (string, bool) {
 
 // GetPath returns the path to the dnote config file
 func GetPath(ctx context.DnoteCtx) string {
-	configPath := fmt.Sprintf("%s/%s/%s", ctx.Paths.Config, consts.DnoteDirName, consts.ConfigFilename)
-
-	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
-		return configPath
-	}
-
 	legacyPath, ok := checkLegacyPath(ctx)
 	if ok {
 		return legacyPath
 	}
 
-	return configPath
+	return fmt.Sprintf("%s/%s/%s", ctx.Paths.Config, consts.DnoteDirName, consts.ConfigFilename)
 }
 
 // Read reads the config file

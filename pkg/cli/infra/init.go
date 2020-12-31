@@ -59,18 +59,12 @@ func checkLegacyDBPath() (string, bool) {
 }
 
 func getDBPath(paths context.Paths) string {
-	dbPath := fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
-
-	if os.Getenv("DISABLE_LEGACY_DNOTE_DIR") == "true" {
-		return dbPath
-	}
-
 	legacyDnoteDir, ok := checkLegacyDBPath()
 	if ok {
 		return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
 	}
 
-	return dbPath
+	return fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
 }
 
 func newCtx(versionTag string) (context.DnoteCtx, error) {
@@ -84,7 +78,6 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 	}
 
 	dbPath := getDBPath(paths)
-	log.Debug("paths: home '%s' config '%s' data '%s' cache '%s' db '%s'\n", paths.Home, paths.Config, paths.Data, paths.Cache, dbPath)
 
 	db, err := database.Open(dbPath)
 	if err != nil {
