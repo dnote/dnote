@@ -11,10 +11,8 @@ require (
 	github.com/gobuffalo/packr/v2 v2.8.1
 	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/uuid v1.1.3
 	github.com/gorilla/csrf v1.6.2
-	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/schema v1.2.0
 	github.com/jinzhu/gorm v1.9.16
@@ -23,6 +21,7 @@ require (
 	github.com/lib/pq v1.9.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/nadproject/nad v0.0.0-20200124233812-f1a4e763ee2f
 	github.com/pkg/errors v0.9.1
 	github.com/radovskyb/watcher v1.0.7
 	github.com/robfig/cron v1.2.0
@@ -38,7 +37,6 @@ require (
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.4.0
 )

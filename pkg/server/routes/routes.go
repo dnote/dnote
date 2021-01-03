@@ -3,8 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/gorilla/mux"
 )
@@ -17,9 +16,9 @@ type Route struct {
 	RateLimit bool
 }
 
-func registerRoutes(router *mux.Router, mw middleware, c config.Config, routes []Route) {
+func registerRoutes(router *mux.Router, mw middleware, app *app.App, routes []Route) {
 	for _, route := range routes {
-		wrappedHandler := mw(route.Handler, c, route.RateLimit)
+		wrappedHandler := mw(route.Handler, app, route.RateLimit)
 
 		router.
 			Handle(route.Pattern, wrappedHandler).
@@ -28,39 +27,40 @@ func registerRoutes(router *mux.Router, mw middleware, c config.Config, routes [
 }
 
 // NewWebRoutes returns a new web routes
-func NewWebRoutes(cfg config.Config, c *controllers.Controllers, cl clock.Clock) []Route {
+func NewWebRoutes(c *controllers.Controllers) []Route {
 	return []Route{
 		{"GET", "/", http.HandlerFunc(c.Users.New), true},
+		{"GET", "/new", http.HandlerFunc(c.Users.New), true},
 	}
 }
 
 // NewAPIRoutes returns a new api routes
-func NewAPIRoutes(cfg config.Config, c *controllers.Controllers, cl clock.Clock) []Route {
+func NewAPIRoutes(c *controllers.Controllers) []Route {
 	return []Route{}
 }
 
-// RouteConfig is the configuration for routes
-type RouteConfig struct {
+// Config is the configuration for routes
+type Config struct {
 	Controllers *controllers.Controllers
 	WebRoutes   []Route
 	APIRoutes   []Route
 }
 
 // New creates and returns a new router
-func New(cfg config.Config, rc RouteConfig) http.Handler {
+func New(app *app.App, rc Config) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 
 	webRouter := router.PathPrefix("/").Subrouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	registerRoutes(webRouter, WebMw, cfg, rc.WebRoutes)
-	registerRoutes(apiRouter, APIMw, cfg, rc.APIRoutes)
+	registerRoutes(webRouter, WebMw, app, rc.WebRoutes)
+	registerRoutes(apiRouter, APIMw, app, rc.APIRoutes)
 
 	// static
-	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(cfg.StaticDir)))
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
 	router.PathPrefix("/static/").Handler(staticHandler)
 
 	// catch-all
-	// router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
+	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
 
 	return LoggingMw(router)
 }

@@ -104,15 +104,15 @@ func initDB(c config.Config) *gorm.DB {
 	return db
 }
 
-func initApp(c config.Config) app.App {
-	db := initDB(c)
+func initApp(cfg config.Config) app.App {
+	db := initDB(cfg)
 
 	return app.App{
 		DB:             db,
 		Clock:          clock.New(),
 		EmailTemplates: mailer.NewTemplates(nil),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
-		Config:         c,
+		Config:         cfg,
 	}
 }
 
@@ -139,21 +139,18 @@ func startCmd() {
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
-
 	if err := runJob(app); err != nil {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	cl := clock.New()
-	ctl := controllers.New(cfg, app.DB, cl)
-
-	rc := routes.RouteConfig{
-		WebRoutes:   routes.NewWebRoutes(cfg, ctl, cl),
-		APIRoutes:   routes.NewAPIRoutes(cfg, ctl, cl),
+	ctl := controllers.New(cfg, &app)
+	rc := routes.Config{
+		WebRoutes:   routes.NewWebRoutes(ctl),
+		APIRoutes:   routes.NewAPIRoutes(ctl),
 		Controllers: ctl,
 	}
 
-	r := routes.New(cfg, rc)
+	r := routes.New(&app, rc)
 
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
