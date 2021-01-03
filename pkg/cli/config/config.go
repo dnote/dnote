@@ -24,6 +24,8 @@ import (
 
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
+	"github.com/dnote/dnote/pkg/cli/log"
+	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -34,9 +36,28 @@ type Config struct {
 	APIEndpoint string `yaml:"apiEndpoint"`
 }
 
+func checkLegacyPath(ctx context.DnoteCtx) (string, bool) {
+	legacyPath := fmt.Sprintf("%s/%s", ctx.Paths.LegacyDnote, consts.ConfigFilename)
+
+	ok, err := utils.FileExists(legacyPath)
+	if err != nil {
+		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyPath).Error())
+	}
+	if ok {
+		return legacyPath, true
+	}
+
+	return "", false
+}
+
 // GetPath returns the path to the dnote config file
 func GetPath(ctx context.DnoteCtx) string {
-	return fmt.Sprintf("%s/%s", ctx.DnoteDir, consts.ConfigFilename)
+	legacyPath, ok := checkLegacyPath(ctx)
+	if ok {
+		return legacyPath
+	}
+
+	return fmt.Sprintf("%s/%s/%s", ctx.Paths.Config, consts.DnoteDirName, consts.ConfigFilename)
 }
 
 // Read reads the config file

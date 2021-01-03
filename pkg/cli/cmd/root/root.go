@@ -24,7 +24,7 @@ import (
 
 var root = &cobra.Command{
 	Use:           "dnote",
-	Short:         "Dnote - Instantly capture what you learn while coding",
+	Short:         "Dnote - a simple command line notebook",
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

@@ -37,7 +37,7 @@ import (
 func GetTmpContentPath(ctx context.DnoteCtx) (string, error) {
 	for i := 0; ; i++ {
 		filename := fmt.Sprintf("%s_%d.%s", consts.TmpContentFileBase, i, consts.TmpContentFileExt)
-		candidate := fmt.Sprintf("%s/%s", ctx.DnoteDir, filename)
+		candidate := fmt.Sprintf("%s/%s", ctx.Paths.Cache, filename)
 
 		ok, err := utils.FileExists(candidate)
 		if err != nil {

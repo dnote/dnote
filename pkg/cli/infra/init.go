@@ -24,7 +24,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"os/user"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -32,6 +32,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
+	"github.com/dnote/dnote/pkg/cli/dirs"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/utils"
@@ -43,24 +44,50 @@ import (
 // RunEFunc is a function type of dnote commands
 type RunEFunc func(*cobra.Command, []string) error
 
-func newCtx(versionTag string) (context.DnoteCtx, error) {
-	homeDir, err := getHomeDir()
-	if err != nil {
-		return context.DnoteCtx{}, errors.Wrap(err, "Failed to get home dir")
+func checkLegacyDBPath() (string, bool) {
+	legacyDnoteDir := getLegacyDnotePath(dirs.Home)
+	ok, err := utils.FileExists(legacyDnoteDir)
+	if ok {
+		return legacyDnoteDir, true
 	}
-	dnoteDir := getDnoteDir(homeDir)
 
-	dnoteDBPath := fmt.Sprintf("%s/%s", dnoteDir, consts.DnoteDBFileName)
-	db, err := database.Open(dnoteDBPath)
+	if err != nil {
+		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyDnoteDir).Error())
+	}
+
+	return "", false
+}
+
+func getDBPath(paths context.Paths) string {
+	legacyDnoteDir, ok := checkLegacyDBPath()
+	if ok {
+		return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
+	}
+
+	return fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
+}
+
+func newCtx(versionTag string) (context.DnoteCtx, error) {
+	dnoteDir := getLegacyDnotePath(dirs.Home)
+	paths := context.Paths{
+		Home:        dirs.Home,
+		Config:      dirs.ConfigHome,
+		Data:        dirs.DataHome,
+		Cache:       dirs.CacheHome,
+		LegacyDnote: dnoteDir,
+	}
+
+	dbPath := getDBPath(paths)
+
+	db, err := database.Open(dbPath)
 	if err != nil {
 		return context.DnoteCtx{}, errors.Wrap(err, "conntecting to db")
 	}
 
 	ctx := context.DnoteCtx{
-		HomeDir:  homeDir,
-		DnoteDir: dnoteDir,
-		Version:  versionTag,
-		DB:       db,
+		Paths:   paths,
+		Version: versionTag,
+		DB:      db,
 	}
 
 	return ctx, nil
@@ -123,8 +150,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	}
 
 	ret := context.DnoteCtx{
-		HomeDir:          ctx.HomeDir,
-		DnoteDir:         ctx.DnoteDir,
+		Paths:            ctx.Paths,
 		Version:          ctx.Version,
 		DB:               ctx.DB,
 		SessionKey:       sessionKey,
@@ -137,31 +163,10 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	return ret, nil
 }
 
-func getDnoteDir(homeDir string) string {
-	var ret string
-
-	dnoteDirEnv := os.Getenv("DNOTE_DIR")
-	if dnoteDirEnv == "" {
-		ret = fmt.Sprintf("%s/%s", homeDir, consts.DnoteDirName)
-	} else {
-		ret = dnoteDirEnv
-	}
-
-	return ret
-}
-
-func getHomeDir() (string, error) {
-	homeDirEnv := os.Getenv("DNOTE_HOME_DIR")
-	if homeDirEnv != "" {
-		return homeDirEnv, nil
-	}
-
-	usr, err := user.Current()
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to get current user")
-	}
-
-	return usr.HomeDir, nil
+// getLegacyDnotePath returns a legacy dnote directory path placed under
+// the user's home directory
+func getLegacyDnotePath(homeDir string) string {
+	return fmt.Sprintf("%s/%s", homeDir, consts.LegacyDnoteDirName)
 }
 
 // InitDB initializes the database.
@@ -304,20 +309,32 @@ func getEditorCommand() string {
 	return ret
 }
 
-// initDnoteDir initializes dnote directory if it does not exist yet
-func initDnoteDir(ctx context.DnoteCtx) error {
-	path := ctx.DnoteDir
-
+func initDir(path string) error {
 	ok, err := utils.FileExists(path)
 	if err != nil {
-		return errors.Wrap(err, "checking if dnote dir exists")
+		return errors.Wrapf(err, "checking if dir exists at %s", path)
 	}
 	if ok {
 		return nil
 	}
 
 	if err := os.MkdirAll(path, 0755); err != nil {
-		return errors.Wrap(err, "Failed to create dnote directory")
+		return errors.Wrapf(err, "creating a directory at %s", path)
+	}
+
+	return nil
+}
+
+// initDnoteDir initializes missing directories that Dnote uses
+func initDnoteDir(ctx context.DnoteCtx) error {
+	if err := initDir(filepath.Join(ctx.Paths.Config, consts.DnoteDirName)); err != nil {
+		return errors.Wrap(err, "initializing config dir")
+	}
+	if err := initDir(filepath.Join(ctx.Paths.Data, consts.DnoteDirName)); err != nil {
+		return errors.Wrap(err, "initializing data dir")
+	}
+	if err := initDir(filepath.Join(ctx.Paths.Cache, consts.DnoteDirName)); err != nil {
+		return errors.Wrap(err, "initializing cache dir")
 	}
 
 	return nil

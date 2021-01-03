@@ -20,8 +20,10 @@
 package consts
 
 var (
+	// LegacyDnoteDirName is the name of the legacy directory containing dnote files
+	LegacyDnoteDirName = ".dnote"
 	// DnoteDirName is the name of the directory containing dnote files
-	DnoteDirName = ".dnote"
+	DnoteDirName = "dnote"
 	// DnoteDBFileName is a filename for the Dnote SQLite database
 	DnoteDBFileName = "dnote.db"
 	// TmpContentFileBase is the base for the filename for a temporary content

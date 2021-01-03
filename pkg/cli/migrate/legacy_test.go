@@ -42,13 +42,15 @@ func setupEnv(t *testing.T, homeDir string) context.DnoteCtx {
 	}
 
 	return context.DnoteCtx{
-		HomeDir:  homeDir,
-		DnoteDir: dnoteDir,
+		Paths: context.Paths{
+			Home:        homeDir,
+			LegacyDnote: dnoteDir,
+		},
 	}
 }
 
 func teardownEnv(t *testing.T, ctx context.DnoteCtx) {
-	if err := os.RemoveAll(ctx.DnoteDir); err != nil {
+	if err := os.RemoveAll(ctx.Paths.LegacyDnote); err != nil {
 		t.Fatal(errors.Wrap(err, "tearing down the dnote dir"))
 	}
 }
@@ -59,7 +61,7 @@ func TestMigrateToV1(t *testing.T) {
 		ctx := setupEnv(t, "../tmp")
 		defer teardownEnv(t, ctx)
 
-		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
+		yamlPath, err := filepath.Abs(filepath.Join(ctx.Paths.Home, ".dnote-yaml-archived"))
 		if err != nil {
 			panic(errors.Wrap(err, "Failed to get absolute YAML path").Error())
 		}
@@ -85,7 +87,7 @@ func TestMigrateToV1(t *testing.T) {
 		ctx := setupEnv(t, "../tmp")
 		defer teardownEnv(t, ctx)
 
-		yamlPath, err := filepath.Abs(filepath.Join(ctx.HomeDir, ".dnote-yaml-archived"))
+		yamlPath, err := filepath.Abs(filepath.Join(ctx.Paths.Home, ".dnote-yaml-archived"))
 		if err != nil {
 			panic(errors.Wrap(err, "Failed to get absolute YAML path").Error())
 		}
@@ -356,7 +358,13 @@ func TestMigrateToV8(t *testing.T) {
 	db := database.InitTestDB(t, "../tmp/.dnote/dnote-test.db", &opts)
 	defer database.TeardownTestDB(t, db)
 
-	ctx := context.DnoteCtx{HomeDir: "../tmp", DnoteDir: "../tmp/.dnote", DB: db}
+	ctx := context.DnoteCtx{
+		Paths: context.Paths{
+			Home:        "../tmp",
+			LegacyDnote: "../tmp/.dnote",
+		},
+		DB: db,
+	}
 
 	// set up
 	testutils.CopyFixture(t, ctx, "./fixtures/legacy-8-actions.json", "actions")
@@ -373,10 +381,10 @@ func TestMigrateToV8(t *testing.T) {
 	// test
 
 	// 1. test if files are migrated
-	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.DnoteDir)
-	dnotercPath := fmt.Sprintf("%s/dnoterc", ctx.DnoteDir)
-	schemaFilePath := fmt.Sprintf("%s/schema", ctx.DnoteDir)
-	timestampFilePath := fmt.Sprintf("%s/timestamps", ctx.DnoteDir)
+	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.Paths.LegacyDnote)
+	dnotercPath := fmt.Sprintf("%s/dnoterc", ctx.Paths.LegacyDnote)
+	schemaFilePath := fmt.Sprintf("%s/schema", ctx.Paths.LegacyDnote)
+	timestampFilePath := fmt.Sprintf("%s/timestamps", ctx.Paths.LegacyDnote)
 
 	ok, err := utils.FileExists(dnoteFilePath)
 	if err != nil {
