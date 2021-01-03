@@ -145,7 +145,7 @@ func startCmd() {
 
 	ctl := controllers.New(cfg, &app)
 	rc := routes.Config{
-		WebRoutes:   routes.NewWebRoutes(ctl),
+		WebRoutes:   routes.NewWebRoutes(&app, ctl),
 		APIRoutes:   routes.NewAPIRoutes(ctl),
 		Controllers: ctl,
 	}

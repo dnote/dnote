@@ -27,9 +27,9 @@ func registerRoutes(router *mux.Router, mw middleware, app *app.App, routes []Ro
 }
 
 // NewWebRoutes returns a new web routes
-func NewWebRoutes(c *controllers.Controllers) []Route {
+func NewWebRoutes(app *app.App, c *controllers.Controllers) []Route {
 	return []Route{
-		{"GET", "/", http.HandlerFunc(c.Users.New), true},
+		{"GET", "/", Auth(app, http.HandlerFunc(c.Users.New), nil), true},
 		{"GET", "/new", http.HandlerFunc(c.Users.New), true},
 	}
 }

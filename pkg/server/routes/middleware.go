@@ -10,7 +10,8 @@ type middleware func(h http.Handler, app *app.App, rateLimit bool) http.Handler
 
 // WebMw is the middleware for the web
 func WebMw(h http.Handler, app *app.App, rateLimit bool) http.Handler {
-	return h
+	ret := h
+	return ret
 }
 
 // APIMw is the middleware for the API

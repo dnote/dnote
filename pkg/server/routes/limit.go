@@ -105,8 +105,8 @@ func lookupIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
-// Limit is a middleware to rate limit the handler
-func Limit(next http.Handler) http.HandlerFunc {
+// limitMw is a middleware to rate limit the handler
+func limitMw(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		identifier := lookupIP(r)
 		limiter := getVisitor(identifier)
