@@ -193,6 +193,11 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.12.0 - 2020-01-03
+
+- Use XDG base directory on Linux and macOS (#527)
+- Add `--content-only` flag to print the note content only (#528)
+
 ### 0.11.1 - 2020-04-25
 
 #### Fixed
