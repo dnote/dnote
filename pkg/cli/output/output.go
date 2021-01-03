@@ -43,6 +43,10 @@ func NoteInfo(info database.NoteInfo) {
 	fmt.Printf("\n-------------------------------------------------------\n")
 }
 
+func NoteContent(info database.NoteInfo) {
+	fmt.Printf("%s", info.Content)
+}
+
 // BookInfo prints a note information
 func BookInfo(info database.BookInfo) {
 	log.Infof("book name: %s\n", info.Name)

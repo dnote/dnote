@@ -41,6 +41,7 @@ var example = `
  `
 
 var nameOnly bool
+var contentOnly bool
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 {
@@ -63,6 +64,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 	f := cmd.Flags()
 	f.BoolVarP(&nameOnly, "name-only", "", false, "print book names only")
+	f.BoolVarP(&contentOnly, "content-only", "", false, "print the note content only")
 
 	return cmd
 }
@@ -79,13 +81,13 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			}
 
 			if utils.IsNumber(args[0]) {
-				run = cat.NewRun(ctx)
+				run = cat.NewRun(ctx, contentOnly)
 			} else {
 				run = ls.NewRun(ctx, false)
 			}
 		} else if len(args) == 2 {
 			// DEPRECATED: passing book name to view command is deprecated
-			run = cat.NewRun(ctx)
+			run = cat.NewRun(ctx, false)
 		} else {
 			return errors.New("Incorrect number of arguments")
 		}

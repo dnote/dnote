@@ -55,7 +55,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Aliases:    []string{"c"},
 		Short:      "See a note",
 		Example:    example,
-		RunE:       NewRun(ctx),
+		RunE:       NewRun(ctx, false),
 		PreRunE:    preRun,
 		Deprecated: deprecationWarning,
 	}
@@ -64,7 +64,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 }
 
 // NewRun returns a new run function
-func NewRun(ctx context.DnoteCtx) infra.RunEFunc {
+func NewRun(ctx context.DnoteCtx, contentOnly bool) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		var noteRowIDArg string
 
@@ -87,7 +87,11 @@ func NewRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return err
 		}
 
-		output.NoteInfo(info)
+		if contentOnly {
+			output.NoteContent(info)
+		} else {
+			output.NoteInfo(info)
+		}
 
 		return nil
 	}
