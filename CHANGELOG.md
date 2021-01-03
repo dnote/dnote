@@ -195,8 +195,30 @@ None
 
 ### 0.12.0 - 2020-01-03
 
-- Use XDG base directory on Linux and macOS (#527)
+#### Upgrade guide
+
+* **On Linux or macOS** Please move your Dnote files to new directories based on the XDG base directory specfication. **On Windows**, no action is required.
+
+```
+# Move the database file
+mv ~/.dnote/dnote.db ~/.local/share/dnote/dnote.db 
+
+# Move the config file
+mv ~/.dnote/dnoterc ~/.config/dnote/dnoterc
+
+# Delete ~/.dnote. (it is safe to delete DNOTE_TMPCONTENT.md files, if they exist.)
+rm -rf ~/.dnote
+```
+
+If `~/.dnote` directory exists, dnote will continue to use that directory for backward compatibility until the next major release.
+
+#### Added
+
 - Add `--content-only` flag to print the note content only (#528)
+
+#### Changed
+
+- Use XDG base directory on Linux and macOS (#527)
 
 ### 0.11.1 - 2020-04-25
 
