@@ -1,0 +1,50 @@
+{{define "yield"}}
+<div class="container page page-mobile-full">
+  <div class="page-header">
+    <h1 class="page-heading">Settings</h1>
+  </div>
+
+</div>
+{{end}}
+
+{{define "settingsSidebar"}}
+<nav class="wrapper">
+  <ul class="list-unstyled">
+    <li>
+      <a href="/settings"></a>
+      <NavLink
+        class={styles.item}
+        activeClassName={styles.active}
+        to={getSettingsPath(SettingSections.account)}
+      >
+        Account
+      </NavLink>
+    </li>
+    {__STANDALONE__ ? null : (
+      <li>
+        <a class={styles.item} href="/subscriptions/manage">
+          Billing
+        </a>
+      </li>
+    )}
+    <li>
+      <NavLink
+        class={styles.item}
+        activeClassName={styles.active}
+        to={getSettingsPath(SettingSections.notifications)}
+      >
+        Notifications
+      </NavLink>
+    </li>
+    <li>
+      <NavLink
+        class={styles.item}
+        activeClassName={styles.active}
+        to={getSettingsPath(SettingSections.about)}
+      >
+        About
+      </NavLink>
+    </li>
+  </ul>
+</nav>
+{{end}}
