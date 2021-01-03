@@ -1,0 +1,57 @@
+{{define "yield"}}
+<div class="auth-page">
+  <div class="container">
+    <h1 class="heading">Register</h1>
+
+    <div class="body">
+      <div class="panel">
+        {{template "signupForm"}}
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="callout">Already have an account?</div>
+      <a href="/login" class="cta">
+        Sign in
+      </a>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "signupForm"}}
+<form action="/register" method="POST">
+  {{csrfField}}
+
+  <div class="form-group">
+    <div class="input-row">
+      <label for="email-input" class="label">
+        Email
+        <input
+          id="email-input"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          class="form-control"
+          value="{{.Email}}"
+        />
+      </label>
+    </div>
+
+    <div class="input-row">
+      <label for="password-input" class="label">
+        Password
+        <input
+          id="password-input"
+          name="password"
+          type="password"
+          placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+          class="form-control"
+        />
+      </label>
+    </div>
+
+    <button  type="submit" class="auth-button button button-normal button-stretch button-third">Register</button>
+  </div>
+</form>
+{{end}}

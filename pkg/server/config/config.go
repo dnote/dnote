@@ -79,6 +79,8 @@ type Config struct {
 	DisableRegistration bool
 	Port                string
 	DB                  PostgresConfig
+	PageTemplateDir     string
+	StaticDir           string
 }
 
 // Load constructs and returns a new config based on the environment variables.
@@ -106,6 +108,16 @@ func Load() Config {
 // SetOnPremise sets the OnPremise value
 func (c *Config) SetOnPremise(val bool) {
 	c.OnPremise = val
+}
+
+// SetPageTemplateDir sets page template dir for the config
+func (c *Config) SetPageTemplateDir(d string) {
+	c.PageTemplateDir = d
+}
+
+// SetStaticDir sets static dir for the confi
+func (c *Config) SetStaticDir(d string) {
+	c.StaticDir = d
 }
 
 func validate(c Config) error {

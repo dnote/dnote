@@ -28,9 +28,11 @@ import (
 	"github.com/dnote/dnote/pkg/server/api"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/routes"
 	"github.com/dnote/dnote/pkg/server/web"
 	"github.com/jinzhu/gorm"
 
@@ -41,6 +43,9 @@ import (
 var versionTag = "master"
 var port = flag.String("port", "3000", "port to connect to")
 var rootBox *packr.Box
+
+var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
+var staticDir = flag.String("staticDir", "./static/", "the path to the static directory ")
 
 func init() {
 	rootBox = packr.New("root", "../../web/public")
@@ -124,9 +129,11 @@ func runJob(a app.App) error {
 }
 
 func startCmd() {
-	c := config.Load()
+	cfg := config.Load()
+	cfg.SetPageTemplateDir(*pageDir)
+	cfg.SetStaticDir(*staticDir)
 
-	app := initApp(c)
+	app := initApp(cfg)
 	defer app.DB.Close()
 
 	if err := database.Migrate(app.DB); err != nil {
@@ -137,13 +144,19 @@ func startCmd() {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	srv, err := initServer(app)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing server"))
+	cl := clock.New()
+	ctl := controllers.New(cfg, app.DB, cl)
+
+	rc := routes.RouteConfig{
+		WebRoutes:   routes.NewWebRoutes(cfg, ctl, cl),
+		APIRoutes:   routes.NewAPIRoutes(cfg, ctl, cl),
+		Controllers: ctl,
 	}
 
+	r := routes.New(cfg, rc)
+
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
-	log.Fatalln(http.ListenAndServe(":"+*port, srv))
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
 }
 
 func versionCmd() {

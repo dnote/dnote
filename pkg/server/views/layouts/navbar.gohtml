@@ -1,0 +1,32 @@
+{{define "navbar"}}
+<header class="header-wrapper">
+  <div class="container">
+    <div class="header-content">
+      <div class="left">
+        <a href="/">NAD</a>
+
+        <nav>
+          <ul class="list-unstyled main-nav">
+            <li><a href="/new">New</a></li>
+            <li><a href="/books">Books</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div>
+        {{if .User}}
+          <li>{{template "logoutForm"}}</li>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+</header>
+{{end}}
+
+{{define "logoutForm"}}
+<form class="navbar-form navbar-left" action="/logout" method="POST">
+  {{csrfField}}
+  <button type="submit" class="btn btn-default">Log out</button>
+</form>
+{{end}}

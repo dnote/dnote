@@ -1,0 +1,18 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ title }}</title>
+
+    {{template "css" .}}
+  </head>
+
+  <body>
+    {{template "header" .}}
+
+    {{template "alert" .Alert}}
+
+    {{template "yield" .Yield}}
+  </body>
+</html>
+{{end}}
