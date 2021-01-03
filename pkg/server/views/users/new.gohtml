@@ -1,0 +1,86 @@
+{{define "yield"}}
+<div class="auth-page">
+  <div class="container">
+    <a href="{{rootURL}}">
+      {{template "logo" .}}
+    </a>
+
+    <h1 class="heading">Join Dnote</h1>
+
+    <div class="body">
+      {{if .Referrer}}
+        <div class="alert alert-info" role="alert">
+          Please join to continue.
+        </div>
+      {{end}}
+
+      <div class="panel">
+        {{if .Alert}}
+          <div class="alert alert-{{.Alert.Level}}" role="alert">
+            {{.Alert.Message}}
+          </div>
+        {{end}}
+
+        {{template "signupForm" .}}
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="callout">Already have an account?</div>
+      <a href="/login" class="cta">
+        Sign in
+      </a>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "signupForm"}}
+<form action="{{ if .Referrer }} {{ getPathWithReferrer "/join" .Referrer }} {{else}} /join {{end}}" method="POST">
+  {{csrfField}}
+
+  <div class="form-group">
+    <div class="input-row">
+      <label for="email-input" class="label">
+        Email
+        <input
+          id="email-input"
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          class="form-control"
+          value="{{.Email}}"
+        />
+      </label>
+    </div>
+
+    <div class="input-row">
+      <label for="password-input" class="label">
+        Password
+        <input
+          id="password-input"
+          name="password"
+          type="password"
+          placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+          class="form-control"
+        />
+      </label>
+    </div>
+
+    <div class="input-row">
+      <label for="password-confirmation-input" class="label">
+        Password confirmation
+        <input
+          id="password-confirmation-input"
+          name="password_confirmation"
+          type="password"
+          placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+          class="form-control"
+        />
+      </label>
+    </div>
+
+    <button  type="submit" class="auth-button button button-normal button-stretch button-third">Join</button>
+  </div>
+</form>
+{{end}}

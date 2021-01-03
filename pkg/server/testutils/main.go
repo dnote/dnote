@@ -25,6 +25,9 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
+	"reflect"
+	// "strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -198,9 +201,18 @@ func MakeReq(endpoint string, method, path, data string) *http.Request {
 	u := fmt.Sprintf("%s%s", endpoint, path)
 
 	req, err := http.NewRequest(method, u, strings.NewReader(data))
+
 	if err != nil {
 		panic(errors.Wrap(err, "constructing http request"))
 	}
+
+	return req
+}
+
+// MakeFormReq makes an HTTP request and returns a response
+func MakeFormReq(endpoint, method, path string, data url.Values) *http.Request {
+	req := MakeReq(endpoint, method, path, data.Encode())
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return req
 }
@@ -271,3 +283,71 @@ func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string
 
 	return nil
 }
+
+// EndpointType is the type of endpoint to be tested
+type EndpointType int
+
+const (
+	// EndpointWeb represents a web endpoint returning HTML
+	EndpointWeb EndpointType = iota
+	// EndpointAPI represents an API endpoint returning JSON
+	EndpointAPI
+)
+
+type endpointTest func(t *testing.T, target EndpointType)
+
+// RunForWebAndAPI runs the given test function for web and API
+func RunForWebAndAPI(t *testing.T, name string, runTest endpointTest) {
+	t.Run(fmt.Sprintf("%s-web", name), func(t *testing.T) {
+		runTest(t, EndpointWeb)
+	})
+
+	t.Run(fmt.Sprintf("%s-api", name), func(t *testing.T) {
+		runTest(t, EndpointAPI)
+	})
+}
+
+// PayloadWrapper is a wrapper for a payload that can be converted to
+// either URL form values or JSON
+type PayloadWrapper struct {
+	Data interface{}
+}
+
+func (p PayloadWrapper) ToURLValues() url.Values {
+	values := url.Values{}
+
+	el := reflect.ValueOf(p.Data)
+	if el.Kind() == reflect.Ptr {
+		el = el.Elem()
+	}
+	iVal := el
+	typ := iVal.Type()
+	for i := 0; i < iVal.NumField(); i++ {
+		fi := typ.Field(i)
+		name := fi.Tag.Get("schema")
+		if name == "" {
+			name = fi.Name
+		}
+
+		if !iVal.Field(i).IsNil() {
+			values.Set(name, fmt.Sprint(iVal.Field(i).Elem()))
+		}
+	}
+
+	return values
+}
+
+func (p PayloadWrapper) ToJSON(t *testing.T) string {
+	b, err := json.Marshal(p.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(b)
+}
+
+// TrueVal is a true value
+var TrueVal = true
+
+// FalseVal is a false value
+var FalseVal = false

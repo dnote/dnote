@@ -1,0 +1,68 @@
+{{define "navbar"}}
+<header class="header-wrapper">
+  <div class="container mobile-fw">
+    <div class="header-content">
+      <div class="left">
+        <a href="/" class="brand">
+          {{template "logoWithText"}}
+        </a>
+      </div>
+
+      <div class="right">
+        {{if .User}}
+          <nav class="main-nav">
+            <ul class="list-unstyled list">
+              <li class="item">
+                {{template "accountDropdown" .}}
+              </li>
+            </ul>
+          </nav>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+</header>
+{{end}}
+
+{{define "accountDropdown"}}
+<div class="dropdown account-dropdown">
+  <button class="dropdown-trigger button-no-ui nav-item">Account</button>
+
+  <div class="dropdown-content right-align">
+    <header>
+      <div class="account-dropdown-header">
+        <div class="session-notice-wrapper">
+          {{template "lockIcon"}}
+
+          <div class="session-notice">
+            Signed in
+          </div>
+        </div>
+
+        <div class="email">
+          {{.Account.Email.String}}
+        </div>
+
+      </div>
+      <div class="divider"></div>
+    </header>
+
+    <ul class="list-unstyled" role="menu">
+      <li role="none">
+        <a class="dropdown-link" href="/settings" role="menuitem">Settings</a>
+      </li>
+      <li role="none">
+        {{template "logoutForm"}}
+      </li>
+    </ul>
+  </div>
+</div>
+{{end}}
+
+{{define "logoutForm"}}
+<form action="/logout" method="POST">
+  {{csrfField}}
+  <input type="submit" class="button-no-ui dropdown-link" role="menuitem" tabindex="0" value="Logout"></input>
+</form>
+{{end}}

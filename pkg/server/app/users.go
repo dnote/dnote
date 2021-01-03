@@ -20,6 +20,7 @@ package app
 
 import (
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -48,8 +49,28 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 }
 
 // CreateUser creates a user
-func (a *App) CreateUser(email, password string) (database.User, error) {
+func (a *App) CreateUser(email, password string, passwordConfirmation string) (database.User, error) {
+	if email == "" {
+		return database.User{}, ErrEmailRequired
+	}
+
+	if len(password) < 8 {
+		return database.User{}, ErrPasswordTooShort
+	}
+
+	if password != passwordConfirmation {
+		return database.User{}, ErrPasswordConfirmationMismatch
+	}
+
 	tx := a.DB.Begin()
+
+	var count int
+	if err := tx.Model(database.Account{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		return database.User{}, errors.Wrap(err, "counting user")
+	}
+	if count > 0 {
+		return database.User{}, ErrDuplicateEmail
+	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -98,4 +119,43 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 	tx.Commit()
 
 	return user, nil
+}
+
+// Authenticate authenticates a user
+func (a *App) Authenticate(email, password string) (*database.User, error) {
+	var account database.Account
+	conn := a.DB.Where("email = ?", email).First(&account)
+	if conn.RecordNotFound() {
+		return nil, ErrNotFound
+	} else if conn.Error != nil {
+		return nil, conn.Error
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(password))
+	if err != nil {
+		return nil, ErrLoginInvalid
+	}
+
+	var user database.User
+	err = a.DB.Where("id = ?", account.UserID).First(&user).Error
+	if err != nil {
+		return nil, errors.Wrap(err, "finding user")
+	}
+
+	return &user, nil
+}
+
+// SignIn signs in a user
+func (a *App) SignIn(user *database.User) (*database.Session, error) {
+	err := a.TouchLastLoginAt(*user, a.DB)
+	if err != nil {
+		log.ErrorWrap(err, "touching login timestamp")
+	}
+
+	session, err := a.CreateSession(user.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating session")
+	}
+
+	return &session, nil
 }
