@@ -21,7 +21,7 @@ require (
 	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/lib/pq v1.9.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
-	github.com/mattn/go-sqlite3 v1.14.6
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/radovskyb/watcher v1.0.7
 	github.com/robfig/cron v1.2.0
