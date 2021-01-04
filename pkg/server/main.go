@@ -25,7 +25,6 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/api"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
@@ -33,66 +32,16 @@ import (
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/routes"
-	"github.com/dnote/dnote/pkg/server/web"
 	"github.com/jinzhu/gorm"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
 )
 
 var versionTag = "master"
 var port = flag.String("port", "3000", "port to connect to")
-var rootBox *packr.Box
 
 var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
 var staticDir = flag.String("staticDir", "./static/", "the path to the static directory ")
-
-func init() {
-	rootBox = packr.New("root", "../../web/public")
-}
-
-func mustFind(box *packr.Box, path string) []byte {
-	b, err := rootBox.Find(path)
-	if err != nil {
-		panic(errors.Wrapf(err, "getting file content for %s", path))
-	}
-
-	return b
-}
-
-func initWebContext(db *gorm.DB) web.Context {
-	staticBox := packr.New("static", "../../web/public/static")
-
-	return web.Context{
-		DB:               db,
-		IndexHTML:        mustFind(rootBox, "index.html"),
-		RobotsTxt:        mustFind(rootBox, "robots.txt"),
-		ServiceWorkerJs:  mustFind(rootBox, "service-worker.js"),
-		StaticFileSystem: staticBox,
-	}
-}
-
-func initServer(a app.App) (*http.ServeMux, error) {
-	apiRouter, err := api.NewRouter(&api.API{App: &a})
-	if err != nil {
-		return nil, errors.Wrap(err, "initializing router")
-	}
-
-	webCtx := initWebContext(a.DB)
-	webHandlers, err := web.Init(webCtx)
-	if err != nil {
-		return nil, errors.Wrap(err, "initializing web handlers")
-	}
-
-	mux := http.NewServeMux()
-	mux.Handle("/api/", http.StripPrefix("/api", apiRouter))
-	mux.Handle("/static/", webHandlers.GetStatic)
-	mux.HandleFunc("/service-worker.js", webHandlers.GetServiceWorker)
-	mux.HandleFunc("/robots.txt", webHandlers.GetRobots)
-	mux.HandleFunc("/", webHandlers.GetRoot)
-
-	return mux, nil
-}
 
 func initDB(c config.Config) *gorm.DB {
 	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
@@ -152,7 +101,7 @@ func startCmd() {
 
 	r := routes.New(&app, rc)
 
-	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
+	log.Printf("dnote version %s is running on port %s", versionTag, *port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
 }
 
@@ -161,7 +110,7 @@ func versionCmd() {
 }
 
 func rootCmd() {
-	fmt.Printf(`Dnote Server - A simple personal knowledge base
+	fmt.Printf(`dnote server - a simple personal knowledge base
 
 Usage:
   dnote-server [command]

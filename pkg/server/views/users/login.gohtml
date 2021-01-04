@@ -1,0 +1,61 @@
+{{define "yield"}}
+<div class="auth-page">
+  <div class="container">
+    <h1 class="heading">Sign in to Dnote</h1>
+
+    <div class="body">
+      {{template "alert" .}}
+
+      <div class="panel">
+        {{template "loginForm"}}
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="callout">Don&#39;t have an account?</div>
+      <a href="/register" class="cta">
+        Create account
+      </a>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "loginForm"}}
+<form action="/login" method="POST">
+  {{csrfField}}
+
+  <div class="input-row">
+    <label for="email-input" class="label">
+      Email
+      <input
+        tabindex="1"
+        id="email-input"
+        name="email"
+        type="email"
+        placeholder="you@example.com"
+        class="form-control"
+      />
+    </label>
+  </div>
+
+  <div class="input-row">
+    <label for="password-input" class="label">
+      Password
+      <a href="/forgot" class="forgot">
+        Forgot?
+      </a>
+      <input
+        tabindex="2"
+        id="password-input"
+        name="password"
+        type="password"
+        placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+        class="form-control"
+      />
+    </label>
+  </div>
+
+  <button tabindex="3" type="submit" class="auth-button button button-normal button-stretch button-first">Log In</button>
+</form>
+{{end}}

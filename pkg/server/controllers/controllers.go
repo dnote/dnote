@@ -15,7 +15,7 @@ type Controllers struct {
 func New(cfg config.Config, app *app.App) *Controllers {
 	c := Controllers{}
 
-	c.Users = NewUsers(cfg, app.DB)
+	c.Users = NewUsers(cfg, app)
 	c.Static = NewStatic(cfg)
 
 	return &c
