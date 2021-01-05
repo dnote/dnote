@@ -201,10 +201,12 @@ func getStatusCode(err error) int {
 }
 
 // handleHTMLError writes the error to the log and sets the error message in the data.
-func handleHTMLError(w http.ResponseWriter, err error, msg string, d *views.Data) {
+func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg string, v *views.View, d *views.Data) {
 	statusCode := getStatusCode(err)
 	w.WriteHeader(statusCode)
 
 	logError(err, msg)
 	d.SetAlert(err)
+
+	v.Render(w, r, d)
 }

@@ -101,7 +101,7 @@ func startCmd() {
 
 	r := routes.New(&app, rc)
 
-	log.Printf("dnote version %s is running on port %s", versionTag, *port)
+	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
 }
 
@@ -110,7 +110,7 @@ func versionCmd() {
 }
 
 func rootCmd() {
-	fmt.Printf(`dnote server - a simple personal knowledge base
+	fmt.Printf(`Dnote server - a simple personal knowledge base
 
 Usage:
   dnote-server [command]

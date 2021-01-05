@@ -5,7 +5,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 )
 
@@ -48,26 +47,23 @@ type LoginForm struct {
 }
 
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
 	var form LoginForm
 	if err := parseRequestData(r, &form); err != nil {
-		log.Error(err.Error())
-		w.WriteHeader(500)
+		handleHTMLError(w, r, err, "parsing request data", u.LoginView, &vd)
 		return
 	}
 
-	vd := views.Data{}
-
 	user, err := u.app.Authenticate(form.Email, form.Password)
 	if err != nil {
-		handleHTMLError(w, err, "authenticating user", &vd)
-		u.LoginView.Render(w, r, vd)
+		handleHTMLError(w, r, err, "authenticating user", u.LoginView, &vd)
 		return
 	}
 
 	session, err := u.app.SignIn(user)
 	if err != nil {
-		handleHTMLError(w, err, "signing in a user", &vd)
-		u.LoginView.Render(w, r, vd)
+		handleHTMLError(w, r, err, "signing in a user", u.LoginView, &vd)
 		return
 	}
 
@@ -80,14 +76,13 @@ func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 
 	key, err := GetCredential(r)
 	if err != nil {
-		handleHTMLError(w, err, "signing in a user", &vd)
+		handleHTMLError(w, r, err, "getting credentials", u.LoginView, &vd)
 		u.LoginView.Render(w, r, vd)
 		return
 	}
 
 	if err = u.app.DeleteSession(key); err != nil {
-		handleHTMLError(w, err, "signing in a user", &vd)
-		u.LoginView.Render(w, r, vd)
+		handleHTMLError(w, r, err, "deleting session", u.LoginView, &vd)
 		return
 	}
 
