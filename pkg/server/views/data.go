@@ -133,21 +133,3 @@ type PublicError interface {
 	error
 	Public() string
 }
-
-// BadRequestError is an error for bad request
-type BadRequestError interface {
-	error
-	IsBadRequest() bool
-}
-
-// ConflictError is an error for bad request
-type ConflictError interface {
-	error
-	IsConflictError() bool
-}
-
-// NotFoundError is an error for bad request
-type NotFoundError interface {
-	error
-	IsNotFoundError() bool
-}

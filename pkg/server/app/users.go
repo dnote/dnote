@@ -104,16 +104,16 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 // Authenticate authenticates a user
 func (a *App) Authenticate(email, password string) (*database.User, error) {
 	var account database.Account
-	conn := a.DB.Debug().Where("email = ?", email).First(&account)
+	conn := a.DB.Where("email = ?", email).First(&account)
 	if conn.RecordNotFound() {
-		return nil, errors.New("not found")
+		return nil, ErrNotFound
 	} else if conn.Error != nil {
 		return nil, conn.Error
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(password))
 	if err != nil {
-		return nil, err
+		return nil, ErrLoginInvalid
 	}
 
 	var user database.User

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
@@ -56,32 +55,42 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	vd := views.Data{}
+
 	user, err := u.app.Authenticate(form.Email, form.Password)
 	if err != nil {
-		log.Error(err.Error())
-		w.WriteHeader(500)
+		handleHTMLError(w, err, "authenticating user", &vd)
+		u.LoginView.Render(w, r, vd)
 		return
 	}
 
 	session, err := u.app.SignIn(user)
 	if err != nil {
-		log.Error(err.Error())
-		w.WriteHeader(500)
+		handleHTMLError(w, err, "signing in a user", &vd)
+		u.LoginView.Render(w, r, vd)
 		return
 	}
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
 
-	response := SessionResponse{
-		Key:       session.Key,
-		ExpiresAt: session.ExpiresAt.Unix(),
-	}
+func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
+	var vd views.Data
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Error(err.Error())
+	key, err := GetCredential(r)
+	if err != nil {
+		handleHTMLError(w, err, "signing in a user", &vd)
+		u.LoginView.Render(w, r, vd)
 		return
 	}
 
+	if err = u.app.DeleteSession(key); err != nil {
+		handleHTMLError(w, err, "signing in a user", &vd)
+		u.LoginView.Render(w, r, vd)
+		return
+	}
+
+	unsetSessionCookie(w)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }

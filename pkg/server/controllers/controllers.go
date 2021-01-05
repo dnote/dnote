@@ -8,6 +8,7 @@ import (
 // Controllers is a group of controllers
 type Controllers struct {
 	Users  *Users
+	Notes  *Notes
 	Static *Static
 }
 
@@ -16,6 +17,7 @@ func New(cfg config.Config, app *app.App) *Controllers {
 	c := Controllers{}
 
 	c.Users = NewUsers(cfg, app)
+	c.Notes = NewNotes(cfg, app)
 	c.Static = NewStatic(cfg)
 
 	return &c

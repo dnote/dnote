@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 )
@@ -178,4 +181,30 @@ func unsetSessionCookie(w http.ResponseWriter) {
 type SessionResponse struct {
 	Key       string `json:"key"`
 	ExpiresAt int64  `json:"expires_at"`
+}
+
+func logError(err error, msg string) {
+	// log if internal error
+	if _, ok := err.(views.PublicError); !ok {
+		log.ErrorWrap(err, msg)
+	}
+}
+
+func getStatusCode(err error) int {
+	switch err {
+	case app.ErrNotFound:
+	case app.ErrLoginInvalid:
+		return http.StatusNotFound
+	}
+
+	return http.StatusInternalServerError
+}
+
+// handleHTMLError writes the error to the log and sets the error message in the data.
+func handleHTMLError(w http.ResponseWriter, err error, msg string, d *views.Data) {
+	statusCode := getStatusCode(err)
+	w.WriteHeader(statusCode)
+
+	logError(err, msg)
+	d.SetAlert(err)
 }
