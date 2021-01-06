@@ -10,7 +10,11 @@ emailTemplateDir=$(realpath "$dir/../../pkg/server/mailer/templates/src")
 export DNOTE_TEST_EMAIL_TEMPLATE_DIR="$emailTemplateDir"
 
 function run_test {
-  go test ./... -cover -p 1
+  if [ -z "$1" ]; then
+    go test ./... -cover -p 1
+  else
+    go test "$1" -cover -p 1
+  fi
 }
 
 if [ "${WATCH-false}" == true ]; then
@@ -18,7 +22,7 @@ if [ "${WATCH-false}" == true ]; then
   while inotifywait --exclude .swp -e modify -r .; do run_test; done;
   set -e
 else
-  run_test
+  run_test "$1"
 fi
 
 popd
