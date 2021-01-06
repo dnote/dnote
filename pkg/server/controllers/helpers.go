@@ -192,7 +192,9 @@ func logError(err error, msg string) {
 }
 
 func getStatusCode(err error) int {
-	switch err {
+	rootErr := errors.Cause(err)
+
+	switch rootErr {
 	case app.ErrNotFound:
 	case app.ErrLoginInvalid:
 		return http.StatusNotFound
