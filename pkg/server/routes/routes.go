@@ -45,7 +45,10 @@ func NewWebRoutes(app *app.App, c *controllers.Controllers) []Route {
 
 // NewAPIRoutes returns a new api routes
 func NewAPIRoutes(c *controllers.Controllers) []Route {
-	return []Route{}
+	return []Route{
+		{"POST", "/v1/login", Cors(c.Users.V3Login), true},
+		{"POST", "/v1/logout", Cors(c.Users.V3Logout), true},
+	}
 }
 
 // Config is the configuration for routes

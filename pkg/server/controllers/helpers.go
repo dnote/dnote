@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/schema"
@@ -209,4 +210,39 @@ func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg stri
 	d.SetAlert(err)
 
 	v.Render(w, r, d)
+}
+
+// handleJSONError logs the error and responds with the given status code with a generic status text
+func handleJSONError(w http.ResponseWriter, err error, msg string) {
+	statusCode := getStatusCode(err)
+
+	rootErr := errors.Cause(err)
+
+	var respText string
+	if pErr, ok := rootErr.(views.PublicError); ok {
+		respText = pErr.Public()
+	} else {
+		respText = http.StatusText(statusCode)
+	}
+
+	logError(err, msg)
+	http.Error(w, respText, statusCode)
+}
+
+// respondWithSession makes a HTTP response with the session from the user with the given userID.
+// It sets the HTTP-Only cookie for browser clients and also sends a JSON response for non-browser clients.
+func respondWithSession(w http.ResponseWriter, statusCode int, session *database.Session) {
+	setSessionCookie(w, session.Key, session.ExpiresAt)
+
+	response := SessionResponse{
+		Key:       session.Key,
+		ExpiresAt: session.ExpiresAt.Unix(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		handleJSONError(w, err, "encoding payload")
+		return
+	}
 }

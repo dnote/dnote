@@ -5,8 +5,10 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
+	"github.com/pkg/errors"
 )
 
 // NewUsers creates a new Users controller.
@@ -75,25 +77,37 @@ type LoginForm struct {
 	Password string `schema:"password" json:"password"`
 }
 
-// Login handles login
-func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
+func (u *Users) login(r *http.Request) (*database.Session, error) {
 	var form LoginForm
 	if err := parseRequestData(r, &form); err != nil {
-		handleHTMLError(w, r, err, "parsing request data", u.LoginView, &vd)
-		return
+		return nil, err
 	}
 
 	user, err := u.app.Authenticate(form.Email, form.Password)
 	if err != nil {
-		handleHTMLError(w, r, err, "authenticating user", u.LoginView, &vd)
-		return
+		// If the user is not found, treat it as invalid login
+		if err == app.ErrNotFound {
+			return nil, app.ErrLoginInvalid
+		}
+
+		return nil, err
 	}
 
-	session, err := u.app.SignIn(user)
+	s, err := u.app.SignIn(user)
 	if err != nil {
-		handleHTMLError(w, r, err, "signing in a user", u.LoginView, &vd)
+		return nil, err
+	}
+
+	return s, nil
+}
+
+// Login handles login
+func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	session, err := u.login(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "logging in user", u.LoginView, &vd)
 		return
 	}
 
@@ -101,22 +115,50 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// V3Login handles login
+func (u *Users) V3Login(w http.ResponseWriter, r *http.Request) {
+	session, err := u.login(r)
+	if err != nil {
+		handleJSONError(w, err, "logging in user")
+		return
+	}
+
+	respondWithSession(w, http.StatusOK, session)
+}
+
+func (u *Users) logout(r *http.Request) error {
+	key, err := GetCredential(r)
+	if err != nil {
+		return errors.Wrap(err, "getting credentials")
+	}
+
+	if err = u.app.DeleteSession(key); err != nil {
+		return errors.Wrap(err, "deleting session")
+	}
+
+	return nil
+}
+
 // Logout handles logout
 func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
-	key, err := GetCredential(r)
-	if err != nil {
-		handleHTMLError(w, r, err, "getting credentials", u.LoginView, &vd)
-		u.LoginView.Render(w, r, vd)
-		return
-	}
-
-	if err = u.app.DeleteSession(key); err != nil {
-		handleHTMLError(w, r, err, "deleting session", u.LoginView, &vd)
+	if err := u.logout(r); err != nil {
+		handleHTMLError(w, r, err, "logging out", u.LoginView, &vd)
 		return
 	}
 
 	unsetSessionCookie(w)
 	http.Redirect(w, r, "/login", http.StatusFound)
+}
+
+// V3Logout handles logout via API
+func (u *Users) V3Logout(w http.ResponseWriter, r *http.Request) {
+	if err := u.logout(r); err != nil {
+		handleJSONError(w, err, "logging out")
+		return
+	}
+
+	unsetSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
 }
