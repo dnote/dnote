@@ -5,6 +5,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 )
 
@@ -14,7 +15,6 @@ func NewUsers(cfg config.Config, app *app.App) *Users {
 	return &Users{
 		NewView:   views.NewView(cfg.PageTemplateDir, views.Config{Title: "Join", Layout: "base"}, "users/new"),
 		LoginView: views.NewView(cfg.PageTemplateDir, views.Config{Title: "Login", Layout: "base"}, "users/login"),
-		onPremise: cfg.OnPremise,
 		app:       app,
 	}
 }
@@ -24,10 +24,9 @@ type Users struct {
 	NewView   *views.View
 	LoginView *views.View
 	app       *app.App
-	onPremise bool
 }
 
-// New handles GET /register
+// New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	var form RegistrationForm
 	parseURLParams(r, &form)
@@ -40,12 +39,43 @@ type RegistrationForm struct {
 	Password string `schema:"password"`
 }
 
+// Create handles register
+func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+	var form RegistrationForm
+	if err := parseForm(r, &form); err != nil {
+		vd.SetAlert(err)
+		u.NewView.Render(w, r, vd)
+		return
+	}
+
+	user, err := u.app.CreateUser(form.Email, form.Password)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating user", u.NewView, &vd)
+		return
+	}
+
+	session, err := u.app.SignIn(&user)
+	if err != nil {
+		handleHTMLError(w, r, err, "signing in a user", u.LoginView, &vd)
+		return
+	}
+
+	setSessionCookie(w, session.Key, session.ExpiresAt)
+	http.Redirect(w, r, "/", http.StatusFound)
+
+	if err := u.app.SendWelcomeEmail(form.Email); err != nil {
+		log.ErrorWrap(err, "sending welcome email")
+	}
+}
+
 // LoginForm is the form data for log in
 type LoginForm struct {
 	Email    string `schema:"email" json:"email"`
 	Password string `schema:"password" json:"password"`
 }
 
+// Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
@@ -71,6 +101,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// Logout handles logout
 func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 

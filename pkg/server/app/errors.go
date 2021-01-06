@@ -15,4 +15,7 @@ var (
 	ErrNotFound appError = "not found"
 	// ErrLoginInvalid is an error for invalid login
 	ErrLoginInvalid appError = "invalid login"
+
+	// ErrDuplicateEmail is an error for duplicat email
+	ErrDuplicateEmail appError = "duplicate email"
 )

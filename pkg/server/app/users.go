@@ -52,6 +52,14 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 func (a *App) CreateUser(email, password string) (database.User, error) {
 	tx := a.DB.Begin()
 
+	var count int
+	if err := tx.Model(database.Account{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		return database.User{}, errors.Wrap(err, "counting user")
+	}
+	if count > 0 {
+		return database.User{}, ErrDuplicateEmail
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		tx.Rollback()

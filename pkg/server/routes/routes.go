@@ -28,13 +28,19 @@ func registerRoutes(router *mux.Router, mw middleware, app *app.App, routes []Ro
 
 // NewWebRoutes returns a new web routes
 func NewWebRoutes(app *app.App, c *controllers.Controllers) []Route {
-	return []Route{
+	ret := []Route{
 		{"GET", "/", Auth(app, http.HandlerFunc(c.Notes.Index), &AuthParams{RedirectGuestsToLogin: true}), true},
-		{"GET", "/new", http.HandlerFunc(c.Users.New), true},
 		{"GET", "/login", c.Users.LoginView, true},
 		{"POST", "/login", http.HandlerFunc(c.Users.Login), true},
 		{"POST", "/logout", http.HandlerFunc(c.Users.Logout), true},
 	}
+
+	if !app.Config.DisableRegistration {
+		ret = append(ret, Route{"GET", "/join", http.HandlerFunc(c.Users.New), true})
+		ret = append(ret, Route{"POST", "/join", http.HandlerFunc(c.Users.Create), true})
+	}
+
+	return ret
 }
 
 // NewAPIRoutes returns a new api routes
