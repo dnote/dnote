@@ -27,7 +27,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -47,28 +47,28 @@ func TestGetBooks(t *testing.T) {
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID:  user.ID,
 		Label:   "js",
 		USN:     1123,
 		Deleted: false,
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-	b2 := database.Book{
+	b2 := models.Book{
 		UserID:  user.ID,
 		Label:   "css",
 		USN:     1125,
 		Deleted: false,
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-	b3 := database.Book{
+	b3 := models.Book{
 		UserID:  anotherUser.ID,
 		Label:   "css",
 		USN:     1128,
 		Deleted: false,
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-	b4 := database.Book{
+	b4 := models.Book{
 		UserID:  user.ID,
 		Label:   "",
 		USN:     1129,
@@ -88,7 +88,7 @@ func TestGetBooks(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "decoding payload"))
 	}
 
-	var b1Record, b2Record database.Book
+	var b1Record, b2Record models.Book
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
@@ -128,17 +128,17 @@ func TestGetBooksByName(t *testing.T) {
 	anotherUser := testutils.SetupUserData()
 	req := testutils.MakeReq(server.URL, "GET", "/v3/books?name=js", "")
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-	b2 := database.Book{
+	b2 := models.Book{
 		UserID: user.ID,
 		Label:  "css",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-	b3 := database.Book{
+	b3 := models.Book{
 		UserID: anotherUser.ID,
 		Label:  "js",
 	}
@@ -155,7 +155,7 @@ func TestGetBooksByName(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "decoding payload"))
 	}
 
-	var b1Record database.Book
+	var b1Record models.Book
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
 
 	expected := []presenters.Book{
@@ -215,20 +215,20 @@ func TestDeleteBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 109), "preparing another user max_usn")
 
-			b1 := database.Book{
+			b1 := models.Book{
 				UserID: user.ID,
 				Label:  "js",
 				USN:    1,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing a book data")
-			b2 := database.Book{
+			b2 := models.Book{
 				UserID:  user.ID,
 				Label:   tc.label,
 				USN:     2,
 				Deleted: tc.deleted,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing a book data")
-			b3 := database.Book{
+			b3 := models.Book{
 				UserID: anotherUser.ID,
 				Label:  "linux",
 				USN:    3,
@@ -244,14 +244,14 @@ func TestDeleteBook(t *testing.T) {
 				n3Body = "n3 content"
 			}
 
-			n1 := database.Note{
+			n1 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b1.UUID,
 				Body:     "n1 content",
 				USN:      4,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&n1), "preparing a note data")
-			n2 := database.Note{
+			n2 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
 				Body:     n2Body,
@@ -259,7 +259,7 @@ func TestDeleteBook(t *testing.T) {
 				Deleted:  tc.deleted,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&n2), "preparing a note data")
-			n3 := database.Note{
+			n3 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
 				Body:     n3Body,
@@ -267,7 +267,7 @@ func TestDeleteBook(t *testing.T) {
 				Deleted:  tc.deleted,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&n3), "preparing a note data")
-			n4 := database.Note{
+			n4 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
 				Body:     "",
@@ -275,7 +275,7 @@ func TestDeleteBook(t *testing.T) {
 				Deleted:  true,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&n4), "preparing a note data")
-			n5 := database.Note{
+			n5 := models.Note{
 				UserID:   anotherUser.ID,
 				BookUUID: b3.UUID,
 				Body:     "n5 content",
@@ -294,13 +294,13 @@ func TestDeleteBook(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-			var b1Record, b2Record, b3Record database.Book
-			var n1Record, n2Record, n3Record, n4Record, n5Record database.Note
-			var userRecord database.User
+			var b1Record, b2Record, b3Record models.Book
+			var n1Record, n2Record, n3Record, n4Record, n5Record models.Note
+			var userRecord models.User
 			var bookCount, noteCount int
 
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b3.ID).First(&b3Record), "finding b3")
@@ -374,11 +374,11 @@ func TestCreateBook(t *testing.T) {
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
-	var bookRecord database.Book
-	var userRecord database.User
+	var bookRecord models.Book
+	var userRecord models.User
 	var bookCount, noteCount int
-	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+	testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 	testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
@@ -424,7 +424,7 @@ func TestCreateBookDuplicate(t *testing.T) {
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 		USN:    58,
@@ -438,11 +438,11 @@ func TestCreateBookDuplicate(t *testing.T) {
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusConflict, "")
 
-	var bookRecord database.Book
+	var bookRecord models.Book
 	var bookCount, noteCount int
-	var userRecord database.User
-	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	var userRecord models.User
+	testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+	testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 	testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
@@ -504,14 +504,14 @@ func TestUpdateBook(t *testing.T) {
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-			b1 := database.Book{
+			b1 := models.Book{
 				UUID:    tc.bookUUID,
 				UserID:  user.ID,
 				Label:   tc.bookLabel,
 				Deleted: tc.bookDeleted,
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-			b2 := database.Book{
+			b2 := models.Book{
 				UUID:   b2UUID,
 				UserID: user.ID,
 				Label:  "js",
@@ -526,11 +526,11 @@ func TestUpdateBook(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, fmt.Sprintf("status code mismatch for test case %d", idx))
 
-			var bookRecord database.Book
-			var userRecord database.User
+			var bookRecord models.Book
+			var userRecord models.User
 			var noteCount, bookCount int
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 

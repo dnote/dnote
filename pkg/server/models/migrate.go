@@ -16,48 +16,31 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package database
+package models
 
 import (
-	"github.com/dnote/dnote/pkg/server/config"
+	"log"
+
+	"github.com/gobuffalo/packr/v2"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-
-	// Use postgres
-	_ "github.com/lib/pq"
+	"github.com/rubenv/sql-migrate"
 )
 
-var (
-	// MigrationTableName is the name of the table that keeps track of migrations
-	MigrationTableName = "migrations"
-)
-
-// InitSchema migrates database schema to reflect the latest model definition
-func InitSchema(db *gorm.DB) {
-	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error; err != nil {
-		panic(err)
+// Migrate runs the migrations
+func Migrate(db *gorm.DB) error {
+	migrations := &migrate.PackrMigrationSource{
+		Box: packr.New("migrations", "../models/migrations/"),
 	}
 
-	if err := db.AutoMigrate(
-		Note{},
-		Book{},
-		User{},
-		Account{},
-		Notification{},
-		Token{},
-		EmailPreference{},
-		Session{},
-	).Error; err != nil {
-		panic(err)
-	}
-}
+	migrate.SetTable(MigrationTableName)
 
-// Open initializes the database connection
-func Open(c config.Config) *gorm.DB {
-	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
+	n, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up)
 	if err != nil {
-		panic(errors.Wrap(err, "opening database conection"))
+		return errors.Wrap(err, "running migrations")
 	}
 
-	return db
+	log.Printf("Performed %d migrations", n)
+
+	return nil
 }

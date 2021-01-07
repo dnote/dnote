@@ -28,9 +28,9 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
-	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/routes"
 	"github.com/jinzhu/gorm"
 
@@ -48,7 +48,7 @@ func initDB(c config.Config) *gorm.DB {
 	if err != nil {
 		panic(errors.Wrap(err, "opening database connection"))
 	}
-	database.InitSchema(db)
+	models.InitSchema(db)
 
 	return db
 }
@@ -85,7 +85,7 @@ func startCmd() {
 	app := initApp(cfg)
 	defer app.DB.Close()
 
-	if err := database.Migrate(app.DB); err != nil {
+	if err := models.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))
 	}
 	if err := runJob(app); err != nil {

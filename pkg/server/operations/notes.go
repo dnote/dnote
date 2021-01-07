@@ -19,7 +19,7 @@
 package operations
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/permissions"
 	"github.com/jinzhu/gorm"
@@ -27,16 +27,16 @@ import (
 )
 
 // GetNote retrieves a note for the given user
-func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool, error) {
-	zeroNote := database.Note{}
+func GetNote(db *gorm.DB, uuid string, user models.User) (models.Note, bool, error) {
+	zeroNote := models.Note{}
 	if !helpers.ValidateUUID(uuid) {
 		return zeroNote, false, nil
 	}
 
 	conn := db.Where("notes.uuid = ? AND deleted = ?", uuid, false)
-	conn = database.PreloadNote(conn)
+	conn = models.PreloadNote(conn)
 
-	var note database.Note
+	var note models.Note
 	conn = conn.Find(&note)
 
 	if conn.RecordNotFound() {

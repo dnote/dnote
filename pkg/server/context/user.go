@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 const (
@@ -14,20 +14,20 @@ const (
 type privateKey string
 
 // WithUser creates a new context with the given user
-func WithUser(ctx context.Context, user *database.User) context.Context {
+func WithUser(ctx context.Context, user *models.User) context.Context {
 	return context.WithValue(ctx, userKey, user)
 }
 
 // WithToken creates a new context with the given user
-func WithToken(ctx context.Context, tok *database.Token) context.Context {
+func WithToken(ctx context.Context, tok *models.Token) context.Context {
 	return context.WithValue(ctx, tokenKey, tok)
 }
 
 // User retrieves a user from the given context. It returns a pointer to
 // a user. If the context does not contain a user, it returns nil.
-func User(ctx context.Context) *database.User {
+func User(ctx context.Context) *models.User {
 	if temp := ctx.Value(userKey); temp != nil {
-		if user, ok := temp.(*database.User); ok {
+		if user, ok := temp.(*models.User); ok {
 			return user
 		}
 	}
@@ -36,9 +36,9 @@ func User(ctx context.Context) *database.User {
 }
 
 // Token retrieves a token from the given context.
-func Token(ctx context.Context) *database.Token {
+func Token(ctx context.Context) *models.Token {
 	if temp := ctx.Value(tokenKey); temp != nil {
-		if tok, ok := temp.(*database.Token); ok {
+		if tok, ok := temp.(*models.Token); ok {
 			return tok
 		}
 	}

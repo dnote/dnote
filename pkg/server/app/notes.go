@@ -19,7 +19,7 @@
 package app
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -27,13 +27,13 @@ import (
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
 // It returns the created note.
-func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool, client string) (database.Note, error) {
+func (a *App) CreateNote(user models.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool, client string) (models.Note, error) {
 	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		tx.Rollback()
-		return database.Note{}, errors.Wrap(err, "incrementing user max_usn")
+		return models.Note{}, errors.Wrap(err, "incrementing user max_usn")
 	}
 
 	var noteAddedOn int64
@@ -52,10 +52,10 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 
 	uuid, err := helpers.GenUUID()
 	if err != nil {
-		return database.Note{}, err
+		return models.Note{}, err
 	}
 
-	note := database.Note{
+	note := models.Note{
 		UUID:      uuid,
 		BookUUID:  bookUUID,
 		UserID:    user.ID,
@@ -112,7 +112,7 @@ func (r UpdateNoteParams) GetPublic() bool {
 }
 
 // UpdateNote creates a note with the next usn and updates the user's max_usn
-func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p *UpdateNoteParams) (database.Note, error) {
+func (a *App) UpdateNote(tx *gorm.DB, user models.User, note models.Note, p *UpdateNoteParams) (models.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
@@ -142,7 +142,7 @@ func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p 
 }
 
 // DeleteNote marks a note deleted with the next usn and updates the user's max_usn
-func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.Note, error) {
+func (a *App) DeleteNote(tx *gorm.DB, user models.User, note models.Note) (models.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		return note, errors.Wrap(err, "incrementing user max_usn")
@@ -161,8 +161,8 @@ func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (d
 }
 
 // GetUserNoteByUUID retrives a digest by the uuid for the given user
-func (a *App) GetUserNoteByUUID(userID int, uuid string) (*database.Note, error) {
-	var ret database.Note
+func (a *App) GetUserNoteByUUID(userID int, uuid string) (*models.Note, error) {
+	var ret models.Note
 	conn := a.DB.Where("user_id = ? AND uuid = ?", userID, uuid).First(&ret)
 
 	if conn.RecordNotFound() {

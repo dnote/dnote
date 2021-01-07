@@ -19,11 +19,11 @@
 package permissions
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 // ViewNote checks if the given user can view the given note
-func ViewNote(user *database.User, note database.Note) bool {
+func ViewNote(user *models.User, note models.Note) bool {
 	if note.Public {
 		return true
 	}

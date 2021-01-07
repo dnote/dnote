@@ -22,7 +22,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -40,19 +40,19 @@ func generateRandom(bits int) (string, error) {
 }
 
 // Create generates a new token in the database
-func Create(db *gorm.DB, userID int, kind string) (database.Token, error) {
+func Create(db *gorm.DB, userID int, kind string) (models.Token, error) {
 	val, err := generateRandom(16)
 	if err != nil {
-		return database.Token{}, errors.Wrap(err, "generating random bytes")
+		return models.Token{}, errors.Wrap(err, "generating random bytes")
 	}
 
-	token := database.Token{
+	token := models.Token{
 		UserID: userID,
 		Value:  val,
 		Type:   kind,
 	}
 	if err := db.Save(&token).Error; err != nil {
-		return database.Token{}, errors.Wrap(err, "creating a token for unsubscribing")
+		return models.Token{}, errors.Wrap(err, "creating a token for unsubscribing")
 	}
 
 	return token, nil

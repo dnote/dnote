@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 // Session represents user session
@@ -13,7 +13,7 @@ type Session struct {
 }
 
 // New returns a new session for the given user
-func New(user database.User, account database.Account) Session {
+func New(user models.User, account models.Account) Session {
 	return Session{
 		UUID:          user.UUID,
 		Pro:           user.Cloud,

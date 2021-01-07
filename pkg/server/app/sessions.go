@@ -22,19 +22,19 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/crypt"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
 // CreateSession returns a new session for the user of the given id
-func (a *App) CreateSession(userID int) (database.Session, error) {
+func (a *App) CreateSession(userID int) (models.Session, error) {
 	key, err := crypt.GetRandomStr(32)
 	if err != nil {
-		return database.Session{}, errors.Wrap(err, "generating key")
+		return models.Session{}, errors.Wrap(err, "generating key")
 	}
 
-	session := database.Session{
+	session := models.Session{
 		UserID:     userID,
 		Key:        key,
 		LastUsedAt: time.Now(),
@@ -42,7 +42,7 @@ func (a *App) CreateSession(userID int) (database.Session, error) {
 	}
 
 	if err := a.DB.Save(&session).Error; err != nil {
-		return database.Session{}, errors.Wrap(err, "saving session")
+		return models.Session{}, errors.Wrap(err, "saving session")
 	}
 
 	return session, nil
@@ -51,7 +51,7 @@ func (a *App) CreateSession(userID int) (database.Session, error) {
 // DeleteUserSessions deletes all existing sessions for the given user. It effectively
 // invalidates all existing sessions.
 func (a *App) DeleteUserSessions(db *gorm.DB, userID int) error {
-	if err := db.Debug().Where("user_id = ?", userID).Delete(&database.Session{}).Error; err != nil {
+	if err := db.Debug().Where("user_id = ?", userID).Delete(&models.Session{}).Error; err != nil {
 		return errors.Wrap(err, "deleting sessions")
 	}
 
@@ -60,7 +60,7 @@ func (a *App) DeleteUserSessions(db *gorm.DB, userID int) error {
 
 // DeleteSession deletes the session that match the given info
 func (a *App) DeleteSession(sessionKey string) error {
-	if err := a.DB.Where("key = ?", sessionKey).Delete(&database.Session{}).Error; err != nil {
+	if err := a.DB.Where("key = ?", sessionKey).Delete(&models.Session{}).Error; err != nil {
 		return errors.Wrap(err, "deleting the session")
 	}
 

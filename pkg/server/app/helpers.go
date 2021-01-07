@@ -19,7 +19,7 @@
 package app
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -31,7 +31,7 @@ func incrementUserUSN(tx *gorm.DB, userID int) (int, error) {
 		return 0, errors.Wrap(err, "incrementing user max_usn")
 	}
 
-	var user database.User
+	var user models.User
 	if err := tx.Select("max_usn").Where("id = ?", userID).First(&user).Error; err != nil {
 		return 0, errors.Wrap(err, "getting the updated user max_usn")
 	}

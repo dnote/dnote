@@ -1,4 +1,4 @@
-package database
+package models
 
 import (
 	"github.com/pkg/errors"

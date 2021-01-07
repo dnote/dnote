@@ -22,7 +22,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -33,13 +33,13 @@ func TestGetNote(t *testing.T) {
 
 	defer testutils.ClearData(testutils.DB)
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	privateNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
@@ -48,7 +48,7 @@ func TestGetNote(t *testing.T) {
 	}
 	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
 
-	publicNote := database.Note{
+	publicNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
@@ -57,16 +57,16 @@ func TestGetNote(t *testing.T) {
 	}
 	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing privateNote")
 
-	var privateNoteRecord, publicNoteRecord database.Note
+	var privateNoteRecord, publicNoteRecord models.Note
 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", privateNote.UUID).Preload("Book").Preload("User").First(&privateNoteRecord), "finding privateNote")
 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).Preload("Book").Preload("User").First(&publicNoteRecord), "finding publicNote")
 
 	testCases := []struct {
 		name         string
-		user         database.User
-		note         database.Note
+		user         models.User
+		note         models.Note
 		expectedOK   bool
-		expectedNote database.Note
+		expectedNote models.Note
 	}{
 		{
 			name:         "owner accessing private note",
@@ -80,7 +80,7 @@ func TestGetNote(t *testing.T) {
 			user:         anotherUser,
 			note:         privateNote,
 			expectedOK:   false,
-			expectedNote: database.Note{},
+			expectedNote: models.Note{},
 		},
 		{
 			name:         "non-owner accessing public note",
@@ -91,14 +91,14 @@ func TestGetNote(t *testing.T) {
 		},
 		{
 			name:         "guest accessing private note",
-			user:         database.User{},
+			user:         models.User{},
 			note:         privateNote,
 			expectedOK:   false,
-			expectedNote: database.Note{},
+			expectedNote: models.Note{},
 		},
 		{
 			name:         "guest accessing public note",
-			user:         database.User{},
+			user:         models.User{},
 			note:         publicNote,
 			expectedOK:   true,
 			expectedNote: publicNoteRecord,
@@ -123,14 +123,14 @@ func TestGetNote_nonexistent(t *testing.T) {
 
 	defer testutils.ClearData(testutils.DB)
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 
 	n1UUID := "4fd19336-671e-4ff3-8f22-662b80e22edc"
-	n1 := database.Note{
+	n1 := models.Note{
 		UUID:     n1UUID,
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
@@ -147,5 +147,5 @@ func TestGetNote_nonexistent(t *testing.T) {
 	}
 
 	assert.Equal(t, ok, false, "ok mismatch")
-	assert.DeepEqual(t, note, database.Note{}, "note mismatch")
+	assert.DeepEqual(t, note, models.Note{}, "note mismatch")
 }

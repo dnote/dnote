@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -40,13 +40,13 @@ type GetMeResponse struct {
 }
 
 func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		handlers.DoError(w, "finding account", err, http.StatusInternalServerError)
 		return
@@ -77,7 +77,7 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		return
@@ -87,7 +87,7 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resetToken, err := token.Create(a.App.DB, account.UserID, database.TokenTypeResetPassword)
+	resetToken, err := token.Create(a.App.DB, account.UserID, models.TokenTypeResetPassword)
 	if err != nil {
 		handlers.DoError(w, errors.Wrap(err, "generating token").Error(), nil, http.StatusInternalServerError)
 		return
@@ -116,8 +116,8 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var token database.Token
-	conn := a.App.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
+	var token models.Token
+	conn := a.App.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, models.TokenTypeResetPassword).First(&token)
 	if conn.RecordNotFound() {
 		http.Error(w, "invalid token", http.StatusBadRequest)
 		return
@@ -147,7 +147,7 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	if err := a.App.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
 		tx.Rollback()
 		handlers.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
@@ -173,7 +173,7 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	var user database.User
+	var user models.User
 	if err := a.App.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
 		handlers.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
 		return

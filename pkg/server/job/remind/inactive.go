@@ -22,7 +22,7 @@ import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
@@ -44,8 +44,8 @@ type inactiveUserInfo struct {
 	sampleNoteUUID string
 }
 
-func (c *Context) sampleUserNote(userID int) (database.Note, error) {
-	var ret database.Note
+func (c *Context) sampleUserNote(userID int) (models.Note, error) {
+	var ret models.Note
 	// FIXME: ordering by random() requires a sequential scan on the whole table and does not scale
 	if err := c.DB.Where("user_id = ?", userID).Order("random() DESC").First(&ret).Error; err != nil {
 		return ret, errors.Wrap(err, "getting a random note")
@@ -103,7 +103,7 @@ GROUP BY notes.user_id, accounts.email`, threshold).Rows()
 }
 
 func (c *Context) canNotify(info inactiveUserInfo) (bool, error) {
-	var pref database.EmailPreference
+	var pref models.EmailPreference
 	if err := c.DB.Where("user_id = ?", info.userID).First(&pref).Error; err != nil {
 		return false, errors.Wrap(err, "getting email preference")
 	}
@@ -112,7 +112,7 @@ func (c *Context) canNotify(info inactiveUserInfo) (bool, error) {
 		return false, nil
 	}
 
-	var notif database.Notification
+	var notif models.Notification
 	conn := c.DB.Where("user_id = ? AND type = ?", info.userID, mailer.EmailTypeInactiveReminder).Order("created_at DESC").First(&notif)
 
 	if conn.RecordNotFound() {
@@ -143,7 +143,7 @@ func (c *Context) process(info inactiveUserInfo) error {
 		return errors.Wrap(err, "getting sender email")
 	}
 
-	tok, err := mailer.GetToken(c.DB, info.userID, database.TokenTypeEmailPreference)
+	tok, err := mailer.GetToken(c.DB, info.userID, models.TokenTypeEmailPreference)
 	if err != nil {
 		return errors.Wrap(err, "getting email token")
 	}
@@ -162,7 +162,7 @@ func (c *Context) process(info inactiveUserInfo) error {
 		return errors.Wrap(err, "queueing email")
 	}
 
-	if err := c.DB.Create(&database.Notification{
+	if err := c.DB.Create(&models.Notification{
 		Type:   mailer.EmailTypeInactiveReminder,
 		UserID: info.userID,
 	}).Error; err != nil {

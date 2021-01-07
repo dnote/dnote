@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/schema"
@@ -233,7 +233,7 @@ func handleJSONError(w http.ResponseWriter, err error, msg string) {
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.
 // It sets the HTTP-Only cookie for browser clients and also sends a JSON response for non-browser clients.
-func respondWithSession(w http.ResponseWriter, statusCode int, session *database.Session) {
+func respondWithSession(w http.ResponseWriter, statusCode int, session *models.Session) {
 	setSessionCookie(w, session.Key, session.ExpiresAt)
 
 	response := SessionResponse{

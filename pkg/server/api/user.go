@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -43,13 +43,13 @@ type updateProfilePayload struct {
 
 // updateProfile updates user
 func (a *API) updateProfile(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		handlers.DoError(w, "getting account", nil, http.StatusInternalServerError)
 		return
@@ -135,7 +135,7 @@ func respondWithCalendar(db *gorm.DB, w http.ResponseWriter, userID int) {
 }
 
 func (a *API) getCalendar(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -145,13 +145,13 @@ func (a *API) getCalendar(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) createVerificationToken(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error
 	if err != nil {
 		handlers.DoError(w, "finding account", err, http.StatusInternalServerError)
@@ -167,7 +167,7 @@ func (a *API) createVerificationToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tok, err := token.Create(a.App.DB, account.UserID, database.TokenTypeEmailVerification)
+	tok, err := token.Create(a.App.DB, account.UserID, models.TokenTypeEmailVerification)
 	if err != nil {
 		handlers.DoError(w, "saving token", err, http.StatusInternalServerError)
 		return
@@ -197,9 +197,9 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var token database.Token
+	var token models.Token
 	if err := a.App.DB.
-		Where("value = ? AND type = ?", params.Token, database.TokenTypeEmailVerification).
+		Where("value = ? AND type = ?", params.Token, models.TokenTypeEmailVerification).
 		First(&token).Error; err != nil {
 		http.Error(w, "invalid token", http.StatusBadRequest)
 		return
@@ -216,7 +216,7 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	if err := a.App.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
 		handlers.DoError(w, "finding account", err, http.StatusInternalServerError)
 		return
@@ -240,7 +240,7 @@ func (a *API) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	tx.Commit()
 
-	var user database.User
+	var user models.User
 	if err := a.App.DB.Where("id = ?", token.UserID).First(&user).Error; err != nil {
 		handlers.DoError(w, "finding user", err, http.StatusInternalServerError)
 		return
@@ -272,7 +272,7 @@ func (p emailPreferernceParams) getProductUpdate() bool {
 }
 
 func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -284,8 +284,8 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pref database.EmailPreference
-	if err := a.App.DB.Where(database.EmailPreference{UserID: user.ID}).FirstOrCreate(&pref).Error; err != nil {
+	var pref models.EmailPreference
+	if err := a.App.DB.Where(models.EmailPreference{UserID: user.ID}).FirstOrCreate(&pref).Error; err != nil {
 		handlers.DoError(w, "finding pref", err, http.StatusInternalServerError)
 		return
 	}
@@ -305,7 +305,7 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, ok := r.Context().Value(helpers.KeyToken).(database.Token)
+	token, ok := r.Context().Value(helpers.KeyToken).(models.Token)
 	if ok {
 		// Mark token as used if the user was authenticated by token
 		if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
@@ -321,14 +321,14 @@ func (a *API) updateEmailPreference(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) getEmailPreference(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var pref database.EmailPreference
-	if err := a.App.DB.Where(database.EmailPreference{UserID: user.ID}).First(&pref).Error; err != nil {
+	var pref models.EmailPreference
+	if err := a.App.DB.Where(models.EmailPreference{UserID: user.ID}).First(&pref).Error; err != nil {
 		handlers.DoError(w, "finding pref", err, http.StatusInternalServerError)
 		return
 	}
@@ -343,7 +343,7 @@ type updatePasswordPayload struct {
 }
 
 func (a *API) updatePassword(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -359,7 +359,7 @@ func (a *API) updatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 		handlers.DoError(w, "getting account", nil, http.StatusInternalServerError)
 		return

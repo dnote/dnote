@@ -24,7 +24,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -72,10 +72,10 @@ func TestCreateBook(t *testing.T) {
 			}
 
 			var bookCount int
-			var bookRecord database.Book
-			var userRecord database.User
+			var bookRecord models.Book
+			var userRecord models.User
 
-			if err := testutils.DB.Model(&database.Book{}).Count(&bookCount).Error; err != nil {
+			if err := testutils.DB.Model(&models.Book{}).Count(&bookCount).Error; err != nil {
 				t.Fatal(errors.Wrap(err, "counting books"))
 			}
 			if err := testutils.DB.First(&bookRecord).Error; err != nil {
@@ -128,7 +128,7 @@ func TestDeleteBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			book := database.Book{UserID: user.ID, Label: "js", Deleted: false}
+			book := models.Book{UserID: user.ID, Label: "js", Deleted: false}
 			testutils.MustExec(t, testutils.DB.Save(&book), fmt.Sprintf("preparing book for test case %d", idx))
 
 			tx := testutils.DB.Begin()
@@ -141,10 +141,10 @@ func TestDeleteBook(t *testing.T) {
 			tx.Commit()
 
 			var bookCount int
-			var bookRecord database.Book
-			var userRecord database.User
+			var bookRecord models.Book
+			var userRecord models.User
 
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
@@ -206,7 +206,7 @@ func TestUpdateBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			b := database.Book{UserID: user.ID, Deleted: false, Label: tc.expectedLabel}
+			b := models.Book{UserID: user.ID, Deleted: false, Label: tc.expectedLabel}
 			testutils.MustExec(t, testutils.DB.Save(&b), fmt.Sprintf("preparing book for test case %d", idx))
 
 			c := clock.NewMock()
@@ -224,9 +224,9 @@ func TestUpdateBook(t *testing.T) {
 			tx.Commit()
 
 			var bookCount int
-			var bookRecord database.Book
-			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
+			var bookRecord models.Book
+			var userRecord models.User
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 

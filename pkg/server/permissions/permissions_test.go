@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
@@ -42,13 +42,13 @@ func TestViewNote(t *testing.T) {
 
 	defer testutils.ClearData(testutils.DB)
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	privateNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
@@ -57,7 +57,7 @@ func TestViewNote(t *testing.T) {
 	}
 	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
 
-	publicNote := database.Note{
+	publicNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",

@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
@@ -51,9 +51,9 @@ func setSessionCookie(w http.ResponseWriter, key string, expires time.Time) {
 	http.SetCookie(w, &cookie)
 }
 
-func touchLastLoginAt(db *gorm.DB, user database.User) error {
+func touchLastLoginAt(db *gorm.DB, user models.User) error {
 	t := time.Now()
-	if err := db.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
+	if err := db.Model(&user).Update(models.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
 	}
 
@@ -77,7 +77,7 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
+	var account models.Account
 	conn := a.App.DB.Where("email = ?", params.Email).First(&account)
 	if conn.RecordNotFound() {
 		http.Error(w, ErrLoginFailure.Error(), http.StatusUnauthorized)
@@ -94,7 +94,7 @@ func (a *API) signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user database.User
+	var user models.User
 	err = a.App.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
 		handlers.DoError(w, "finding user", err, http.StatusInternalServerError)
@@ -179,7 +179,7 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var count int
-	if err := a.App.DB.Model(database.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
+	if err := a.App.DB.Model(models.Account{}).Where("email = ?", params.Email).Count(&count).Error; err != nil {
 		handlers.DoError(w, "checking duplicate user", err, http.StatusInternalServerError)
 		return
 	}

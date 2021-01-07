@@ -24,7 +24,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -60,8 +60,8 @@ func TestCreateUser_ProValue(t *testing.T) {
 			}
 
 			var userCount int
-			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+			var userRecord models.User
+			testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
 			testutils.MustExec(t, testutils.DB.First(&userRecord), "finding user")
 
 			assert.Equal(t, userCount, 1, "book count mismatch")
@@ -83,12 +83,12 @@ func TestCreateUser(t *testing.T) {
 		}
 
 		var userCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
 		assert.Equal(t, userCount, 1, "book count mismatch")
 
 		var accountCount int
-		var accountRecord database.Account
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
+		var accountRecord models.Account
+		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
 		testutils.MustExec(t, testutils.DB.First(&accountRecord), "finding account")
 
 		assert.Equal(t, accountCount, 1, "account count mismatch")
@@ -101,8 +101,8 @@ func TestCreateUser(t *testing.T) {
 	t.Run("duplicate email", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
-		aliceUser := database.User{}
-		aliceAccount := database.Account{UserID: aliceUser.ID, Email: database.ToNullString("alice@example.com")}
+		aliceUser := models.User{}
+		aliceAccount := models.Account{UserID: aliceUser.ID, Email: models.ToNullString("alice@example.com")}
 		testutils.MustExec(t, testutils.DB.Save(&aliceUser), "preparing a user")
 		testutils.MustExec(t, testutils.DB.Save(&aliceAccount), "preparing an account")
 
@@ -112,8 +112,8 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, err, ErrDuplicateEmail, "error mismatch")
 
 		var userCount, accountCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
 
 		assert.Equal(t, userCount, 1, "user count mismatch")
 		assert.Equal(t, accountCount, 1, "account count mismatch")

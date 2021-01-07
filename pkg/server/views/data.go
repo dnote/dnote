@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +33,7 @@ type Alert struct {
 type Data struct {
 	Alert *Alert
 	CSRF  template.HTML
-	User  *database.User
+	User  *models.User
 	Yield interface{}
 }
 

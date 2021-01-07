@@ -23,19 +23,19 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 func TestNew(t *testing.T) {
-	u1 := database.User{UUID: "0f5f0054-d23f-4be1-b5fb-57673109e9cb", Cloud: true}
-	a1 := database.Account{Email: database.ToNullString("alice@example.com"), EmailVerified: false}
+	u1 := models.User{UUID: "0f5f0054-d23f-4be1-b5fb-57673109e9cb", Cloud: true}
+	a1 := models.Account{Email: models.ToNullString("alice@example.com"), EmailVerified: false}
 
-	u2 := database.User{UUID: "718a1041-bbe6-496e-bbe4-ea7e572c295e", Cloud: false}
-	a2 := database.Account{Email: database.ToNullString("bob@example.com"), EmailVerified: false}
+	u2 := models.User{UUID: "718a1041-bbe6-496e-bbe4-ea7e572c295e", Cloud: false}
+	a2 := models.Account{Email: models.ToNullString("bob@example.com"), EmailVerified: false}
 
 	testCases := []struct {
-		user        database.User
-		account     database.Account
+		user        models.User
+		account     models.Account
 		expectedPro bool
 	}{
 		{

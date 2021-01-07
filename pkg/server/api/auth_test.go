@@ -28,7 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/session"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -53,8 +53,8 @@ func TestGetMe(t *testing.T) {
 	a2 := testutils.SetupAccountData(u2, "bob@example.com", "somepassword")
 
 	testCases := []struct {
-		user        database.User
-		account     database.Account
+		user        models.User
+		account     models.Account
 		expectedPro bool
 	}{
 		{
@@ -93,7 +93,7 @@ func TestGetMe(t *testing.T) {
 			}
 			assert.DeepEqual(t, payload, expectedPayload, "payload mismatch")
 
-			var user database.User
+			var user models.User
 			testutils.MustExec(t, testutils.DB.Where("id = ?", tc.user.ID).First(&user), "finding user")
 			assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
 		})
@@ -124,10 +124,10 @@ func TestCreateResetToken(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
 
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting tokens")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting tokens")
 
-		var resetToken database.Token
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", u.ID, database.TokenTypeResetPassword).First(&resetToken), "finding reset token")
+		var resetToken models.Token
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", u.ID, models.TokenTypeResetPassword).First(&resetToken), "finding reset token")
 
 		assert.Equal(t, tokenCount, 1, "reset_token count mismatch")
 		assert.NotEqual(t, resetToken.Value, nil, "reset_token value mismatch")
@@ -158,7 +158,7 @@ func TestCreateResetToken(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
 
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting tokens")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting tokens")
 		assert.Equal(t, tokenCount, 0, "reset_token count mismatch")
 	})
 }
@@ -176,30 +176,30 @@ func TestResetPassword(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
-			Type:   database.TokenTypeResetPassword,
+			Type:   models.TokenTypeResetPassword,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-		otherTok := database.Token{
+		otherTok := models.Token{
 			UserID: u.ID,
 			Value:  "somerandomvalue",
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&otherTok), "preparing another token")
 
 		dat := `{"token": "MivFxYiSMMA4An9dP24DNQ==", "password": "newpassword"}`
 		req := testutils.MakeReq(server.URL, "PATCH", "/reset-password", dat)
 
-		s1 := database.Session{
+		s1 := models.Session{
 			Key:       "some-session-key-1",
 			UserID:    u.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
 		}
 		testutils.MustExec(t, testutils.DB.Save(&s1), "preparing user session 1")
 
-		s2 := &database.Session{
+		s2 := &models.Session{
 			Key:       "some-session-key-2",
 			UserID:    u.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
@@ -207,7 +207,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&s2), "preparing user session 2")
 
 		anotherUser := testutils.SetupUserData()
-		testutils.MustExec(t, testutils.DB.Save(&database.Session{
+		testutils.MustExec(t, testutils.DB.Save(&models.Session{
 			Key:       "some-session-key-3",
 			UserID:    anotherUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
@@ -219,8 +219,8 @@ func TestResetPassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismatch")
 
-		var resetToken, verificationToken database.Token
-		var account database.Account
+		var resetToken, verificationToken models.Token
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "somerandomvalue").First(&verificationToken), "finding reset token")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "finding account")
@@ -231,15 +231,15 @@ func TestResetPassword(t *testing.T) {
 		assert.Equal(t, verificationToken.UsedAt, (*time.Time)(nil), "verificationToken UsedAt mismatch")
 
 		var s1Count, s2Count int
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s1.ID).Count(&s1Count), "counting s1")
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s2.ID).Count(&s2Count), "counting s2")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Where("id = ?", s1.ID).Count(&s1Count), "counting s1")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Where("id = ?", s2.ID).Count(&s2Count), "counting s2")
 
 		assert.Equal(t, s1Count, 0, "s1 should have been deleted")
 		assert.Equal(t, s2Count, 0, "s2 should have been deleted")
 
 		var userSessionCount, anotherUserSessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", u.ID).Count(&userSessionCount), "counting user session")
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", anotherUser.ID).Count(&anotherUserSessionCount), "counting anotherUser session")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Where("user_id = ?", u.ID).Count(&userSessionCount), "counting user session")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Where("user_id = ?", anotherUser.ID).Count(&anotherUserSessionCount), "counting anotherUser session")
 
 		assert.Equal(t, userSessionCount, 1, "should have created a new user session")
 		assert.Equal(t, anotherUserSessionCount, 1, "anotherUser session count mismatch")
@@ -257,10 +257,10 @@ func TestResetPassword(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
-			Type:   database.TokenTypeResetPassword,
+			Type:   models.TokenTypeResetPassword,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
@@ -273,8 +273,8 @@ func TestResetPassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
 
-		var resetToken database.Token
-		var account database.Account
+		var resetToken models.Token
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "finding account")
 
@@ -295,10 +295,10 @@ func TestResetPassword(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
-			Type:   database.TokenTypeResetPassword,
+			Type:   models.TokenTypeResetPassword,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
@@ -312,8 +312,8 @@ func TestResetPassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusGone, "Status code mismatch")
 
-		var resetToken database.Token
-		var account database.Account
+		var resetToken models.Token
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
 		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
@@ -334,10 +334,10 @@ func TestResetPassword(t *testing.T) {
 		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
-			Type:   database.TokenTypeResetPassword,
+			Type:   models.TokenTypeResetPassword,
 			UsedAt: &usedAt,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -352,8 +352,8 @@ func TestResetPassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
 
-		var resetToken database.Token
-		var account database.Account
+		var resetToken models.Token
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
 		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
@@ -380,10 +380,10 @@ func TestResetPassword(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "Failed to prepare reset_token")
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
@@ -397,8 +397,8 @@ func TestResetPassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
 
-		var resetToken database.Token
-		var account database.Account
+		var resetToken models.Token
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
 

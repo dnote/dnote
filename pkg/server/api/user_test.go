@@ -28,7 +28,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -56,7 +56,7 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismsatch")
 
-		var account database.Account
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
 
 		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
@@ -84,7 +84,7 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
-		var account database.Account
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
 		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
@@ -110,7 +110,7 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
 
-		var account database.Account
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
 		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
@@ -138,12 +138,12 @@ func TestCreateVerificationToken(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusCreated, "status code mismatch")
 
-		var account database.Account
-		var token database.Token
+		var account models.Account
+		var token models.Token
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified should not have been updated")
 		assert.NotEqual(t, token.Value, "", "token Value mismatch")
@@ -175,10 +175,10 @@ func TestCreateVerificationToken(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusGone, "Status code mismatch")
 
-		var account database.Account
+		var account models.Account
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified should not have been updated")
 		assert.Equal(t, tokenCount, 0, "token count mismatch")
@@ -198,9 +198,9 @@ func TestVerifyEmail(t *testing.T) {
 
 		user := testutils.SetupUserData()
 		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
-		tok := database.Token{
+		tok := models.Token{
 			UserID: user.ID,
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -214,12 +214,12 @@ func TestVerifyEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismatch")
 
-		var account database.Account
-		var token database.Token
+		var account models.Account
+		var token models.Token
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
 		assert.NotEqual(t, token.Value, "", "token value should not have been updated")
@@ -241,9 +241,9 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
-		tok := database.Token{
+		tok := models.Token{
 			UserID: user.ID,
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
@@ -258,12 +258,12 @@ func TestVerifyEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
 
-		var account database.Account
-		var token database.Token
+		var account models.Account
+		var token models.Token
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
 		assert.NotEqual(t, token.UsedAt, nil, "token used_at mismatch")
@@ -284,9 +284,9 @@ func TestVerifyEmail(t *testing.T) {
 		user := testutils.SetupUserData()
 		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
 
-		tok := database.Token{
+		tok := models.Token{
 			UserID: user.ID,
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -301,12 +301,12 @@ func TestVerifyEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusGone, "")
 
-		var account database.Account
-		var token database.Token
+		var account models.Account
+		var token models.Token
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
 		assert.Equal(t, tokenCount, 1, "token count mismatch")
@@ -328,9 +328,9 @@ func TestVerifyEmail(t *testing.T) {
 		a.EmailVerified = true
 		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
 
-		tok := database.Token{
+		tok := models.Token{
 			UserID: user.ID,
-			Type:   database.TokenTypeEmailVerification,
+			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -344,12 +344,12 @@ func TestVerifyEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusConflict, "")
 
-		var account database.Account
-		var token database.Token
+		var account models.Account
+		var token models.Token
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
 		assert.Equal(t, tokenCount, 1, "token count mismatch")
@@ -380,8 +380,8 @@ func TestUpdateEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		var user database.User
-		var account database.Account
+		var user models.User
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
 
@@ -411,8 +411,8 @@ func TestUpdateEmail(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
-		var user database.User
-		var account database.Account
+		var user models.User
+		var account models.Account
 		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
 
@@ -442,7 +442,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding account")
 		assert.Equal(t, preference.InactiveReminder, true, "preference mismatch")
 	})
@@ -458,9 +458,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		testutils.SetupEmailPreferenceData(u, false)
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -474,11 +474,11 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		var preferenceCount int
-		var token database.Token
+		var token models.Token
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
+		testutils.MustExec(t, testutils.DB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", tok.ID).First(&token), "failed to find token")
 
 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
@@ -497,9 +497,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 
 		u := testutils.SetupUserData()
 		testutils.SetupEmailPreferenceData(u, true)
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -514,7 +514,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
@@ -533,9 +533,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		testutils.SetupEmailPreferenceData(u, true)
 
 		usedAt := time.Now().Add(-11 * time.Minute)
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
@@ -550,7 +550,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
@@ -569,9 +569,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		u := testutils.SetupUserData()
 		testutils.SetupEmailPreferenceData(u, true)
 		usedAt := time.Now().Add(-9 * time.Minute)
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
@@ -587,7 +587,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, false, "InactiveReminder mismatch")
 	})
@@ -614,7 +614,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
@@ -631,9 +631,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		defer server.Close()
 
 		u := testutils.SetupUserData()
-		tok := database.Token{
+		tok := models.Token{
 			UserID: u.ID,
-			Type:   database.TokenTypeEmailPreference,
+			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
@@ -648,10 +648,10 @@ func TestUpdateEmailPreference(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var preferenceCount int
-		testutils.MustExec(t, testutils.DB.Model(database.EmailPreference{}).Count(&preferenceCount), "counting preference")
+		testutils.MustExec(t, testutils.DB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
 
-		var preference database.EmailPreference
+		var preference models.EmailPreference
 		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, false, "email mismatch")
 	})

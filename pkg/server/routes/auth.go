@@ -7,15 +7,15 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
-func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams) (database.User, database.Token, bool, error) {
-	var user database.User
-	var token database.Token
+func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams) (models.User, models.Token, bool, error) {
+	var user models.User
+	var token models.Token
 
 	query := r.URL.Query()
 	tokenValue := query.Get("token")
@@ -131,8 +131,8 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 }
 
 // AuthWithSession performs user authentication with session
-func AuthWithSession(db *gorm.DB, r *http.Request, p *AuthParams) (database.User, bool, error) {
-	var user database.User
+func AuthWithSession(db *gorm.DB, r *http.Request, p *AuthParams) (models.User, bool, error) {
+	var user models.User
 
 	sessionKey, err := GetCredential(r)
 	if err != nil {
@@ -142,7 +142,7 @@ func AuthWithSession(db *gorm.DB, r *http.Request, p *AuthParams) (database.User
 		return user, false, nil
 	}
 
-	var session database.Session
+	var session models.Session
 	conn := db.Where("key = ?", sessionKey).First(&session)
 
 	if conn.RecordNotFound() {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/views"
 	// "github.com/nadproject/nad/pkg/server/context"
 )
@@ -31,7 +31,7 @@ func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 
 	var vd views.Data
 	vd.Yield = struct {
-		Notes []database.Note
+		Notes []models.Note
 	}{
 		Notes: nil,
 	}

@@ -29,7 +29,7 @@ import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -43,8 +43,8 @@ func assertSessionResp(t *testing.T, res *http.Response) {
 	}
 
 	var sessionCount int
-	var session database.Session
-	testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+	var session models.Session
+	testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 	testutils.MustExec(t, testutils.DB.First(&session), "getting session")
 
 	assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
@@ -117,14 +117,14 @@ func TestRegister(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
-			var account database.Account
+			var account models.Account
 			testutils.MustExec(t, testutils.DB.Where("email = ?", tc.email).First(&account), "finding account")
 			assert.Equal(t, account.Email.String, tc.email, "Email mismatch")
 			assert.NotEqual(t, account.UserID, 0, "UserID mismatch")
 			passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(tc.password))
 			assert.Equal(t, passwordErr, nil, "Password mismatch")
 
-			var user database.User
+			var user models.User
 			testutils.MustExec(t, testutils.DB.Where("id = ?", account.UserID).First(&user), "finding user")
 			assert.Equal(t, user.Cloud, tc.expectedPro, "Cloud mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
@@ -159,8 +159,8 @@ func TestRegisterMissingParams(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
 		var accountCount, userCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
 
 		assert.Equal(t, accountCount, 0, "accountCount mismatch")
 		assert.Equal(t, userCount, 0, "userCount mismatch")
@@ -186,8 +186,8 @@ func TestRegisterMissingParams(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
 		var accountCount, userCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
 
 		assert.Equal(t, accountCount, 0, "accountCount mismatch")
 		assert.Equal(t, userCount, 0, "userCount mismatch")
@@ -216,11 +216,11 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusBadRequest, "status code mismatch")
 
 	var accountCount, userCount, verificationTokenCount int
-	testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
-	testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
-	testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&verificationTokenCount), "counting verification token")
+	testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
+	testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
+	testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&verificationTokenCount), "counting verification token")
 
-	var user database.User
+	var user models.User
 	testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
 
 	assert.Equal(t, accountCount, 1, "account count mismatch")
@@ -252,8 +252,8 @@ func TestRegisterDisabled(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusForbidden, "status code mismatch")
 
 	var accountCount, userCount int
-	testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
-	testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+	testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
+	testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
 
 	assert.Equal(t, accountCount, 0, "account count mismatch")
 	assert.Equal(t, userCount, 0, "user count mismatch")
@@ -282,8 +282,8 @@ func TestSignIn(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		var user database.User
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		var user models.User
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
 		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
 
 		// after register, should sign in user
@@ -312,12 +312,12 @@ func TestSignIn(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
-		var user database.User
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		var user models.User
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
 		assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 
@@ -344,12 +344,12 @@ func TestSignIn(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
-		var user database.User
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		var user models.User
+		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
 		assert.DeepEqual(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 
@@ -374,7 +374,7 @@ func TestSignIn(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 }
@@ -388,13 +388,13 @@ func TestSignout(t *testing.T) {
 		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
 		anotherUser := testutils.SetupUserData()
 
-		session1 := database.Session{
+		session1 := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    aliceUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
 		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
-		session2 := database.Session{
+		session2 := models.Session{
 			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
 			UserID:    anotherUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -417,8 +417,8 @@ func TestSignout(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
 
 		var sessionCount int
-		var s2 database.Session
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		var s2 models.Session
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&s2), "getting s2")
 
 		assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
@@ -440,13 +440,13 @@ func TestSignout(t *testing.T) {
 		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
 		anotherUser := testutils.SetupUserData()
 
-		session1 := database.Session{
+		session1 := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    aliceUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
 		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
-		session2 := database.Session{
+		session2 := models.Session{
 			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
 			UserID:    anotherUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -468,8 +468,8 @@ func TestSignout(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
 
 		var sessionCount int
-		var postSession1, postSession2 database.Session
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		var postSession1, postSession2 models.Session
+		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		testutils.MustExec(t, testutils.DB.Where("key = ?", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=").First(&postSession1), "getting postSession1")
 		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&postSession2), "getting postSession2")
 

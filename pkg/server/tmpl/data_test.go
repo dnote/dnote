@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -45,8 +45,8 @@ func TestNotePageGetData(t *testing.T) {
 	}
 
 	p := notePage{
-		Note: database.Note{
-			Book: database.Book{
+		Note: models.Note{
+			Book: models.Book{
 				Label: "vocabulary",
 			},
 			AddedOn: time.Date(2019, time.January, 2, 0, 0, 0, 0, time.UTC).UnixNano(),

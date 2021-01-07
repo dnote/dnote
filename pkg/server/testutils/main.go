@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -49,44 +49,44 @@ var DB *gorm.DB
 func InitTestDB() {
 	c := config.Load()
 	fmt.Println(c.DB.GetConnectionStr())
-	db := database.Open(c)
+	db := models.Open(c)
 
-	database.InitSchema(db)
+	models.InitSchema(db)
 
 	DB = db
 }
 
 // ClearData deletes all records from the database
 func ClearData(db *gorm.DB) {
-	if err := db.Delete(&database.Book{}).Error; err != nil {
+	if err := db.Delete(&models.Book{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear books"))
 	}
-	if err := db.Delete(&database.Note{}).Error; err != nil {
+	if err := db.Delete(&models.Note{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notes"))
 	}
-	if err := db.Delete(&database.Notification{}).Error; err != nil {
+	if err := db.Delete(&models.Notification{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notifications"))
 	}
-	if err := db.Delete(&database.User{}).Error; err != nil {
+	if err := db.Delete(&models.User{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear users"))
 	}
-	if err := db.Delete(&database.Account{}).Error; err != nil {
+	if err := db.Delete(&models.Account{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear accounts"))
 	}
-	if err := db.Delete(&database.Token{}).Error; err != nil {
+	if err := db.Delete(&models.Token{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
-	if err := db.Delete(&database.EmailPreference{}).Error; err != nil {
+	if err := db.Delete(&models.EmailPreference{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
-	if err := db.Delete(&database.Session{}).Error; err != nil {
+	if err := db.Delete(&models.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
 }
 
 // SetupUserData creates and returns a new user for testing purposes
-func SetupUserData() database.User {
-	user := database.User{
+func SetupUserData() models.User {
+	user := models.User{
 		Cloud: true,
 	}
 
@@ -98,19 +98,19 @@ func SetupUserData() database.User {
 }
 
 // SetupAccountData creates and returns a new account for the user
-func SetupAccountData(user database.User, email, password string) database.Account {
-	account := database.Account{
+func SetupAccountData(user models.User, email, password string) models.Account {
+	account := models.Account{
 		UserID: user.ID,
 	}
 	if email != "" {
-		account.Email = database.ToNullString(email)
+		account.Email = models.ToNullString(email)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to hash password"))
 	}
-	account.Password = database.ToNullString(string(hashedPassword))
+	account.Password = models.ToNullString(string(hashedPassword))
 
 	if err := DB.Save(&account).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to prepare account"))
@@ -120,8 +120,8 @@ func SetupAccountData(user database.User, email, password string) database.Accou
 }
 
 // SetupSession creates and returns a new user session
-func SetupSession(t *testing.T, user database.User) database.Session {
-	session := database.Session{
+func SetupSession(t *testing.T, user models.User) models.Session {
+	session := models.Session{
 		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -134,8 +134,8 @@ func SetupSession(t *testing.T, user database.User) database.Session {
 }
 
 // SetupEmailPreferenceData creates and returns a new email frequency for a user
-func SetupEmailPreferenceData(user database.User, inactiveReminder bool) database.EmailPreference {
-	frequency := database.EmailPreference{
+func SetupEmailPreferenceData(user models.User, inactiveReminder bool) models.EmailPreference {
+	frequency := models.EmailPreference{
 		UserID:           user.ID,
 		InactiveReminder: inactiveReminder,
 	}
@@ -167,13 +167,13 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 }
 
 // SetReqAuthHeader sets the authorization header in the given request for the given user
-func SetReqAuthHeader(t *testing.T, req *http.Request, user database.User) {
+func SetReqAuthHeader(t *testing.T, req *http.Request, user models.User) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		t.Fatal(errors.Wrap(err, "reading random bits"))
 	}
 
-	session := database.Session{
+	session := models.Session{
 		Key:       base64.StdEncoding.EncodeToString(b),
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
@@ -186,7 +186,7 @@ func SetReqAuthHeader(t *testing.T, req *http.Request, user database.User) {
 }
 
 // HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
-func HTTPAuthDo(t *testing.T, req *http.Request, user database.User) *http.Response {
+func HTTPAuthDo(t *testing.T, req *http.Request, user models.User) *http.Response {
 	SetReqAuthHeader(t, req, user)
 
 	return HTTPDo(t, req)

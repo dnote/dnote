@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
@@ -47,7 +47,7 @@ type noteMetaTagsData struct {
 }
 
 type notePage struct {
-	Note database.Note
+	Note models.Note
 	T    *template.Template
 }
 

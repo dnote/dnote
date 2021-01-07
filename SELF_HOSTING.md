@@ -4,7 +4,7 @@ This guide documents the steps for installing the Dnote server on your own machi
 
 ## Overview
 
-Dnote server comes as a single binary file that you can simply download and run. It uses Postgres as the database.
+Dnote server comes as a single binary file that you can simply download and run. It uses Postgres as the models.
 
 ## Installation
 
@@ -37,7 +37,7 @@ DisableRegistration=false
   dnote-server start
 ```
 
-Replace `$user`, `$password` with the credentials of the Postgres user that owns the `dnote` database.
+Replace `$user`, `$password` with the credentials of the Postgres user that owns the `dnote` models.
 
 Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
 

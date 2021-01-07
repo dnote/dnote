@@ -21,7 +21,7 @@ package presenters
 import (
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 // Book is a result of PresentBooks
@@ -34,7 +34,7 @@ type Book struct {
 }
 
 // PresentBook presents a book
-func PresentBook(book database.Book) Book {
+func PresentBook(book models.Book) Book {
 	return Book{
 		UUID:      book.UUID,
 		USN:       book.USN,
@@ -45,7 +45,7 @@ func PresentBook(book database.Book) Book {
 }
 
 // PresentBooks presents books
-func PresentBooks(books []database.Book) []Book {
+func PresentBooks(books []models.Book) []Book {
 	ret := []Book{}
 
 	for _, book := range books {

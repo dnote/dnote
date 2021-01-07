@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -73,8 +73,8 @@ func NewRouter(a *API) (*mux.Router, error) {
 		{Method: "PATCH", Pattern: "/reset-password", HandlerFunc: a.resetPassword, RateLimit: true},
 		{Method: "PATCH", Pattern: "/account/profile", HandlerFunc: handlers.Auth(app, a.updateProfile, nil), RateLimit: true},
 		{Method: "PATCH", Pattern: "/account/password", HandlerFunc: handlers.Auth(app, a.updatePassword, nil), RateLimit: true},
-		{Method: "GET", Pattern: "/account/email-preference", HandlerFunc: handlers.TokenAuth(app, a.getEmailPreference, database.TokenTypeEmailPreference, nil), RateLimit: true},
-		{Method: "PATCH", Pattern: "/account/email-preference", HandlerFunc: handlers.TokenAuth(app, a.updateEmailPreference, database.TokenTypeEmailPreference, nil), RateLimit: true},
+		{Method: "GET", Pattern: "/account/email-preference", HandlerFunc: handlers.TokenAuth(app, a.getEmailPreference, models.TokenTypeEmailPreference, nil), RateLimit: true},
+		{Method: "PATCH", Pattern: "/account/email-preference", HandlerFunc: handlers.TokenAuth(app, a.updateEmailPreference, models.TokenTypeEmailPreference, nil), RateLimit: true},
 		{Method: "GET", Pattern: "/notes", HandlerFunc: handlers.Auth(app, a.getNotes, nil), RateLimit: false},
 		{Method: "GET", Pattern: "/notes/{noteUUID}", HandlerFunc: a.getNote, RateLimit: true},
 		{Method: "GET", Pattern: "/calendar", HandlerFunc: handlers.Auth(app, a.getCalendar, nil), RateLimit: true},

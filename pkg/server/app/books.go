@@ -19,28 +19,28 @@
 package app
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
 
 // CreateBook creates a book with the next usn and updates the user's max_usn
-func (a *App) CreateBook(user database.User, name string) (database.Book, error) {
+func (a *App) CreateBook(user models.User, name string) (models.Book, error) {
 	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		tx.Rollback()
-		return database.Book{}, errors.Wrap(err, "incrementing user max_usn")
+		return models.Book{}, errors.Wrap(err, "incrementing user max_usn")
 	}
 
 	uuid, err := helpers.GenUUID()
 	if err != nil {
-		return database.Book{}, err
+		return models.Book{}, err
 	}
 
-	book := database.Book{
+	book := models.Book{
 		UUID:      uuid,
 		UserID:    user.ID,
 		Label:     name,
@@ -59,7 +59,7 @@ func (a *App) CreateBook(user database.User, name string) (database.Book, error)
 }
 
 // DeleteBook marks a book deleted with the next usn and updates the user's max_usn
-func (a *App) DeleteBook(tx *gorm.DB, user database.User, book database.Book) (database.Book, error) {
+func (a *App) DeleteBook(tx *gorm.DB, user models.User, book models.Book) (models.Book, error) {
 	if user.ID != book.UserID {
 		return book, errors.New("Not allowed")
 	}
@@ -82,7 +82,7 @@ func (a *App) DeleteBook(tx *gorm.DB, user database.User, book database.Book) (d
 }
 
 // UpdateBook updaates the book, the usn and the user's max_usn
-func (a *App) UpdateBook(tx *gorm.DB, user database.User, book database.Book, label *string) (database.Book, error) {
+func (a *App) UpdateBook(tx *gorm.DB, user models.User, book models.Book, label *string) (models.Book, error) {
 	if user.ID != book.UserID {
 		return book, errors.New("Not allowed")
 	}

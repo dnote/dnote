@@ -21,7 +21,7 @@ package presenters
 import (
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 // Note is a result of PresentNote
@@ -50,7 +50,7 @@ type NoteUser struct {
 }
 
 // PresentNote presents note
-func PresentNote(note database.Note) Note {
+func PresentNote(note models.Note) Note {
 	ret := Note{
 		UUID:      note.UUID,
 		CreatedAt: FormatTS(note.CreatedAt),
@@ -72,7 +72,7 @@ func PresentNote(note database.Note) Note {
 }
 
 // PresentNotes presents notes
-func PresentNotes(notes []database.Note) []Note {
+func PresentNotes(notes []models.Note) []Note {
 	ret := []Note{}
 
 	for _, note := range notes {

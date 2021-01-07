@@ -26,7 +26,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
@@ -44,7 +44,7 @@ func TestCreateNote(t *testing.T) {
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 		USN:    58,
@@ -59,12 +59,12 @@ func TestCreateNote(t *testing.T) {
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
-	var noteRecord database.Note
-	var bookRecord database.Book
-	var userRecord database.User
+	var noteRecord models.Note
+	var bookRecord models.Book
+	var userRecord models.User
 	var bookCount, noteCount int
-	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+	testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 	testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
@@ -249,20 +249,20 @@ func TestUpdateNote(t *testing.T) {
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-			b1 := database.Book{
+			b1 := models.Book{
 				UUID:   b1UUID,
 				UserID: user.ID,
 				Label:  "css",
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-			b2 := database.Book{
+			b2 := models.Book{
 				UUID:   b2UUID,
 				UserID: user.ID,
 				Label:  "js",
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
 
-			note := database.Note{
+			note := models.Note{
 				UserID:   user.ID,
 				UUID:     tc.noteUUID,
 				BookUUID: tc.noteBookUUID,
@@ -280,12 +280,12 @@ func TestUpdateNote(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, "status code mismatch for test case")
 
-			var bookRecord database.Book
-			var noteRecord database.Note
-			var userRecord database.User
+			var bookRecord models.Book
+			var noteRecord models.Note
+			var userRecord models.User
 			var noteCount, bookCount int
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("uuid = ?", note.UUID).First(&noteRecord), "finding note")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
@@ -345,13 +345,13 @@ func TestDeleteNote(t *testing.T) {
 			user := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 981), "preparing user max_usn")
 
-			b1 := database.Book{
+			b1 := models.Book{
 				UUID:   b1UUID,
 				UserID: user.ID,
 				Label:  "js",
 			}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-			note := database.Note{
+			note := models.Note{
 				UserID:   user.ID,
 				BookUUID: b1.UUID,
 				Body:     tc.content,
@@ -368,12 +368,12 @@ func TestDeleteNote(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-			var bookRecord database.Book
-			var noteRecord database.Note
-			var userRecord database.User
+			var bookRecord models.Book
+			var noteRecord models.Note
+			var userRecord models.User
 			var bookCount, noteCount int
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("uuid = ?", note.UUID).First(&noteRecord), "finding note")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")

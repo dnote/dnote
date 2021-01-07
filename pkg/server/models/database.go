@@ -16,52 +16,48 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package main
+package models
 
 import (
-	"flag"
-	"fmt"
-	"os"
-
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/joho/godotenv"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"github.com/rubenv/sql-migrate"
+
+	// Use postgres
+	_ "github.com/lib/pq"
 )
 
 var (
-	migrationDir = flag.String("migrationDir", "../migrations", "the path to the directory with migraiton files")
+	// MigrationTableName is the name of the table that keeps track of migrations
+	MigrationTableName = "migrations"
 )
 
-func init() {
-	fmt.Println("Migrating Dnote database...")
-
-	// Load env
-	if os.Getenv("GO_ENV") != "PRODUCTION" {
-		if err := godotenv.Load("../../.env.dev"); err != nil {
-			panic(err)
-		}
+// InitSchema migrates database schema to reflect the latest model definition
+func InitSchema(db *gorm.DB) {
+	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error; err != nil {
+		panic(err)
 	}
 
+	if err := db.AutoMigrate(
+		Note{},
+		Book{},
+		User{},
+		Account{},
+		Notification{},
+		Token{},
+		EmailPreference{},
+		Session{},
+	).Error; err != nil {
+		panic(err)
+	}
 }
 
-func main() {
-	flag.Parse()
-
-	c := config.Load()
-	db := database.Open(c)
-
-	migrations := &migrate.FileMigrationSource{
-		Dir: *migrationDir,
-	}
-
-	migrate.SetTable("migrations")
-
-	n, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up)
+// Open initializes the database connection
+func Open(c config.Config) *gorm.DB {
+	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
 	if err != nil {
-		panic(errors.Wrap(err, "executing migrations"))
+		panic(errors.Wrap(err, "opening database conection"))
 	}
 
-	fmt.Printf("Applied %d migrations\n", n)
+	return db
 }

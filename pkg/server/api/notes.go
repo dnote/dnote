@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/operations"
@@ -75,7 +75,7 @@ ts_headline('english_nostop', notes.body, plainto_tsquery('english_nostop', ?), 
 	`, search, headlineOpts)
 }
 
-func respondWithNote(w http.ResponseWriter, note database.Note) {
+func respondWithNote(w http.ResponseWriter, note models.Note) {
 	presentedNote := presenters.PresentNote(note)
 
 	handlers.RespondJSON(w, http.StatusOK, presentedNote)
@@ -137,7 +137,7 @@ type dateRange struct {
 }
 
 func (a *API) getNotes(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -157,15 +157,15 @@ func respondGetNotes(db *gorm.DB, userID int, query url.Values, w http.ResponseW
 	conn := getNotesBaseQuery(db, userID, q)
 
 	var total int
-	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
+	if err := conn.Model(models.Note{}).Count(&total).Error; err != nil {
 		handlers.DoError(w, "counting total", err, http.StatusInternalServerError)
 		return
 	}
 
-	notes := []database.Note{}
+	notes := []models.Note{}
 	if total != 0 {
 		conn = orderGetNotes(conn)
-		conn = database.PreloadNote(conn)
+		conn = models.PreloadNote(conn)
 		conn = paginate(conn, q.Page)
 
 		if err := conn.Find(&notes).Error; err != nil {
@@ -307,13 +307,13 @@ func escapeSearchQuery(searchQuery string) string {
 }
 
 func (a *API) legacyGetNotes(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var notes []database.Note
+	var notes []models.Note
 	if err := a.App.DB.Where("user_id = ? AND encrypted = true", user.ID).Find(&notes).Error; err != nil {
 		handlers.DoError(w, "finding notes", err, http.StatusInternalServerError)
 		return

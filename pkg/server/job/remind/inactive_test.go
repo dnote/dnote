@@ -26,7 +26,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -54,14 +54,14 @@ func TestDoInactive(t *testing.T) {
 	u1 := testutils.SetupUserData()
 	a1 := testutils.SetupAccountData(u1, "alice@example.com", "pass1234")
 	testutils.MustExec(t, testutils.DB.Model(&a1).Update("email_verified", true), "setting email verified")
-	testutils.MustExec(t, testutils.DB.Save(&database.EmailPreference{UserID: u1.ID, InactiveReminder: true}), "preparing email preference")
+	testutils.MustExec(t, testutils.DB.Save(&models.EmailPreference{UserID: u1.ID, InactiveReminder: true}), "preparing email preference")
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: u1.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-	n1 := database.Note{
+	n1 := models.Note{
 		BookUUID: b1.UUID,
 		UserID:   u1.ID,
 	}
@@ -71,14 +71,14 @@ func TestDoInactive(t *testing.T) {
 	u2 := testutils.SetupUserData()
 	a2 := testutils.SetupAccountData(u2, "bob@example.com", "pass1234")
 	testutils.MustExec(t, testutils.DB.Model(&a2).Update("email_verified", true), "setting email verified")
-	testutils.MustExec(t, testutils.DB.Save(&database.EmailPreference{UserID: u2.ID, InactiveReminder: true}), "preparing email preference")
+	testutils.MustExec(t, testutils.DB.Save(&models.EmailPreference{UserID: u2.ID, InactiveReminder: true}), "preparing email preference")
 
-	b2 := database.Book{
+	b2 := models.Book{
 		UserID: u2.ID,
 		Label:  "css",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-	n2 := database.Note{
+	n2 := models.Note{
 		UserID:   u2.ID,
 		BookUUID: b2.UUID,
 	}
@@ -89,16 +89,16 @@ func TestDoInactive(t *testing.T) {
 	u3 := testutils.SetupUserData()
 	a3 := testutils.SetupAccountData(u3, "alice@example.com", "pass1234")
 	testutils.MustExec(t, testutils.DB.Model(&a3).Update("email_verified", true), "setting email verified")
-	emailPref3 := database.EmailPreference{UserID: u3.ID}
+	emailPref3 := models.EmailPreference{UserID: u3.ID}
 	testutils.MustExec(t, testutils.DB.Save(&emailPref3), "preparing email preference")
 	testutils.MustExec(t, testutils.DB.Model(&emailPref3).Update(map[string]interface{}{"inactive_reminder": false}), "updating email preference")
 
-	b3 := database.Book{
+	b3 := models.Book{
 		UserID: u3.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-	n3 := database.Note{
+	n3 := models.Note{
 		BookUUID: b3.UUID,
 		UserID:   u3.ID,
 	}
@@ -122,18 +122,18 @@ func TestDoInactive_Cooldown(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	// setup sets up an inactive user
-	setup := func(t *testing.T, now time.Time, email string) database.User {
+	setup := func(t *testing.T, now time.Time, email string) models.User {
 		u := testutils.SetupUserData()
 		a := testutils.SetupAccountData(u, email, "pass1234")
 		testutils.MustExec(t, testutils.DB.Model(&a).Update("email_verified", true), "setting email verified")
-		testutils.MustExec(t, testutils.DB.Save(&database.EmailPreference{UserID: u.ID, InactiveReminder: true}), "preparing email preference")
+		testutils.MustExec(t, testutils.DB.Save(&models.EmailPreference{UserID: u.ID, InactiveReminder: true}), "preparing email preference")
 
-		b := database.Book{
+		b := models.Book{
 			UserID: u.ID,
 			Label:  "css",
 		}
 		testutils.MustExec(t, testutils.DB.Save(&b), "preparing book")
-		n := database.Note{
+		n := models.Note{
 			UserID:   u.ID,
 			BookUUID: b.UUID,
 		}
@@ -149,20 +149,20 @@ func TestDoInactive_Cooldown(t *testing.T) {
 	setup(t, now, "alice@example.com")
 
 	bob := setup(t, now, "bob@example.com")
-	bobNotif := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: bob.ID}
+	bobNotif := models.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: bob.ID}
 	testutils.MustExec(t, testutils.DB.Create(&bobNotif), "preparing inactive notification for bob")
 	testutils.MustExec(t, testutils.DB.Model(&bobNotif).Update("created_at", now.AddDate(0, 0, -7)), "preparing created_at for inactive notification for bob")
 
 	chuck := setup(t, now, "chuck@example.com")
-	chuckNotif := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: chuck.ID}
+	chuckNotif := models.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: chuck.ID}
 	testutils.MustExec(t, testutils.DB.Create(&chuckNotif), "preparing inactive notification for chuck")
 	testutils.MustExec(t, testutils.DB.Model(&chuckNotif).Update("created_at", now.AddDate(0, 0, -15)), "preparing created_at for inactive notification for chuck")
 
 	dan := setup(t, now, "dan@example.com")
-	danNotif1 := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
+	danNotif1 := models.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
 	testutils.MustExec(t, testutils.DB.Create(&danNotif1), "preparing inactive notification 1 for dan")
 	testutils.MustExec(t, testutils.DB.Model(&danNotif1).Update("created_at", now.AddDate(0, 0, -10)), "preparing created_at for inactive notification for dan")
-	danNotif2 := database.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
+	danNotif2 := models.Notification{Type: mailer.EmailTypeInactiveReminder, UserID: dan.ID}
 	testutils.MustExec(t, testutils.DB.Create(&danNotif2), "preparing inactive notification 2 for dan")
 	testutils.MustExec(t, testutils.DB.Model(&danNotif2).Update("created_at", now.AddDate(0, 0, -15)), "preparing created_at for inactive notification for dan")
 

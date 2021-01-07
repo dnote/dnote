@@ -25,7 +25,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -82,7 +82,7 @@ func TestCreateNote(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
+			b1 := models.Book{UserID: user.ID, Label: "js", Deleted: false}
 			testutils.MustExec(t, testutils.DB.Save(&b1), fmt.Sprintf("preparing b1 for test case %d", idx))
 
 			a := NewTest(&App{
@@ -97,11 +97,11 @@ func TestCreateNote(t *testing.T) {
 			tx.Commit()
 
 			var bookCount, noteCount int
-			var noteRecord database.Note
-			var userRecord database.User
+			var noteRecord models.Note
+			var userRecord models.User
 
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting book for test case %d", idx))
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), fmt.Sprintf("counting notes for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), fmt.Sprintf("counting book for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), fmt.Sprintf("counting notes for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.First(&noteRecord), fmt.Sprintf("finding note for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
@@ -145,10 +145,10 @@ func TestUpdateNote(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), "preparing user max_usn for test case")
 
-			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
+			b1 := models.Book{UserID: user.ID, Label: "js", Deleted: false}
 			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1 for test case")
 
-			note := database.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
+			note := models.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
 			testutils.MustExec(t, testutils.DB.Save(&note), "preparing note for test case")
 
 			c := clock.NewMock()
@@ -170,11 +170,11 @@ func TestUpdateNote(t *testing.T) {
 			tx.Commit()
 
 			var bookCount, noteCount int
-			var noteRecord database.Note
-			var userRecord database.User
+			var noteRecord models.Note
+			var userRecord models.User
 
-			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting book for test case")
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes for test case")
+			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting book for test case")
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes for test case")
 			testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note for test case")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user for test case")
 
@@ -220,10 +220,10 @@ func TestDeleteNote(t *testing.T) {
 			anotherUser := testutils.SetupUserData()
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			b1 := database.Book{UserID: user.ID, Label: "testBook"}
+			b1 := models.Book{UserID: user.ID, Label: "testBook"}
 			testutils.MustExec(t, testutils.DB.Save(&b1), fmt.Sprintf("preparing b1 for test case %d", idx))
 
-			note := database.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
+			note := models.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
 			testutils.MustExec(t, testutils.DB.Save(&note), fmt.Sprintf("preparing note for test case %d", idx))
 
 			a := NewTest(nil)
@@ -237,10 +237,10 @@ func TestDeleteNote(t *testing.T) {
 			tx.Commit()
 
 			var noteCount int
-			var noteRecord database.Note
-			var userRecord database.User
+			var noteRecord models.Note
+			var userRecord models.User
 
-			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), fmt.Sprintf("counting notes for test case %d", idx))
+			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), fmt.Sprintf("counting notes for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.First(&noteRecord), fmt.Sprintf("finding note for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 

@@ -19,7 +19,7 @@
 package app
 
 import (
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/jinzhu/gorm"
@@ -28,17 +28,17 @@ import (
 )
 
 // TouchLastLoginAt updates the last login timestamp
-func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
+func (a *App) TouchLastLoginAt(user models.User, tx *gorm.DB) error {
 	t := a.Clock.Now()
-	if err := tx.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
+	if err := tx.Model(&user).Update(models.User{LastLoginAt: &t}).Error; err != nil {
 		return errors.Wrap(err, "updating last_login_at")
 	}
 
 	return nil
 }
 
-func createEmailPreference(user database.User, tx *gorm.DB) error {
-	p := database.EmailPreference{
+func createEmailPreference(user models.User, tx *gorm.DB) error {
+	p := models.EmailPreference{
 		UserID: user.ID,
 	}
 	if err := tx.Save(&p).Error; err != nil {
@@ -49,21 +49,21 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 }
 
 // CreateUser creates a user
-func (a *App) CreateUser(email, password string) (database.User, error) {
+func (a *App) CreateUser(email, password string) (models.User, error) {
 	tx := a.DB.Begin()
 
 	var count int
-	if err := tx.Model(database.Account{}).Where("email = ?", email).Count(&count).Error; err != nil {
-		return database.User{}, errors.Wrap(err, "counting user")
+	if err := tx.Model(models.Account{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		return models.User{}, errors.Wrap(err, "counting user")
 	}
 	if count > 0 {
-		return database.User{}, ErrDuplicateEmail
+		return models.User{}, ErrDuplicateEmail
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "hashing password")
+		return models.User{}, errors.Wrap(err, "hashing password")
 	}
 
 	// Grant all privileges if self-hosting
@@ -74,34 +74,34 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 		pro = false
 	}
 
-	user := database.User{
+	user := models.User{
 		Cloud: pro,
 	}
 	if err = tx.Save(&user).Error; err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "saving user")
+		return models.User{}, errors.Wrap(err, "saving user")
 	}
-	account := database.Account{
-		Email:    database.ToNullString(email),
-		Password: database.ToNullString(string(hashedPassword)),
+	account := models.Account{
+		Email:    models.ToNullString(email),
+		Password: models.ToNullString(string(hashedPassword)),
 		UserID:   user.ID,
 	}
 	if err = tx.Save(&account).Error; err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "saving account")
+		return models.User{}, errors.Wrap(err, "saving account")
 	}
 
-	if _, err := token.Create(tx, user.ID, database.TokenTypeEmailPreference); err != nil {
+	if _, err := token.Create(tx, user.ID, models.TokenTypeEmailPreference); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "creating email verificaiton token")
+		return models.User{}, errors.Wrap(err, "creating email verificaiton token")
 	}
 	if err := createEmailPreference(user, tx); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "creating email preference")
+		return models.User{}, errors.Wrap(err, "creating email preference")
 	}
 	if err := a.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "updating last login")
+		return models.User{}, errors.Wrap(err, "updating last login")
 	}
 
 	tx.Commit()
@@ -110,8 +110,8 @@ func (a *App) CreateUser(email, password string) (database.User, error) {
 }
 
 // Authenticate authenticates a user
-func (a *App) Authenticate(email, password string) (*database.User, error) {
-	var account database.Account
+func (a *App) Authenticate(email, password string) (*models.User, error) {
+	var account models.Account
 	conn := a.DB.Where("email = ?", email).First(&account)
 	if conn.RecordNotFound() {
 		return nil, ErrNotFound
@@ -124,7 +124,7 @@ func (a *App) Authenticate(email, password string) (*database.User, error) {
 		return nil, ErrLoginInvalid
 	}
 
-	var user database.User
+	var user models.User
 	err = a.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
 		return nil, errors.Wrap(err, "finding user")
@@ -134,7 +134,7 @@ func (a *App) Authenticate(email, password string) (*database.User, error) {
 }
 
 // SignIn signs in a user
-func (a *App) SignIn(user *database.User) (*database.Session, error) {
+func (a *App) SignIn(user *models.User) (*models.Session, error) {
 	err := a.TouchLastLoginAt(*user, a.DB)
 	if err != nil {
 		log.ErrorWrap(err, "touching login timestamp")

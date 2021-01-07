@@ -5,7 +5,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/pkg/errors"
@@ -77,7 +77,7 @@ type LoginForm struct {
 	Password string `schema:"password" json:"password"`
 }
 
-func (u *Users) login(r *http.Request) (*database.Session, error) {
+func (u *Users) login(r *http.Request) (*models.Session, error) {
 	var form LoginForm
 	if err := parseRequestData(r, &form); err != nil {
 		return nil, err

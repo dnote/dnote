@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package database
+package models
 
 const (
 	// TokenTypeResetPassword is a type of a token for reseting password

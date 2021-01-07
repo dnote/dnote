@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 		kind string
 	}{
 		{
-			kind: database.TokenTypeEmailPreference,
+			kind: models.TokenTypeEmailPreference,
 		},
 	}
 
@@ -52,10 +52,10 @@ func TestCreate(t *testing.T) {
 
 			// Test
 			var count int
-			testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&count), "counting token")
+			testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&count), "counting token")
 			assert.Equalf(t, count, 1, "error mismatch")
 
-			var tokenRecord database.Token
+			var tokenRecord models.Token
 			testutils.MustExec(t, testutils.DB.First(&tokenRecord), "finding token")
 			assert.Equalf(t, tokenRecord.UserID, tok.UserID, "UserID mismatch")
 			assert.Equalf(t, tokenRecord.Value, tok.Value, "Value mismatch")

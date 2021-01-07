@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -66,7 +66,7 @@ type SyncFragNote struct {
 }
 
 // NewFragNote presents the given note as a SyncFragNote
-func NewFragNote(note database.Note) SyncFragNote {
+func NewFragNote(note models.Note) SyncFragNote {
 	return SyncFragNote{
 		UUID:      note.UUID,
 		USN:       note.USN,
@@ -94,7 +94,7 @@ type SyncFragBook struct {
 }
 
 // NewFragBook presents the given book as a SyncFragBook
-func NewFragBook(book database.Book) SyncFragBook {
+func NewFragBook(book models.Book) SyncFragBook {
 	return SyncFragBook{
 		UUID:      book.UUID,
 		USN:       book.USN,
@@ -122,11 +122,11 @@ func (e *queryParamError) Error() string {
 }
 
 func (a *API) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment, error) {
-	var notes []database.Note
+	var notes []models.Note
 	if err := a.App.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&notes).Error; err != nil {
 		return SyncFragment{}, nil
 	}
-	var books []database.Book
+	var books []models.Book
 	if err := a.App.DB.Where("user_id = ? AND usn > ? AND usn <= ?", userID, afterUSN, userMaxUSN).Order("usn ASC").Limit(limit).Find(&books).Error; err != nil {
 		return SyncFragment{}, nil
 	}
@@ -168,16 +168,16 @@ func (a *API) newFragment(userID, userMaxUSN, afterUSN, limit int) (SyncFragment
 		fragMaxUSN = item.usn
 
 		switch v := item.val.(type) {
-		case database.Note:
-			note := item.val.(database.Note)
+		case models.Note:
+			note := item.val.(models.Note)
 
 			if note.Deleted {
 				fragExpungedNotes = append(fragExpungedNotes, note.UUID)
 			} else {
 				fragNotes = append(fragNotes, NewFragNote(note))
 			}
-		case database.Book:
-			book := item.val.(database.Book)
+		case models.Book:
+			book := item.val.(models.Book)
 
 			if book.Deleted {
 				fragExpungedBooks = append(fragExpungedBooks, book.UUID)
@@ -249,7 +249,7 @@ type GetSyncFragmentResp struct {
 
 // GetSyncFragment responds with a sync fragment
 func (a *API) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -282,7 +282,7 @@ type GetSyncStateResp struct {
 
 // GetSyncState responds with a sync fragment
 func (a *API) GetSyncState(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return

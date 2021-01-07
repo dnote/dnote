@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
@@ -52,7 +52,7 @@ func validateCreateBookPayload(p createBookPayload) error {
 
 // CreateBook creates a new book
 func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		return
 	}
@@ -71,7 +71,7 @@ func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var bookCount int
-	err = a.App.DB.Model(database.Book{}).
+	err = a.App.DB.Model(models.Book{}).
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
@@ -100,7 +100,7 @@ func (a *API) BooksOptions(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondWithBooks(db *gorm.DB, userID int, query url.Values, w http.ResponseWriter) {
-	var books []database.Book
+	var books []models.Book
 	conn := db.Where("user_id = ? AND NOT deleted", userID).Order("label ASC")
 	name := query.Get("name")
 	encryptedStr := query.Get("encrypted")
@@ -131,7 +131,7 @@ func respondWithBooks(db *gorm.DB, userID int, query url.Values, w http.Response
 
 // GetBooks returns books for the user
 func (a *API) GetBooks(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		return
 	}
@@ -143,7 +143,7 @@ func (a *API) GetBooks(w http.ResponseWriter, r *http.Request) {
 
 // GetBook returns a book for the user
 func (a *API) GetBook(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		return
 	}
@@ -151,7 +151,7 @@ func (a *API) GetBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bookUUID := vars["bookUUID"]
 
-	var book database.Book
+	var book models.Book
 	conn := a.App.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
 
 	if conn.RecordNotFound() {
@@ -178,7 +178,7 @@ type UpdateBookResp struct {
 
 // UpdateBook updates a book
 func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		return
 	}
@@ -188,7 +188,7 @@ func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	tx := a.App.DB.Begin()
 
-	var book database.Book
+	var book models.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
 		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
@@ -223,7 +223,7 @@ type DeleteBookResp struct {
 
 // DeleteBook removes a book
 func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		return
 	}
@@ -233,13 +233,13 @@ func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	tx := a.App.DB.Begin()
 
-	var book database.Book
+	var book models.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
 		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
-	var notes []database.Note
+	var notes []models.Note
 	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
 		handlers.DoError(w, "finding notes", err, http.StatusInternalServerError)
 		return

@@ -29,13 +29,13 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
-func getExpectedNotePayload(n database.Note, b database.Book, u database.User) presenters.Note {
+func getExpectedNotePayload(n models.Note, b models.Book, u models.User) presenters.Note {
 	return presenters.Note{
 		UUID:      n.UUID,
 		CreatedAt: n.CreatedAt,
@@ -66,23 +66,23 @@ func TestGetNotes(t *testing.T) {
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-	b2 := database.Book{
+	b2 := models.Book{
 		UserID: user.ID,
 		Label:  "css",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-	b3 := database.Book{
+	b3 := models.Book{
 		UserID: anotherUser.ID,
 		Label:  "css",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
 
-	n1 := database.Note{
+	n1 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "n1 content",
@@ -91,7 +91,7 @@ func TestGetNotes(t *testing.T) {
 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
-	n2 := database.Note{
+	n2 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "n2 content",
@@ -100,7 +100,7 @@ func TestGetNotes(t *testing.T) {
 		AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
-	n3 := database.Note{
+	n3 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "n3 content",
@@ -109,7 +109,7 @@ func TestGetNotes(t *testing.T) {
 		AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
-	n4 := database.Note{
+	n4 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b2.UUID,
 		Body:     "n4 content",
@@ -118,7 +118,7 @@ func TestGetNotes(t *testing.T) {
 		AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
-	n5 := database.Note{
+	n5 := models.Note{
 		UserID:   anotherUser.ID,
 		BookUUID: b3.UUID,
 		Body:     "n5 content",
@@ -127,7 +127,7 @@ func TestGetNotes(t *testing.T) {
 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
-	n6 := database.Note{
+	n6 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "",
@@ -149,7 +149,7 @@ func TestGetNotes(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "decoding payload"))
 	}
 
-	var n2Record, n1Record database.Note
+	var n2Record, n1Record models.Note
 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
 
@@ -176,27 +176,27 @@ func TestGetNote(t *testing.T) {
 	user := testutils.SetupUserData()
 	anotherUser := testutils.SetupUserData()
 
-	b1 := database.Book{
+	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	privateNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
 		Public:   false,
 	}
 	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
-	publicNote := database.Note{
+	publicNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "publicNote content",
 		Public:   true,
 	}
 	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing publicNote")
-	deletedNote := database.Note{
+	deletedNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Deleted:  true,
@@ -217,7 +217,7 @@ func TestGetNote(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
 
-		var n1Record database.Note
+		var n1Record models.Note
 		testutils.MustExec(t, testutils.DB.Where("uuid = ?", privateNote.UUID).First(&n1Record), "finding n1Record")
 
 		expected := getExpectedNotePayload(n1Record, b1, user)
@@ -238,7 +238,7 @@ func TestGetNote(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
 
-		var n2Record database.Note
+		var n2Record models.Note
 		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)
@@ -259,7 +259,7 @@ func TestGetNote(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
 
-		var n2Record database.Note
+		var n2Record models.Note
 		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)
@@ -297,7 +297,7 @@ func TestGetNote(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
 
-		var n2Record database.Note
+		var n2Record models.Note
 		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)

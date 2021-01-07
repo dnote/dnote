@@ -27,7 +27,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
@@ -184,13 +184,13 @@ func TestAuthMiddleware(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
-	session := database.Session{
+	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
 	testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
-	session2 := database.Session{
+	session2 := models.Session{
 		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(-time.Hour * 24),
@@ -298,7 +298,7 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
-	session := database.Session{
+	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -413,7 +413,7 @@ func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
 
 		user := testutils.SetupUserData()
 		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
-		session := database.Session{
+		session := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    user.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -435,13 +435,13 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
-	tok := database.Token{
+	tok := models.Token{
 		UserID: user.ID,
-		Type:   database.TokenTypeEmailPreference,
+		Type:   models.TokenTypeEmailPreference,
 		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-	session := database.Session{
+	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -453,7 +453,7 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 	}
 
 	a := &app.App{DB: testutils.DB}
-	server := httptest.NewServer(TokenAuth(a, handler, database.TokenTypeEmailPreference, nil))
+	server := httptest.NewServer(TokenAuth(a, handler, models.TokenTypeEmailPreference, nil))
 	defer server.Close()
 
 	t.Run("with token", func(t *testing.T) {
@@ -566,13 +566,13 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 
 	user := testutils.SetupUserData()
 	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
-	tok := database.Token{
+	tok := models.Token{
 		UserID: user.ID,
-		Type:   database.TokenTypeEmailPreference,
+		Type:   models.TokenTypeEmailPreference,
 		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
 	}
 	testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-	session := database.Session{
+	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
@@ -584,7 +584,7 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 	}
 
 	a := &app.App{DB: testutils.DB}
-	server := httptest.NewServer(TokenAuth(a, handler, database.TokenTypeEmailPreference, &AuthParams{
+	server := httptest.NewServer(TokenAuth(a, handler, models.TokenTypeEmailPreference, &AuthParams{
 		ProOnly: true,
 	}))
 

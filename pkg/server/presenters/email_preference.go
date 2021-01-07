@@ -21,7 +21,7 @@ package presenters
 import (
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 // EmailPreference is a presented email digest
@@ -33,7 +33,7 @@ type EmailPreference struct {
 }
 
 // PresentEmailPreference presents a digest
-func PresentEmailPreference(p database.EmailPreference) EmailPreference {
+func PresentEmailPreference(p models.EmailPreference) EmailPreference {
 	ret := EmailPreference{
 		InactiveReminder: p.InactiveReminder,
 		ProductUpdate:    p.ProductUpdate,

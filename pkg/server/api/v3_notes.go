@@ -24,7 +24,7 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/handlers"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
@@ -52,7 +52,7 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -70,7 +70,7 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var note database.Note
+	var note models.Note
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
 		handlers.DoError(w, "finding note", err, http.StatusInternalServerError)
 		return
@@ -89,7 +89,7 @@ func (a *API) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var book database.Book
+	var book models.Book
 	if err := tx.Where("uuid = ? AND user_id = ?", note.BookUUID, user.ID).First(&book).Error; err != nil {
 		tx.Rollback()
 		handlers.DoError(w, fmt.Sprintf("finding book %s to preload", note.BookUUID), err, http.StatusInternalServerError)
@@ -119,13 +119,13 @@ func (a *API) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
-	var note database.Note
+	var note models.Note
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
 		handlers.DoError(w, "finding note", err, http.StatusInternalServerError)
 		return
@@ -171,7 +171,7 @@ type CreateNoteResp struct {
 
 // CreateNote creates a note
 func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
+	user, ok := r.Context().Value(helpers.KeyUser).(models.User)
 	if !ok {
 		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
@@ -190,7 +190,7 @@ func (a *API) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var book database.Book
+	var book models.Book
 	if err := a.App.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
 		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return

@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
@@ -41,7 +41,7 @@ func paginate(conn *gorm.DB, page int) *gorm.DB {
 	return conn
 }
 
-func getBookIDs(books []database.Book) []int {
+func getBookIDs(books []models.Book) []int {
 	ret := []int{}
 
 	for _, book := range books {
