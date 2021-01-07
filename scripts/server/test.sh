@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test.sh runs server tests. It is to be invoked by other scripts that set
 # appropriate env vars.
-set -eux
+set -ex
 
 dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 pushd "$dir/../../pkg/server"
