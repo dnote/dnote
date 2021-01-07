@@ -35,7 +35,7 @@ import (
 
 func TestGetBooks(t *testing.T) {
 
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -44,8 +44,8 @@ func TestGetBooks(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	user := models.SetUpUserData()
+	anotherUser := models.SetUpUserData()
 
 	b1 := models.Book{
 		UserID:  user.ID,
@@ -53,32 +53,32 @@ func TestGetBooks(t *testing.T) {
 		USN:     1123,
 		Deleted: false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 	b2 := models.Book{
 		UserID:  user.ID,
 		Label:   "css",
 		USN:     1125,
 		Deleted: false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	models.MustExec(t, models.TestDB.Save(&b2), "preparing b2")
 	b3 := models.Book{
 		UserID:  anotherUser.ID,
 		Label:   "css",
 		USN:     1128,
 		Deleted: false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+	models.MustExec(t, models.TestDB.Save(&b3), "preparing b3")
 	b4 := models.Book{
 		UserID:  user.ID,
 		Label:   "",
 		USN:     1129,
 		Deleted: true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b4), "preparing b4")
+	models.MustExec(t, models.TestDB.Save(&b4), "preparing b4")
 
 	// Execute
 	req := testutils.MakeReq(server.URL, "GET", "/v3/books", "")
-	res := testutils.HTTPAuthDo(t, req, user)
+	res := models.HTTPAuthDo(t, req, user)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -89,9 +89,9 @@ func TestGetBooks(t *testing.T) {
 	}
 
 	var b1Record, b2Record models.Book
-	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
-	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
-	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+	models.MustExec(t, models.TestDB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+	models.MustExec(t, models.TestDB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+	models.MustExec(t, models.TestDB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
 
 	expected := []presenters.Book{
 		{
@@ -115,7 +115,7 @@ func TestGetBooks(t *testing.T) {
 
 func TestGetBooksByName(t *testing.T) {
 
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -124,28 +124,28 @@ func TestGetBooksByName(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	user := models.SetUpUserData()
+	anotherUser := models.SetUpUserData()
 	req := testutils.MakeReq(server.URL, "GET", "/v3/books?name=js", "")
 
 	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 	b2 := models.Book{
 		UserID: user.ID,
 		Label:  "css",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	models.MustExec(t, models.TestDB.Save(&b2), "preparing b2")
 	b3 := models.Book{
 		UserID: anotherUser.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+	models.MustExec(t, models.TestDB.Save(&b3), "preparing b3")
 
 	// Execute
-	res := testutils.HTTPAuthDo(t, req, user)
+	res := models.HTTPAuthDo(t, req, user)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -156,7 +156,7 @@ func TestGetBooksByName(t *testing.T) {
 	}
 
 	var b1Record models.Book
-	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+	models.MustExec(t, models.TestDB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
 
 	expected := []presenters.Book{
 		{
@@ -201,7 +201,7 @@ func TestDeleteBook(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
 
-			defer testutils.ClearData(testutils.DB)
+			defer models.ClearTestData(models.TestDB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{
@@ -210,30 +210,30 @@ func TestDeleteBook(t *testing.T) {
 			})
 			defer server.Close()
 
-			user := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 58), "preparing user max_usn")
-			anotherUser := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 109), "preparing another user max_usn")
+			user := models.SetUpUserData()
+			models.MustExec(t, models.TestDB.Model(&user).Update("max_usn", 58), "preparing user max_usn")
+			anotherUser := models.SetUpUserData()
+			models.MustExec(t, models.TestDB.Model(&anotherUser).Update("max_usn", 109), "preparing another user max_usn")
 
 			b1 := models.Book{
 				UserID: user.ID,
 				Label:  "js",
 				USN:    1,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing a book data")
+			models.MustExec(t, models.TestDB.Save(&b1), "preparing a book data")
 			b2 := models.Book{
 				UserID:  user.ID,
 				Label:   tc.label,
 				USN:     2,
 				Deleted: tc.deleted,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing a book data")
+			models.MustExec(t, models.TestDB.Save(&b2), "preparing a book data")
 			b3 := models.Book{
 				UserID: anotherUser.ID,
 				Label:  "linux",
 				USN:    3,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&b3), "preparing a book data")
+			models.MustExec(t, models.TestDB.Save(&b3), "preparing a book data")
 
 			var n2Body string
 			if !tc.deleted {
@@ -250,7 +250,7 @@ func TestDeleteBook(t *testing.T) {
 				Body:     "n1 content",
 				USN:      4,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&n1), "preparing a note data")
+			models.MustExec(t, models.TestDB.Save(&n1), "preparing a note data")
 			n2 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
@@ -258,7 +258,7 @@ func TestDeleteBook(t *testing.T) {
 				USN:      5,
 				Deleted:  tc.deleted,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&n2), "preparing a note data")
+			models.MustExec(t, models.TestDB.Save(&n2), "preparing a note data")
 			n3 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
@@ -266,7 +266,7 @@ func TestDeleteBook(t *testing.T) {
 				USN:      6,
 				Deleted:  tc.deleted,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&n3), "preparing a note data")
+			models.MustExec(t, models.TestDB.Save(&n3), "preparing a note data")
 			n4 := models.Note{
 				UserID:   user.ID,
 				BookUUID: b2.UUID,
@@ -274,14 +274,14 @@ func TestDeleteBook(t *testing.T) {
 				USN:      7,
 				Deleted:  true,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&n4), "preparing a note data")
+			models.MustExec(t, models.TestDB.Save(&n4), "preparing a note data")
 			n5 := models.Note{
 				UserID:   anotherUser.ID,
 				BookUUID: b3.UUID,
 				Body:     "n5 content",
 				USN:      8,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&n5), "preparing a note data")
+			models.MustExec(t, models.TestDB.Save(&n5), "preparing a note data")
 
 			endpoint := fmt.Sprintf("/v3/books/%s", b2.UUID)
 			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
@@ -289,7 +289,7 @@ func TestDeleteBook(t *testing.T) {
 			req.Header.Set("Origin", "chrome-extension://iaolnfnipkoinabdbbakcmkkdignedce")
 
 			// Execute
-			res := testutils.HTTPAuthDo(t, req, user)
+			res := models.HTTPAuthDo(t, req, user)
 
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -299,17 +299,17 @@ func TestDeleteBook(t *testing.T) {
 			var userRecord models.User
 			var bookCount, noteCount int
 
-			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b3.ID).First(&b3Record), "finding b3")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", n1.ID).First(&n1Record), "finding n1")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", n2.ID).First(&n2Record), "finding n2")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", n3.ID).First(&n3Record), "finding n3")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", n4.ID).First(&n4Record), "finding n4")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", n5.ID).First(&n5Record), "finding n5")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+			models.MustExec(t, models.TestDB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			models.MustExec(t, models.TestDB.Model(&models.Note{}).Count(&noteCount), "counting notes")
+			models.MustExec(t, models.TestDB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+			models.MustExec(t, models.TestDB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+			models.MustExec(t, models.TestDB.Where("id = ?", b3.ID).First(&b3Record), "finding b3")
+			models.MustExec(t, models.TestDB.Where("id = ?", n1.ID).First(&n1Record), "finding n1")
+			models.MustExec(t, models.TestDB.Where("id = ?", n2.ID).First(&n2Record), "finding n2")
+			models.MustExec(t, models.TestDB.Where("id = ?", n3.ID).First(&n3Record), "finding n3")
+			models.MustExec(t, models.TestDB.Where("id = ?", n4.ID).First(&n4Record), "finding n4")
+			models.MustExec(t, models.TestDB.Where("id = ?", n5.ID).First(&n5Record), "finding n5")
+			models.MustExec(t, models.TestDB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
 			assert.Equal(t, bookCount, 3, "book count mismatch")
 			assert.Equal(t, noteCount, 5, "note count mismatch")
@@ -352,7 +352,7 @@ func TestDeleteBook(t *testing.T) {
 
 func TestCreateBook(t *testing.T) {
 
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -361,15 +361,15 @@ func TestCreateBook(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+	user := models.SetUpUserData()
+	models.MustExec(t, models.TestDB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 	req := testutils.MakeReq(server.URL, "POST", "/v3/books", `{"name": "js"}`)
 	req.Header.Set("Version", "0.1.1")
 	req.Header.Set("Origin", "chrome-extension://iaolnfnipkoinabdbbakcmkkdignedce")
 
 	// Execute
-	res := testutils.HTTPAuthDo(t, req, user)
+	res := models.HTTPAuthDo(t, req, user)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
@@ -377,10 +377,10 @@ func TestCreateBook(t *testing.T) {
 	var bookRecord models.Book
 	var userRecord models.User
 	var bookCount, noteCount int
-	testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
-	testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
-	testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
-	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+	models.MustExec(t, models.TestDB.Model(&models.Book{}).Count(&bookCount), "counting books")
+	models.MustExec(t, models.TestDB.Model(&models.Note{}).Count(&noteCount), "counting notes")
+	models.MustExec(t, models.TestDB.First(&bookRecord), "finding book")
+	models.MustExec(t, models.TestDB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
 	maxUSN := 102
 
@@ -412,7 +412,7 @@ func TestCreateBook(t *testing.T) {
 
 func TestCreateBookDuplicate(t *testing.T) {
 
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -421,19 +421,19 @@ func TestCreateBookDuplicate(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+	user := models.SetUpUserData()
+	models.MustExec(t, models.TestDB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 		USN:    58,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book data")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing book data")
 
 	// Execute
 	req := testutils.MakeReq(server.URL, "POST", "/v3/books", `{"name": "js"}`)
-	res := testutils.HTTPAuthDo(t, req, user)
+	res := models.HTTPAuthDo(t, req, user)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusConflict, "")
@@ -441,10 +441,10 @@ func TestCreateBookDuplicate(t *testing.T) {
 	var bookRecord models.Book
 	var bookCount, noteCount int
 	var userRecord models.User
-	testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
-	testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
-	testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
-	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+	models.MustExec(t, models.TestDB.Model(&models.Book{}).Count(&bookCount), "counting books")
+	models.MustExec(t, models.TestDB.Model(&models.Note{}).Count(&noteCount), "counting notes")
+	models.MustExec(t, models.TestDB.First(&bookRecord), "finding book")
+	models.MustExec(t, models.TestDB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
 	assert.Equalf(t, bookCount, 1, "book count mismatch")
 	assert.Equalf(t, noteCount, 0, "note count mismatch")
@@ -492,7 +492,7 @@ func TestUpdateBook(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 
-			defer testutils.ClearData(testutils.DB)
+			defer models.ClearTestData(models.TestDB)
 
 			// Setup
 			server := MustNewServer(t, &app.App{
@@ -501,8 +501,8 @@ func TestUpdateBook(t *testing.T) {
 			})
 			defer server.Close()
 
-			user := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+			user := models.SetUpUserData()
+			models.MustExec(t, models.TestDB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 			b1 := models.Book{
 				UUID:    tc.bookUUID,
@@ -510,18 +510,18 @@ func TestUpdateBook(t *testing.T) {
 				Label:   tc.bookLabel,
 				Deleted: tc.bookDeleted,
 			}
-			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+			models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 			b2 := models.Book{
 				UUID:   b2UUID,
 				UserID: user.ID,
 				Label:  "js",
 			}
-			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+			models.MustExec(t, models.TestDB.Save(&b2), "preparing b2")
 
 			// Executdb,e
 			endpoint := fmt.Sprintf("/v3/books/%s", tc.bookUUID)
 			req := testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload)
-			res := testutils.HTTPAuthDo(t, req, user)
+			res := models.HTTPAuthDo(t, req, user)
 
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusOK, fmt.Sprintf("status code mismatch for test case %d", idx))
@@ -529,10 +529,10 @@ func TestUpdateBook(t *testing.T) {
 			var bookRecord models.Book
 			var userRecord models.User
 			var noteCount, bookCount int
-			testutils.MustExec(t, testutils.DB.Model(&models.Book{}).Count(&bookCount), "counting books")
-			testutils.MustExec(t, testutils.DB.Model(&models.Note{}).Count(&noteCount), "counting notes")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+			models.MustExec(t, models.TestDB.Model(&models.Book{}).Count(&bookCount), "counting books")
+			models.MustExec(t, models.TestDB.Model(&models.Note{}).Count(&noteCount), "counting notes")
+			models.MustExec(t, models.TestDB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
+			models.MustExec(t, models.TestDB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
 			assert.Equalf(t, bookCount, 2, "book count mismatch")
 			assert.Equalf(t, noteCount, 0, "note count mismatch")

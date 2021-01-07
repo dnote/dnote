@@ -24,6 +24,7 @@ import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
@@ -34,7 +35,7 @@ func NewTest(appParams *App) App {
 	c.SetOnPremise(false)
 
 	a := App{
-		DB:             testutils.DB,
+		DB:             models.TestDB,
 		Clock:          clock.NewMock(),
 		EmailTemplates: mailer.NewTemplates(&emailTmplDir),
 		EmailBackend:   &testutils.MockEmailbackendImplementation{},

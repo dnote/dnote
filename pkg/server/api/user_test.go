@@ -37,7 +37,7 @@ import (
 
 func TestUpdatePassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -45,26 +45,26 @@ func TestUpdatePassword(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "alice@example.com", "oldpassword")
+		user := models.SetUpUserData()
+		models.SetUpAccountData(user, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "newpassword"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
-		res := testutils.HTTPAuthDo(t, req, user)
+		req := models.MakeReq(server.URL, "PATCH", "/account/password", dat)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismsatch")
 
 		var account models.Account
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
 
 		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
 		assert.Equal(t, passwordErr, nil, "Password mismatch")
 	})
 
 	t.Run("old password mismatch", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -73,24 +73,24 @@ func TestUpdatePassword(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+		u := models.SetUpUserData()
+		a := models.SetUpAccountData(u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "randompassword", "new_password": "newpassword"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
+		req := models.MakeReq(server.URL, "PATCH", "/account/password", dat)
+		res := models.HTTPAuthDo(t, req, u)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
 		var account models.Account
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&account), "finding account")
 		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
 
 	t.Run("password too short", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -99,26 +99,26 @@ func TestUpdatePassword(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+		u := models.SetUpUserData()
+		a := models.SetUpAccountData(u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := `{"old_password": "oldpassword", "new_password": "a"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/password", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
+		req := models.MakeReq(server.URL, "PATCH", "/account/password", dat)
+		res := models.HTTPAuthDo(t, req, u)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
 
 		var account models.Account
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&account), "finding account")
 		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
 }
 
 func TestCreateVerificationToken(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		emailBackend := testutils.MockEmailbackendImplementation{}
@@ -128,12 +128,12 @@ func TestCreateVerificationToken(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		user := models.SetUpUserData()
+		models.SetUpAccountData(user, "alice@example.com", "pass1234")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		req := models.MakeReq(server.URL, "POST", "/verification-token", "")
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusCreated, "status code mismatch")
@@ -141,9 +141,9 @@ func TestCreateVerificationToken(t *testing.T) {
 		var account models.Account
 		var token models.Token
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified should not have been updated")
 		assert.NotEqual(t, token.Value, "", "token Value mismatch")
@@ -154,7 +154,7 @@ func TestCreateVerificationToken(t *testing.T) {
 
 	t.Run("already verified", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -163,22 +163,22 @@ func TestCreateVerificationToken(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		a := testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		user := models.SetUpUserData()
+		a := models.SetUpAccountData(user, "alice@example.com", "pass1234")
 		a.EmailVerified = true
-		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
+		models.MustExec(t, models.TestDB.Save(&a), "preparing account")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		req := models.MakeReq(server.URL, "POST", "/verification-token", "")
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusGone, "Status code mismatch")
 
 		var account models.Account
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified should not have been updated")
 		assert.Equal(t, tokenCount, 0, "token count mismatch")
@@ -188,7 +188,7 @@ func TestCreateVerificationToken(t *testing.T) {
 func TestVerifyEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -196,20 +196,20 @@ func TestVerifyEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		user := models.SetUpUserData()
+		models.SetUpAccountData(user, "alice@example.com", "pass1234")
 		tok := models.Token{
 			UserID: user.ID,
 			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
+		req := models.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismatch")
@@ -217,9 +217,9 @@ func TestVerifyEmail(t *testing.T) {
 		var account models.Account
 		var token models.Token
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
 		assert.NotEqual(t, token.Value, "", "token value should not have been updated")
@@ -229,7 +229,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("used token", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -237,8 +237,8 @@ func TestVerifyEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		user := models.SetUpUserData()
+		models.SetUpAccountData(user, "alice@example.com", "pass1234")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := models.Token{
@@ -247,13 +247,13 @@ func TestVerifyEmail(t *testing.T) {
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
+		req := models.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
@@ -261,9 +261,9 @@ func TestVerifyEmail(t *testing.T) {
 		var account models.Account
 		var token models.Token
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
 		assert.NotEqual(t, token.UsedAt, nil, "token used_at mismatch")
@@ -273,7 +273,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("expired token", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -281,22 +281,22 @@ func TestVerifyEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		user := models.SetUpUserData()
+		models.SetUpAccountData(user, "alice@example.com", "pass1234")
 
 		tok := models.Token{
 			UserID: user.ID,
 			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
-		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-31)), "Failed to prepare token created_at")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-31)), "Failed to prepare token created_at")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
+		req := models.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusGone, "")
@@ -304,9 +304,9 @@ func TestVerifyEmail(t *testing.T) {
 		var account models.Account
 		var token models.Token
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
 		assert.Equal(t, tokenCount, 1, "token count mismatch")
@@ -315,7 +315,7 @@ func TestVerifyEmail(t *testing.T) {
 
 	t.Run("already verified", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -323,23 +323,23 @@ func TestVerifyEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		user := testutils.SetupUserData()
-		a := testutils.SetupAccountData(user, "alice@example.com", "oldpass1234")
+		user := models.SetUpUserData()
+		a := models.SetUpAccountData(user, "alice@example.com", "oldpass1234")
 		a.EmailVerified = true
-		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
+		models.MustExec(t, models.TestDB.Save(&a), "preparing account")
 
 		tok := models.Token{
 			UserID: user.ID,
 			Type:   models.TokenTypeEmailVerification,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		dat := `{"token": "someTokenValue"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/verify-email", dat)
+		req := models.MakeReq(server.URL, "PATCH", "/verify-email", dat)
 
 		// Execute
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusConflict, "")
@@ -347,9 +347,9 @@ func TestVerifyEmail(t *testing.T) {
 		var account models.Account
 		var token models.Token
 		var tokenCount int
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
-		testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&tokenCount), "counting token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ? AND type = ?", user.ID, models.TokenTypeEmailVerification).First(&token), "finding token")
+		models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&tokenCount), "counting token")
 
 		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
 		assert.Equal(t, tokenCount, 1, "token count mismatch")
@@ -359,7 +359,7 @@ func TestVerifyEmail(t *testing.T) {
 
 func TestUpdateEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -367,30 +367,30 @@ func TestUpdateEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		u := models.SetUpUserData()
+		a := models.SetUpAccountData(u, "alice@example.com", "pass1234")
 		a.EmailVerified = true
-		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
+		models.MustExec(t, models.TestDB.Save(&a), "updating email_verified")
 
 		// Execute
 		dat := `{"email": "alice-new@example.com", "password": "pass1234"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/profile", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
+		req := models.MakeReq(server.URL, "PATCH", "/account/profile", dat)
+		res := models.HTTPAuthDo(t, req, u)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var user models.User
 		var account models.Account
-		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("id = ?", u.ID).First(&user), "finding user")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&account), "finding account")
 
 		assert.Equal(t, account.Email.String, "alice-new@example.com", "email mismatch")
 		assert.Equal(t, account.EmailVerified, false, "EmailVerified mismatch")
 	})
 
 	t.Run("password mismatch", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -398,23 +398,23 @@ func TestUpdateEmail(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		a := testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		u := models.SetUpUserData()
+		a := models.SetUpAccountData(u, "alice@example.com", "pass1234")
 		a.EmailVerified = true
-		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
+		models.MustExec(t, models.TestDB.Save(&a), "updating email_verified")
 
 		// Execute
 		dat := `{"email": "alice-new@example.com", "password": "wrongpassword"}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/profile", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
+		req := models.MakeReq(server.URL, "PATCH", "/account/profile", dat)
+		res := models.HTTPAuthDo(t, req, u)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
 		var user models.User
 		var account models.Account
-		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		models.MustExec(t, models.TestDB.Where("id = ?", u.ID).First(&user), "finding user")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&account), "finding account")
 
 		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
 		assert.Equal(t, account.EmailVerified, true, "EmailVerified mismatch")
@@ -423,7 +423,7 @@ func TestUpdateEmail(t *testing.T) {
 
 func TestUpdateEmailPreference(t *testing.T) {
 	t.Run("with login", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -431,24 +431,24 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, false)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, false)
 
 		// Execute
 		dat := `{"inactive_reminder": true}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
-		res := testutils.HTTPAuthDo(t, req, u)
+		req := models.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
+		res := models.HTTPAuthDo(t, req, u)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding account")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding account")
 		assert.Equal(t, preference.InactiveReminder, true, "preference mismatch")
 	})
 
 	t.Run("with an unused token", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -456,19 +456,19 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, false)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, false)
 		tok := models.Token{
 			UserID: u.ID,
 			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		// Execute
 		dat := `{"inactive_reminder": true}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+		req := models.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
@@ -477,9 +477,9 @@ func TestUpdateEmailPreference(t *testing.T) {
 		var preference models.EmailPreference
 		var preferenceCount int
 		var token models.Token
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
-		testutils.MustExec(t, testutils.DB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
-		testutils.MustExec(t, testutils.DB.Where("id = ?", tok.ID).First(&token), "failed to find token")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
+		models.MustExec(t, models.TestDB.Where("id = ?", tok.ID).First(&token), "failed to find token")
 
 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
@@ -487,7 +487,7 @@ func TestUpdateEmailPreference(t *testing.T) {
 	})
 
 	t.Run("with nonexistent token", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -495,18 +495,18 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, true)
 		tok := models.Token{
 			UserID: u.ID,
 			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someNonexistentToken")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+		req := models.MakeReq(server.URL, "PATCH", url, dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -515,12 +515,12 @@ func TestUpdateEmailPreference(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("with expired token", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -529,8 +529,8 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, true)
 
 		usedAt := time.Now().Add(-11 * time.Minute)
 		tok := models.Token{
@@ -539,25 +539,25 @@ func TestUpdateEmailPreference(t *testing.T) {
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		// Execute
 		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+		req := models.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("with a used but unexpired token", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -566,8 +566,8 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, true)
 		usedAt := time.Now().Add(-9 * time.Minute)
 		tok := models.Token{
 			UserID: u.ID,
@@ -575,11 +575,11 @@ func TestUpdateEmailPreference(t *testing.T) {
 			Value:  "someTokenValue",
 			UsedAt: &usedAt,
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+		req := models.MakeReq(server.URL, "PATCH", url, dat)
 
 		// Execute
 		res := testutils.HTTPDo(t, req)
@@ -588,13 +588,13 @@ func TestUpdateEmailPreference(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, false, "InactiveReminder mismatch")
 	})
 
 	t.Run("no user and no token", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -603,25 +603,25 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupEmailPreferenceData(u, true)
+		u := models.SetUpUserData()
+		models.SetupEmailPreferenceData(u, true)
 
 		// Execute
 		dat := `{"inactive_reminder": false}`
-		req := testutils.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
+		req := models.MakeReq(server.URL, "PATCH", "/account/email-preference", dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, true, "email mismatch")
 	})
 
 	t.Run("create a record if not exists", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -630,35 +630,35 @@ func TestUpdateEmailPreference(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
+		u := models.SetUpUserData()
 		tok := models.Token{
 			UserID: u.ID,
 			Type:   models.TokenTypeEmailPreference,
 			Value:  "someTokenValue",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 
 		// Execute
 		dat := `{"inactive_reminder": false}`
 		url := fmt.Sprintf("/account/email-preference?token=%s", "someTokenValue")
-		req := testutils.MakeReq(server.URL, "PATCH", url, dat)
+		req := models.MakeReq(server.URL, "PATCH", url, dat)
 		res := testutils.HTTPDo(t, req)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var preferenceCount int
-		testutils.MustExec(t, testutils.DB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
+		models.MustExec(t, models.TestDB.Model(models.EmailPreference{}).Count(&preferenceCount), "counting preference")
 		assert.Equal(t, preferenceCount, 1, "preference count mismatch")
 
 		var preference models.EmailPreference
-		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
+		models.MustExec(t, models.TestDB.Where("user_id = ?", u.ID).First(&preference), "finding preference")
 		assert.Equal(t, preference.InactiveReminder, false, "email mismatch")
 	})
 }
 
 func TestGetEmailPreference(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 	// Setup
 	server := MustNewServer(t, &app.App{
 
@@ -666,12 +666,12 @@ func TestGetEmailPreference(t *testing.T) {
 	})
 	defer server.Close()
 
-	u := testutils.SetupUserData()
-	pref := testutils.SetupEmailPreferenceData(u, true)
+	u := models.SetUpUserData()
+	pref := models.SetupEmailPreferenceData(u, true)
 
 	// Execute
-	req := testutils.MakeReq(server.URL, "GET", "/account/email-preference", "")
-	res := testutils.HTTPAuthDo(t, req, u)
+	req := models.MakeReq(server.URL, "GET", "/account/email-preference", "")
+	res := models.HTTPAuthDo(t, req, u)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")

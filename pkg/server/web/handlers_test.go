@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/dnote/dnote/pkg/server/models"
 	"github.com/pkg/errors"
 )
 
@@ -40,7 +40,7 @@ func TestInit(t *testing.T) {
 	}{
 		{
 			ctx: Context{
-				DB:               testutils.DB,
+				DB:               models.TestDB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -60,7 +60,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               testutils.DB,
+				DB:               models.TestDB,
 				IndexHTML:        nil,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -70,7 +70,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               testutils.DB,
+				DB:               models.TestDB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        nil,
 				ServiceWorkerJs:  mockServiceWorkerJs,
@@ -80,7 +80,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               testutils.DB,
+				DB:               models.TestDB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  nil,
@@ -90,7 +90,7 @@ func TestInit(t *testing.T) {
 		},
 		{
 			ctx: Context{
-				DB:               testutils.DB,
+				DB:               models.TestDB,
 				IndexHTML:        mockIndexHTML,
 				RobotsTxt:        mockRobotsTxt,
 				ServiceWorkerJs:  mockServiceWorkerJs,

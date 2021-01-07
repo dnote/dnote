@@ -55,7 +55,7 @@ func getExpectedNotePayload(n models.Note, b models.Book, u models.User) present
 }
 
 func TestGetNotes(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -63,24 +63,24 @@ func TestGetNotes(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	user := models.SetUpUserData()
+	anotherUser := models.SetUpUserData()
 
 	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 	b2 := models.Book{
 		UserID: user.ID,
 		Label:  "css",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	models.MustExec(t, models.TestDB.Save(&b2), "preparing b2")
 	b3 := models.Book{
 		UserID: anotherUser.ID,
 		Label:  "css",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+	models.MustExec(t, models.TestDB.Save(&b3), "preparing b3")
 
 	n1 := models.Note{
 		UserID:   user.ID,
@@ -90,7 +90,7 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  false,
 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+	models.MustExec(t, models.TestDB.Save(&n1), "preparing n1")
 	n2 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
@@ -99,7 +99,7 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  false,
 		AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
+	models.MustExec(t, models.TestDB.Save(&n2), "preparing n2")
 	n3 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
@@ -108,7 +108,7 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  false,
 		AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
+	models.MustExec(t, models.TestDB.Save(&n3), "preparing n3")
 	n4 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b2.UUID,
@@ -117,7 +117,7 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  false,
 		AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
+	models.MustExec(t, models.TestDB.Save(&n4), "preparing n4")
 	n5 := models.Note{
 		UserID:   anotherUser.ID,
 		BookUUID: b3.UUID,
@@ -126,7 +126,7 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  false,
 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
+	models.MustExec(t, models.TestDB.Save(&n5), "preparing n5")
 	n6 := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
@@ -135,11 +135,11 @@ func TestGetNotes(t *testing.T) {
 		Deleted:  true,
 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
+	models.MustExec(t, models.TestDB.Save(&n6), "preparing n6")
 
 	// Execute
 	req := testutils.MakeReq(server.URL, "GET", "/notes?year=2018&month=8", "")
-	res := testutils.HTTPAuthDo(t, req, user)
+	res := models.HTTPAuthDo(t, req, user)
 
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -150,8 +150,8 @@ func TestGetNotes(t *testing.T) {
 	}
 
 	var n2Record, n1Record models.Note
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
+	models.MustExec(t, models.TestDB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
+	models.MustExec(t, models.TestDB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
 
 	expected := GetNotesResponse{
 		Notes: []presenters.Note{
@@ -165,7 +165,7 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestGetNote(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -173,14 +173,14 @@ func TestGetNote(t *testing.T) {
 	})
 	defer server.Close()
 
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	user := models.SetUpUserData()
+	anotherUser := models.SetUpUserData()
 
 	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 
 	privateNote := models.Note{
 		UserID:   user.ID,
@@ -188,26 +188,26 @@ func TestGetNote(t *testing.T) {
 		Body:     "privateNote content",
 		Public:   false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
+	models.MustExec(t, models.TestDB.Save(&privateNote), "preparing privateNote")
 	publicNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "publicNote content",
 		Public:   true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing publicNote")
+	models.MustExec(t, models.TestDB.Save(&publicNote), "preparing publicNote")
 	deletedNote := models.Note{
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Deleted:  true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&deletedNote), "preparing publicNote")
+	models.MustExec(t, models.TestDB.Save(&deletedNote), "preparing publicNote")
 
 	t.Run("owner accessing private note", func(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", privateNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -218,7 +218,7 @@ func TestGetNote(t *testing.T) {
 		}
 
 		var n1Record models.Note
-		testutils.MustExec(t, testutils.DB.Where("uuid = ?", privateNote.UUID).First(&n1Record), "finding n1Record")
+		models.MustExec(t, models.TestDB.Where("uuid = ?", privateNote.UUID).First(&n1Record), "finding n1Record")
 
 		expected := getExpectedNotePayload(n1Record, b1, user)
 		assert.DeepEqual(t, payload, expected, "payload mismatch")
@@ -228,7 +228,7 @@ func TestGetNote(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -239,7 +239,7 @@ func TestGetNote(t *testing.T) {
 		}
 
 		var n2Record models.Note
-		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+		models.MustExec(t, models.TestDB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)
 		assert.DeepEqual(t, payload, expected, "payload mismatch")
@@ -249,7 +249,7 @@ func TestGetNote(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, anotherUser)
+		res := models.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
@@ -260,7 +260,7 @@ func TestGetNote(t *testing.T) {
 		}
 
 		var n2Record models.Note
-		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+		models.MustExec(t, models.TestDB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)
 		assert.DeepEqual(t, payload, expected, "payload mismatch")
@@ -270,7 +270,7 @@ func TestGetNote(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", privateNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, anotherUser)
+		res := models.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
@@ -298,7 +298,7 @@ func TestGetNote(t *testing.T) {
 		}
 
 		var n2Record models.Note
-		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+		models.MustExec(t, models.TestDB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
 
 		expected := getExpectedNotePayload(n2Record, b1, user)
 		assert.DeepEqual(t, payload, expected, "payload mismatch")
@@ -325,7 +325,7 @@ func TestGetNote(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", "someRandomString")
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
@@ -342,7 +342,7 @@ func TestGetNote(t *testing.T) {
 		// Execute
 		url := fmt.Sprintf("/notes/%s", deletedNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")

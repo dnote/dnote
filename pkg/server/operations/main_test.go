@@ -22,14 +22,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/dnote/dnote/pkg/server/models"
 )
 
 func TestMain(m *testing.M) {
-	testutils.InitTestDB()
+	models.InitTestDB()
 
 	code := m.Run()
-	testutils.ClearData(testutils.DB)
+	models.ClearTestData(models.TestDB)
 
 	os.Exit(code)
 }

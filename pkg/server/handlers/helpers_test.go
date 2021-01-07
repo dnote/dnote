@@ -181,26 +181,26 @@ func TestGetCredential(t *testing.T) {
 }
 
 func TestAuthMiddleware(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
-	user := testutils.SetupUserData()
+	user := models.SetUpUserData()
 	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+	models.MustExec(t, models.TestDB.Save(&session), "preparing session")
 	session2 := models.Session{
 		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(-time.Hour * 24),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session")
+	models.MustExec(t, models.TestDB.Save(&session2), "preparing session")
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
-	a := &app.App{DB: testutils.DB}
+	a := &app.App{DB: models.TestDB}
 	server := httptest.NewServer(Auth(a, handler, nil))
 	defer server.Close()
 
@@ -294,22 +294,22 @@ func TestAuthMiddleware(t *testing.T) {
 }
 
 func TestAuthMiddleware_ProOnly(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
-	user := testutils.SetupUserData()
-	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
+	user := models.SetUpUserData()
+	models.MustExec(t, models.TestDB.Model(&user).Update("cloud", false), "preparing session")
 	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+	models.MustExec(t, models.TestDB.Save(&session), "preparing session")
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	a := &app.App{DB: testutils.DB}
+	a := &app.App{DB: models.TestDB}
 	server := httptest.NewServer(Auth(a, handler, &AuthParams{
 		ProOnly: true,
 	}))
@@ -384,13 +384,13 @@ func TestAuthMiddleware_ProOnly(t *testing.T) {
 }
 
 func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	a := &app.App{DB: testutils.DB}
+	a := &app.App{DB: models.TestDB}
 	server := httptest.NewServer(Auth(a, handler, &AuthParams{
 		RedirectGuestsToLogin: true,
 	}))
@@ -411,17 +411,17 @@ func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
 	t.Run("logged in user", func(t *testing.T) {
 		req := testutils.MakeReq(server.URL, "GET", "/", "")
 
-		user := testutils.SetupUserData()
-		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
+		user := models.SetUpUserData()
+		models.MustExec(t, models.TestDB.Model(&user).Update("cloud", false), "preparing session")
 		session := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    user.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
-		testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+		models.MustExec(t, models.TestDB.Save(&session), "preparing session")
 
 		// execute
-		res := testutils.HTTPAuthDo(t, req, user)
+		res := models.HTTPAuthDo(t, req, user)
 		req.Header.Set("Authorization", session.Key)
 
 		// test
@@ -432,27 +432,27 @@ func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
-	user := testutils.SetupUserData()
+	user := models.SetUpUserData()
 	tok := models.Token{
 		UserID: user.ID,
 		Type:   models.TokenTypeEmailPreference,
 		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+	models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+	models.MustExec(t, models.TestDB.Save(&session), "preparing session")
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	a := &app.App{DB: testutils.DB}
+	a := &app.App{DB: models.TestDB}
 	server := httptest.NewServer(TokenAuth(a, handler, models.TokenTypeEmailPreference, nil))
 	defer server.Close()
 
@@ -562,28 +562,28 @@ func TestTokenAuthMiddleWare(t *testing.T) {
 }
 
 func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
-	user := testutils.SetupUserData()
-	testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
+	user := models.SetUpUserData()
+	models.MustExec(t, models.TestDB.Model(&user).Update("cloud", false), "preparing session")
 	tok := models.Token{
 		UserID: user.ID,
 		Type:   models.TokenTypeEmailPreference,
 		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+	models.MustExec(t, models.TestDB.Save(&tok), "preparing token")
 	session := models.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	testutils.MustExec(t, testutils.DB.Save(&session), "preparing session")
+	models.MustExec(t, models.TestDB.Save(&session), "preparing session")
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	a := &app.App{DB: testutils.DB}
+	a := &app.App{DB: models.TestDB}
 	server := httptest.NewServer(TokenAuth(a, handler, models.TokenTypeEmailPreference, &AuthParams{
 		ProOnly: true,
 	}))

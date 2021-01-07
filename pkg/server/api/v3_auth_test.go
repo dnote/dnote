@@ -44,8 +44,8 @@ func assertSessionResp(t *testing.T, res *http.Response) {
 
 	var sessionCount int
 	var session models.Session
-	testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
-	testutils.MustExec(t, testutils.DB.First(&session), "getting session")
+	models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+	models.MustExec(t, models.TestDB.First(&session), "getting session")
 
 	assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
 	assert.Equal(t, got.Key, session.Key, "session Key mismatch")
@@ -94,7 +94,7 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("register %s %s", tc.email, tc.password), func(t *testing.T) {
-			defer testutils.ClearData(testutils.DB)
+			defer models.ClearTestData(models.TestDB)
 
 			c := config.Load()
 			c.SetOnPremise(tc.onPremise)
@@ -118,14 +118,14 @@ func TestRegister(t *testing.T) {
 			assert.StatusCodeEquals(t, res, http.StatusCreated, "")
 
 			var account models.Account
-			testutils.MustExec(t, testutils.DB.Where("email = ?", tc.email).First(&account), "finding account")
+			models.MustExec(t, models.TestDB.Where("email = ?", tc.email).First(&account), "finding account")
 			assert.Equal(t, account.Email.String, tc.email, "Email mismatch")
 			assert.NotEqual(t, account.UserID, 0, "UserID mismatch")
 			passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(tc.password))
 			assert.Equal(t, passwordErr, nil, "Password mismatch")
 
 			var user models.User
-			testutils.MustExec(t, testutils.DB.Where("id = ?", account.UserID).First(&user), "finding user")
+			models.MustExec(t, models.TestDB.Where("id = ?", account.UserID).First(&user), "finding user")
 			assert.Equal(t, user.Cloud, tc.expectedPro, "Cloud mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
@@ -141,7 +141,7 @@ func TestRegister(t *testing.T) {
 
 func TestRegisterMissingParams(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -159,8 +159,8 @@ func TestRegisterMissingParams(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
 		var accountCount, userCount int
-		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
+		models.MustExec(t, models.TestDB.Model(&models.Account{}).Count(&accountCount), "counting account")
+		models.MustExec(t, models.TestDB.Model(&models.User{}).Count(&userCount), "counting user")
 
 		assert.Equal(t, accountCount, 0, "accountCount mismatch")
 		assert.Equal(t, userCount, 0, "userCount mismatch")
@@ -168,7 +168,7 @@ func TestRegisterMissingParams(t *testing.T) {
 
 	t.Run("missing password", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -186,8 +186,8 @@ func TestRegisterMissingParams(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
 		var accountCount, userCount int
-		testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
+		models.MustExec(t, models.TestDB.Model(&models.Account{}).Count(&accountCount), "counting account")
+		models.MustExec(t, models.TestDB.Model(&models.User{}).Count(&userCount), "counting user")
 
 		assert.Equal(t, accountCount, 0, "accountCount mismatch")
 		assert.Equal(t, userCount, 0, "userCount mismatch")
@@ -195,7 +195,7 @@ func TestRegisterMissingParams(t *testing.T) {
 }
 
 func TestRegisterDuplicateEmail(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	// Setup
 	server := MustNewServer(t, &app.App{
@@ -203,8 +203,8 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	})
 	defer server.Close()
 
-	u := testutils.SetupUserData()
-	testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+	u := models.SetUpUserData()
+	models.SetUpAccountData(u, "alice@example.com", "somepassword")
 
 	dat := `{"email": "alice@example.com", "password": "foobarbaz"}`
 	req := testutils.MakeReq(server.URL, "POST", "/v3/register", dat)
@@ -216,12 +216,12 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusBadRequest, "status code mismatch")
 
 	var accountCount, userCount, verificationTokenCount int
-	testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
-	testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
-	testutils.MustExec(t, testutils.DB.Model(&models.Token{}).Count(&verificationTokenCount), "counting verification token")
+	models.MustExec(t, models.TestDB.Model(&models.Account{}).Count(&accountCount), "counting account")
+	models.MustExec(t, models.TestDB.Model(&models.User{}).Count(&userCount), "counting user")
+	models.MustExec(t, models.TestDB.Model(&models.Token{}).Count(&verificationTokenCount), "counting verification token")
 
 	var user models.User
-	testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
+	models.MustExec(t, models.TestDB.Where("id = ?", u.ID).First(&user), "finding user")
 
 	assert.Equal(t, accountCount, 1, "account count mismatch")
 	assert.Equal(t, userCount, 1, "user count mismatch")
@@ -230,7 +230,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 }
 
 func TestRegisterDisabled(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	c := config.Load()
 	c.DisableRegistration = true
@@ -252,8 +252,8 @@ func TestRegisterDisabled(t *testing.T) {
 	assert.StatusCodeEquals(t, res, http.StatusForbidden, "status code mismatch")
 
 	var accountCount, userCount int
-	testutils.MustExec(t, testutils.DB.Model(&models.Account{}).Count(&accountCount), "counting account")
-	testutils.MustExec(t, testutils.DB.Model(&models.User{}).Count(&userCount), "counting user")
+	models.MustExec(t, models.TestDB.Model(&models.Account{}).Count(&accountCount), "counting account")
+	models.MustExec(t, models.TestDB.Model(&models.User{}).Count(&userCount), "counting user")
 
 	assert.Equal(t, accountCount, 0, "account count mismatch")
 	assert.Equal(t, userCount, 0, "user count mismatch")
@@ -261,7 +261,7 @@ func TestRegisterDisabled(t *testing.T) {
 
 func TestSignIn(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -270,8 +270,8 @@ func TestSignIn(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		u := models.SetUpUserData()
+		models.SetUpAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "alice@example.com", "password": "pass1234"}`
 		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
@@ -283,7 +283,7 @@ func TestSignIn(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
 		var user models.User
-		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
+		models.MustExec(t, models.TestDB.Model(&models.User{}).First(&user), "finding user")
 		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
 
 		// after register, should sign in user
@@ -291,7 +291,7 @@ func TestSignIn(t *testing.T) {
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -300,8 +300,8 @@ func TestSignIn(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		u := models.SetUpUserData()
+		models.SetUpAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "alice@example.com", "password": "wrongpassword1234"}`
 		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
@@ -313,17 +313,17 @@ func TestSignIn(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var user models.User
-		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
+		models.MustExec(t, models.TestDB.Model(&models.User{}).First(&user), "finding user")
 		assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+		models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 
 	t.Run("wrong email", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -332,8 +332,8 @@ func TestSignIn(t *testing.T) {
 		})
 		defer server.Close()
 
-		u := testutils.SetupUserData()
-		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		u := models.SetUpUserData()
+		models.SetUpAccountData(u, "alice@example.com", "pass1234")
 
 		dat := `{"email": "bob@example.com", "password": "pass1234"}`
 		req := testutils.MakeReq(server.URL, "POST", "/v3/signin", dat)
@@ -345,17 +345,17 @@ func TestSignIn(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var user models.User
-		testutils.MustExec(t, testutils.DB.Model(&models.User{}).First(&user), "finding user")
+		models.MustExec(t, models.TestDB.Model(&models.User{}).First(&user), "finding user")
 		assert.DeepEqual(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+		models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 
 	t.Run("nonexistent email", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -374,7 +374,7 @@ func TestSignIn(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		var sessionCount int
-		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+		models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
 		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
 	})
 }
@@ -382,24 +382,24 @@ func TestSignIn(t *testing.T) {
 func TestSignout(t *testing.T) {
 	t.Run("authenticated", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
-		aliceUser := testutils.SetupUserData()
-		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
-		anotherUser := testutils.SetupUserData()
+		aliceUser := models.SetUpUserData()
+		models.SetUpAccountData(aliceUser, "alice@example.com", "pass1234")
+		anotherUser := models.SetUpUserData()
 
 		session1 := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    aliceUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
-		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
+		models.MustExec(t, models.TestDB.Save(&session1), "preparing session1")
 		session2 := models.Session{
 			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
 			UserID:    anotherUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
-		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
+		models.MustExec(t, models.TestDB.Save(&session2), "preparing session2")
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -418,8 +418,8 @@ func TestSignout(t *testing.T) {
 
 		var sessionCount int
 		var s2 models.Session
-		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&s2), "getting s2")
+		models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+		models.MustExec(t, models.TestDB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&s2), "getting s2")
 
 		assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
 
@@ -434,24 +434,24 @@ func TestSignout(t *testing.T) {
 
 	t.Run("unauthenticated", func(t *testing.T) {
 
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
-		aliceUser := testutils.SetupUserData()
-		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
-		anotherUser := testutils.SetupUserData()
+		aliceUser := models.SetUpUserData()
+		models.SetUpAccountData(aliceUser, "alice@example.com", "pass1234")
+		anotherUser := models.SetUpUserData()
 
 		session1 := models.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 			UserID:    aliceUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
-		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
+		models.MustExec(t, models.TestDB.Save(&session1), "preparing session1")
 		session2 := models.Session{
 			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
 			UserID:    anotherUser.ID,
 			ExpiresAt: time.Now().Add(time.Hour * 24),
 		}
-		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
+		models.MustExec(t, models.TestDB.Save(&session2), "preparing session2")
 
 		// Setup
 		server := MustNewServer(t, &app.App{
@@ -469,9 +469,9 @@ func TestSignout(t *testing.T) {
 
 		var sessionCount int
 		var postSession1, postSession2 models.Session
-		testutils.MustExec(t, testutils.DB.Model(&models.Session{}).Count(&sessionCount), "counting session")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=").First(&postSession1), "getting postSession1")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&postSession2), "getting postSession2")
+		models.MustExec(t, models.TestDB.Model(&models.Session{}).Count(&sessionCount), "counting session")
+		models.MustExec(t, models.TestDB.Where("key = ?", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=").First(&postSession1), "getting postSession1")
+		models.MustExec(t, models.TestDB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&postSession2), "getting postSession2")
 
 		// two existing sessions should remain
 		assert.Equal(t, sessionCount, 2, "sessionCount mismatch")

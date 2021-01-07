@@ -25,13 +25,12 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/models"
-	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
 func TestAppShellExecute(t *testing.T) {
 	t.Run("home", func(t *testing.T) {
-		a, err := NewAppShell(testutils.DB, []byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
+		a, err := NewAppShell(models.TestDB, []byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}
@@ -50,23 +49,23 @@ func TestAppShellExecute(t *testing.T) {
 	})
 
 	t.Run("note", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		defer models.ClearTestData(models.TestDB)
 
-		user := testutils.SetupUserData()
+		user := models.SetUpUserData()
 		b1 := models.Book{
 			UserID: user.ID,
 			Label:  "js",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+		models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 		n1 := models.Note{
 			UserID:   user.ID,
 			BookUUID: b1.UUID,
 			Public:   true,
 			Body:     "n1 content",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing note")
+		models.MustExec(t, models.TestDB.Save(&n1), "preparing note")
 
-		a, err := NewAppShell(testutils.DB, []byte("{{ .MetaTags }}"))
+		a, err := NewAppShell(models.TestDB, []byte("{{ .MetaTags }}"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}

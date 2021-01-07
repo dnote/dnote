@@ -20,132 +20,15 @@
 package testutils
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
-	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/models"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-// DB is the database connection to a test database
-var DB *gorm.DB
-
-// InitTestDB establishes connection pool with the test database specified by
-// the environment variable configuration and initalizes a new schema
-func InitTestDB() {
-	c := config.Load()
-	fmt.Println(c.DB.GetConnectionStr())
-	db := models.Open(c)
-
-	models.InitSchema(db)
-
-	DB = db
-}
-
-// ClearData deletes all records from the database
-func ClearData(db *gorm.DB) {
-	if err := db.Delete(&models.Book{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear books"))
-	}
-	if err := db.Delete(&models.Note{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notes"))
-	}
-	if err := db.Delete(&models.Notification{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notifications"))
-	}
-	if err := db.Delete(&models.User{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear users"))
-	}
-	if err := db.Delete(&models.Account{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear accounts"))
-	}
-	if err := db.Delete(&models.Token{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear tokens"))
-	}
-	if err := db.Delete(&models.EmailPreference{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear email preferences"))
-	}
-	if err := db.Delete(&models.Session{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear sessions"))
-	}
-}
-
-// SetupUserData creates and returns a new user for testing purposes
-func SetupUserData() models.User {
-	user := models.User{
-		Cloud: true,
-	}
-
-	if err := DB.Save(&user).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to prepare user"))
-	}
-
-	return user
-}
-
-// SetupAccountData creates and returns a new account for the user
-func SetupAccountData(user models.User, email, password string) models.Account {
-	account := models.Account{
-		UserID: user.ID,
-	}
-	if email != "" {
-		account.Email = models.ToNullString(email)
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to hash password"))
-	}
-	account.Password = models.ToNullString(string(hashedPassword))
-
-	if err := DB.Save(&account).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to prepare account"))
-	}
-
-	return account
-}
-
-// SetupSession creates and returns a new user session
-func SetupSession(t *testing.T, user models.User) models.Session {
-	session := models.Session{
-		Key:       "Vvgm3eBXfXGEFWERI7faiRJ3DAzJw+7DdT9J1LEyNfI=",
-		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(time.Hour * 24),
-	}
-	if err := DB.Save(&session).Error; err != nil {
-		t.Fatal(errors.Wrap(err, "Failed to prepare user"))
-	}
-
-	return session
-}
-
-// SetupEmailPreferenceData creates and returns a new email frequency for a user
-func SetupEmailPreferenceData(user models.User, inactiveReminder bool) models.EmailPreference {
-	frequency := models.EmailPreference{
-		UserID:           user.ID,
-		InactiveReminder: inactiveReminder,
-	}
-
-	if err := DB.Save(&frequency).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to prepare email frequency"))
-	}
-
-	return frequency
-}
 
 // HTTPDo makes an HTTP request and returns a response
 func HTTPDo(t *testing.T, req *http.Request) *http.Response {
@@ -166,33 +49,6 @@ func HTTPDo(t *testing.T, req *http.Request) *http.Response {
 	return res
 }
 
-// SetReqAuthHeader sets the authorization header in the given request for the given user
-func SetReqAuthHeader(t *testing.T, req *http.Request, user models.User) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		t.Fatal(errors.Wrap(err, "reading random bits"))
-	}
-
-	session := models.Session{
-		Key:       base64.StdEncoding.EncodeToString(b),
-		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
-	}
-	if err := DB.Save(&session).Error; err != nil {
-		t.Fatal(errors.Wrap(err, "Failed to prepare user"))
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session.Key))
-}
-
-// HTTPAuthDo makes an HTTP request with an appropriate authorization header for a user
-func HTTPAuthDo(t *testing.T, req *http.Request, user models.User) *http.Response {
-	SetReqAuthHeader(t, req, user)
-
-	return HTTPDo(t, req)
-
-}
-
 // MakeReq makes an HTTP request and returns a response
 func MakeReq(endpoint string, method, path, data string) *http.Request {
 	u := fmt.Sprintf("%s%s", endpoint, path)
@@ -203,13 +59,6 @@ func MakeReq(endpoint string, method, path, data string) *http.Request {
 	}
 
 	return req
-}
-
-// MustExec fails the test if the given database query has error
-func MustExec(t *testing.T, db *gorm.DB, message string) {
-	if err := db.Error; err != nil {
-		t.Fatalf("%s: %s", message, err.Error())
-	}
 }
 
 // GetCookieByName returns a cookie with the given name

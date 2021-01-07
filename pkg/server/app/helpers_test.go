@@ -24,7 +24,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/models"
-	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 )
 
@@ -46,13 +45,13 @@ func TestIncremenetUserUSN(t *testing.T) {
 	// set up
 	for idx, tc := range testCases {
 		func() {
-			defer testutils.ClearData(testutils.DB)
+			defer models.ClearTestData(models.TestDB)
 
-			user := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			user := models.SetUpUserData()
+			models.MustExec(t, models.TestDB.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			// execute
-			tx := testutils.DB.Begin()
+			tx := models.TestDB.Begin()
 			nextUSN, err := incrementUserUSN(tx, user.ID)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "incrementing the user usn"))
@@ -61,7 +60,7 @@ func TestIncremenetUserUSN(t *testing.T) {
 
 			// test
 			var userRecord models.User
-			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			models.MustExec(t, models.TestDB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
 			assert.Equal(t, userRecord.MaxUSN, tc.expectedMaxUSN, fmt.Sprintf("user max_usn mismatch for case %d", idx))
 			assert.Equal(t, nextUSN, tc.expectedMaxUSN, fmt.Sprintf("next_usn mismatch for case %d", idx))

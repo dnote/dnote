@@ -24,29 +24,28 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/models"
-	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 func TestMain(m *testing.M) {
-	testutils.InitTestDB()
+	models.InitTestDB()
 
 	code := m.Run()
-	testutils.ClearData(testutils.DB)
+	models.ClearTestData(models.TestDB)
 
 	os.Exit(code)
 }
 
 func TestViewNote(t *testing.T) {
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	user := models.SetUpUserData()
+	anotherUser := models.SetUpUserData()
 
-	defer testutils.ClearData(testutils.DB)
+	defer models.ClearTestData(models.TestDB)
 
 	b1 := models.Book{
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	models.MustExec(t, models.TestDB.Save(&b1), "preparing b1")
 
 	privateNote := models.Note{
 		UserID:   user.ID,
@@ -55,7 +54,7 @@ func TestViewNote(t *testing.T) {
 		Deleted:  false,
 		Public:   false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
+	models.MustExec(t, models.TestDB.Save(&privateNote), "preparing privateNote")
 
 	publicNote := models.Note{
 		UserID:   user.ID,
@@ -64,7 +63,7 @@ func TestViewNote(t *testing.T) {
 		Deleted:  false,
 		Public:   true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing privateNote")
+	models.MustExec(t, models.TestDB.Save(&publicNote), "preparing privateNote")
 
 	t.Run("owner accessing private note", func(t *testing.T) {
 		result := ViewNote(&user, privateNote)
