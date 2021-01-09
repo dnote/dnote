@@ -195,8 +195,10 @@ func getStatusCode(err error) int {
 	rootErr := errors.Cause(err)
 
 	switch rootErr {
-	case app.ErrNotFound, app.ErrLoginInvalid:
+	case app.ErrNotFound:
 		return http.StatusNotFound
+	case app.ErrLoginInvalid:
+		return http.StatusUnauthorized
 	case app.ErrDuplicateEmail, app.ErrEmailRequired, app.ErrPasswordTooShort:
 		return http.StatusBadRequest
 	}

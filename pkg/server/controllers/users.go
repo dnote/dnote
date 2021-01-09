@@ -114,7 +114,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusOK)
 }
 
 // V3Login handles login
@@ -128,39 +128,51 @@ func (u *Users) V3Login(w http.ResponseWriter, r *http.Request) {
 	respondWithSession(w, http.StatusOK, session)
 }
 
-func (u *Users) logout(r *http.Request) error {
+func (u *Users) logout(r *http.Request) (bool, error) {
 	key, err := GetCredential(r)
 	if err != nil {
-		return errors.Wrap(err, "getting credentials")
+		return false, errors.Wrap(err, "getting credentials")
+	}
+
+	if key == "" {
+		return false, nil
 	}
 
 	if err = u.app.DeleteSession(key); err != nil {
-		return errors.Wrap(err, "deleting session")
+		return false, errors.Wrap(err, "deleting session")
 	}
 
-	return nil
+	return true, nil
 }
 
 // Logout handles logout
 func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
-	if err := u.logout(r); err != nil {
+	ok, err := u.logout(r)
+	if err != nil {
 		handleHTMLError(w, r, err, "logging out", u.LoginView, vd)
 		return
 	}
 
-	unsetSessionCookie(w)
-	http.Redirect(w, r, "/login", http.StatusFound)
+	if ok {
+		unsetSessionCookie(w)
+	}
+
+	http.Redirect(w, r, "/login", http.StatusNoContent)
 }
 
 // V3Logout handles logout via API
 func (u *Users) V3Logout(w http.ResponseWriter, r *http.Request) {
-	if err := u.logout(r); err != nil {
+	ok, err := u.logout(r)
+	if err != nil {
 		handleJSONError(w, err, "logging out")
 		return
 	}
 
-	unsetSessionCookie(w)
+	if ok {
+		unsetSessionCookie(w)
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
