@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"net/http"
@@ -6,7 +6,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 )
 
-type middleware func(h http.Handler, app *app.App, rateLimit bool) http.Handler
+// Middleware is a middleware for request handlers
+type Middleware func(h http.Handler, app *app.App, rateLimit bool) http.Handler
 
 // WebMw is the middleware for the web
 func WebMw(h http.Handler, app *app.App, rateLimit bool) http.Handler {

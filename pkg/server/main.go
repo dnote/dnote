@@ -31,7 +31,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/routes"
 	"github.com/jinzhu/gorm"
 
 	"github.com/pkg/errors"
@@ -93,13 +92,13 @@ func startCmd() {
 	}
 
 	ctl := controllers.New(cfg, &app)
-	rc := routes.Config{
-		WebRoutes:   routes.NewWebRoutes(&app, ctl),
-		APIRoutes:   routes.NewAPIRoutes(ctl),
+	rc := controllers.RouteConfig{
+		WebRoutes:   controllers.NewWebRoutes(&app, ctl),
+		APIRoutes:   controllers.NewAPIRoutes(ctl),
 		Controllers: ctl,
 	}
 
-	r := routes.New(&app, rc)
+	r := controllers.NewRouter(&app, rc)
 
 	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
