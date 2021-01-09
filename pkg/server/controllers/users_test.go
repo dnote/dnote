@@ -291,67 +291,72 @@ func TestJoinDisabled(t *testing.T) {
 	assert.Equal(t, userCount, 0, "user count mismatch")
 }
 
-func TestLogin(t *testing.T) {
+func setupLoginTest(t *testing.T) *httptest.Server {
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
+	})
+
+	u := testutils.SetupUserData()
+	testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+
+	return server
+}
+
+func TestV3Login(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		type executeFunc func(*testing.T, *httptest.Server) *http.Response
-		type checkFunc func(*testing.T, *http.Response)
+		defer testutils.ClearData(testutils.DB)
 
-		runTest := func(t *testing.T, name string, execute executeFunc, check checkFunc) {
-			t.Run(name, func(t *testing.T) {
-				defer testutils.ClearData(testutils.DB)
+		server := setupLoginTest(t)
+		defer server.Close()
 
-				// Setup
-				server := MustNewServer(t, &app.App{
-					Clock: clock.NewMock(),
-					Config: config.Config{
-						PageTemplateDir: "../views",
-					},
-				})
-				defer server.Close()
+		// Execute
+		dat := `{"email": "alice@example.com", "password": "pass1234"}`
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
+		res := testutils.HTTPDo(t, req)
 
-				u := testutils.SetupUserData()
-				testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-				// Execute
-				res := execute(t, server)
+		var user database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
 
-				// Test
-				assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-				var user database.User
-				testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
-				assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
-
-				check(t, res)
-			})
-		}
-
-		runTest(t, "web endpoint",
-			func(t *testing.T, server *httptest.Server) *http.Response {
-				dat := url.Values{}
-				dat.Set("email", "alice@example.com")
-				dat.Set("password", "pass1234")
-				req := testutils.MakeFormReq(server.URL, "POST", "/login", dat)
-
-				return testutils.HTTPDo(t, req)
-			},
-			func(t *testing.T, res *http.Response) {
-				assertResponseSessionCookie(t, res)
-			})
-
-		runTest(t, "api endpoint",
-			func(t *testing.T, server *httptest.Server) *http.Response {
-				dat := `{"email": "alice@example.com", "password": "pass1234"}`
-				req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
-
-				return testutils.HTTPDo(t, req)
-			},
-			func(t *testing.T, res *http.Response) {
-				assertSessionResp(t, res)
-			})
+		assertSessionResp(t, res)
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := setupLoginTest(t)
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+
+		dat := `{"email": "alice@example.com", "password": "wrongpassword1234"}`
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+
+		var user database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
+
+		var sessionCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
+	})
+
+	t.Run("wrong email", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -361,6 +366,85 @@ func TestLogin(t *testing.T) {
 				PageTemplateDir: "../views",
 			},
 		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+
+		dat := `{"email": "bob@example.com", "password": "foobarbaz"}`
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+
+		var user database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		assert.DeepEqual(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
+
+		var sessionCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
+	})
+
+	t.Run("nonexistent email", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		dat := `{"email": "nonexistent@example.com", "password": "pass1234"}`
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
+
+		var sessionCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+		assert.Equal(t, sessionCount, 0, "sessionCount mismatch")
+	})
+}
+
+func TestWebLogin(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		server := setupLoginTest(t)
+		defer server.Close()
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("email", "alice@example.com")
+		dat.Set("password", "pass1234")
+		req := testutils.MakeFormReq(server.URL, "POST", "/login", dat)
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+		var user database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
+
+		assertResponseSessionCookie(t, res)
+	})
+
+	t.Run("wrong password", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := setupLoginTest(t)
 		defer server.Close()
 
 		u := testutils.SetupUserData()
@@ -450,56 +534,110 @@ func TestLogin(t *testing.T) {
 	})
 }
 
-func TestLogout(t *testing.T) {
+func setupLogoutTest(t *testing.T) (*httptest.Server, *database.Session, *database.Session) {
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
+	})
+
+	aliceUser := testutils.SetupUserData()
+	testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
+	anotherUser := testutils.SetupUserData()
+
+	session1ExpiresAt := time.Now().Add(time.Hour * 24)
+	session1 := database.Session{
+		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
+		UserID:    aliceUser.ID,
+		ExpiresAt: session1ExpiresAt,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
+	session2 := database.Session{
+		Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
+		UserID:    anotherUser.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
+
+	return server, &session1, &session2
+}
+
+func assertLogoutAuthenticated(t *testing.T, res *http.Response) {
+	assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+
+	var sessionCount int
+	var s2 database.Session
+	testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+	testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&s2), "getting s2")
+
+	assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
+}
+
+func assertLogoutUnauthenticated(t *testing.T, res *http.Response) {
+	assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+
+	var sessionCount int
+	var postSession1, postSession2 database.Session
+	testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
+	testutils.MustExec(t, testutils.DB.Where("key = ?", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=").First(&postSession1), "getting postSession1")
+	testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&postSession2), "getting postSession2")
+
+	// two existing sessions should remain
+	assert.Equal(t, sessionCount, 2, "sessionCount mismatch")
+
+	c := testutils.GetCookieByName(res.Cookies(), "id")
+	assert.Equal(t, c, (*http.Cookie)(nil), "id cookie should have not been set")
+}
+
+func TestV3Logout(t *testing.T) {
 	t.Run("authenticated", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
-		aliceUser := testutils.SetupUserData()
-		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
-		anotherUser := testutils.SetupUserData()
-
-		session1ExpiresAt := time.Now().Add(time.Hour * 24)
-		session1 := database.Session{
-			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
-			UserID:    aliceUser.ID,
-			ExpiresAt: session1ExpiresAt,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
-		session2 := database.Session{
-			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
-			UserID:    anotherUser.ID,
-			ExpiresAt: time.Now().Add(time.Hour * 24),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
+		server, session1, _ := setupLogoutTest(t)
 		defer server.Close()
 
 		// Execute
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signout", "")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", session1.Key))
+		res := testutils.HTTPDo(t, req)
 
+		// Test
+		assertLogoutAuthenticated(t, res)
+	})
+
+	t.Run("unauthenticated", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		server, _, _ := setupLogoutTest(t)
+		defer server.Close()
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/signout", "")
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assertLogoutUnauthenticated(t, res)
+	})
+}
+
+func TestWebLogout(t *testing.T) {
+	t.Run("authenticated", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		server, session1, _ := setupLogoutTest(t)
+		defer server.Close()
+
+		// Execute
 		dat := url.Values{}
 		req := testutils.MakeFormReq(server.URL, "POST", "/logout", dat)
-
-		req.AddCookie(&http.Cookie{Name: "id", Value: "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=", Expires: session1ExpiresAt, Path: "/", HttpOnly: true})
-		// req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU="))
+		req.AddCookie(&http.Cookie{Name: "id", Value: "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=", Expires: session1.ExpiresAt, Path: "/", HttpOnly: true})
 
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
-
-		var sessionCount int
-		var s2 database.Session
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&s2), "getting s2")
-
-		assert.Equal(t, sessionCount, 1, "sessionCount mismatch")
+		assertLogoutAuthenticated(t, res)
 
 		c := testutils.GetCookieByName(res.Cookies(), "id")
 		assert.Equal(t, c.Value, "", "session key mismatch")
@@ -513,30 +651,7 @@ func TestLogout(t *testing.T) {
 	t.Run("unauthenticated", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
-		aliceUser := testutils.SetupUserData()
-		testutils.SetupAccountData(aliceUser, "alice@example.com", "pass1234")
-		anotherUser := testutils.SetupUserData()
-
-		session1 := database.Session{
-			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
-			UserID:    aliceUser.ID,
-			ExpiresAt: time.Now().Add(time.Hour * 24),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&session1), "preparing session1")
-		session2 := database.Session{
-			Key:       "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=",
-			UserID:    anotherUser.ID,
-			ExpiresAt: time.Now().Add(time.Hour * 24),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&session2), "preparing session2")
-
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
+		server, _, _ := setupLogoutTest(t)
 		defer server.Close()
 
 		// Execute
@@ -545,18 +660,6 @@ func TestLogout(t *testing.T) {
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
-
-		var sessionCount int
-		var postSession1, postSession2 database.Session
-		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Count(&sessionCount), "counting session")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=").First(&postSession1), "getting postSession1")
-		testutils.MustExec(t, testutils.DB.Where("key = ?", "MDCpbvCRg7W2sH6S870wqLqZDZTObYeVd0PzOekfo/A=").First(&postSession2), "getting postSession2")
-
-		// two existing sessions should remain
-		assert.Equal(t, sessionCount, 2, "sessionCount mismatch")
-
-		c := testutils.GetCookieByName(res.Cookies(), "id")
-		assert.Equal(t, c, (*http.Cookie)(nil), "id cookie should have not been set")
+		assertLogoutUnauthenticated(t, res)
 	})
 }
