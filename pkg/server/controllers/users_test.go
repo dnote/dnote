@@ -72,7 +72,7 @@ func assertSessionResp(t *testing.T, res *http.Response) {
 	assert.Equal(t, c.Expires.Unix(), session.ExpiresAt.Unix(), "session Expires mismatch")
 }
 
-func TestRegister(t *testing.T) {
+func TestJoin(t *testing.T) {
 	testCases := []struct {
 		email       string
 		password    string
@@ -155,7 +155,7 @@ func TestRegister(t *testing.T) {
 	}
 }
 
-func TestRegisterMissingParams(t *testing.T) {
+func TestJoinMissingParams(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
@@ -217,7 +217,7 @@ func TestRegisterMissingParams(t *testing.T) {
 	})
 }
 
-func TestRegisterDuplicateEmail(t *testing.T) {
+func TestJoinDuplicateEmail(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	// Setup
@@ -257,7 +257,7 @@ func TestRegisterDuplicateEmail(t *testing.T) {
 	assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
 }
 
-func TestRegisterDisabled(t *testing.T) {
+func TestJoinDisabled(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	// Setup
@@ -289,7 +289,7 @@ func TestRegisterDisabled(t *testing.T) {
 	assert.Equal(t, userCount, 0, "user count mismatch")
 }
 
-func TestSignIn(t *testing.T) {
+func TestLogin(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
@@ -423,7 +423,7 @@ func TestSignIn(t *testing.T) {
 	})
 }
 
-func TestSignout(t *testing.T) {
+func TestLogout(t *testing.T) {
 	t.Run("authenticated", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
