@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
@@ -13,10 +13,10 @@ import (
 
 // NewUsers creates a new Users controller.
 // It panics if the necessary templates are not parsed.
-func NewUsers(cfg config.Config, app *app.App) *Users {
+func NewUsers(app *app.App) *Users {
 	return &Users{
-		NewView:   views.NewView(cfg.PageTemplateDir, views.Config{Title: "Join", Layout: "base"}, "users/new"),
-		LoginView: views.NewView(cfg.PageTemplateDir, views.Config{Title: "Login", Layout: "base"}, "users/login"),
+		NewView:   views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Join", Layout: "base"}, "users/new"),
+		LoginView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Login", Layout: "base"}, "users/login"),
 		app:       app,
 	}
 }
@@ -51,20 +51,22 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Printf("form %+v\n", form)
+
 	user, err := u.app.CreateUser(form.Email, form.Password)
 	if err != nil {
-		handleHTMLError(w, r, err, "creating user", u.NewView, &vd)
+		handleHTMLError(w, r, err, "creating user", u.NewView, vd)
 		return
 	}
 
 	session, err := u.app.SignIn(&user)
 	if err != nil {
-		handleHTMLError(w, r, err, "signing in a user", u.LoginView, &vd)
+		handleHTMLError(w, r, err, "signing in a user", u.LoginView, vd)
 		return
 	}
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusCreated)
 
 	if err := u.app.SendWelcomeEmail(form.Email); err != nil {
 		log.ErrorWrap(err, "sending welcome email")
@@ -107,7 +109,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 
 	session, err := u.login(r)
 	if err != nil {
-		handleHTMLError(w, r, err, "logging in user", u.LoginView, &vd)
+		handleHTMLError(w, r, err, "logging in user", u.LoginView, vd)
 		return
 	}
 
@@ -144,7 +146,7 @@ func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 	var vd views.Data
 
 	if err := u.logout(r); err != nil {
-		handleHTMLError(w, r, err, "logging out", u.LoginView, &vd)
+		handleHTMLError(w, r, err, "logging out", u.LoginView, vd)
 		return
 	}
 

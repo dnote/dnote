@@ -22,7 +22,7 @@ package web
 import (
 	"net/http"
 
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/tmpl"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -106,9 +106,9 @@ func getRootHandler(c Context) http.HandlerFunc {
 		buf, err := appShell.Execute(r)
 		if err != nil {
 			if errors.Cause(err) == tmpl.ErrNotFound {
-				handlers.RespondNotFound(w)
+				middleware.RespondNotFound(w)
 			} else {
-				handlers.DoError(w, "executing app shell", err, http.StatusInternalServerError)
+				middleware.DoError(w, "executing app shell", err, http.StatusInternalServerError)
 			}
 			return
 		}

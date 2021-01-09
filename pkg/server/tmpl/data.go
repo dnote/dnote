@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/pkg/errors"
 )
@@ -52,7 +52,7 @@ type notePage struct {
 }
 
 func (a AppShell) newNotePage(r *http.Request, noteUUID string) (notePage, error) {
-	user, _, err := handlers.AuthWithSession(a.DB, r, nil)
+	user, _, err := middleware.AuthWithSession(a.DB, r, nil)
 	if err != nil {
 		return notePage{}, errors.Wrap(err, "authenticating with session")
 	}

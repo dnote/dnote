@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/log"
 )
 
 // Controllers is a group of controllers
@@ -13,12 +13,14 @@ type Controllers struct {
 }
 
 // New returns a new group of controllers
-func New(cfg config.Config, app *app.App) *Controllers {
+func New(app *app.App) *Controllers {
+	log.Info(app.Config.PageTemplateDir)
+
 	c := Controllers{}
 
-	c.Users = NewUsers(cfg, app)
-	c.Notes = NewNotes(cfg, app)
-	c.Static = NewStatic(cfg)
+	c.Users = NewUsers(app)
+	c.Notes = NewNotes(app)
+	c.Static = NewStatic(app)
 
 	return &c
 }

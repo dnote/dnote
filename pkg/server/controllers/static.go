@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/views"
 )
 
 // NewStatic creates a new Static controller.
-func NewStatic(cfg config.Config) *Static {
+func NewStatic(app *app.App) *Static {
 	return &Static{
-		NotFoundView: views.NewView(cfg.PageTemplateDir, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
+		NotFoundView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
 	}
 }
 

@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
@@ -251,26 +251,26 @@ type GetSyncFragmentResp struct {
 func (a *API) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		middleware.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	afterUSN, limit, err := parseGetSyncFragmentQuery(r.URL.Query())
 	if err != nil {
-		handlers.DoError(w, "parsing query params", err, http.StatusInternalServerError)
+		middleware.DoError(w, "parsing query params", err, http.StatusInternalServerError)
 		return
 	}
 
 	fragment, err := a.newFragment(user.ID, user.MaxUSN, afterUSN, limit)
 	if err != nil {
-		handlers.DoError(w, "getting fragment", err, http.StatusInternalServerError)
+		middleware.DoError(w, "getting fragment", err, http.StatusInternalServerError)
 		return
 	}
 
 	response := GetSyncFragmentResp{
 		Fragment: fragment,
 	}
-	handlers.RespondJSON(w, http.StatusOK, response)
+	middleware.RespondJSON(w, http.StatusOK, response)
 }
 
 // GetSyncStateResp represents a response from GetSyncFragment handler
@@ -284,7 +284,7 @@ type GetSyncStateResp struct {
 func (a *API) GetSyncState(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		middleware.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -300,5 +300,5 @@ func (a *API) GetSyncState(w http.ResponseWriter, r *http.Request) {
 		"resp":    response,
 	}).Info("getting sync state")
 
-	handlers.RespondJSON(w, http.StatusOK, response)
+	middleware.RespondJSON(w, http.StatusOK, response)
 }

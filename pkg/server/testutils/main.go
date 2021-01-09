@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -198,9 +199,18 @@ func MakeReq(endpoint string, method, path, data string) *http.Request {
 	u := fmt.Sprintf("%s%s", endpoint, path)
 
 	req, err := http.NewRequest(method, u, strings.NewReader(data))
+
 	if err != nil {
 		panic(errors.Wrap(err, "constructing http request"))
 	}
+
+	return req
+}
+
+// MakeFormReq makes an HTTP request and returns a response
+func MakeFormReq(endpoint, method, path string, data url.Values) *http.Request {
+	req := MakeReq(endpoint, method, path, data.Encode())
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return req
 }

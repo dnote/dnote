@@ -50,6 +50,14 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 
 // CreateUser creates a user
 func (a *App) CreateUser(email, password string) (database.User, error) {
+	if email == "" {
+		return database.User{}, ErrEmailRequired
+	}
+
+	if len(password) < 8 {
+		return database.User{}, ErrPasswordTooShort
+	}
+
 	tx := a.DB.Begin()
 
 	var count int

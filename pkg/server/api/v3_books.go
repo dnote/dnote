@@ -25,7 +25,7 @@ import (
 	"net/url"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
@@ -60,13 +60,13 @@ func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 	var params createBookPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		handlers.DoError(w, "decoding payload", err, http.StatusInternalServerError)
+		middleware.DoError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	err = validateCreateBookPayload(params)
 	if err != nil {
-		handlers.DoError(w, "validating payload", err, http.StatusBadRequest)
+		middleware.DoError(w, "validating payload", err, http.StatusBadRequest)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
-		handlers.DoError(w, "checking duplicate", err, http.StatusInternalServerError)
+		middleware.DoError(w, "checking duplicate", err, http.StatusInternalServerError)
 		return
 	}
 	if bookCount > 0 {
@@ -85,12 +85,12 @@ func (a *API) CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	book, err := a.App.CreateBook(user, params.Name)
 	if err != nil {
-		handlers.DoError(w, "inserting book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "inserting book", err, http.StatusInternalServerError)
 	}
 	resp := CreateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-	handlers.RespondJSON(w, http.StatusCreated, resp)
+	middleware.RespondJSON(w, http.StatusCreated, resp)
 }
 
 // BooksOptions is a handler for OPTIONS endpoint for notes
@@ -121,12 +121,12 @@ func respondWithBooks(db *gorm.DB, userID int, query url.Values, w http.Response
 	}
 
 	if err := conn.Find(&books).Error; err != nil {
-		handlers.DoError(w, "finding books", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding books", err, http.StatusInternalServerError)
 		return
 	}
 
 	presentedBooks := presenters.PresentBooks(books)
-	handlers.RespondJSON(w, http.StatusOK, presentedBooks)
+	middleware.RespondJSON(w, http.StatusOK, presentedBooks)
 }
 
 // GetBooks returns books for the user
@@ -159,12 +159,12 @@ func (a *API) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := conn.Error; err != nil {
-		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	p := presenters.PresentBook(book)
-	handlers.RespondJSON(w, http.StatusOK, p)
+	middleware.RespondJSON(w, http.StatusOK, p)
 }
 
 type updateBookPayload struct {
@@ -190,21 +190,21 @@ func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	var params updateBookPayload
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		handlers.DoError(w, "decoding payload", err, http.StatusInternalServerError)
+		middleware.DoError(w, "decoding payload", err, http.StatusInternalServerError)
 		return
 	}
 
 	book, err = a.App.UpdateBook(tx, user, book, params.Name)
 	if err != nil {
 		tx.Rollback()
-		handlers.DoError(w, "updating a book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "updating a book", err, http.StatusInternalServerError)
 	}
 
 	tx.Commit()
@@ -212,7 +212,7 @@ func (a *API) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	resp := UpdateBookResp{
 		Book: presenters.PresentBook(book),
 	}
-	handlers.RespondJSON(w, http.StatusOK, resp)
+	middleware.RespondJSON(w, http.StatusOK, resp)
 }
 
 // DeleteBookResp is the response from create book api
@@ -235,25 +235,25 @@ func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		handlers.DoError(w, "finding book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding book", err, http.StatusInternalServerError)
 		return
 	}
 
 	var notes []database.Note
 	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
-		handlers.DoError(w, "finding notes", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding notes", err, http.StatusInternalServerError)
 		return
 	}
 
 	for _, note := range notes {
 		if _, err := a.App.DeleteNote(tx, user, note); err != nil {
-			handlers.DoError(w, "deleting a note", err, http.StatusInternalServerError)
+			middleware.DoError(w, "deleting a note", err, http.StatusInternalServerError)
 			return
 		}
 	}
 	b, err := a.App.DeleteBook(tx, user, book)
 	if err != nil {
-		handlers.DoError(w, "deleting book", err, http.StatusInternalServerError)
+		middleware.DoError(w, "deleting book", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -263,5 +263,5 @@ func (a *API) DeleteBook(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 		Book:   presenters.PresentBook(b),
 	}
-	handlers.RespondJSON(w, http.StatusOK, resp)
+	middleware.RespondJSON(w, http.StatusOK, resp)
 }

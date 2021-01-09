@@ -1,7 +1,7 @@
 package views
 
 import (
-	"html/template"
+	// "html/template"
 	"net/http"
 	"time"
 
@@ -32,7 +32,7 @@ type Alert struct {
 // Data is the top level structure that views expect data to come in.
 type Data struct {
 	Alert *Alert
-	CSRF  template.HTML
+	// CSRF  template.HTML
 	User  *database.User
 	Yield interface{}
 }

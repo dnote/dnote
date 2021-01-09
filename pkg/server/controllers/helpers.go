@@ -195,22 +195,23 @@ func getStatusCode(err error) int {
 	rootErr := errors.Cause(err)
 
 	switch rootErr {
-	case app.ErrNotFound:
-	case app.ErrLoginInvalid:
+	case app.ErrNotFound, app.ErrLoginInvalid:
 		return http.StatusNotFound
+	case app.ErrDuplicateEmail, app.ErrEmailRequired, app.ErrPasswordTooShort:
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError
 }
 
 // handleHTMLError writes the error to the log and sets the error message in the data.
-func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg string, v *views.View, d *views.Data) {
+func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg string, v *views.View, d views.Data) {
 	statusCode := getStatusCode(err)
 	w.WriteHeader(statusCode)
 
 	logError(err, msg)
-	d.SetAlert(err)
 
+	d.SetAlert(err)
 	v.Render(w, r, d)
 }
 

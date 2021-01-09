@@ -16,6 +16,10 @@ var (
 	// ErrLoginInvalid is an error for invalid login
 	ErrLoginInvalid appError = "invalid login"
 
-	// ErrDuplicateEmail is an error for duplicat email
+	// ErrDuplicateEmail is an error for duplicate email
 	ErrDuplicateEmail appError = "duplicate email"
+	// ErrEmailRequired is an error for missing email
+	ErrEmailRequired appError = "missing email"
+	// ErrPasswordTooShort is an error for short password
+	ErrPasswordTooShort appError = "password should be longer than 8 characters"
 )

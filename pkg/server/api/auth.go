@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -42,13 +42,13 @@ type GetMeResponse struct {
 func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
 	if !ok {
-		handlers.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
+		middleware.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
 
 	var account database.Account
 	if err := a.App.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		handlers.DoError(w, "finding account", err, http.StatusInternalServerError)
+		middleware.DoError(w, "finding account", err, http.StatusInternalServerError)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (a *API) getMe(w http.ResponseWriter, r *http.Request) {
 	response := GetMeResponse{
 		User: session.New(user, account),
 	}
-	handlers.RespondJSON(w, http.StatusOK, response)
+	middleware.RespondJSON(w, http.StatusOK, response)
 }
 
 type createResetTokenPayload struct {
@@ -83,21 +83,21 @@ func (a *API) createResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := conn.Error; err != nil {
-		handlers.DoError(w, errors.Wrap(err, "finding account").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "finding account").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	resetToken, err := token.Create(a.App.DB, account.UserID, database.TokenTypeResetPassword)
 	if err != nil {
-		handlers.DoError(w, errors.Wrap(err, "generating token").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "generating token").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if err := a.App.SendPasswordResetEmail(account.Email.String, resetToken.Value); err != nil {
 		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
-			handlers.RespondInvalidSMTPConfig(w)
+			middleware.RespondInvalidSMTPConfig(w)
 		} else {
-			handlers.DoError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
+			middleware.DoError(w, errors.Wrap(err, "sending password reset email").Error(), nil, http.StatusInternalServerError)
 		}
 
 		return
@@ -123,7 +123,7 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := conn.Error; err != nil {
-		handlers.DoError(w, errors.Wrap(err, "finding token").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "finding token").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -143,31 +143,31 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
 	if err != nil {
 		tx.Rollback()
-		handlers.DoError(w, errors.Wrap(err, "hashing password").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "hashing password").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	var account database.Account
 	if err := a.App.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
 		tx.Rollback()
-		handlers.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Model(&account).Update("password", string(hashedPassword)).Error; err != nil {
 		tx.Rollback()
-		handlers.DoError(w, errors.Wrap(err, "updating password").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "updating password").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
 		tx.Rollback()
-		handlers.DoError(w, errors.Wrap(err, "updating password reset token").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "updating password reset token").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if err := a.App.DeleteUserSessions(tx, account.UserID); err != nil {
 		tx.Rollback()
-		handlers.DoError(w, errors.Wrap(err, "deleting user sessions").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "deleting user sessions").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -175,7 +175,7 @@ func (a *API) resetPassword(w http.ResponseWriter, r *http.Request) {
 
 	var user database.User
 	if err := a.App.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
-		handlers.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
+		middleware.DoError(w, errors.Wrap(err, "finding user").Error(), nil, http.StatusInternalServerError)
 		return
 	}
 

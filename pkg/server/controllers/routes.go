@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/handlers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/gorilla/mux"
 )
 
@@ -27,7 +27,7 @@ type RouteConfig struct {
 // NewWebRoutes returns a new web routes
 func NewWebRoutes(app *app.App, c *Controllers) []Route {
 	ret := []Route{
-		{"GET", "/", handlers.Auth(app, http.HandlerFunc(c.Notes.Index), &handlers.AuthParams{RedirectGuestsToLogin: true}), true},
+		{"GET", "/", middleware.Auth(app, http.HandlerFunc(c.Notes.Index), &middleware.AuthParams{RedirectGuestsToLogin: true}), true},
 		{"GET", "/login", c.Users.LoginView, true},
 		{"POST", "/login", http.HandlerFunc(c.Users.Login), true},
 		{"POST", "/logout", http.HandlerFunc(c.Users.Logout), true},
@@ -44,23 +44,23 @@ func NewWebRoutes(app *app.App, c *Controllers) []Route {
 // NewAPIRoutes returns a new api routes
 func NewAPIRoutes(c *Controllers) []Route {
 	return []Route{
-		{"POST", "/v1/login", handlers.Cors(c.Users.V3Login), true},
-		{"POST", "/v1/logout", handlers.Cors(c.Users.V3Logout), true},
+		{"POST", "/v1/login", middleware.Cors(c.Users.V3Login), true},
+		{"POST", "/v1/logout", middleware.Cors(c.Users.V3Logout), true},
 	}
 }
 
 func applyMiddleware(h http.HandlerFunc, rateLimit bool) http.Handler {
 	ret := h
-	ret = handlers.Logging(ret)
+	ret = middleware.Logging(ret)
 
 	if rateLimit && os.Getenv("GO_ENV") != "TEST" {
-		ret = handlers.Limit(ret)
+		ret = middleware.Limit(ret)
 	}
 
 	return ret
 }
 
-func registerRoutes(router *mux.Router, mw handlers.Middleware, app *app.App, routes []Route) {
+func registerRoutes(router *mux.Router, mw middleware.Middleware, app *app.App, routes []Route) {
 	for _, route := range routes {
 		wrappedHandler := mw(route.Handler, app, route.RateLimit)
 
@@ -76,8 +76,8 @@ func NewRouter(app *app.App, rc RouteConfig) http.Handler {
 
 	webRouter := router.PathPrefix("/").Subrouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	registerRoutes(webRouter, handlers.WebMw, app, rc.WebRoutes)
-	registerRoutes(apiRouter, handlers.APIMw, app, rc.APIRoutes)
+	registerRoutes(webRouter, middleware.WebMw, app, rc.WebRoutes)
+	registerRoutes(apiRouter, middleware.APIMw, app, rc.APIRoutes)
 
 	// static
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
@@ -86,5 +86,5 @@ func NewRouter(app *app.App, rc RouteConfig) http.Handler {
 	// catch-all
 	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
 
-	return handlers.Logging(router)
+	return middleware.Logging(router)
 }

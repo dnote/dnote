@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/views"
 	// "github.com/nadproject/nad/pkg/server/context"
@@ -12,9 +11,9 @@ import (
 
 // NewNotes creates a new Notes controller.
 // It panics if the necessary templates are not parsed.
-func NewNotes(cfg config.Config, app *app.App) *Notes {
+func NewNotes(app *app.App) *Notes {
 	return &Notes{
-		IndexView: views.NewView(cfg.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
+		IndexView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
 		app:       app,
 	}
 }
