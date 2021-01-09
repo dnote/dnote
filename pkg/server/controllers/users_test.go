@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -36,6 +37,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func assertSessionCookie(t *testing.T, c *http.Cookie, session database.Session) {
+	assert.Equal(t, c.Value, session.Key, "session key mismatch")
+	assert.Equal(t, c.Path, "/", "session path mismatch")
+	assert.Equal(t, c.HttpOnly, true, "session HTTPOnly mismatch")
+	assert.Equal(t, c.Expires.Unix(), session.ExpiresAt.Unix(), "session Expires mismatch")
+}
+
 func assertResponseSessionCookie(t *testing.T, res *http.Response) {
 	var sessionCount int
 	var session database.Session
@@ -43,10 +51,7 @@ func assertResponseSessionCookie(t *testing.T, res *http.Response) {
 	testutils.MustExec(t, testutils.DB.First(&session), "getting session")
 
 	c := testutils.GetCookieByName(res.Cookies(), "id")
-	assert.Equal(t, c.Value, session.Key, "session key mismatch")
-	assert.Equal(t, c.Path, "/", "session path mismatch")
-	assert.Equal(t, c.HttpOnly, true, "session HTTPOnly mismatch")
-	assert.Equal(t, c.Expires.Unix(), session.ExpiresAt.Unix(), "session Expires mismatch")
+	assertSessionCookie(t, c, session)
 }
 
 func assertSessionResp(t *testing.T, res *http.Response) {
@@ -66,10 +71,7 @@ func assertSessionResp(t *testing.T, res *http.Response) {
 	assert.Equal(t, got.ExpiresAt, session.ExpiresAt.Unix(), "session ExpiresAt mismatch")
 
 	c := testutils.GetCookieByName(res.Cookies(), "id")
-	assert.Equal(t, c.Value, session.Key, "session key mismatch")
-	assert.Equal(t, c.Path, "/", "session path mismatch")
-	assert.Equal(t, c.HttpOnly, true, "session HTTPOnly mismatch")
-	assert.Equal(t, c.Expires.Unix(), session.ExpiresAt.Unix(), "session Expires mismatch")
+	assertSessionCookie(t, c, session)
 }
 
 func TestJoin(t *testing.T) {
@@ -291,37 +293,62 @@ func TestJoinDisabled(t *testing.T) {
 
 func TestLogin(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		type executeFunc func(*testing.T, *httptest.Server) *http.Response
+		type checkFunc func(*testing.T, *http.Response)
 
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
+		runTest := func(t *testing.T, name string, execute executeFunc, check checkFunc) {
+			t.Run(name, func(t *testing.T) {
+				defer testutils.ClearData(testutils.DB)
+
+				// Setup
+				server := MustNewServer(t, &app.App{
+					Clock: clock.NewMock(),
+					Config: config.Config{
+						PageTemplateDir: "../views",
+					},
+				})
+				defer server.Close()
+
+				u := testutils.SetupUserData()
+				testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+
+				// Execute
+				res := execute(t, server)
+
+				// Test
+				assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+				var user database.User
+				testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+				assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
+
+				check(t, res)
+			})
+		}
+
+		runTest(t, "web endpoint",
+			func(t *testing.T, server *httptest.Server) *http.Response {
+				dat := url.Values{}
+				dat.Set("email", "alice@example.com")
+				dat.Set("password", "pass1234")
+				req := testutils.MakeFormReq(server.URL, "POST", "/login", dat)
+
+				return testutils.HTTPDo(t, req)
 			},
-		})
-		defer server.Close()
+			func(t *testing.T, res *http.Response) {
+				assertResponseSessionCookie(t, res)
+			})
 
-		u := testutils.SetupUserData()
-		testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		runTest(t, "api endpoint",
+			func(t *testing.T, server *httptest.Server) *http.Response {
+				dat := `{"email": "alice@example.com", "password": "pass1234"}`
+				req := testutils.MakeReq(server.URL, "POST", "/api/v3/signin", dat)
 
-		dat := url.Values{}
-		dat.Set("email", "alice@example.com")
-		dat.Set("password", "pass1234")
-		req := testutils.MakeFormReq(server.URL, "POST", "/login", dat)
-
-		// Execute
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var user database.User
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
-		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
-
-		// after register, should sign in user
-		assertResponseSessionCookie(t, res)
+				return testutils.HTTPDo(t, req)
+			},
+			func(t *testing.T, res *http.Response) {
+				assertSessionResp(t, res)
+			})
 	})
 
 	t.Run("wrong password", func(t *testing.T) {
