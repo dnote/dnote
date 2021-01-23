@@ -10,6 +10,7 @@ type Controllers struct {
 	Users  *Users
 	Notes  *Notes
 	Static *Static
+	Health *Health
 }
 
 // New returns a new group of controllers
@@ -21,6 +22,7 @@ func New(app *app.App) *Controllers {
 	c.Users = NewUsers(app)
 	c.Notes = NewNotes(app)
 	c.Static = NewStatic(app)
+	c.Health = NewHealth(app)
 
 	return &c
 }
