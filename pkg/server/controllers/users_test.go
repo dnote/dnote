@@ -416,7 +416,48 @@ func TestV3Login(t *testing.T) {
 	})
 }
 
+type TestData map[string]string
+
+var allContentTypes = []string{"application/json", "html"}
+
+func runForAllContentTypes(t *testing.T, dat TestData, testFunc func(t *testing.T, dat TestData, contentType string)) {
+	for _, contentType := range allContentTypes {
+		testFunc(t, dat, contentType)
+	}
+}
+
 func TestWebLogin(t *testing.T) {
+	testSuccess := func(t *testing.T, ddd TestData, contentType string) {
+		defer testutils.ClearData(testutils.DB)
+
+		server := setupLoginTest(t)
+		defer server.Close()
+
+		// Execute
+		// set json or form
+		dat := url.Values{}
+		dat.Set("email", "alice@example.com")
+		dat.Set("password", "pass1234")
+		req := testutils.MakeFormReq(server.URL, "POST", "/login", dat)
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+		var user database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
+		assert.NotEqual(t, user.LastLoginAt, nil, "LastLoginAt mismatch")
+
+		if contentType == "application/json" {
+
+			assertSessionResp(t, res)
+		} else {
+			assertResponseSessionCookie(t, res)
+		}
+	}
+
+	runForAllContentTypes(t, TestData{"email": "alice@example.com"}, testSuccess)
+
 	t.Run("success", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
