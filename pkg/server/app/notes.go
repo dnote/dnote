@@ -19,6 +19,9 @@
 package app
 
 import (
+	"strings"
+	"time"
+
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/jinzhu/gorm"
@@ -173,4 +176,135 @@ func (a *App) GetUserNoteByUUID(userID int, uuid string) (*database.Note, error)
 	}
 
 	return &ret, nil
+}
+
+// GetNotesParams is params for finding notes
+type GetNotesParams struct {
+	Year      int
+	Month     int
+	Page      int
+	Books     []string
+	Search    string
+	Encrypted bool
+}
+
+type ftsParams struct {
+	HighlightAll bool
+}
+
+func getHeadlineOptions(params *ftsParams) string {
+	headlineOptions := []string{
+		"StartSel=<dnotehl>",
+		"StopSel=</dnotehl>",
+		"ShortWord=0",
+	}
+
+	if params != nil && params.HighlightAll {
+		headlineOptions = append(headlineOptions, "HighlightAll=true")
+	} else {
+		headlineOptions = append(headlineOptions, "MaxFragments=3, MaxWords=50, MinWords=10")
+	}
+
+	return strings.Join(headlineOptions, ",")
+}
+
+func selectFTSFields(conn *gorm.DB, search string, params *ftsParams) *gorm.DB {
+	headlineOpts := getHeadlineOptions(params)
+
+	return conn.Select(`
+notes.id,
+notes.uuid,
+notes.created_at,
+notes.updated_at,
+notes.book_uuid,
+notes.user_id,
+notes.added_on,
+notes.edited_on,
+notes.usn,
+notes.deleted,
+notes.encrypted,
+ts_headline('english_nostop', notes.body, plainto_tsquery('english_nostop', ?), ?) AS body
+	`, search, headlineOpts)
+}
+
+func getNotesBaseQuery(db *gorm.DB, userID int, q GetNotesParams) *gorm.DB {
+	conn := db.Where(
+		"notes.user_id = ? AND notes.deleted = ? AND notes.encrypted = ?",
+		userID, false, q.Encrypted,
+	)
+
+	if q.Search != "" {
+		conn = selectFTSFields(conn, q.Search, nil)
+		conn = conn.Where("tsv @@ plainto_tsquery('english_nostop', ?)", q.Search)
+	}
+
+	if len(q.Books) > 0 {
+		conn = conn.Joins("INNER JOIN books ON books.uuid = notes.book_uuid").
+			Where("books.label in (?)", q.Books)
+	}
+
+	if q.Year != 0 || q.Month != 0 {
+		dateLowerbound, dateUpperbound := getDateBounds(q.Year, q.Month)
+		conn = conn.Where("notes.added_on >= ? AND notes.added_on < ?", dateLowerbound, dateUpperbound)
+	}
+
+	return conn
+}
+
+func getDateBounds(year, month int) (int64, int64) {
+	var yearUpperbound, monthUpperbound int
+
+	if month == 12 {
+		monthUpperbound = 1
+		yearUpperbound = year + 1
+	} else {
+		monthUpperbound = month + 1
+		yearUpperbound = year
+	}
+
+	lower := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).UnixNano()
+	upper := time.Date(yearUpperbound, time.Month(monthUpperbound), 1, 0, 0, 0, 0, time.UTC).UnixNano()
+
+	return lower, upper
+}
+
+func orderGetNotes(conn *gorm.DB) *gorm.DB {
+	return conn.Order("notes.updated_at DESC, notes.id DESC")
+}
+
+func paginate(conn *gorm.DB, page int) *gorm.DB {
+	limit := 30
+
+	// Paginate
+	if page > 0 {
+		offset := limit * (page - 1)
+		conn = conn.Offset(offset)
+	}
+
+	conn = conn.Limit(limit)
+
+	return conn
+}
+
+// GetNotes returns a list of matching notes
+func (a *App) GetNotes(userID int, params GetNotesParams) ([]database.Note, error) {
+	conn := getNotesBaseQuery(a.DB, userID, params)
+
+	var total int
+	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
+		return []database.Note{}, errors.Wrap(err, "counting total")
+	}
+
+	notes := []database.Note{}
+	if total != 0 {
+		conn = orderGetNotes(conn)
+		conn = database.PreloadNote(conn)
+		conn = paginate(conn, params.Page)
+
+		if err := conn.Find(&notes).Error; err != nil {
+			return []database.Note{}, errors.Wrap(err, "finding notes")
+		}
+	}
+
+	return notes, nil
 }

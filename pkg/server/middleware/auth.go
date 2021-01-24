@@ -1,14 +1,13 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -87,7 +86,7 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 			}
 		}
 
-		ctx := context.WithValue(r.Context(), helpers.KeyUser, user)
+		ctx := context.WithUser(r.Context(), &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -104,7 +103,7 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 		ctx := r.Context()
 
 		if ok {
-			ctx = context.WithValue(ctx, helpers.KeyToken, token)
+			ctx = context.WithToken(ctx, &token)
 		} else {
 			// If token-based auth fails, fall back to session-based auth
 			user, ok, err = AuthWithSession(a.DB, r, p)
@@ -126,7 +125,7 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 			}
 		}
 
-		ctx = context.WithValue(ctx, helpers.KeyUser, user)
+		ctx = context.WithUser(ctx, &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
