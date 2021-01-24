@@ -103,16 +103,16 @@ func (u *Users) login(r *http.Request) (*database.Session, error) {
 	return s, nil
 }
 
-func (u *Users) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	session, err := u.login(r)
-	if err != nil {
-		vd := views.Data{}
-		handleHTMLError(w, r, err, "logging in user", u.LoginView, vd)
-		return
-	}
-
-	render(vd, "json")
-}
+// func (u *Users) HandleLogin(w http.ResponseWriter, r *http.Request) {
+// 	session, err := u.login(r)
+// 	if err != nil {
+// 		vd := views.Data{}
+// 		handleHTMLError(w, r, err, "logging in user", u.LoginView, vd)
+// 		return
+// 	}
+//
+// 	render(vd, "json")
+// }
 
 // Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {

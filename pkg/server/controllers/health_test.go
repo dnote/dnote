@@ -23,17 +23,23 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 func TestHealth(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
-	server := setupLoginTest(t)
+	server := MustNewServer(t, &app.App{
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
+	})
 	defer server.Close()
 
 	// Execute
-	req := testutils.MakeReq(server.URL, "GET", "/health", "")
+	req := testutils.MakeReq(server.URL, "GET", "/api/health", "")
 	res := testutils.HTTPDo(t, req)
 
 	// Test

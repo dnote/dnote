@@ -281,3 +281,26 @@ func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string
 
 	return nil
 }
+
+// EndpointType is the type of endpoint to be tested
+type EndpointType int
+
+const (
+	// EndpointWeb represents a web endpoint returning HTML
+	EndpointWeb EndpointType = iota
+	// EndpointAPI represents an API endpoint returning JSON
+	EndpointAPI
+)
+
+type endpointTest func(t *testing.T, target EndpointType)
+
+// RunForWebAndAPI runs the given test function for web and API
+func RunForWebAndAPI(t *testing.T, name string, runTest endpointTest) {
+	t.Run(fmt.Sprintf("%s-web", name), func(t *testing.T) {
+		runTest(t, EndpointWeb)
+	})
+
+	t.Run(fmt.Sprintf("%s-api", name), func(t *testing.T) {
+		runTest(t, EndpointAPI)
+	})
+}

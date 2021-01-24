@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/consts"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
@@ -15,15 +16,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	contentTypeForm = "application/x-www-form-urlencoded"
-	contentTypeJSON = "application/json"
-)
-
 func parseRequestData(r *http.Request, dst interface{}) error {
 	ct := r.Header.Get("Content-Type")
 
-	if ct == contentTypeForm {
+	if ct == consts.ContentTypeForm {
 		if err := parseForm(r, dst); err != nil {
 			return errors.Wrap(err, "parsing form")
 		}
