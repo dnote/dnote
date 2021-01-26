@@ -199,6 +199,8 @@ func getStatusCode(err error) int {
 		return http.StatusBadRequest
 	case app.ErrLoginRequired:
 		return http.StatusUnauthorized
+	case app.ErrBookUUIDRequired:
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError
@@ -258,4 +260,23 @@ func respondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	if err := json.NewEncoder(w).Encode(payload); err != nil {
 		handleJSONError(w, err, "encoding response")
 	}
+}
+
+func getClientType(r *http.Request) string {
+	origin := r.Header.Get("Origin")
+
+	if strings.HasPrefix(origin, "moz-extension://") {
+		return "firefox-extension"
+	}
+
+	if strings.HasPrefix(origin, "chrome-extension://") {
+		return "chrome-extension"
+	}
+
+	userAgent := r.Header.Get("User-Agent")
+	if strings.HasPrefix(userAgent, "Go-http-client") {
+		return "cli"
+	}
+
+	return "web"
 }

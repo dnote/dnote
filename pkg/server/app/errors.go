@@ -25,4 +25,7 @@ var (
 
 	// ErrLoginRequired is an error for not authenticated
 	ErrLoginRequired appError = "login required"
+
+	// ErrBookUUIDRequired is an error for note missing book uuid
+	ErrBookUUIDRequired appError = "book uuid required"
 )

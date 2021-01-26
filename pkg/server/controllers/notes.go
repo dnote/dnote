@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -128,6 +129,12 @@ func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, error) {
 	return res, nil
 }
 
+// GetNotesResponse is a reponse by getNotesHandler
+type GetNotesResponse struct {
+	Notes []presenters.Note `json:"notes"`
+	Total int               `json:"total"`
+}
+
 // Index handles GET /
 func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
@@ -180,6 +187,7 @@ func (n *Notes) getNote(r *http.Request) (database.Note, error) {
 	return note, nil
 }
 
+// Show shows note
 func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
@@ -198,6 +206,7 @@ func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 	n.ShowView.Render(w, r, vd)
 }
 
+// V3Show is api for show
 func (n *Notes) V3Show(w http.ResponseWriter, r *http.Request) {
 	note, err := n.getNote(r)
 	if err != nil {
@@ -208,8 +217,81 @@ func (n *Notes) V3Show(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, presenters.PresentNote(note))
 }
 
-// GetNotesResponse is a reponse by getNotesHandler
-type GetNotesResponse struct {
-	Notes []presenters.Note `json:"notes"`
-	Total int               `json:"total"`
+type createNotePayload struct {
+	BookUUID string `schema:"book_uuid" json:"book_uuid"`
+	Content  string `schema:"content" json:"content"`
+	AddedOn  *int64 `schema:"added_on" json:"added_on"`
+	EditedOn *int64 `schema:"edited_on" json:"edited_on"`
+}
+
+func validateCreateNotePayload(p createNotePayload) error {
+	if p.BookUUID == "" {
+		return app.ErrBookUUIDRequired
+	}
+
+	return nil
+}
+
+func (n *Notes) create(r *http.Request) (database.Note, error) {
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Note{}, app.ErrLoginRequired
+	}
+
+	var params createNotePayload
+	if err := parseRequestData(r, &params); err != nil {
+		return database.Note{}, errors.Wrap(err, "parsing request payload")
+	}
+
+	if err := validateCreateNotePayload(params); err != nil {
+		return database.Note{}, err
+	}
+
+	var book database.Book
+	if err := n.app.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
+		return database.Note{}, errors.Wrap(err, "finding book")
+	}
+
+	client := getClientType(r)
+	note, err := n.app.CreateNote(*user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false, client)
+	if err != nil {
+		return database.Note{}, errors.Wrap(err, "creating note")
+	}
+
+	// preload associations
+	note.User = *user
+	note.Book = book
+
+	return note, nil
+}
+
+// CreateNoteResp is a response for creating a note
+type CreateNoteResp struct {
+	Result presenters.Note `json:"result"`
+}
+
+// Create creates note
+func (n *Notes) Create(w http.ResponseWriter, r *http.Request) {
+	note, err := n.create(r)
+	if err != nil {
+		handleJSONError(w, err, "creating note")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, CreateNoteResp{
+		Result: presenters.PresentNote(note),
+	})
+}
+
+// V3Create creates note
+func (n *Notes) V3Create(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	note, err := n.create(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating note", n.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusCreated)
 }

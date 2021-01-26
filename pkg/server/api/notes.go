@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/helpers"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
@@ -110,7 +110,7 @@ func (a *API) getNote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	noteUUID := vars["noteUUID"]
 
-	note, ok, err := operations.GetNote(a.App.DB, noteUUID, user)
+	note, ok, err := operations.GetNote(a.App.DB, noteUUID, &user)
 	if !ok {
 		middleware.RespondNotFound(w)
 		return

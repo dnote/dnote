@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -395,5 +396,70 @@ func TestGetNote(t *testing.T) {
 
 			assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 		}
+	})
+}
+
+func TestCreateNote(t *testing.T) {
+	testutils.RunForWebAndAPI(t, "success", func(t *testing.T, target testutils.EndpointType) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+		b1 := database.Book{
+			UserID: user.ID,
+			Label:  "js",
+			USN:    58,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+
+		// Execute
+
+		var req *http.Request
+		if target == testutils.EndpointAPI {
+			dat := fmt.Sprintf(`{"book_uuid": "%s", "content": "note content"}`, b1.UUID)
+			req = testutils.MakeReq(server.URL, "POST", "/api/v3/notes", dat)
+		} else {
+			dat := url.Values{}
+			dat.Set("book_uuid", b1.UUID)
+			dat.Set("content", "note content")
+			req = testutils.MakeFormReq(server.URL, "POST", "/notes", dat)
+		}
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusCreated, "")
+
+		var noteRecord database.Note
+		var bookRecord database.Book
+		var userRecord database.User
+		var bookCount, noteCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+		testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 1, "note count mismatch")
+
+		assert.Equal(t, bookRecord.Label, b1.Label, "book name mismatch")
+		assert.Equal(t, bookRecord.UUID, b1.UUID, "book uuid mismatch")
+		assert.Equal(t, bookRecord.UserID, b1.UserID, "book user_id mismatch")
+		assert.Equal(t, bookRecord.USN, 58, "book usn mismatch")
+
+		assert.NotEqual(t, noteRecord.UUID, "", "note uuid should have been generated")
+		assert.Equal(t, noteRecord.BookUUID, b1.UUID, "note book_uuid mismatch")
+		assert.Equal(t, noteRecord.Body, "note content", "note content mismatch")
+		assert.Equal(t, noteRecord.USN, 102, "note usn mismatch")
 	})
 }
