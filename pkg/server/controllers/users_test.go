@@ -298,7 +298,11 @@ func TestLogin(t *testing.T) {
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusFound, "")
+		if target == testutils.EndpointWeb {
+			assert.StatusCodeEquals(t, res, http.StatusFound, "")
+		} else {
+			assert.StatusCodeEquals(t, res, http.StatusOK, "")
+		}
 
 		var user database.User
 		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")
@@ -494,7 +498,11 @@ func TestLogout(t *testing.T) {
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+		if target == testutils.EndpointWeb {
+			assert.StatusCodeEquals(t, res, http.StatusFound, "Status mismatch")
+		} else {
+			assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+		}
 
 		var sessionCount int
 		var s2 database.Session
@@ -532,7 +540,11 @@ func TestLogout(t *testing.T) {
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+		if target == testutils.EndpointWeb {
+			assert.StatusCodeEquals(t, res, http.StatusFound, "Status mismatch")
+		} else {
+			assert.StatusCodeEquals(t, res, http.StatusNoContent, "Status mismatch")
+		}
 
 		var sessionCount int
 		var postSession1, postSession2 database.Session

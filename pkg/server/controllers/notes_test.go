@@ -18,152 +18,166 @@
 
 package controllers
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"io/ioutil"
-// 	"net/http"
-// 	"testing"
-// 	"time"
-//
-// 	"github.com/dnote/dnote/pkg/assert"
-// 	"github.com/dnote/dnote/pkg/clock"
-// 	"github.com/dnote/dnote/pkg/server/app"
-// 	"github.com/dnote/dnote/pkg/server/database"
-// 	"github.com/dnote/dnote/pkg/server/presenters"
-// 	"github.com/dnote/dnote/pkg/server/testutils"
-// 	"github.com/pkg/errors"
-// )
-//
-// func getExpectedNotePayload(n database.Note, b database.Book, u database.User) presenters.Note {
-// 	return presenters.Note{
-// 		UUID:      n.UUID,
-// 		CreatedAt: n.CreatedAt,
-// 		UpdatedAt: n.UpdatedAt,
-// 		Body:      n.Body,
-// 		AddedOn:   n.AddedOn,
-// 		Public:    n.Public,
-// 		USN:       n.USN,
-// 		Book: presenters.NoteBook{
-// 			UUID:  b.UUID,
-// 			Label: b.Label,
-// 		},
-// 		User: presenters.NoteUser{
-// 			UUID: u.UUID,
-// 		},
-// 	}
-// }
-//
-// func TestGetNotes(t *testing.T) {
-// 	defer testutils.ClearData(testutils.DB)
-//
-// 	// Setup
-// 	server := MustNewServer(t, &app.App{
-// 		Clock: clock.NewMock(),
-// 	})
-// 	defer server.Close()
-//
-// 	user := testutils.SetupUserData()
-// 	anotherUser := testutils.SetupUserData()
-//
-// 	b1 := database.Book{
-// 		UserID: user.ID,
-// 		Label:  "js",
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-// 	b2 := database.Book{
-// 		UserID: user.ID,
-// 		Label:  "css",
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-// 	b3 := database.Book{
-// 		UserID: anotherUser.ID,
-// 		Label:  "css",
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-//
-// 	n1 := database.Note{
-// 		UserID:   user.ID,
-// 		BookUUID: b1.UUID,
-// 		Body:     "n1 content",
-// 		USN:      11,
-// 		Deleted:  false,
-// 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
-// 	n2 := database.Note{
-// 		UserID:   user.ID,
-// 		BookUUID: b1.UUID,
-// 		Body:     "n2 content",
-// 		USN:      14,
-// 		Deleted:  false,
-// 		AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
-// 	n3 := database.Note{
-// 		UserID:   user.ID,
-// 		BookUUID: b1.UUID,
-// 		Body:     "n3 content",
-// 		USN:      17,
-// 		Deleted:  false,
-// 		AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
-// 	n4 := database.Note{
-// 		UserID:   user.ID,
-// 		BookUUID: b2.UUID,
-// 		Body:     "n4 content",
-// 		USN:      18,
-// 		Deleted:  false,
-// 		AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
-// 	n5 := database.Note{
-// 		UserID:   anotherUser.ID,
-// 		BookUUID: b3.UUID,
-// 		Body:     "n5 content",
-// 		USN:      19,
-// 		Deleted:  false,
-// 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
-// 	n6 := database.Note{
-// 		UserID:   user.ID,
-// 		BookUUID: b1.UUID,
-// 		Body:     "",
-// 		USN:      11,
-// 		Deleted:  true,
-// 		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-// 	}
-// 	testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
-//
-// 	// Execute
-// 	req := testutils.MakeReq(server.URL, "GET", "/notes?year=2018&month=8", "")
-// 	res := testutils.HTTPAuthDo(t, req, user)
-//
-// 	// Test
-// 	assert.StatusCodeEquals(t, res, http.StatusOK, "")
-//
-// 	var payload getNotesResponse
-// 	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-// 		t.Fatal(errors.Wrap(err, "decoding payload"))
-// 	}
-//
-// 	var n2Record, n1Record database.Note
-// 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
-// 	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
-//
-// 	expected := GetNotesResponse{
-// 		Notes: []presenters.Note{
-// 			getExpectedNotePayload(n2Record, b1, user),
-// 			getExpectedNotePayload(n1Record, b1, user),
-// 		},
-// 		Total: 2,
-// 	}
-//
-// 	assert.DeepEqual(t, payload, expected, "payload mismatch")
-// }
-//
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
+	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/presenters"
+	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/pkg/errors"
+)
+
+func getExpectedNotePayload(n database.Note, b database.Book, u database.User) presenters.Note {
+	return presenters.Note{
+		UUID:      n.UUID,
+		CreatedAt: n.CreatedAt,
+		UpdatedAt: n.UpdatedAt,
+		Body:      n.Body,
+		AddedOn:   n.AddedOn,
+		Public:    n.Public,
+		USN:       n.USN,
+		Book: presenters.NoteBook{
+			UUID:  b.UUID,
+			Label: b.Label,
+		},
+		User: presenters.NoteUser{
+			UUID: u.UUID,
+		},
+	}
+}
+
+func TestGetNotes(t *testing.T) {
+	testutils.RunForWebAndAPI(t, "unauthenticated", func(t *testing.T, target testutils.EndpointType) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		anotherUser := testutils.SetupUserData()
+
+		b1 := database.Book{
+			UserID: user.ID,
+			Label:  "js",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+		b2 := database.Book{
+			UserID: user.ID,
+			Label:  "css",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+		b3 := database.Book{
+			UserID: anotherUser.ID,
+			Label:  "css",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+
+		n1 := database.Note{
+			UserID:   user.ID,
+			BookUUID: b1.UUID,
+			Body:     "n1 content",
+			USN:      11,
+			Deleted:  false,
+			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+		n2 := database.Note{
+			UserID:   user.ID,
+			BookUUID: b1.UUID,
+			Body:     "n2 content",
+			USN:      14,
+			Deleted:  false,
+			AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
+		n3 := database.Note{
+			UserID:   user.ID,
+			BookUUID: b1.UUID,
+			Body:     "n3 content",
+			USN:      17,
+			Deleted:  false,
+			AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
+		n4 := database.Note{
+			UserID:   user.ID,
+			BookUUID: b2.UUID,
+			Body:     "n4 content",
+			USN:      18,
+			Deleted:  false,
+			AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
+		n5 := database.Note{
+			UserID:   anotherUser.ID,
+			BookUUID: b3.UUID,
+			Body:     "n5 content",
+			USN:      19,
+			Deleted:  false,
+			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
+		n6 := database.Note{
+			UserID:   user.ID,
+			BookUUID: b1.UUID,
+			Body:     "",
+			USN:      11,
+			Deleted:  true,
+			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
+
+		// Execute
+		var endpoint string
+		if target == testutils.EndpointWeb {
+			endpoint = "/"
+		} else {
+			endpoint = "/api/v3/notes"
+		}
+
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("%s?year=2018&month=8", endpoint), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+		if target == testutils.EndpointAPI {
+			var payload GetNotesResponse
+			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+				t.Fatal(errors.Wrap(err, "decoding payload"))
+			}
+
+			var n2Record, n1Record database.Note
+			testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
+			testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
+
+			expected := GetNotesResponse{
+				Notes: []presenters.Note{
+					getExpectedNotePayload(n2Record, b1, user),
+					getExpectedNotePayload(n1Record, b1, user),
+				},
+				Total: 2,
+			}
+
+			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		}
+	})
+}
+
 // func TestGetNote(t *testing.T) {
 // 	defer testutils.ClearData(testutils.DB)
 //

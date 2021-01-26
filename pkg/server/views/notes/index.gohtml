@@ -1,3 +1,9 @@
 {{define "yield"}}
-home page
+  <ul>
+    {{range .Notes}}
+      <li>
+        {{ .Body }}
+      </li>
+    {{end}}
+  </ul>
 {{end}}
