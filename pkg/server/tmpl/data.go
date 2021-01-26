@@ -57,7 +57,7 @@ func (a AppShell) newNotePage(r *http.Request, noteUUID string) (notePage, error
 		return notePage{}, errors.Wrap(err, "authenticating with session")
 	}
 
-	note, ok, err := operations.GetNote(a.DB, noteUUID, user)
+	note, ok, err := operations.GetNote(a.DB, noteUUID, &user)
 
 	if !ok {
 		return notePage{}, ErrNotFound

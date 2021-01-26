@@ -9,8 +9,10 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/operations"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/views"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +21,7 @@ import (
 func NewNotes(app *app.App) *Notes {
 	return &Notes{
 		IndexView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
+		ShowView:  views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/show"),
 		app:       app,
 	}
 }
@@ -26,6 +29,7 @@ func NewNotes(app *app.App) *Notes {
 // Notes is a user controller.
 type Notes struct {
 	IndexView *views.View
+	ShowView  *views.View
 	app       *app.App
 }
 
@@ -157,6 +161,51 @@ func (n *Notes) V3Index(w http.ResponseWriter, r *http.Request) {
 		Notes: presenters.PresentNotes(result.Notes),
 		Total: result.Total,
 	})
+}
+
+func (n *Notes) getNote(r *http.Request) (database.Note, error) {
+	user := context.User(r.Context())
+
+	vars := mux.Vars(r)
+	noteUUID := vars["noteUUID"]
+
+	note, ok, err := operations.GetNote(n.app.DB, noteUUID, user)
+	if !ok {
+		return database.Note{}, app.ErrNotFound
+	}
+	if err != nil {
+		return database.Note{}, errors.Wrap(err, "finding note")
+	}
+
+	return note, nil
+}
+
+func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	note, err := n.getNote(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
+		return
+	}
+
+	vd.Yield = struct {
+		Note database.Note
+	}{
+		Note: note,
+	}
+
+	n.ShowView.Render(w, r, vd)
+}
+
+func (n *Notes) V3Show(w http.ResponseWriter, r *http.Request) {
+	note, err := n.getNote(r)
+	if err != nil {
+		handleJSONError(w, err, "getting note")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, presenters.PresentNote(note))
 }
 
 // GetNotesResponse is a reponse by getNotesHandler

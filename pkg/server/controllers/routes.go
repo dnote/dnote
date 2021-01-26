@@ -31,6 +31,7 @@ func NewWebRoutes(app *app.App, c *Controllers) []Route {
 		{"GET", "/login", c.Users.LoginView, true},
 		{"POST", "/login", http.HandlerFunc(c.Users.Login), true},
 		{"POST", "/logout", http.HandlerFunc(c.Users.Logout), true},
+		{"GET", "/notes/{noteUUID}", http.HandlerFunc(c.Notes.Show), true},
 	}
 
 	if !app.Config.DisableRegistration {
@@ -51,6 +52,7 @@ func NewAPIRoutes(app *app.App, c *Controllers) []Route {
 		{"POST", "/v3/signin", middleware.Cors(c.Users.V3Login), true},
 		{"POST", "/v3/signout", middleware.Cors(c.Users.V3Logout), true},
 		{"GET", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Index), nil)), true},
+		{"GET", "/v3/notes/{noteUUID}", http.HandlerFunc(c.Notes.V3Show), true},
 	}
 }
 

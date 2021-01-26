@@ -27,7 +27,7 @@ import (
 )
 
 // GetNote retrieves a note for the given user
-func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool, error) {
+func GetNote(db *gorm.DB, uuid string, user *database.User) (database.Note, bool, error) {
 	zeroNote := database.Note{}
 	if !helpers.ValidateUUID(uuid) {
 		return zeroNote, false, nil
@@ -45,7 +45,7 @@ func GetNote(db *gorm.DB, uuid string, user database.User) (database.Note, bool,
 		return zeroNote, false, errors.Wrap(err, "finding note")
 	}
 
-	if ok := permissions.ViewNote(&user, note); !ok {
+	if ok := permissions.ViewNote(user, note); !ok {
 		return zeroNote, false, nil
 	}
 
