@@ -114,7 +114,7 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusOK)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // V3Login handles login
@@ -159,7 +159,7 @@ func (u *Users) Logout(w http.ResponseWriter, r *http.Request) {
 		unsetSessionCookie(w)
 	}
 
-	http.Redirect(w, r, "/login", http.StatusNoContent)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 // V3Logout handles logout via API

@@ -33,7 +33,7 @@ func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 	ctl := New(&a)
 	rc := RouteConfig{
 		WebRoutes:   NewWebRoutes(&a, ctl),
-		APIRoutes:   NewAPIRoutes(ctl),
+		APIRoutes:   NewAPIRoutes(&a, ctl),
 		Controllers: ctl,
 	}
 	r := NewRouter(&a, rc)

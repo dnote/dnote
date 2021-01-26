@@ -22,4 +22,7 @@ var (
 	ErrEmailRequired appError = "missing email"
 	// ErrPasswordTooShort is an error for short password
 	ErrPasswordTooShort appError = "password should be longer than 8 characters"
+
+	// ErrLoginRequired is an error for not authenticated
+	ErrLoginRequired appError = "login required"
 )

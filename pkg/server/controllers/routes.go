@@ -42,7 +42,7 @@ func NewWebRoutes(app *app.App, c *Controllers) []Route {
 }
 
 // NewAPIRoutes returns a new api routes
-func NewAPIRoutes(c *Controllers) []Route {
+func NewAPIRoutes(app *app.App, c *Controllers) []Route {
 	return []Route{
 		// internal
 		{"GET", "/health", http.HandlerFunc(c.Health.Index), true},
@@ -50,6 +50,7 @@ func NewAPIRoutes(c *Controllers) []Route {
 		// v3
 		{"POST", "/v3/signin", middleware.Cors(c.Users.V3Login), true},
 		{"POST", "/v3/signout", middleware.Cors(c.Users.V3Logout), true},
+		{"GET", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Index), nil)), true},
 	}
 }
 

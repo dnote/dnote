@@ -9,6 +9,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/pkg/errors"
 )
@@ -103,19 +104,31 @@ func parseGetNotesQuery(q url.Values) (app.GetNotesParams, error) {
 	return ret, nil
 }
 
-// Index handles GET /
-func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
+func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, error) {
 	user := context.User(r.Context())
+	if user == nil {
+		return app.GetNotesResult{}, app.ErrLoginRequired
+	}
 
 	query := r.URL.Query()
 	p, err := parseGetNotesQuery(query)
 	if err != nil {
-		handleHTMLError(w, r, err, "parsing query", n.IndexView, vd)
-		return
+		return app.GetNotesResult{}, errors.Wrap(err, "parsing query")
 	}
 
-	notes, err := n.app.GetNotes(user.ID, p)
+	res, err := n.app.GetNotes(user.ID, p)
+	if err != nil {
+		return app.GetNotesResult{}, errors.Wrap(err, "getting notes")
+	}
+
+	return res, nil
+}
+
+// Index handles GET /
+func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	result, err := n.getNotes(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
 		return
@@ -123,9 +136,31 @@ func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 
 	vd.Yield = struct {
 		Notes []database.Note
+		Total int
 	}{
-		Notes: notes,
+		Notes: result.Notes,
+		Total: result.Total,
 	}
 
 	n.IndexView.Render(w, r, vd)
+}
+
+// V3Index is a v3 handler for getting notes
+func (n *Notes) V3Index(w http.ResponseWriter, r *http.Request) {
+	result, err := n.getNotes(r)
+	if err != nil {
+		handleJSONError(w, err, "getting notes")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, GetNotesResponse{
+		Notes: presenters.PresentNotes(result.Notes),
+		Total: result.Total,
+	})
+}
+
+// GetNotesResponse is a reponse by getNotesHandler
+type GetNotesResponse struct {
+	Notes []presenters.Note `json:"notes"`
+	Total int               `json:"total"`
 }

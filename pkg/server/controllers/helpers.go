@@ -197,6 +197,8 @@ func getStatusCode(err error) int {
 		return http.StatusUnauthorized
 	case app.ErrDuplicateEmail, app.ErrEmailRequired, app.ErrPasswordTooShort:
 		return http.StatusBadRequest
+	case app.ErrLoginRequired:
+		return http.StatusUnauthorized
 	}
 
 	return http.StatusInternalServerError
@@ -245,5 +247,15 @@ func respondWithSession(w http.ResponseWriter, statusCode int, session *database
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		handleJSONError(w, err, "encoding payload")
 		return
+	}
+}
+
+// respondJSON encodes the given payload into a JSON format and writes it to the given response writer
+func respondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		handleJSONError(w, err, "encoding response")
 	}
 }

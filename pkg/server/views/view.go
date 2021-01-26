@@ -83,7 +83,7 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	v.Render(w, r, nil)
 }
 
-// Render is used to render the view with the predefined layout.
+// Render is used to render the view with the predefined layout
 func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
 
@@ -118,6 +118,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 		http.Error(w, AlertMsgGeneric, http.StatusInternalServerError)
 		return
 	}
+
 	io.Copy(w, &buf)
 }
 

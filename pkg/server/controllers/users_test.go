@@ -298,7 +298,7 @@ func TestLogin(t *testing.T) {
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+		assert.StatusCodeEquals(t, res, http.StatusFound, "")
 
 		var user database.User
 		testutils.MustExec(t, testutils.DB.Model(&database.User{}).First(&user), "finding user")

@@ -286,13 +286,19 @@ func paginate(conn *gorm.DB, page int) *gorm.DB {
 	return conn
 }
 
+// GetNotesResult is the result of getting notes
+type GetNotesResult struct {
+	Notes []database.Note
+	Total int
+}
+
 // GetNotes returns a list of matching notes
-func (a *App) GetNotes(userID int, params GetNotesParams) ([]database.Note, error) {
+func (a *App) GetNotes(userID int, params GetNotesParams) (GetNotesResult, error) {
 	conn := getNotesBaseQuery(a.DB, userID, params)
 
 	var total int
 	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
-		return []database.Note{}, errors.Wrap(err, "counting total")
+		return GetNotesResult{}, errors.Wrap(err, "counting total")
 	}
 
 	notes := []database.Note{}
@@ -302,9 +308,14 @@ func (a *App) GetNotes(userID int, params GetNotesParams) ([]database.Note, erro
 		conn = paginate(conn, params.Page)
 
 		if err := conn.Find(&notes).Error; err != nil {
-			return []database.Note{}, errors.Wrap(err, "finding notes")
+			return GetNotesResult{}, errors.Wrap(err, "finding notes")
 		}
 	}
 
-	return notes, nil
+	res := GetNotesResult{
+		Notes: notes,
+		Total: total,
+	}
+
+	return res, nil
 }
