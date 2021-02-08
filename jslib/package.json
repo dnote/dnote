@@ -16,10 +16,10 @@
   "author": "Monomax Software Pty Ltd",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@types/history": "^4.7.7",
+    "@types/history": "^4.7.8",
     "history": "^4.10.1",
     "lodash": "^4.17.20",
-    "qs": "^6.9.4"
+    "qs": "^6.9.6"
   },
   "devDependencies": {
     "@types/jest": "^24.9.1",
