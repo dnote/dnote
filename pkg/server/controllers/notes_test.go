@@ -537,3 +537,261 @@ func TestDeleteNote(t *testing.T) {
 		assert.Equal(t, noteRecord.Deleted, true, "note usn mismatch")
 	})
 }
+
+func TestUpdateNote(t *testing.T) {
+	updatedBody := "some updated content"
+
+	b1UUID := "37868a8e-a844-4265-9a4f-0be598084733"
+	b2UUID := "8f3bd424-6aa5-4ed5-910d-e5b38ab09f8c"
+
+	type payloadData struct {
+		Content  *string `schema:"content" json:"content,omitempty"`
+		BookUUID *string `schema:"book_uuid" json:"book_uuid,omitempty"`
+		Public   *bool   `schema:"public" json:"public,omitempty"`
+	}
+
+	testCases := []struct {
+		payload              testutils.PayloadWrapper
+		noteUUID             string
+		noteBookUUID         string
+		noteBody             string
+		notePublic           bool
+		noteDeleted          bool
+		expectedNoteBody     string
+		expectedNoteBookName string
+		expectedNoteBookUUID string
+		expectedNotePublic   bool
+	}{
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Content: &updatedBody,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "some updated content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					BookUUID: &b1UUID,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					BookUUID: &b2UUID,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b2UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					BookUUID: &b2UUID,
+					Content:  &updatedBody,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b2UUID,
+			expectedNoteBody:     "some updated content",
+			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					BookUUID: &b1UUID,
+					Content:  &updatedBody,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "",
+			noteDeleted:          true,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     updatedBody,
+			expectedNoteBookName: "js",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Public: &testutils.TrueVal,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   true,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Public: &testutils.FalseVal,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           true,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     "original content",
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Content: &updatedBody,
+					Public:  &testutils.FalseVal,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           true,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b1UUID,
+			expectedNoteBody:     updatedBody,
+			expectedNoteBookName: "css",
+			expectedNotePublic:   false,
+		},
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					BookUUID: &b2UUID,
+					Content:  &updatedBody,
+					Public:   &testutils.TrueVal,
+				},
+			},
+			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
+			noteBookUUID:         b1UUID,
+			notePublic:           false,
+			noteBody:             "original content",
+			noteDeleted:          false,
+			expectedNoteBookUUID: b2UUID,
+			expectedNoteBody:     updatedBody,
+			expectedNoteBookName: "js",
+			expectedNotePublic:   true,
+		},
+	}
+
+	for idx, tc := range testCases {
+		testutils.RunForWebAndAPI(t, fmt.Sprintf("test case %d", idx), func(t *testing.T, target testutils.EndpointType) {
+			defer testutils.ClearData(testutils.DB)
+
+			// Setup
+			server := MustNewServer(t, &app.App{
+				Clock: clock.NewMock(),
+				Config: config.Config{
+					PageTemplateDir: "../views",
+				},
+			})
+			defer server.Close()
+
+			user := testutils.SetupUserData()
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+			b1 := database.Book{
+				UUID:   b1UUID,
+				UserID: user.ID,
+				Label:  "css",
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+			b2 := database.Book{
+				UUID:   b2UUID,
+				UserID: user.ID,
+				Label:  "js",
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+
+			note := database.Note{
+				UserID:   user.ID,
+				UUID:     tc.noteUUID,
+				BookUUID: tc.noteBookUUID,
+				Body:     tc.noteBody,
+				Deleted:  tc.noteDeleted,
+				Public:   tc.notePublic,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&note), "preparing note")
+
+			// Execute
+			var req *http.Request
+
+			fmt.Println("URLVALUES")
+			fmt.Println(tc.payload.ToURLValues().Get("book_uuid"))
+			fmt.Println("JSONVALUES")
+			fmt.Println(tc.payload.ToJSON(t))
+			if target == testutils.EndpointWeb {
+				endpoint := fmt.Sprintf("/notes/%s", note.UUID)
+				req = testutils.MakeFormReq(server.URL, "PATCH", endpoint, tc.payload.ToURLValues())
+			} else {
+				endpoint := fmt.Sprintf("/api/v3/notes/%s", note.UUID)
+				req = testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
+			}
+
+			res := testutils.HTTPAuthDo(t, req, user)
+
+			// Test
+			assert.StatusCodeEquals(t, res, http.StatusOK, "status code mismatch for test case")
+
+			var bookRecord database.Book
+			var noteRecord database.Note
+			var userRecord database.User
+			var noteCount, bookCount int
+			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Where("uuid = ?", note.UUID).First(&noteRecord), "finding note")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+			assert.Equalf(t, bookCount, 2, "book count mismatch")
+			assert.Equalf(t, noteCount, 1, "note count mismatch")
+
+			assert.Equal(t, noteRecord.UUID, tc.noteUUID, "note uuid mismatch for test case")
+			assert.Equal(t, noteRecord.Body, tc.expectedNoteBody, "note content mismatch for test case")
+			assert.Equal(t, noteRecord.BookUUID, tc.expectedNoteBookUUID, "note book_uuid mismatch for test case")
+			assert.Equal(t, noteRecord.Public, tc.expectedNotePublic, "note public mismatch for test case")
+			assert.Equal(t, noteRecord.USN, 102, "note usn mismatch for test case")
+
+			assert.Equal(t, userRecord.MaxUSN, 102, "user max_usn mismatch for test case")
+		})
+	}
+}

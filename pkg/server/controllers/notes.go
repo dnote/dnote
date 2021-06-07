@@ -343,11 +343,9 @@ type DeleteNoteResp struct {
 
 // V3Delete deletes note
 func (n *Notes) V3Delete(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
 	note, err := n.del(r)
 	if err != nil {
-		handleHTMLError(w, r, err, "creating note", n.IndexView, vd)
+		handleJSONError(w, err, "deleting note")
 		return
 	}
 
@@ -355,4 +353,101 @@ func (n *Notes) V3Delete(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusNoContent,
 		Result: presenters.PresentNote(note),
 	})
+}
+
+type updateNotePayload struct {
+	BookUUID *string `schema:"book_uuid" json:"book_uuid"`
+	Content  *string `schema:"content" json:"content"`
+	Public   *bool   `schema:"public" json:"public"`
+}
+
+func validateUpdateNotePayload(p updateNotePayload) error {
+	if p.BookUUID == nil && p.Content == nil && p.Public == nil {
+		return app.ErrEmptyUpdate
+	}
+
+	return nil
+}
+
+func (n *Notes) update(r *http.Request) (database.Note, error) {
+	vars := mux.Vars(r)
+	noteUUID := vars["noteUUID"]
+
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Note{}, app.ErrLoginRequired
+	}
+
+	var params updateNotePayload
+	err := parseRequestData(r, &params)
+	if err != nil {
+		return database.Note{}, errors.Wrap(err, "decoding params")
+	}
+
+	if err := validateUpdateNotePayload(params); err != nil {
+		return database.Note{}, err
+	}
+
+	var note database.Note
+	if err := n.app.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).First(&note).Error; err != nil {
+		return database.Note{}, errors.Wrap(err, "finding note")
+	}
+
+	tx := n.app.DB.Begin()
+
+	note, err = n.app.UpdateNote(tx, *user, note, &app.UpdateNoteParams{
+		BookUUID: params.BookUUID,
+		Content:  params.Content,
+		Public:   params.Public,
+	})
+	if err != nil {
+		tx.Rollback()
+		return database.Note{}, errors.Wrap(err, "updating note")
+	}
+
+	var book database.Book
+	if err := tx.Where("uuid = ? AND user_id = ?", note.BookUUID, user.ID).First(&book).Error; err != nil {
+		tx.Rollback()
+		return database.Note{}, errors.Wrapf(err, "finding book %s to preload", note.BookUUID)
+	}
+
+	tx.Commit()
+
+	// preload associations
+	note.User = *user
+	note.Book = book
+
+	return note, nil
+}
+
+type updateNoteResp struct {
+	Status int             `json:"status"`
+	Result presenters.Note `json:"result"`
+}
+
+// V3Update updates a note
+func (n *Notes) V3Update(w http.ResponseWriter, r *http.Request) {
+	note, err := n.update(r)
+	if err != nil {
+		handleJSONError(w, err, "updating note")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, updateNoteResp{
+		Status: http.StatusOK,
+		Result: presenters.PresentNote(note),
+	})
+}
+
+// Update updates a note
+func (n *Notes) Update(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	note, err := n.update(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "updating note", n.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusOK)
 }

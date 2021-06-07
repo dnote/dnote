@@ -65,12 +65,12 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusCreated)
-
 	if err := u.app.SendWelcomeEmail(form.Email); err != nil {
 		log.ErrorWrap(err, "sending welcome email")
 	}
+
+	setSessionCookie(w, session.Key, session.ExpiresAt)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // LoginForm is the form data for log in

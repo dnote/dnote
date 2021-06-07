@@ -39,6 +39,7 @@ func parseForm(r *http.Request, dst interface{}) error {
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
+
 	return parseValues(r.PostForm, dst)
 }
 
@@ -200,6 +201,8 @@ func getStatusCode(err error) int {
 	case app.ErrLoginRequired:
 		return http.StatusUnauthorized
 	case app.ErrBookUUIDRequired:
+		return http.StatusBadRequest
+	case app.ErrEmptyUpdate:
 		return http.StatusBadRequest
 	}
 

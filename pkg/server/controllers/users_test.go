@@ -109,7 +109,7 @@ func TestJoin(t *testing.T) {
 			res := testutils.HTTPDo(t, req)
 
 			// Test
-			assert.StatusCodeEquals(t, res, http.StatusCreated, "")
+			assert.StatusCodeEquals(t, res, http.StatusFound, "")
 
 			var account database.Account
 			testutils.MustExec(t, testutils.DB.Where("email = ?", tc.email).First(&account), "finding account")

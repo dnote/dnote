@@ -26,6 +26,8 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"reflect"
+	// "strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -304,3 +306,48 @@ func RunForWebAndAPI(t *testing.T, name string, runTest endpointTest) {
 		runTest(t, EndpointAPI)
 	})
 }
+
+// PayloadWrapper is a wrapper for a payload that can be converted to
+// either URL form values or JSON
+type PayloadWrapper struct {
+	Data interface{}
+}
+
+func (p PayloadWrapper) ToURLValues() url.Values {
+	values := url.Values{}
+
+	el := reflect.ValueOf(p.Data)
+	if el.Kind() == reflect.Ptr {
+		el = el.Elem()
+	}
+	iVal := el
+	typ := iVal.Type()
+	for i := 0; i < iVal.NumField(); i++ {
+		fi := typ.Field(i)
+		name := fi.Tag.Get("schema")
+		if name == "" {
+			name = fi.Name
+		}
+
+		if !iVal.Field(i).IsNil() {
+			values.Set(name, fmt.Sprint(iVal.Field(i).Elem()))
+		}
+	}
+
+	return values
+}
+
+func (p PayloadWrapper) ToJSON(t *testing.T) string {
+	b, err := json.Marshal(p.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(b)
+}
+
+// TrueVal is a true value
+var TrueVal = true
+
+// FalseVal is a false value
+var FalseVal = false
