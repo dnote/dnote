@@ -265,6 +265,33 @@ func (n *Notes) create(r *http.Request) (database.Note, error) {
 	return note, nil
 }
 
+func (n *Notes) del(r *http.Request) (database.Note, error) {
+	vars := mux.Vars(r)
+	noteUUID := vars["noteUUID"]
+
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Note{}, app.ErrLoginRequired
+	}
+
+	var note database.Note
+	if err := n.app.DB.Where("uuid = ? AND user_id = ?", noteUUID, user.ID).Preload("Book").First(&note).Error; err != nil {
+		return database.Note{}, errors.Wrap(err, "finding note")
+	}
+
+	tx := n.app.DB.Begin()
+
+	note, err := n.app.DeleteNote(tx, *user, note)
+	if err != nil {
+		tx.Rollback()
+		return database.Note{}, errors.Wrap(err, "deleting note")
+	}
+
+	tx.Commit()
+
+	return note, nil
+}
+
 // CreateNoteResp is a response for creating a note
 type CreateNoteResp struct {
 	Result presenters.Note `json:"result"`
@@ -294,4 +321,38 @@ func (n *Notes) V3Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusCreated)
+}
+
+// Delete shows note
+func (n *Notes) Delete(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	_, err := n.del(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, "/notes", http.StatusOK)
+}
+
+type DeleteNoteResp struct {
+	Status int             `json:"status"`
+	Result presenters.Note `json:"result"`
+}
+
+// V3Delete deletes note
+func (n *Notes) V3Delete(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	note, err := n.del(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating note", n.IndexView, vd)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, DeleteNoteResp{
+		Status: http.StatusNoContent,
+		Result: presenters.PresentNote(note),
+	})
 }
