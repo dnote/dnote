@@ -276,3 +276,81 @@ func (b *Books) V3Update(w http.ResponseWriter, r *http.Request) {
 	}
 	respondJSON(w, http.StatusOK, resp)
 }
+
+func (b *Books) del(r *http.Request) (database.Book, error) {
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Book{}, app.ErrLoginRequired
+	}
+
+	vars := mux.Vars(r)
+	uuid := vars["bookUUID"]
+
+	if !helpers.ValidateUUID(uuid) {
+		return database.Book{}, app.ErrInvalidUUID
+	}
+
+	tx := b.app.DB.Begin()
+
+	var book database.Book
+	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
+		return database.Book{}, errors.Wrap(err, "finding a book")
+	}
+
+	var notes []database.Note
+	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
+		return database.Book{}, errors.Wrap(err, "finding notes for the book")
+	}
+
+	for _, note := range notes {
+		if _, err := b.app.DeleteNote(tx, *user, note); err != nil {
+			tx.Rollback()
+			return database.Book{}, errors.Wrap(err, "deleting a note in the book")
+		}
+	}
+
+	book, err := b.app.DeleteBook(tx, *user, book)
+	if err != nil {
+		return database.Book{}, errors.Wrap(err, "deleting the book")
+	}
+
+	tx.Commit()
+
+	return book, nil
+}
+
+// Delete updates a book
+func (b *Books) Delete(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	_, err := b.del(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusOK)
+}
+
+// deleteBookResp is the response from create book api
+type deleteBookResp struct {
+	Status int             `json:"status"`
+	Book   presenters.Book `json:"book"`
+}
+
+// Delete updates a book
+func (b *Books) V3Delete(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	book, err := b.del(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
+		return
+	}
+
+	resp := deleteBookResp{
+		Status: http.StatusOK,
+		Book:   presenters.PresentBook(book),
+	}
+	respondJSON(w, http.StatusOK, resp)
+}

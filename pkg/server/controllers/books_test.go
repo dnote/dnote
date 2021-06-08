@@ -522,3 +522,186 @@ func TestUpdateBook(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteBook(t *testing.T) {
+	testCases := []struct {
+		label          string
+		deleted        bool
+		expectedB2USN  int
+		expectedMaxUSN int
+		expectedN2USN  int
+		expectedN3USN  int
+	}{
+		{
+			label:          "n1 content",
+			deleted:        false,
+			expectedMaxUSN: 61,
+			expectedB2USN:  61,
+			expectedN2USN:  59,
+			expectedN3USN:  60,
+		},
+		{
+			label:          "",
+			deleted:        true,
+			expectedMaxUSN: 59,
+			expectedB2USN:  59,
+			expectedN2USN:  5,
+			expectedN3USN:  6,
+		},
+	}
+
+	for _, tc := range testCases {
+		testutils.RunForWebAndAPI(t, fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T, target testutils.EndpointType) {
+			defer testutils.ClearData(testutils.DB)
+
+			// Setup
+			server := MustNewServer(t, &app.App{
+				Clock: clock.NewMock(),
+				Config: config.Config{
+					PageTemplateDir: "../views",
+				},
+			})
+			defer server.Close()
+
+			user := testutils.SetupUserData()
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 58), "preparing user max_usn")
+			anotherUser := testutils.SetupUserData()
+			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 109), "preparing another user max_usn")
+
+			b1 := database.Book{
+				UserID: user.ID,
+				Label:  "js",
+				USN:    1,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing a book data")
+			b2 := database.Book{
+				UserID:  user.ID,
+				Label:   tc.label,
+				USN:     2,
+				Deleted: tc.deleted,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing a book data")
+			b3 := database.Book{
+				UserID: anotherUser.ID,
+				Label:  "linux",
+				USN:    3,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b3), "preparing a book data")
+
+			var n2Body string
+			if !tc.deleted {
+				n2Body = "n2 content"
+			}
+			var n3Body string
+			if !tc.deleted {
+				n3Body = "n3 content"
+			}
+
+			n1 := database.Note{
+				UserID:   user.ID,
+				BookUUID: b1.UUID,
+				Body:     "n1 content",
+				USN:      4,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&n1), "preparing a note data")
+			n2 := database.Note{
+				UserID:   user.ID,
+				BookUUID: b2.UUID,
+				Body:     n2Body,
+				USN:      5,
+				Deleted:  tc.deleted,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&n2), "preparing a note data")
+			n3 := database.Note{
+				UserID:   user.ID,
+				BookUUID: b2.UUID,
+				Body:     n3Body,
+				USN:      6,
+				Deleted:  tc.deleted,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&n3), "preparing a note data")
+			n4 := database.Note{
+				UserID:   user.ID,
+				BookUUID: b2.UUID,
+				Body:     "",
+				USN:      7,
+				Deleted:  true,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&n4), "preparing a note data")
+			n5 := database.Note{
+				UserID:   anotherUser.ID,
+				BookUUID: b3.UUID,
+				Body:     "n5 content",
+				USN:      8,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&n5), "preparing a note data")
+
+			// Execute
+			var endpoint string
+			if target == testutils.EndpointWeb {
+				endpoint = fmt.Sprintf("/books/%s", b2.UUID)
+			} else {
+				endpoint = fmt.Sprintf("/api/v3/books/%s", b2.UUID)
+			}
+
+			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
+			res := testutils.HTTPAuthDo(t, req, user)
+
+			// Test
+			assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+			var b1Record, b2Record, b3Record database.Book
+			var n1Record, n2Record, n3Record, n4Record, n5Record database.Note
+			var userRecord database.User
+			var bookCount, noteCount int
+
+			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b3.ID).First(&b3Record), "finding b3")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", n1.ID).First(&n1Record), "finding n1")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", n2.ID).First(&n2Record), "finding n2")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", n3.ID).First(&n3Record), "finding n3")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", n4.ID).First(&n4Record), "finding n4")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", n5.ID).First(&n5Record), "finding n5")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+			assert.Equal(t, bookCount, 3, "book count mismatch")
+			assert.Equal(t, noteCount, 5, "note count mismatch")
+
+			assert.Equal(t, userRecord.MaxUSN, tc.expectedMaxUSN, "user max_usn mismatch")
+
+			assert.Equal(t, b1Record.Deleted, false, "b1 deleted mismatch")
+			assert.Equal(t, b1Record.Label, b1.Label, "b1 content mismatch")
+			assert.Equal(t, b1Record.USN, b1.USN, "b1 usn mismatch")
+			assert.Equal(t, b2Record.Deleted, true, "b2 deleted mismatch")
+			assert.Equal(t, b2Record.Label, "", "b2 content mismatch")
+			assert.Equal(t, b2Record.USN, tc.expectedB2USN, "b2 usn mismatch")
+			assert.Equal(t, b3Record.Deleted, false, "b3 deleted mismatch")
+			assert.Equal(t, b3Record.Label, b3.Label, "b3 content mismatch")
+			assert.Equal(t, b3Record.USN, b3.USN, "b3 usn mismatch")
+
+			assert.Equal(t, n1Record.USN, n1.USN, "n1 usn mismatch")
+			assert.Equal(t, n1Record.Deleted, false, "n1 deleted mismatch")
+			assert.Equal(t, n1Record.Body, n1.Body, "n1 content mismatch")
+
+			assert.Equal(t, n2Record.USN, tc.expectedN2USN, "n2 usn mismatch")
+			assert.Equal(t, n2Record.Deleted, true, "n2 deleted mismatch")
+			assert.Equal(t, n2Record.Body, "", "n2 content mismatch")
+
+			assert.Equal(t, n3Record.USN, tc.expectedN3USN, "n3 usn mismatch")
+			assert.Equal(t, n3Record.Deleted, true, "n3 deleted mismatch")
+			assert.Equal(t, n3Record.Body, "", "n3 content mismatch")
+
+			// if already deleted, usn should remain the same and hence should not contribute to bumping the max_usn
+			assert.Equal(t, n4Record.USN, n4.USN, "n4 usn mismatch")
+			assert.Equal(t, n4Record.Deleted, true, "n4 deleted mismatch")
+			assert.Equal(t, n4Record.Body, "", "n4 content mismatch")
+
+			assert.Equal(t, n5Record.USN, n5.USN, "n5 usn mismatch")
+			assert.Equal(t, n5Record.Deleted, false, "n5 deleted mismatch")
+			assert.Equal(t, n5Record.Body, n5.Body, "n5 content mismatch")
+		})
+	}
+}
