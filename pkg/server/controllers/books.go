@@ -7,8 +7,10 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/views"
+	"github.com/gorilla/mux"
 )
 
 // NewBooks creates a new Books controller.
@@ -82,7 +84,7 @@ func (b *Books) Index(w http.ResponseWriter, r *http.Request) {
 	b.IndexView.Render(w, r, vd)
 }
 
-// Index gets books
+// V3Index gets books
 func (b *Books) V3Index(w http.ResponseWriter, r *http.Request) {
 	result, err := b.getBooks(r)
 	if err != nil {
@@ -91,4 +93,35 @@ func (b *Books) V3Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, presenters.PresentBooks(result))
+}
+
+// V3Show gets a book
+func (b *Books) V3Show(w http.ResponseWriter, r *http.Request) {
+	user := context.User(r.Context())
+	if user == nil {
+		handleJSONError(w, app.ErrLoginRequired, "login required")
+		return
+	}
+
+	vars := mux.Vars(r)
+	bookUUID := vars["bookUUID"]
+
+	if !helpers.ValidateUUID(bookUUID) {
+		handleJSONError(w, app.ErrInvalidUUID, "login required")
+		return
+	}
+
+	var book database.Book
+	conn := b.app.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
+
+	if conn.RecordNotFound() {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if err := conn.Error; err != nil {
+		handleJSONError(w, err, "finding the book")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, presenters.PresentBook(book))
 }

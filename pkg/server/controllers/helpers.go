@@ -204,6 +204,8 @@ func getStatusCode(err error) int {
 		return http.StatusBadRequest
 	case app.ErrEmptyUpdate:
 		return http.StatusBadRequest
+	case app.ErrInvalidUUID:
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError

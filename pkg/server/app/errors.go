@@ -30,5 +30,8 @@ var (
 	ErrBookUUIDRequired appError = "book uuid required"
 
 	// ErrEmptyUpdate is an error for empty update params
-	ErrEmptyUpdate appError = "Update is empty"
+	ErrEmptyUpdate appError = "update is empty"
+
+	// ErrInvalidUUID is an error for invalid uuid
+	ErrInvalidUUID appError = "invalid uuid"
 )

@@ -20,7 +20,8 @@ package controllers
 
 import (
 	"encoding/json"
-	// "fmt"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	// "net/url"
 	"testing"
@@ -126,4 +127,168 @@ func TestGetBooks(t *testing.T) {
 			assert.DeepEqual(t, payload, expected, "payload mismatch")
 		}
 	})
+}
+
+func TestGetBooksByName(t *testing.T) {
+	testutils.RunForWebAndAPI(t, "get notes", func(t *testing.T, target testutils.EndpointType) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		anotherUser := testutils.SetupUserData()
+
+		b1 := database.Book{
+			UserID: user.ID,
+			Label:  "js",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+		b2 := database.Book{
+			UserID: user.ID,
+			Label:  "css",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+		b3 := database.Book{
+			UserID: anotherUser.ID,
+			Label:  "js",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+
+		// Execute
+		var endpoint string
+		if target == testutils.EndpointWeb {
+			endpoint = "/books?name=js"
+		} else {
+			endpoint = "/api/v3/books?name=js"
+		}
+
+		req := testutils.MakeReq(server.URL, "GET", endpoint, "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+		if target == testutils.EndpointAPI {
+			var payload []presenters.Book
+			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+				t.Fatal(errors.Wrap(err, "decoding payload"))
+			}
+
+			var b1Record database.Book
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+
+			expected := []presenters.Book{
+				{
+					UUID:      b1Record.UUID,
+					CreatedAt: b1Record.CreatedAt,
+					UpdatedAt: b1Record.UpdatedAt,
+					Label:     b1Record.Label,
+					USN:       b1Record.USN,
+				},
+			}
+
+			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		}
+	})
+}
+
+func TestGetBook(t *testing.T) {
+	defer testutils.ClearData(testutils.DB)
+
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
+	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	anotherUser := testutils.SetupUserData()
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	b2 := database.Book{
+		UserID: user.ID,
+		Label:  "css",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	b3 := database.Book{
+		UserID: anotherUser.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+
+	// Execute
+	endpoint := fmt.Sprintf("/api/v3/books/%s", b1.UUID)
+	req := testutils.MakeReq(server.URL, "GET", endpoint, "")
+	res := testutils.HTTPAuthDo(t, req, user)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+	var payload presenters.Book
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		t.Fatal(errors.Wrap(err, "decoding payload"))
+	}
+
+	var b1Record database.Book
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+
+	expected := presenters.Book{
+		UUID:      b1Record.UUID,
+		CreatedAt: b1Record.CreatedAt,
+		UpdatedAt: b1Record.UpdatedAt,
+		Label:     b1Record.Label,
+		USN:       b1Record.USN,
+	}
+
+	assert.DeepEqual(t, payload, expected, "payload mismatch")
+}
+
+func TestGetBookNonOwner(t *testing.T) {
+	defer testutils.ClearData(testutils.DB)
+
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
+	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	nonOwner := testutils.SetupUserData()
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+
+	// Execute
+	endpoint := fmt.Sprintf("/api/v3/books/%s", b1.UUID)
+	req := testutils.MakeReq(server.URL, "GET", endpoint, "")
+	res := testutils.HTTPAuthDo(t, req, nonOwner)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "reading body"))
+	}
+	assert.DeepEqual(t, string(body), "", "payload mismatch")
 }
