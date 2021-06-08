@@ -108,6 +108,9 @@ func NewRouter(app *app.App, rc RouteConfig) http.Handler {
 	registerRoutes(webRouter, middleware.WebMw, app, rc.WebRoutes)
 	registerRoutes(apiRouter, middleware.APIMw, app, rc.APIRoutes)
 
+	router.PathPrefix("/api/v1").Handler(applyMiddleware(middleware.NotSupported, true))
+	router.PathPrefix("/api/v2").Handler(applyMiddleware(middleware.NotSupported, true))
+
 	// static
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
 	router.PathPrefix("/static/").Handler(staticHandler)
