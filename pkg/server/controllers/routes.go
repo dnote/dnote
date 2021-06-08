@@ -36,6 +36,7 @@ func NewWebRoutes(app *app.App, c *Controllers) []Route {
 		{"DELETE", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Delete), nil), true},
 		{"PATCH", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Update), nil), true},
 		{"GET", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Index), nil), true},
+		{"POST", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Create), nil), true},
 	}
 
 	if !app.Config.DisableRegistration {
@@ -63,6 +64,7 @@ func NewAPIRoutes(app *app.App, c *Controllers) []Route {
 		{"OPTIONS", "/v3/notes", middleware.Cors(http.HandlerFunc(c.Notes.Options)), true},
 		{"GET", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Index), nil)), true},
 		{"GET", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Show), nil)), true},
+		{"POST", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Create), nil)), true},
 	}
 }
 

@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	// "net/url"
+	"net/url"
 	"testing"
 	// "time"
 
@@ -291,4 +291,74 @@ func TestGetBookNonOwner(t *testing.T) {
 		t.Fatal(errors.Wrap(err, "reading body"))
 	}
 	assert.DeepEqual(t, string(body), "", "payload mismatch")
+}
+
+func TestCreateBook(t *testing.T) {
+	testutils.RunForWebAndAPI(t, "success", func(t *testing.T, target testutils.EndpointType) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+		var req *http.Request
+		if target == testutils.EndpointWeb {
+			dat := url.Values{}
+			dat.Set("name", "js")
+			req = testutils.MakeFormReq(server.URL, "POST", "/books", dat)
+		} else {
+			req = testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
+		}
+
+		// Execute
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusCreated, "")
+
+		var bookRecord database.Book
+		var userRecord database.User
+		var bookCount, noteCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+		testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+		maxUSN := 102
+
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 0, "note count mismatch")
+
+		assert.NotEqual(t, bookRecord.UUID, "", "book uuid should have been generated")
+		assert.Equal(t, bookRecord.Label, "js", "book name mismatch")
+		assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
+		assert.Equal(t, bookRecord.USN, maxUSN, "book user_id mismatch")
+		assert.Equal(t, userRecord.MaxUSN, maxUSN, "user max_usn mismatch")
+
+		if target == testutils.EndpointAPI {
+			var got createBookResp
+			if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
+				t.Fatal(errors.Wrap(err, "decoding"))
+			}
+			expected := createBookResp{
+				Book: presenters.Book{
+					UUID:      bookRecord.UUID,
+					USN:       bookRecord.USN,
+					CreatedAt: bookRecord.CreatedAt,
+					UpdatedAt: bookRecord.UpdatedAt,
+					Label:     "js",
+				},
+			}
+
+			assert.DeepEqual(t, got, expected, "payload mismatch")
+		}
+	})
 }

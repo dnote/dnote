@@ -11,6 +11,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // NewBooks creates a new Books controller.
@@ -124,4 +125,82 @@ func (b *Books) V3Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, presenters.PresentBook(book))
+}
+
+type createBookPayload struct {
+	Name string `schema:"name" json:"name"`
+}
+
+func validateCreateBookPayload(p createBookPayload) error {
+	if p.Name == "" {
+		return app.ErrBookNameRequired
+	}
+
+	return nil
+}
+
+func (b *Books) create(r *http.Request) (database.Book, error) {
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Book{}, app.ErrLoginRequired
+	}
+
+	var params createBookPayload
+	if err := parseRequestData(r, &params); err != nil {
+		return database.Book{}, errors.Wrap(err, "parsing request payload")
+	}
+
+	if err := validateCreateBookPayload(params); err != nil {
+		return database.Book{}, errors.Wrap(err, "validating payload")
+	}
+
+	var bookCount int
+	err := b.app.DB.Model(database.Book{}).
+		Where("user_id = ? AND label = ?", user.ID, params.Name).
+		Count(&bookCount).Error
+	if err != nil {
+		return database.Book{}, errors.Wrap(err, "checking duplicate")
+	}
+	if bookCount > 0 {
+		return database.Book{}, app.ErrDuplicateBook
+	}
+
+	book, err := b.app.CreateBook(*user, params.Name)
+	if err != nil {
+		return database.Book{}, errors.Wrap(err, "inserting a book")
+	}
+
+	return book, nil
+}
+
+// Create creates a book
+func (b *Books) Create(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	_, err := b.create(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, "/books", http.StatusCreated)
+}
+
+// createBookResp is the response from create book api
+type createBookResp struct {
+	Book presenters.Book `json:"book"`
+}
+
+// V3Create creates a book
+func (b *Books) V3Create(w http.ResponseWriter, r *http.Request) {
+	result, err := b.create(r)
+	if err != nil {
+		handleJSONError(w, err, "creating a book")
+		return
+	}
+
+	resp := createBookResp{
+		Book: presenters.PresentBook(result),
+	}
+	respondJSON(w, http.StatusCreated, resp)
 }

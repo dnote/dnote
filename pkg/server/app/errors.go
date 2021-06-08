@@ -28,6 +28,10 @@ var (
 
 	// ErrBookUUIDRequired is an error for note missing book uuid
 	ErrBookUUIDRequired appError = "book uuid required"
+	// ErrBookNameRequired is an error for note missing book name
+	ErrBookNameRequired appError = "book name required"
+	// ErrDuplicateBook is an error for duplicate book
+	ErrDuplicateBook appError = "duplicate book exists"
 
 	// ErrEmptyUpdate is an error for empty update params
 	ErrEmptyUpdate appError = "update is empty"

@@ -297,8 +297,8 @@ type CreateNoteResp struct {
 	Result presenters.Note `json:"result"`
 }
 
-// Create creates note
-func (n *Notes) Create(w http.ResponseWriter, r *http.Request) {
+// V3Create creates note
+func (n *Notes) V3Create(w http.ResponseWriter, r *http.Request) {
 	note, err := n.create(r)
 	if err != nil {
 		handleJSONError(w, err, "creating note")
@@ -310,8 +310,8 @@ func (n *Notes) Create(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// V3Create creates note
-func (n *Notes) V3Create(w http.ResponseWriter, r *http.Request) {
+// Create creates note
+func (n *Notes) Create(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
 	note, err := n.create(r)
