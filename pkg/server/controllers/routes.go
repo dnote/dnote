@@ -69,6 +69,7 @@ func NewAPIRoutes(app *app.App, c *Controllers) []Route {
 		{"POST", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Create), nil)), true},
 		{"PATCH", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Update), nil)), true},
 		{"DELETE", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Delete), nil)), true},
+		{"OPTIONS", "/v3/books", middleware.Cors(http.HandlerFunc(c.Books.Options)), true},
 	}
 }
 

@@ -354,3 +354,9 @@ func (b *Books) V3Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	respondJSON(w, http.StatusOK, resp)
 }
+
+// Options is a handler for OPTIONS endpoint for notes
+func (b *Books) Options(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
+}
