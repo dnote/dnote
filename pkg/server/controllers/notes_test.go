@@ -777,10 +777,6 @@ func TestUpdateNote(t *testing.T) {
 			// Execute
 			var req *http.Request
 
-			fmt.Println("URLVALUES")
-			fmt.Println(tc.payload.ToURLValues().Get("book_uuid"))
-			fmt.Println("JSONVALUES")
-			fmt.Println(tc.payload.ToJSON(t))
 			if target == testutils.EndpointWeb {
 				endpoint := fmt.Sprintf("/notes/%s", note.UUID)
 				req = testutils.MakeFormReq(server.URL, "PATCH", endpoint, tc.payload.ToURLValues())

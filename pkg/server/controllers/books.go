@@ -204,3 +204,75 @@ func (b *Books) V3Create(w http.ResponseWriter, r *http.Request) {
 	}
 	respondJSON(w, http.StatusCreated, resp)
 }
+
+type updateBookPayload struct {
+	Name *string `schema:"name" json:"name"`
+}
+
+// UpdateBookResp is the response from create book api
+type UpdateBookResp struct {
+	Book presenters.Book `json:"book"`
+}
+
+func (b *Books) update(r *http.Request) (database.Book, error) {
+	user := context.User(r.Context())
+	if user == nil {
+		return database.Book{}, app.ErrLoginRequired
+	}
+
+	vars := mux.Vars(r)
+	uuid := vars["bookUUID"]
+
+	if !helpers.ValidateUUID(uuid) {
+		return database.Book{}, app.ErrInvalidUUID
+	}
+
+	tx := b.app.DB.Begin()
+
+	var book database.Book
+	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
+		return database.Book{}, errors.Wrap(err, "finding book")
+	}
+
+	var params updateBookPayload
+	if err := parseRequestData(r, &params); err != nil {
+		return database.Book{}, errors.Wrap(err, "decoding payload")
+	}
+
+	book, err := b.app.UpdateBook(tx, *user, book, params.Name)
+	if err != nil {
+		tx.Rollback()
+		return database.Book{}, errors.Wrap(err, "updating a book")
+	}
+
+	tx.Commit()
+
+	return book, nil
+}
+
+// Update updates a book
+func (b *Books) Update(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	_, err := b.update(r)
+	if err != nil {
+		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
+		return
+	}
+
+	http.Redirect(w, r, "/books", http.StatusOK)
+}
+
+// V3Update updates a book
+func (b *Books) V3Update(w http.ResponseWriter, r *http.Request) {
+	book, err := b.update(r)
+	if err != nil {
+		handleJSONError(w, err, "updating a book")
+		return
+	}
+
+	resp := UpdateBookResp{
+		Book: presenters.PresentBook(book),
+	}
+	respondJSON(w, http.StatusOK, resp)
+}

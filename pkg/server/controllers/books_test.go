@@ -415,3 +415,110 @@ func TestCreateBook(t *testing.T) {
 		assert.Equal(t, userRecord.MaxUSN, 101, "user max_usn mismatch")
 	})
 }
+
+func TestUpdateBook(t *testing.T) {
+	updatedLabel := "updated-label"
+
+	b1UUID := "ead8790f-aff9-4bdf-8eec-f734ccd29202"
+	b2UUID := "0ecaac96-8d72-4e04-8925-5a21b79a16da"
+
+	type payloadData struct {
+		Name *string `schema:"name" json:"name,omitempty"`
+	}
+
+	testCases := []struct {
+		payload           testutils.PayloadWrapper
+		bookUUID          string
+		bookDeleted       bool
+		bookLabel         string
+		expectedBookLabel string
+	}{
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Name: &updatedLabel,
+				},
+			},
+			bookUUID:          b1UUID,
+			bookDeleted:       false,
+			bookLabel:         "original-label",
+			expectedBookLabel: updatedLabel,
+		},
+		// if a deleted book is updated, it should be un-deleted
+		{
+			payload: testutils.PayloadWrapper{
+				Data: payloadData{
+					Name: &updatedLabel,
+				},
+			},
+			bookUUID:          b1UUID,
+			bookDeleted:       true,
+			bookLabel:         "",
+			expectedBookLabel: updatedLabel,
+		},
+	}
+
+	for idx, tc := range testCases {
+		testutils.RunForWebAndAPI(t, fmt.Sprintf("test case %d", idx), func(t *testing.T, target testutils.EndpointType) {
+			defer testutils.ClearData(testutils.DB)
+
+			// Setup
+			server := MustNewServer(t, &app.App{
+				Clock: clock.NewMock(),
+				Config: config.Config{
+					PageTemplateDir: "../views",
+				},
+			})
+			defer server.Close()
+
+			user := testutils.SetupUserData()
+			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+			b1 := database.Book{
+				UUID:    tc.bookUUID,
+				UserID:  user.ID,
+				Label:   tc.bookLabel,
+				Deleted: tc.bookDeleted,
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+			b2 := database.Book{
+				UUID:   b2UUID,
+				UserID: user.ID,
+				Label:  "js",
+			}
+			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+
+			// Execute
+			var req *http.Request
+			if target == testutils.EndpointWeb {
+				endpoint := fmt.Sprintf("/books/%s", tc.bookUUID)
+				req = testutils.MakeFormReq(server.URL, "PATCH", endpoint, tc.payload.ToURLValues())
+			} else {
+				endpoint := fmt.Sprintf("/api/v3/books/%s", tc.bookUUID)
+				req = testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
+			}
+			res := testutils.HTTPAuthDo(t, req, user)
+
+			// Test
+			assert.StatusCodeEquals(t, res, http.StatusOK, fmt.Sprintf("status code mismatch for test case %d", idx))
+
+			var bookRecord database.Book
+			var userRecord database.User
+			var noteCount, bookCount int
+			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
+			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+			assert.Equalf(t, bookCount, 2, "book count mismatch")
+			assert.Equalf(t, noteCount, 0, "note count mismatch")
+
+			assert.Equalf(t, bookRecord.UUID, tc.bookUUID, "book uuid mismatch")
+			assert.Equalf(t, bookRecord.Label, tc.expectedBookLabel, "book label mismatch")
+			assert.Equalf(t, bookRecord.USN, 102, "book usn mismatch")
+			assert.Equalf(t, bookRecord.Deleted, false, "book Deleted mismatch")
+
+			assert.Equal(t, userRecord.MaxUSN, 102, fmt.Sprintf("user max_usn mismatch for test case %d", idx))
+		})
+	}
+}
