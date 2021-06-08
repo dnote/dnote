@@ -361,4 +361,57 @@ func TestCreateBook(t *testing.T) {
 			assert.DeepEqual(t, got, expected, "payload mismatch")
 		}
 	})
+
+	testutils.RunForWebAndAPI(t, "duplicate", func(t *testing.T, target testutils.EndpointType) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+		b1 := database.Book{
+			UserID: user.ID,
+			Label:  "js",
+			USN:    58,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book data")
+
+		// Execute
+		var req *http.Request
+		if target == testutils.EndpointWeb {
+			dat := url.Values{}
+			dat.Set("name", "js")
+			req = testutils.MakeFormReq(server.URL, "POST", "/books", dat)
+		} else {
+			req = testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
+		}
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusConflict, "")
+
+		var bookRecord database.Book
+		var bookCount, noteCount int
+		var userRecord database.User
+		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+		testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+		assert.Equalf(t, bookCount, 1, "book count mismatch")
+		assert.Equalf(t, noteCount, 0, "note count mismatch")
+
+		assert.Equal(t, bookRecord.Label, "js", "book name mismatch")
+		assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
+		assert.Equal(t, bookRecord.USN, b1.USN, "book usn mismatch")
+		assert.Equal(t, userRecord.MaxUSN, 101, "user max_usn mismatch")
+	})
 }
