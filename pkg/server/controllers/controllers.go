@@ -9,6 +9,7 @@ import (
 type Controllers struct {
 	Users  *Users
 	Notes  *Notes
+	Books  *Books
 	Static *Static
 	Health *Health
 }
@@ -21,6 +22,7 @@ func New(app *app.App) *Controllers {
 
 	c.Users = NewUsers(app)
 	c.Notes = NewNotes(app)
+	c.Books = NewBooks(app)
 	c.Static = NewStatic(app)
 	c.Health = NewHealth(app)
 
