@@ -451,3 +451,9 @@ func (n *Notes) Update(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusOK)
 }
+
+// Options is a handler for OPTIONS endpoint for notes
+func (n *Notes) Options(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
+}
