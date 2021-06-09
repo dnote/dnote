@@ -1,6 +1,10 @@
 {{define "yield"}}
 <div class="auth-page">
   <div class="container">
+    <a href="{{rootURL}}">
+      {{template "logo" .}}
+    </a>
+
     <h1 class="heading">Sign in to Dnote</h1>
 
     <div class="body">
@@ -56,6 +60,6 @@
     </label>
   </div>
 
-  <button tabindex="3" type="submit" class="auth-button button button-normal button-stretch button-first">Log In</button>
+  <button tabindex="3" type="submit" class="auth-button button button-normal button-stretch button-first">Sign In</button>
 </form>
 {{end}}

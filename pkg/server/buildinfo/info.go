@@ -7,4 +7,6 @@ var (
 	CSSFiles = ""
 	// JSFiles is the js files
 	JSFiles = ""
+	// RootURL is the root url
+	RootURL = "/"
 )

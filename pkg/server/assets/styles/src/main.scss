@@ -1,15 +1,12 @@
-@import "./grid";
-@import "./reboot";
-@import "./bootstrap";
-@import "./button";
+@import './grid';
+@import './reboot';
+@import './bootstrap';
+@import './button';
+@import './shared';
 
 // pages
-@import "./login";
-@import "./header";
-
-:root {
-  //background: #141414;
-}
+@import './login';
+@import './header';
 
 html {
   font-size: 100%;

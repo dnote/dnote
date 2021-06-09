@@ -1,0 +1,238 @@
+// This file has been automatically copied from the web project.
+// Do not modify it. If you want to modify the style, change the original file.
+
+/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import './font';
+@import './responsive';
+
+@keyframes holderPulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+// placeholder frames
+.holder {
+  animation: holderPulse 800ms infinite;
+  background: #f4f4f4;
+
+  &.holder-dark {
+    background: #e6e6e6;
+  }
+}
+
+input[type='text']:disabled,
+input[type='email']:disabled,
+input[type='number']:disabled,
+input[type='password']:disabled,
+textarea:disabled {
+  background-color: $lighter-gray;
+  cursor: not-allowed;
+}
+
+.list-unstyled {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.sr-only {
+  display: none;
+}
+
+.scrollbar-measure {
+  position: absolute;
+  top: -9999px;
+  width: 50px;
+  height: 50px;
+  overflow: scroll;
+}
+
+button {
+  img,
+  svg {
+    display: block;
+  }
+}
+
+.text-input {
+  border: 1px solid $border-color;
+  padding: rem(8px) rem(12px);
+  position: relative;
+  border-radius: rem(4px);
+  display: block;
+
+  &::placeholder {
+    color: $gray;
+  }
+  &:focus {
+    border-color: $light-blue;
+    box-shadow: inset 0 1px 2px rgba(24, 31, 35, 0.075),
+      0 0 0 0.2em rgba(4, 100, 210, 0.3);
+    outline: none;
+  }
+}
+
+.text-input-small {
+  padding: rem(4px) rem(12px);
+}
+
+.text-input-medium {
+  padding: rem(8px) rem(12px);
+}
+
+.text-input-stretch {
+  width: 100%;
+}
+
+.label-full {
+  width: 100%;
+}
+
+a {
+  color: $link;
+
+  &:hover {
+    color: $link-hover;
+  }
+}
+
+// normalize
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 0;
+}
+
+// grid
+.container.mobile-fw {
+  @include breakpoint(mddown) {
+    max-width: 100%;
+  }
+}
+.container.mobile-nopadding {
+  @include breakpoint(mddown) {
+    padding-left: 0;
+    padding-right: 0;
+
+    .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    [class*='col-'] {
+      // Apply to all column(s) inside the row
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+}
+html body {
+  overflow-y: scroll;
+}
+
+.page {
+  padding-top: rem(20px);
+  padding-bottom: rem(20px);
+
+  &.page-mobile-full {
+    padding-top: 0;
+    padding-bottom: 0;
+
+    @include breakpoint(lg) {
+      padding-top: rem(32px);
+      padding-bottom: rem(32px);
+    }
+  }
+}
+
+.page-header {
+  margin-top: rem(20px);
+
+  &.page-header-full {
+    margin-bottom: rem(20px);
+  }
+
+  @include breakpoint(lg) {
+    // padding: 0;
+    margin-bottom: rem(20px);
+    margin-top: 0;
+  }
+}
+
+.form-select {
+  appearance: none;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAUCAYAAACEYr13AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAACeSURBVHgBzZPBCYQwFERn2Qa2BEuwhJSyHawdrB1oB1qCV6uwhHj0qBXoBPwQRONXEXzwLoEXcCTAzfxogpPEdJyNcZCIWu8CO5+p8WOxoR9NnK3EYrEX/wOxuDmqUcSikejlXfCFfqie5ngE/ie4cVS/ibS0XB4anBhxSaKIU+xQBmLV8m6HZiW2OECEi4/JoXrO78AFHR1oTSvcxQTq7lVcue6CCAAAAABJRU5ErkJggg==');
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 8px 10px;
+  border: 1px solid $border-color;
+  min-height: 34px;
+  padding: 6px 8px;
+  padding-right: 24px;
+  outline: none;
+  vertical-align: middle;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px rgba(32, 36, 41, 0.08);
+
+  &:focus {
+    border-color: #2188ff;
+    outline: none;
+    box-shadow: inset 0 1px 2px rgba(32, 36, 41, 0.08),
+      0 0 0 2px rgba(3, 102, 214, 0.3);
+  }
+  &:disabled,
+  &.form-select-disabled {
+    background-image: url('data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAABAAAAAUCAYAAACEYr13AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAEKSURBVHgBzVTNDYIwFC4NB46OwAi4gY7gETgoE6gTGCcwTgAJ4efGCLCBjMAIXrmA3yOhQazQhJj4JQ0v7fte3/e1hbFfIk3TYxzHp6kc7dtCFEUW5/xBcdM0a9d1S1kel00mSWKCnIkkxDSnXADIMYYEU9O0zPf91WwB6L6NyB3atrUMw7hNFkCbFyROmXYYmypMDMNwo+t6ztSwtW27oEAXrXBuwu2rCht+WPgU7C8gPCBzYOBKhQS5FTwIKBYeQFeJoWyiKNYH5Co6OCuQr/0JdBuPVyElQCd7GRMb3B3HebsHHzexrmvyQvZwqjFZWsDzvCc62BFhSGYD3UMsfs6ToKOd+6EsxgtrtWLW4gUN3AAAAABJRU5ErkJggg==');
+    background-color: $lighter-gray;
+  }
+}
+
+.input-label {
+  // width: 100%;
+  width: auto;
+  font-weight: 600;
+  margin-bottom: rem(4px);
+  @include font-size('small');
+}
+
+.page-heading {
+  @include font-size('x-large');
+}
+
+.dropdown-caret {
+  display: inline-block;
+  vertical-align: middle;
+  border-top-width: 4px;
+  border-top-style: solid;
+  border-right: 4px solid transparent;
+  border-bottom: 0 solid transparent;
+  border-left: 4px solid transparent;
+  margin-left: rem(8px);
+}

@@ -16,7 +16,7 @@ import (
 func NewUsers(app *app.App) *Users {
 	return &Users{
 		NewView:   views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Join", Layout: "base"}, "users/new"),
-		LoginView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Login", Layout: "base"}, "users/login"),
+		LoginView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Sign In", Layout: "base"}, "users/login"),
 		app:       app,
 	}
 }
