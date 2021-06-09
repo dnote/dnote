@@ -1,0 +1,45 @@
+@import './theme';
+@import './variables';
+
+.header-wrapper {
+  padding: 0;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  background: $first;
+  align-items: stretch;
+  justify-content: space-between;
+  flex: 1;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  height: $header-height;
+
+  @include breakpoint(md) {
+    flex-direction: row;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .left {
+    display: flex;
+  }
+
+  .main-nav {
+    display: flex;
+    height: 100%;
+
+    a {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+    }
+  }
+}

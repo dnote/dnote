@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
@@ -50,7 +51,7 @@ func NewView(baseDir string, c Config, files ...string) *View {
 			return "", errors.New("csrfField is not implemented")
 		},
 		"css": func() []string {
-			return strings.Split("", ",")
+			return strings.Split(buildinfo.CSSFiles, ",")
 		},
 		"title": func() string {
 			if c.Title != "" {

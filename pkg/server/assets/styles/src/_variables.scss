@@ -1,0 +1,13 @@
+$header-height: 60px;
+$footer-height: 56px;
+
+// breakpoints
+$xl-breakpoint: 1441px;
+$lg-breakpoint: 992px;
+$md-breakpoint: 576px;
+$sm-breakpoint: 321px;
+
+:export {
+  mdBreakpoint: $md-breakpoint;
+  smBreakpoint: $sm-breakpoint;
+}

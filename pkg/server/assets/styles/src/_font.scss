@@ -1,0 +1,93 @@
+@import './responsive';
+
+$lowDecay: 0.1;
+$medDecay: 0.15;
+$highDecay: 0.2;
+
+// font-size is a mixin for pre-defined font-size values in rem.
+// It also includes px as a fallback for older browsers.
+@mixin font-size($size, $responsive: true) {
+  $smSizeValue: 16;
+  $mdSizeValue: 16;
+  $lgSizeValue: 16;
+
+  @if $size == 'x-small' {
+    $baseSize: 12;
+
+    $smSizeValue: $baseSize;
+    $mdSizeValue: $baseSize;
+    $lgSizeValue: $baseSize;
+  } @else if $size == 'small' {
+    $baseSize: 14;
+
+    $smSizeValue: $baseSize;
+    $mdSizeValue: $baseSize;
+    $lgSizeValue: $baseSize;
+  } @else if $size == 'regular' {
+    $baseSize: 16;
+
+    $smSizeValue: $baseSize * (1 - $lowDecay);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
+    $lgSizeValue: $baseSize;
+  } @else if $size == 'medium' {
+    $baseSize: 18;
+
+    $smSizeValue: $baseSize;
+    $mdSizeValue: $baseSize;
+    $lgSizeValue: $baseSize;
+  } @else if $size == 'large' {
+    $baseSize: 20;
+
+    $smSizeValue: $baseSize;
+    $mdSizeValue: $baseSize;
+    $lgSizeValue: $baseSize;
+  } @else if $size == 'x-large' {
+    $baseSize: 24;
+
+    $smSizeValue: $baseSize * (1 - $lowDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
+    $lgSizeValue: $baseSize;
+  } @else if $size == '2x-large' {
+    $baseSize: 32;
+
+    $smSizeValue: $baseSize * (1 - $lowDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $lowDecay);
+    $lgSizeValue: $baseSize;
+  } @else if $size == '3x-large' {
+    $baseSize: 36;
+
+    $smSizeValue: $baseSize * (1 - $medDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $medDecay);
+    $lgSizeValue: $baseSize;
+  } @else if $size == '4x-large' {
+    $baseSize: 48;
+
+    $smSizeValue: $baseSize * (1 - $medDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $medDecay);
+    $lgSizeValue: $baseSize;
+  } @else if $size == '5x-large' {
+    $baseSize: 56;
+
+    $smSizeValue: $baseSize * (1 - $highDecay * 2);
+    $mdSizeValue: $baseSize * (1 - $highDecay);
+    $lgSizeValue: $baseSize;
+  }
+
+  @if $responsive == true {
+    font-size: $smSizeValue * 1px;
+    font-size: $smSizeValue *  0.0625em;
+
+    @include breakpoint(md) {
+      font-size: $mdSizeValue * 1px;
+      font-size: $mdSizeValue * 0.0625em;
+    }
+
+    @include breakpoint(lg) {
+      font-size: $lgSizeValue * 1px;
+      font-size: $lgSizeValue * 0.0625em;
+    }
+  } @else {
+    font-size: $lgSizeValue * 1px;
+    font-size: $lgSizeValue * 0.0625em;
+  }
+}

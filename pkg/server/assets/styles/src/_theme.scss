@@ -1,0 +1,29 @@
+// basic colors
+$black: #2a2a2a;
+$white: #ffffff;
+$light: #f7f9fa;
+$gray: #686868;
+$light-gray: #8c8c8c;
+$lighter-gray: #f3f3f3;
+$dark-gray: #637283;
+
+// primary colors
+$first: #072a40;
+$second: #e7e7e7;
+$third: #0a4b73;
+
+// functional colors
+$border-color: #d8d8d8;
+$border-color-light: $lighter-gray;
+
+$link: #6f53c0;
+$link-hover: darken($link, 5%);
+
+$danger-text: #cb2431;
+$danger-background: #f8d7da;
+
+$blue: #0668d7;
+$light-blue: #ecf4ff;
+$green: #28a755;
+
+$active: #49abfd;

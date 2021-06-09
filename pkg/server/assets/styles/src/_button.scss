@@ -1,0 +1,163 @@
+@import './theme';
+@import './font';
+
+@mixin button($text-color, $background-color) {
+  color: $text-color;
+  background-color: $background-color;
+
+  &:not(:disabled):hover {
+    color: $text-color;
+    background-color: darken($background-color, 5%);
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+@mixin button-outline($color, $border-color) {
+  background: transparent;
+  color: $color;
+
+  &:not(.button-no-ui) {
+    border-color: $border-color;
+    border-width: 2px;
+  }
+
+  &:not(:disabled):hover {
+    color: $color;
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+.button {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border-image: initial;
+  transition-property: color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+  text-decoration: none;
+  border-radius: 2px;
+  cursor: pointer;
+
+  &:not(.button-no-ui) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+  }
+
+  &:not(:disabled):hover {
+    text-decoration: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: 2px dotted #9c9c9c;
+  }
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-small {
+  @include font-size('small');
+  padding: 4px 12px;
+}
+
+.button-normal {
+  @include font-size('small');
+  padding: 8px 16px;
+}
+
+.button-large {
+  @include font-size('medium');
+
+  padding: 8px 24px;
+
+  @include breakpoint(md) {
+    padding: 12px 36px;
+  }
+
+  @include breakpoint(lg) {
+    padding: 12px 48px;
+  }
+}
+
+.button-xlarge {
+  @include font-size('x-large');
+
+  padding: 16px 24px;
+
+  @include breakpoint(md) {
+    padding: 12px 36px;
+  }
+
+  @include breakpoint(lg) {
+    padding: 16px 48px;
+  }
+}
+
+.button-first {
+  @include button(#ffffff, #333745);
+}
+
+.button-first-outline {
+  @include button-outline(#333745, #333745);
+}
+
+.button-second {
+  @include button($black, $second);
+}
+
+.button-second-outline {
+  @include button-outline($black, $second);
+}
+
+.button-third {
+  @include button(#ffffff, $third);
+}
+
+.button-third-outline {
+  @include button-outline($third, $third);
+}
+
+.button-danger {
+  @include button-outline($danger-text, $danger-text);
+  font-weight: 600;
+}
+
+.button-stretch {
+  width: 100%;
+}
+
+.button ~ .button {
+  margin-left: rem(12px);
+}
+
+.button-no-ui {
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.button-no-padding {
+  padding: 0;
+}
+
+.button-link {
+  color: $link;
+
+  &:hover {
+    color: $link-hover;
+    text-decoration: underline;
+  }
+}

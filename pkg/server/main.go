@@ -26,6 +26,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
@@ -35,9 +36,6 @@ import (
 
 	"github.com/pkg/errors"
 )
-
-var versionTag = "master"
-var port = flag.String("port", "3000", "port to connect to")
 
 var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
 var staticDir = flag.String("staticDir", "./static/", "the path to the static directory ")
@@ -100,12 +98,12 @@ func startCmd() {
 
 	r := controllers.NewRouter(&app, rc)
 
-	log.Printf("Dnote version %s is running on port %s", versionTag, *port)
+	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, cfg.Port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
 }
 
 func versionCmd() {
-	fmt.Printf("dnote-server-%s\n", versionTag)
+	fmt.Printf("dnote-server-%s\n", buildinfo.Version)
 }
 
 func rootCmd() {

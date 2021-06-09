@@ -1,0 +1,81 @@
+@import './theme';
+@import './font';
+
+.auth-page {
+  background: $lighter-gray;
+  text-align: center;
+  min-height: 100vh;
+  padding: 50px 0;
+
+  .auth-button {
+    margin-top: 8px;
+  }
+
+  .heading {
+    color: $black;
+    @include font-size('2x-large');
+    font-weight: 300;
+    margin-top: 12px;
+    margin-bottom: 0;
+  }
+
+  .body {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+  }
+
+  .referrer-flash {
+    margin: 24px 0;
+  }
+  .error-flash {
+    margin-bottom: 24px;
+  }
+
+  .footer {
+    margin-top: 20px;
+    line-height: 20px;
+  }
+
+  .callout {
+    color: #7c7c7c;
+    @include font-size('small');
+  }
+  .cta {
+    @include font-size('small');
+  }
+
+  .panel {
+    border: 1px solid $border-color;
+    background: $white;
+    border-radius: 2px;
+    padding: 20px;
+    text-align: left;
+  }
+
+  .form {
+  }
+
+  .auth-button {
+    margin-top: 16px;
+  }
+
+  .input-row {
+    & ~ .input-row {
+      margin-top: 12px;
+    }
+  }
+  .label {
+    @include font-size('small');
+    font-weight: 600;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .forgot {
+    @include font-size('small');
+    float: right;
+    font-weight: 400;
+  }
+}
