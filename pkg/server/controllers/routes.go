@@ -28,14 +28,14 @@ type RouteConfig struct {
 func NewWebRoutes(app *app.App, c *Controllers) []Route {
 	ret := []Route{
 		{"GET", "/", middleware.Auth(app, http.HandlerFunc(c.Notes.Index), &middleware.AuthParams{RedirectGuestsToLogin: true}), true},
-		{"GET", "/login", c.Users.LoginView, true},
+		{"GET", "/login", http.HandlerFunc(c.Users.NewLogin), true},
 		{"POST", "/login", http.HandlerFunc(c.Users.Login), true},
 		{"POST", "/logout", http.HandlerFunc(c.Users.Logout), true},
 		{"GET", "/notes/{noteUUID}", http.HandlerFunc(c.Notes.Show), true},
 		{"POST", "/notes", middleware.Auth(app, http.HandlerFunc(c.Notes.Create), nil), true},
 		{"DELETE", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Delete), nil), true},
 		{"PATCH", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Update), nil), true},
-		{"GET", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Index), nil), true},
+		{"GET", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Index), &middleware.AuthParams{RedirectGuestsToLogin: true}), true},
 		{"POST", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Create), nil), true},
 		{"PATCH", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Update), nil), true},
 		{"DELETE", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Delete), nil), true},

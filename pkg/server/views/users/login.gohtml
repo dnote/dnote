@@ -8,10 +8,8 @@
     <h1 class="heading">Sign in to Dnote</h1>
 
     <div class="body">
-      {{template "alert" .}}
-
       <div class="panel">
-        {{template "loginForm"}}
+        {{template "loginForm" .}}
       </div>
     </div>
 
@@ -26,7 +24,7 @@
 {{end}}
 
 {{define "loginForm"}}
-<form action="/login" method="POST">
+<form action="{{ .FormAction }}" method="POST">
   {{csrfField}}
 
   <div class="input-row">

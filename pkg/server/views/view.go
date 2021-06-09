@@ -46,9 +46,7 @@ func NewView(baseDir string, c Config, files ...string) *View {
 	addTemplateExt(files)
 	files = append(files, layoutFiles(baseDir)...)
 
-	fmt.Println(layoutFiles(baseDir))
-
-	t, err := template.New(c.Title).Funcs(template.FuncMap{
+	viewHelpers := template.FuncMap{
 		"csrfField": func() (template.HTML, error) {
 			return "", errors.New("csrfField is not implemented")
 		},
@@ -68,7 +66,11 @@ func NewView(baseDir string, c Config, files ...string) *View {
 		"rootURL": func() string {
 			return buildinfo.RootURL
 		},
-	}).ParseFiles(files...)
+	}
+
+	t := template.New(c.Title).Funcs(viewHelpers)
+
+	t, err := t.ParseFiles(files...)
 	if err != nil {
 		panic(errors.Wrap(err, "instantiating view."))
 	}

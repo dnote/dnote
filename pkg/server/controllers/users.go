@@ -3,9 +3,11 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/pkg/errors"
@@ -28,11 +30,44 @@ type Users struct {
 	app       *app.App
 }
 
+func getPathWithReferrer(base string, r *http.Request) string {
+	referrer := r.URL.Query().Get("referrer")
+	if referrer == "" {
+		return base
+	}
+
+	query := url.Values{}
+	query.Set("referrer", referrer)
+
+	return helpers.GetPath(base, &query)
+}
+
+// NewLogin renders user login page
+func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	vd.Yield = struct {
+		FormAction string
+	}{
+		FormAction: getPathWithReferrer("/login", r),
+	}
+
+	u.LoginView.Render(w, r, vd)
+}
+
 // New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	var form RegistrationForm
-	parseURLParams(r, &form)
-	u.NewView.Render(w, r, form)
+	vd := views.Data{}
+
+	vd.Yield = struct {
+		FormAction string
+		Email      string
+	}{
+		FormAction: getPathWithReferrer("/join", r),
+		Email:      "",
+	}
+
+	u.NewView.Render(w, r, vd)
 }
 
 // RegistrationForm is the form data for registering
@@ -70,7 +105,9 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusFound)
+
+	dest := getPathOrReferrer("/", r)
+	http.Redirect(w, r, dest, http.StatusFound)
 }
 
 // LoginForm is the form data for log in
@@ -103,6 +140,17 @@ func (u *Users) login(r *http.Request) (*database.Session, error) {
 	return s, nil
 }
 
+func getPathOrReferrer(path string, r *http.Request) string {
+	q := r.URL.Query()
+	referrer := q.Get("referrer")
+
+	if referrer == "" {
+		return path
+	}
+
+	return referrer
+}
+
 // Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
@@ -113,8 +161,10 @@ func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dest := getPathOrReferrer("/", r)
+
 	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, dest, http.StatusFound)
 }
 
 // V3Login handles login

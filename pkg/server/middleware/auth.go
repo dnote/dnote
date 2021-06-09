@@ -2,12 +2,14 @@ package middleware
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -67,7 +69,12 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 		user, ok, err := AuthWithSession(a.DB, r, p)
 		if !ok {
 			if p != nil && p.RedirectGuestsToLogin {
-				http.Redirect(w, r, "/login", http.StatusFound)
+
+				q := url.Values{}
+				q.Set("referrer", r.URL.Path)
+				path := helpers.GetPath("/login", &q)
+
+				http.Redirect(w, r, path, http.StatusFound)
 				return
 			}
 

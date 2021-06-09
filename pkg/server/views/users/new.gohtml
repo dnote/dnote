@@ -1,11 +1,15 @@
 {{define "yield"}}
 <div class="auth-page">
   <div class="container">
+    <a href="{{rootURL}}">
+      {{template "logo" .}}
+    </a>
+
     <h1 class="heading">Register</h1>
 
     <div class="body">
       <div class="panel">
-        {{template "signupForm"}}
+        {{template "signupForm" .}}
       </div>
     </div>
 
@@ -20,7 +24,7 @@
 {{end}}
 
 {{define "signupForm"}}
-<form action="/join" method="POST">
+<form action="{{ .FormAction }}" method="POST">
   {{csrfField}}
 
   <div class="form-group">

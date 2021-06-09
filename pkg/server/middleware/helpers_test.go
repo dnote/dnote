@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -405,7 +406,7 @@ func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
 
 		// test
 		assert.Equal(t, res.StatusCode, http.StatusFound, "status code mismatch")
-		assert.Equal(t, res.Header.Get("Location"), "/login", "location header mismatch")
+		assert.Equal(t, res.Header.Get("Location"), "/login?referrer=%2F", "location header mismatch")
 	})
 
 	t.Run("logged in user", func(t *testing.T) {
@@ -692,5 +693,26 @@ func TestTokenAuthMiddleWare_ProOnly(t *testing.T) {
 
 		// test
 		assert.Equal(t, res.StatusCode, http.StatusUnauthorized, "status code mismatch")
+	})
+}
+
+func TestGetPath(t *testing.T) {
+	t.Run("without query", func(t *testing.T) {
+		// execute
+		got := getPath("/some-path", nil)
+
+		// test
+		assert.Equal(t, got, "/some-path", "got mismatch")
+	})
+
+	t.Run("with query", func(t *testing.T) {
+		// execute
+		q := url.Values{}
+		q.Set("foo", "bar")
+		q.Set("baz", "/quz")
+		got := getPath("/some-path", &q)
+
+		// test
+		assert.Equal(t, got, "/some-path?baz=%2Fquz&foo=bar", "got mismatch")
 	})
 }
