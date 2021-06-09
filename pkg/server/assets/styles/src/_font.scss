@@ -1,3 +1,21 @@
+/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 @import './responsive';
 
 $lowDecay: 0.1;
@@ -12,7 +30,7 @@ $highDecay: 0.2;
   $lgSizeValue: 16;
 
   @if $size == 'x-small' {
-    $baseSize: 12;
+    $baseSize: 13;
 
     $smSizeValue: $baseSize;
     $mdSizeValue: $baseSize;
@@ -75,19 +93,19 @@ $highDecay: 0.2;
 
   @if $responsive == true {
     font-size: $smSizeValue * 1px;
-    font-size: $smSizeValue *  0.0625em;
+    font-size: $smSizeValue * 0.1rem;
 
     @include breakpoint(md) {
       font-size: $mdSizeValue * 1px;
-      font-size: $mdSizeValue * 0.0625em;
+      font-size: $mdSizeValue * 0.1rem;
     }
 
     @include breakpoint(lg) {
       font-size: $lgSizeValue * 1px;
-      font-size: $lgSizeValue * 0.0625em;
+      font-size: $lgSizeValue * 0.1rem;
     }
   } @else {
     font-size: $lgSizeValue * 1px;
-    font-size: $lgSizeValue * 0.0625em;
+    font-size: $lgSizeValue * 0.1rem;
   }
 }
