@@ -13,7 +13,7 @@ import (
 )
 
 var commonHelpers = map[string]interface{}{
-	"getPathWithReferrer": func(base, referrer string) string {
+	"getPathWithReferrer": func(base string, referrer string) string {
 		if referrer == "" {
 			return base
 		}
@@ -54,28 +54,24 @@ type Users struct {
 func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	vd.Yield = struct {
-		Referrer string
-	}{
-		Referrer: r.URL.Query().Get("referrer"),
+	vd.Yield = map[string]interface{}{
+		"Referrer":   r.URL.Query().Get("referrer"),
+		"ErrMessage": "aa",
 	}
 
-	u.LoginView.Render(w, r, vd)
+	u.LoginView.Render(w, r, &vd)
 }
 
 // New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	vd.Yield = struct {
-		Email    string
-		Referrer string
-	}{
-		Email:    "",
-		Referrer: r.URL.Query().Get("referrer"),
+	vd.Yield = map[string]interface{}{
+		"Email":    "",
+		"Referrer": r.URL.Query().Get("referrer"),
 	}
 
-	u.NewView.Render(w, r, vd)
+	u.NewView.Render(w, r, &vd)
 }
 
 // RegistrationForm is the form data for registering
@@ -91,7 +87,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	var form RegistrationForm
 	if err := parseForm(r, &form); err != nil {
 		vd.SetAlert(err)
-		u.NewView.Render(w, r, vd)
+		u.NewView.Render(w, r, &vd)
 		return
 	}
 

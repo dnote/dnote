@@ -99,19 +99,21 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Render is used to render the view with the predefined layout
-func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
+func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
 	w.Header().Set("Content-Type", "text/html")
 
 	var vd Data
-	switch d := data.(type) {
-	case Data:
-		vd = d
-		// do nothing
-	default:
-		vd = Data{
-			Yield: data,
-		}
-	}
+	// 	switch d := data.(type) {
+	// 	case Data:
+	// 		vd = d
+	// 		// do nothing
+	// 	// case map[string]interface{}:
+	// 	// 	vd = Data{
+	// 	// 		Yield: d,
+	// 	// 	}
+	// 	}
+
+	vd = *data
 
 	if alert := getAlert(r); alert != nil {
 		vd.Alert = alert

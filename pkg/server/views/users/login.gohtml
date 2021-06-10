@@ -15,6 +15,13 @@
       {{end}}
 
       <div class="panel">
+        {{if .ErrMessage}}
+          <div class="alert alert-danger" role="alert">
+            {{.ErrMessage}}
+          </div>
+        {{end}}
+
+
         {{template "loginForm" .}}
       </div>
     </div>
@@ -30,7 +37,7 @@
 {{end}}
 
 {{define "loginForm"}}
-<form action="{{ getPathWithReferrer "/login" .Referrer }}" method="POST">
+<form action="{{ if .Referrer }} {{ getPathWithReferrer "/login" .Referrer }} {{else}} /login {{end}}" method="POST">
   {{csrfField}}
 
   <div class="input-row">

@@ -139,21 +139,13 @@ type GetNotesResponse struct {
 func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	result, err := n.getNotes(r)
+	_, err := n.getNotes(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
 		return
 	}
 
-	vd.Yield = struct {
-		Notes []database.Note
-		Total int
-	}{
-		Notes: result.Notes,
-		Total: result.Total,
-	}
-
-	n.IndexView.Render(w, r, vd)
+	n.IndexView.Render(w, r, &vd)
 }
 
 // V3Index is a v3 handler for getting notes
@@ -191,19 +183,13 @@ func (n *Notes) getNote(r *http.Request) (database.Note, error) {
 func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	note, err := n.getNote(r)
+	_, err := n.getNote(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
 		return
 	}
 
-	vd.Yield = struct {
-		Note database.Note
-	}{
-		Note: note,
-	}
-
-	n.ShowView.Render(w, r, vd)
+	n.ShowView.Render(w, r, &vd)
 }
 
 // V3Show is api for show

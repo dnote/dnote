@@ -221,7 +221,7 @@ func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg stri
 	logError(err, msg)
 
 	d.SetAlert(err)
-	v.Render(w, r, d)
+	v.Render(w, r, &d)
 }
 
 // handleJSONError logs the error and responds with the given status code with a generic status text

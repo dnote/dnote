@@ -76,13 +76,11 @@ func (b *Books) Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vd.Yield = struct {
-		Books []database.Book
-	}{
-		Books: result,
+	vd.Yield = map[string]interface{}{
+		"Books": result,
 	}
 
-	b.IndexView.Render(w, r, vd)
+	b.IndexView.Render(w, r, &vd)
 }
 
 // V3Index gets books
