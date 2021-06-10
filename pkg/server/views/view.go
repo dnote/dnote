@@ -30,6 +30,7 @@ type Config struct {
 	Title          string
 	Layout         string
 	HeaderTemplate string
+	HelperFuncs    map[string]interface{}
 }
 
 func (c Config) getLayout() string {
@@ -66,6 +67,12 @@ func NewView(baseDir string, c Config, files ...string) *View {
 		"rootURL": func() string {
 			return buildinfo.RootURL
 		},
+	}
+
+	if c.HelperFuncs != nil {
+		for k, v := range c.HelperFuncs {
+			viewHelpers[k] = v
+		}
 	}
 
 	t := template.New(c.Title).Funcs(viewHelpers)

@@ -12,13 +12,34 @@ import (
 	"github.com/pkg/errors"
 )
 
+var commonHelpers = map[string]interface{}{
+	"getPathWithReferrer": func(base, referrer string) string {
+		if referrer == "" {
+			return base
+		}
+
+		query := url.Values{}
+		query.Set("referrer", referrer)
+
+		return helpers.GetPath(base, &query)
+	},
+}
+
 // NewUsers creates a new Users controller.
 // It panics if the necessary templates are not parsed.
 func NewUsers(app *app.App) *Users {
 	return &Users{
-		NewView:   views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Join", Layout: "base"}, "users/new"),
-		LoginView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Sign In", Layout: "base"}, "users/login"),
-		app:       app,
+		NewView: views.NewView(
+			app.Config.PageTemplateDir,
+			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers},
+			"users/new",
+		),
+		LoginView: views.NewView(
+			app.Config.PageTemplateDir,
+			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers},
+			"users/login",
+		),
+		app: app,
 	}
 }
 
@@ -29,26 +50,14 @@ type Users struct {
 	app       *app.App
 }
 
-func getPathWithReferrer(base string, r *http.Request) string {
-	referrer := r.URL.Query().Get("referrer")
-	if referrer == "" {
-		return base
-	}
-
-	query := url.Values{}
-	query.Set("referrer", referrer)
-
-	return helpers.GetPath(base, &query)
-}
-
 // NewLogin renders user login page
 func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
 	vd.Yield = struct {
-		FormAction string
+		Referrer string
 	}{
-		FormAction: getPathWithReferrer("/login", r),
+		Referrer: r.URL.Query().Get("referrer"),
 	}
 
 	u.LoginView.Render(w, r, vd)
@@ -59,11 +68,11 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
 	vd.Yield = struct {
-		FormAction string
-		Email      string
+		Email    string
+		Referrer string
 	}{
-		FormAction: getPathWithReferrer("/join", r),
-		Email:      "",
+		Email:    "",
+		Referrer: r.URL.Query().Get("referrer"),
 	}
 
 	u.NewView.Render(w, r, vd)

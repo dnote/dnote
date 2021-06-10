@@ -8,6 +8,12 @@
     <h1 class="heading">Join Dnote</h1>
 
     <div class="body">
+      {{if .Referrer}}
+        <div class="alert alert-info" role="alert">
+          Please join to continue.
+        </div>
+      {{end}}
+
       <div class="panel">
         {{template "signupForm" .}}
       </div>
@@ -24,7 +30,7 @@
 {{end}}
 
 {{define "signupForm"}}
-<form action="{{ .FormAction }}" method="POST">
+<form action="{{ getPathWithReferrer "/join" .Referrer }}" method="POST">
   {{csrfField}}
 
   <div class="form-group">

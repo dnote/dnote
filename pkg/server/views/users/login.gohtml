@@ -8,6 +8,12 @@
     <h1 class="heading">Sign in to Dnote</h1>
 
     <div class="body">
+      {{if .Referrer}}
+        <div class="alert alert-info" role="alert">
+          Please sign in to continue to that page.
+        </div>
+      {{end}}
+
       <div class="panel">
         {{template "loginForm" .}}
       </div>
@@ -24,7 +30,7 @@
 {{end}}
 
 {{define "loginForm"}}
-<form action="{{ .FormAction }}" method="POST">
+<form action="{{ getPathWithReferrer "/login" .Referrer }}" method="POST">
   {{csrfField}}
 
   <div class="input-row">
