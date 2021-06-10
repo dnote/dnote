@@ -22,6 +22,8 @@ var (
 	ErrEmailRequired appError = "missing email"
 	// ErrPasswordTooShort is an error for short password
 	ErrPasswordTooShort appError = "password should be longer than 8 characters"
+	// ErrPasswordConfirmationMismatch is an error for password ans password confirmation not matching
+	ErrPasswordConfirmationMismatch appError = "password confirmation does not match password"
 
 	// ErrLoginRequired is an error for not authenticated
 	ErrLoginRequired appError = "login required"

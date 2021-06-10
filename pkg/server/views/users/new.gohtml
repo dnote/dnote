@@ -5,7 +5,7 @@
       {{template "logo" .}}
     </a>
 
-    <h1 class="heading">Register</h1>
+    <h1 class="heading">Join Dnote</h1>
 
     <div class="body">
       <div class="panel">
@@ -55,7 +55,20 @@
       </label>
     </div>
 
-    <button  type="submit" class="auth-button button button-normal button-stretch button-third">Register</button>
+    <div class="input-row">
+      <label for="password-confirmation-input" class="label">
+        Password confirmation
+        <input
+          id="password-confirmation-input"
+          name="password_confirmation"
+          type="password"
+          placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+          class="form-control"
+        />
+      </label>
+    </div>
+
+    <button  type="submit" class="auth-button button button-normal button-stretch button-third">Join</button>
   </div>
 </form>
 {{end}}

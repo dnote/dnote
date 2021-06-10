@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -72,8 +71,9 @@ func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 
 // RegistrationForm is the form data for registering
 type RegistrationForm struct {
-	Email    string `schema:"email"`
-	Password string `schema:"password"`
+	Email                string `schema:"email"`
+	Password             string `schema:"password"`
+	PasswordConfirmation string `schema:"password_confirmation"`
 }
 
 // Create handles register
@@ -86,9 +86,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("form %+v\n", form)
-
-	user, err := u.app.CreateUser(form.Email, form.Password)
+	user, err := u.app.CreateUser(form.Email, form.Password, form.PasswordConfirmation)
 	if err != nil {
 		handleHTMLError(w, r, err, "creating user", u.NewView, vd)
 		return
