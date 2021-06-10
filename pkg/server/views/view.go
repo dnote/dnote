@@ -31,6 +31,7 @@ type Config struct {
 	Layout         string
 	HeaderTemplate string
 	HelperFuncs    map[string]interface{}
+	AlertInBody    bool
 }
 
 func (c Config) getLayout() string {
@@ -83,8 +84,9 @@ func NewView(baseDir string, c Config, files ...string) *View {
 	}
 
 	return &View{
-		Template: t,
-		Layout:   c.getLayout(),
+		Template:    t,
+		Layout:      c.getLayout(),
+		AlertInBody: c.AlertInBody,
 	}
 }
 
@@ -92,6 +94,8 @@ func NewView(baseDir string, c Config, files ...string) *View {
 type View struct {
 	Template *template.Template
 	Layout   string
+	// AlertInBody specifies if alert should be set in the body instead of the header
+	AlertInBody bool
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {

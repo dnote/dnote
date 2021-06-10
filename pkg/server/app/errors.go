@@ -14,12 +14,14 @@ var (
 	// ErrNotFound an error that indicates that the given resource is not found
 	ErrNotFound appError = "not found"
 	// ErrLoginInvalid is an error for invalid login
-	ErrLoginInvalid appError = "invalid login"
+	ErrLoginInvalid appError = "Wrong email and password combination"
 
 	// ErrDuplicateEmail is an error for duplicate email
 	ErrDuplicateEmail appError = "duplicate email"
 	// ErrEmailRequired is an error for missing email
-	ErrEmailRequired appError = "missing email"
+	ErrEmailRequired appError = "Please enter an email"
+	// ErrPasswordRequired is an error for missing email
+	ErrPasswordRequired appError = "Please enter a password"
 	// ErrPasswordTooShort is an error for short password
 	ErrPasswordTooShort appError = "password should be longer than 8 characters"
 	// ErrPasswordConfirmationMismatch is an error for password ans password confirmation not matching

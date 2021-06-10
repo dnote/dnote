@@ -220,7 +220,7 @@ func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg stri
 
 	logError(err, msg)
 
-	d.SetAlert(err)
+	d.SetAlert(err, v.AlertInBody)
 	v.Render(w, r, &d)
 }
 

@@ -36,7 +36,7 @@ func NewUsers(app *app.App) *Users {
 		),
 		LoginView: views.NewView(
 			app.Config.PageTemplateDir,
-			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers},
+			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/login",
 		),
 		app: app,
@@ -55,8 +55,7 @@ func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
 	vd.Yield = map[string]interface{}{
-		"Referrer":   r.URL.Query().Get("referrer"),
-		"ErrMessage": "aa",
+		"Referrer": r.URL.Query().Get("referrer"),
 	}
 
 	u.LoginView.Render(w, r, &vd)
@@ -86,8 +85,7 @@ func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 	var form RegistrationForm
 	if err := parseForm(r, &form); err != nil {
-		vd.SetAlert(err)
-		u.NewView.Render(w, r, &vd)
+		handleHTMLError(w, r, err, "parsing form", u.NewView, vd)
 		return
 	}
 
@@ -125,6 +123,13 @@ func (u *Users) login(r *http.Request) (*database.Session, error) {
 		return nil, err
 	}
 
+	if form.Email == "" {
+		return nil, app.ErrEmailRequired
+	}
+	if form.Password == "" {
+		return nil, app.ErrPasswordRequired
+	}
+
 	user, err := u.app.Authenticate(form.Email, form.Password)
 	if err != nil {
 		// If the user is not found, treat it as invalid login
@@ -156,10 +161,13 @@ func getPathOrReferrer(path string, r *http.Request) string {
 
 // Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
 	session, err := u.login(r)
 	if err != nil {
+		vd := views.Data{}
+		vd.Yield = map[string]interface{}{
+			"Referrer": r.URL.Query().Get("referrer"),
+			// TODO: populate email
+		}
 		handleHTMLError(w, r, err, "logging in user", u.LoginView, vd)
 		return
 	}
