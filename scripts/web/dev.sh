@@ -13,6 +13,8 @@ dotenvPath="$serverPath/.env.dev"
 source "$dotenvPath"
 set +a
 
+# copy assets
+cp "$basePath"/pkg/server/assets/static/* "$basePath/pkg/server/static"
 # run asset pipeline in the background
 (cd "$basePath/pkg/server/assets/" && "$basePath/pkg/server/assets/styles/build.sh" true ) &
 
