@@ -50,17 +50,6 @@ type Users struct {
 	app       *app.App
 }
 
-// NewLogin renders user login page
-func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	vd.Yield = map[string]interface{}{
-		"Referrer": r.URL.Query().Get("referrer"),
-	}
-
-	u.LoginView.Render(w, r, &vd)
-}
-
 // New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
@@ -117,12 +106,7 @@ type LoginForm struct {
 	Password string `schema:"password" json:"password"`
 }
 
-func (u *Users) login(r *http.Request) (*database.Session, error) {
-	var form LoginForm
-	if err := parseRequestData(r, &form); err != nil {
-		return nil, err
-	}
-
+func (u *Users) login(form LoginForm) (*database.Session, error) {
 	if form.Email == "" {
 		return nil, app.ErrEmailRequired
 	}
@@ -159,28 +143,54 @@ func getPathOrReferrer(path string, r *http.Request) string {
 	return referrer
 }
 
+func getLoginViewData(r *http.Request) views.Data {
+	vd := views.Data{}
+
+	vd.Yield = map[string]interface{}{
+		"Referrer": r.URL.Query().Get("referrer"),
+	}
+
+	return vd
+}
+
+// NewLogin renders user login page
+func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
+	vd := getLoginViewData(r)
+	u.LoginView.Render(w, r, &vd)
+}
+
 // Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
-	session, err := u.login(r)
+	vd := getLoginViewData(r)
+
+	var form LoginForm
+	if err := parseRequestData(r, &form); err != nil {
+		handleHTMLError(w, r, err, "parsing payload", u.LoginView, vd)
+		return
+	}
+
+	session, err := u.login(form)
 	if err != nil {
-		vd := views.Data{}
-		vd.Yield = map[string]interface{}{
-			"Referrer": r.URL.Query().Get("referrer"),
-			// TODO: populate email
-		}
+		vd.Yield["Email"] = form.Email
 		handleHTMLError(w, r, err, "logging in user", u.LoginView, vd)
 		return
 	}
 
-	dest := getPathOrReferrer("/", r)
-
 	setSessionCookie(w, session.Key, session.ExpiresAt)
+
+	dest := getPathOrReferrer("/", r)
 	http.Redirect(w, r, dest, http.StatusFound)
 }
 
 // V3Login handles login
 func (u *Users) V3Login(w http.ResponseWriter, r *http.Request) {
-	session, err := u.login(r)
+	var form LoginForm
+	if err := parseRequestData(r, &form); err != nil {
+		handleJSONError(w, err, "parsing payload")
+		return
+	}
+
+	session, err := u.login(form)
 	if err != nil {
 		handleJSONError(w, err, "logging in user")
 		return
