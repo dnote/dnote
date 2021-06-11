@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/dnote/dnote/pkg/server/session"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/pkg/errors"

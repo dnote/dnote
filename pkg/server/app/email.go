@@ -116,6 +116,10 @@ func (a *App) SendWelcomeEmail(email string) error {
 
 // SendPasswordResetEmail sends password reset email
 func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
+	if email == "" {
+		return ErrEmailRequired
+	}
+
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
 		AccountEmail: email,
 		Token:        tokenValue,
@@ -131,6 +135,10 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 	}
 
 	if err := a.EmailBackend.Queue("Reset your password", from, []string{email}, mailer.EmailKindText, body); err != nil {
+		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
+			return ErrInvalidSMTPConfig
+		}
+
 		return errors.Wrapf(err, "queueing email for %s", email)
 	}
 

@@ -16,7 +16,7 @@
 
       <div class="panel">
         {{if .Alert}}
-          <div class="alert alert-danger" role="alert">
+          <div class="alert alert-{{.Alert.Level}}" role="alert">
             {{.Alert.Message}}
           </div>
         {{end}}

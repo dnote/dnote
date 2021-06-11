@@ -42,4 +42,7 @@ var (
 
 	// ErrInvalidUUID is an error for invalid uuid
 	ErrInvalidUUID appError = "invalid uuid"
+
+	// ErrInvalidSMTPConfig is an error for invalid SMTP configuration
+	ErrInvalidSMTPConfig appError = "SMTP is not configured"
 )

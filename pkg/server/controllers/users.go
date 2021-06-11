@@ -8,6 +8,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/pkg/errors"
 )
@@ -39,15 +40,21 @@ func NewUsers(app *app.App) *Users {
 			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/login",
 		),
+		PasswordResetView: views.NewView(
+			app.Config.PageTemplateDir,
+			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
+			"users/password_reset",
+		),
 		app: app,
 	}
 }
 
 // Users is a user controller.
 type Users struct {
-	NewView   *views.View
-	LoginView *views.View
-	app       *app.App
+	NewView           *views.View
+	LoginView         *views.View
+	PasswordResetView *views.View
+	app               *app.App
 }
 
 // New renders user registration page
@@ -243,4 +250,50 @@ func (u *Users) V3Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type createResetTokenPayload struct {
+	Email string `schema:"email" json:"email"`
+}
+
+func (u *Users) CreateResetToken(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	var form createResetTokenPayload
+	if err := parseForm(r, &form); err != nil {
+		handleHTMLError(w, r, err, "parsing form", u.PasswordResetView, vd)
+		return
+	}
+
+	if form.Email == "" {
+		handleHTMLError(w, r, app.ErrEmailRequired, "email is not provided", u.PasswordResetView, vd)
+		return
+	}
+
+	var account database.Account
+	conn := u.app.DB.Where("email = ?", form.Email).First(&account)
+	if conn.RecordNotFound() {
+		return
+	}
+	if err := conn.Error; err != nil {
+		handleHTMLError(w, r, err, "finding account", u.PasswordResetView, vd)
+		return
+	}
+
+	resetToken, err := token.Create(u.app.DB, account.UserID, database.TokenTypeResetPassword)
+	if err != nil {
+		handleHTMLError(w, r, err, "generating token", u.PasswordResetView, vd)
+		return
+	}
+
+	if err := u.app.SendPasswordResetEmail(account.Email.String, resetToken.Value); err != nil {
+		handleHTMLError(w, r, err, "sending password reset email", u.PasswordResetView, vd)
+		return
+	}
+
+	alert := views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Check your email for a link to reset your password.",
+	}
+	views.RedirectAlert(w, r, "/password-reset", http.StatusFound, alert)
 }

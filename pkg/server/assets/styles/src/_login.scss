@@ -54,9 +54,6 @@
     text-align: left;
   }
 
-  .form {
-  }
-
   .auth-button {
     margin-top: 16px;
   }
@@ -77,5 +74,11 @@
     @include font-size('small');
     float: right;
     font-weight: 400;
+  }
+
+  &.password-reset-page {
+    .email-input {
+      margin-top: rem(16px);
+    }
   }
 }

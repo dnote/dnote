@@ -39,6 +39,9 @@ func NewWebRoutes(app *app.App, c *Controllers) []Route {
 		{"POST", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Create), nil), true},
 		{"PATCH", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Update), nil), true},
 		{"DELETE", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Delete), nil), true},
+
+		{"GET", "/password-reset", c.Users.PasswordResetView, true},
+		{"POST", "/reset-token", http.HandlerFunc(c.Users.CreateResetToken), true},
 	}
 
 	if !app.Config.DisableRegistration {

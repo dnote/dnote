@@ -45,6 +45,18 @@ func getErrMessage(err error) string {
 	return AlertMsgGeneric
 }
 
+// PutAlert puts an alert in the given data.
+func (d *Data) PutAlert(alert Alert, alertInYield bool) {
+	if alertInYield {
+		if d.Yield == nil {
+			d.Yield = map[string]interface{}{}
+		}
+		d.Yield["Alert"] = &alert
+	} else {
+		d.Alert = &alert
+	}
+}
+
 // SetAlert sets alert in the given data for given error.
 func (d *Data) SetAlert(err error, alertInYield bool) {
 	errC := errors.Cause(err)
@@ -62,14 +74,7 @@ func (d *Data) SetAlert(err error, alertInYield bool) {
 		}
 	}
 
-	if alertInYield {
-		if d.Yield == nil {
-			d.Yield = map[string]interface{}{}
-		}
-		d.Yield["Alert"] = &alert
-	} else {
-		d.Alert = &alert
-	}
+	d.PutAlert(alert, alertInYield)
 }
 
 // AlertError returns a new error alert using the given message.

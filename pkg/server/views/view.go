@@ -107,20 +107,12 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
 	w.Header().Set("Content-Type", "text/html")
 
 	var vd Data
-	// 	switch d := data.(type) {
-	// 	case Data:
-	// 		vd = d
-	// 		// do nothing
-	// 	// case map[string]interface{}:
-	// 	// 	vd = Data{
-	// 	// 		Yield: d,
-	// 	// 	}
-	// 	}
-
-	vd = *data
+	if data != nil {
+		vd = *data
+	}
 
 	if alert := getAlert(r); alert != nil {
-		vd.Alert = alert
+		vd.PutAlert(*alert, v.AlertInBody)
 		clearAlert(w)
 	}
 
