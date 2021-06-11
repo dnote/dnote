@@ -31,7 +31,7 @@ func NewUsers(app *app.App) *Users {
 	return &Users{
 		NewView: views.NewView(
 			app.Config.PageTemplateDir,
-			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers},
+			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/new",
 		),
 		LoginView: views.NewView(
@@ -52,13 +52,7 @@ type Users struct {
 
 // New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	vd.Yield = map[string]interface{}{
-		"Email":    "",
-		"Referrer": r.URL.Query().Get("referrer"),
-	}
-
+	vd := getDataWithReferrer(r)
 	u.NewView.Render(w, r, &vd)
 }
 
@@ -71,12 +65,15 @@ type RegistrationForm struct {
 
 // Create handles register
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
+	vd := getDataWithReferrer(r)
+
 	var form RegistrationForm
 	if err := parseForm(r, &form); err != nil {
 		handleHTMLError(w, r, err, "parsing form", u.NewView, vd)
 		return
 	}
+
+	vd.Yield["Email"] = form.Email
 
 	user, err := u.app.CreateUser(form.Email, form.Password, form.PasswordConfirmation)
 	if err != nil {
@@ -143,7 +140,7 @@ func getPathOrReferrer(path string, r *http.Request) string {
 	return referrer
 }
 
-func getLoginViewData(r *http.Request) views.Data {
+func getDataWithReferrer(r *http.Request) views.Data {
 	vd := views.Data{}
 
 	vd.Yield = map[string]interface{}{
@@ -155,13 +152,13 @@ func getLoginViewData(r *http.Request) views.Data {
 
 // NewLogin renders user login page
 func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
-	vd := getLoginViewData(r)
+	vd := getDataWithReferrer(r)
 	u.LoginView.Render(w, r, &vd)
 }
 
 // Login handles login
 func (u *Users) Login(w http.ResponseWriter, r *http.Request) {
-	vd := getLoginViewData(r)
+	vd := getDataWithReferrer(r)
 
 	var form LoginForm
 	if err := parseRequestData(r, &form); err != nil {

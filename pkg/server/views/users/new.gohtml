@@ -15,6 +15,12 @@
       {{end}}
 
       <div class="panel">
+        {{if .Alert}}
+          <div class="alert alert-danger" role="alert">
+            {{.Alert.Message}}
+          </div>
+        {{end}}
+
         {{template "signupForm" .}}
       </div>
     </div>
@@ -30,7 +36,7 @@
 {{end}}
 
 {{define "signupForm"}}
-<form action="{{ getPathWithReferrer "/join" .Referrer }}" method="POST">
+<form action="{{ if .Referrer }} {{ getPathWithReferrer "/join" .Referrer }} {{else}} /join {{end}}" method="POST">
   {{csrfField}}
 
   <div class="form-group">
