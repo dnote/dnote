@@ -652,12 +652,13 @@ func TestResetPassword(t *testing.T) {
 		dat := url.Values{}
 		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
 		dat.Set("password", "newpassword")
+		dat.Set("password_confirmation", "newpassword")
 		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
 
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismatch")
+		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismatch")
 
 		var resetToken, verificationToken database.Token
 		var account database.Account
@@ -681,7 +682,7 @@ func TestResetPassword(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", u.ID).Count(&userSessionCount), "counting user session")
 		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", anotherUser.ID).Count(&anotherUserSessionCount), "counting anotherUser session")
 
-		assert.Equal(t, userSessionCount, 1, "should have created a new user session")
+		assert.Equal(t, userSessionCount, 0, "should have deleted a user session")
 		assert.Equal(t, anotherUserSessionCount, 1, "anotherUser session count mismatch")
 	})
 
@@ -709,6 +710,7 @@ func TestResetPassword(t *testing.T) {
 		dat := url.Values{}
 		dat.Set("token", "-ApMnyvpg59uOU5b-Kf5uQ==")
 		dat.Set("password", "oldpassword")
+		dat.Set("password_confirmation", "oldpassword")
 		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
 
 		// Execute
@@ -752,6 +754,7 @@ func TestResetPassword(t *testing.T) {
 		dat := url.Values{}
 		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
 		dat.Set("password", "oldpassword")
+		dat.Set("password_confirmation", "oldpassword")
 		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
 
 		// Execute
@@ -796,6 +799,7 @@ func TestResetPassword(t *testing.T) {
 		dat := url.Values{}
 		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
 		dat.Set("password", "oldpassword")
+		dat.Set("password_confirmation", "oldpassword")
 		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
 
 		// Execute
@@ -845,6 +849,7 @@ func TestResetPassword(t *testing.T) {
 		dat := url.Values{}
 		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
 		dat.Set("password", "oldpassword")
+		dat.Set("password_confirmation", "oldpassword")
 		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
 
 		// Execute
@@ -860,5 +865,73 @@ func TestResetPassword(t *testing.T) {
 
 		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
+	})
+}
+
+func TestCreateResetToken(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("email", "alice@example.com")
+		req := testutils.MakeFormReq(server.URL, "POST", "/reset-token", dat)
+
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismtach")
+
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting tokens")
+
+		var resetToken database.Token
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", u.ID, database.TokenTypeResetPassword).First(&resetToken), "finding reset token")
+
+		assert.Equal(t, tokenCount, 1, "reset_token count mismatch")
+		assert.NotEqual(t, resetToken.Value, nil, "reset_token value mismatch")
+		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "reset_token UsedAt mismatch")
+	})
+
+	t.Run("nonexistent email", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("email", "bob@example.com")
+		req := testutils.MakeFormReq(server.URL, "POST", "/reset-token", dat)
+
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
+
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting tokens")
+		assert.Equal(t, tokenCount, 0, "reset_token count mismatch")
 	})
 }

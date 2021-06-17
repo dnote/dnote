@@ -309,7 +309,7 @@ func (n *Notes) Create(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusCreated)
 }
 
-// Delete shows note
+// Delete deletes note
 func (n *Notes) Delete(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
@@ -438,8 +438,8 @@ func (n *Notes) Update(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/notes/%s", note.UUID), http.StatusOK)
 }
 
-// Options is a handler for OPTIONS endpoint for notes
-func (n *Notes) Options(w http.ResponseWriter, r *http.Request) {
+// IndexOptions is a handler for OPTIONS endpoint for notes
+func (n *Notes) IndexOptions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
 }

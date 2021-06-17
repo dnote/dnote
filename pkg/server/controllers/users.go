@@ -419,3 +419,8 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 		log.ErrorWrap(err, "sending password reset email")
 	}
 }
+
+func (u *Users) logoutOptions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Version")
+}

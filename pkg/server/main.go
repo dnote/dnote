@@ -96,7 +96,10 @@ func startCmd() {
 		Controllers: ctl,
 	}
 
-	r := controllers.NewRouter(&app, rc)
+	r, err := controllers.NewRouter(&app, rc)
+	if err != nil {
+		panic(errors.Wrap(err, "initializing router"))
+	}
 
 	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, cfg.Port)
 	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))

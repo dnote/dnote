@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package api
+package controllers
 
 import (
 	"net/http"
@@ -25,22 +25,53 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/testutils"
-	"github.com/jinzhu/gorm"
 )
 
-func TestCheckHealth(t *testing.T) {
-	// Setup
+func TestNotSupportedVersions(t *testing.T) {
+	testCases := []struct {
+		path string
+	}{
+		// v1
+		{
+			path: "/api/v1",
+		},
+		{
+			path: "/api/v1/foo",
+		},
+		{
+			path: "/api/v1/bar/baz",
+		},
+		// v2
+		{
+			path: "/api/v2",
+		},
+		{
+			path: "/api/v2/foo",
+		},
+		{
+			path: "/api/v2/bar/baz",
+		},
+	}
+
+	// setup
 	server := MustNewServer(t, &app.App{
-		DB:    &gorm.DB{},
 		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
 	})
 	defer server.Close()
 
-	// Execute
-	req := testutils.MakeReq(server.URL, "GET", "/health", "")
-	res := testutils.HTTPDo(t, req)
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			// execute
+			req := testutils.MakeReq(server.URL, "GET", tc.path, "")
+			res := testutils.HTTPDo(t, req)
 
-	// Test
-	assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismtach")
+			// test
+			assert.Equal(t, res.StatusCode, http.StatusGone, "status code mismatch")
+		})
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // Route represents a single route
@@ -69,18 +70,19 @@ func NewAPIRoutes(app *app.App, c *Controllers) []Route {
 		{"GET", "/v3/sync/state", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Sync.GetSyncState), &proOnly)), false},
 		{"POST", "/v3/signin", middleware.Cors(c.Users.V3Login), true},
 		{"POST", "/v3/signout", middleware.Cors(c.Users.V3Logout), true},
+		{"OPTIONS", "/v3/signout", middleware.Cors(http.HandlerFunc(c.Users.logoutOptions)), true},
 		{"GET", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Index), nil)), true},
 		{"GET", "/v3/notes/{noteUUID}", http.HandlerFunc(c.Notes.V3Show), true},
 		{"POST", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Create), nil)), true},
 		{"DELETE", "/v3/notes/{noteUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Delete), nil)), true},
 		{"PATCH", "/v3/notes/{noteUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Update), nil)), true},
-		{"OPTIONS", "/v3/notes", middleware.Cors(http.HandlerFunc(c.Notes.Options)), true},
+		{"OPTIONS", "/v3/notes", middleware.Cors(http.HandlerFunc(c.Notes.IndexOptions)), true},
 		{"GET", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Index), nil)), true},
 		{"GET", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Show), nil)), true},
 		{"POST", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Create), nil)), true},
 		{"PATCH", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Update), nil)), true},
 		{"DELETE", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Delete), nil)), true},
-		{"OPTIONS", "/v3/books", middleware.Cors(http.HandlerFunc(c.Books.Options)), true},
+		{"OPTIONS", "/v3/books", middleware.Cors(http.HandlerFunc(c.Books.IndexOptions)), true},
 	}
 }
 
@@ -95,7 +97,11 @@ func registerRoutes(router *mux.Router, mw middleware.Middleware, app *app.App, 
 }
 
 // NewRouter creates and returns a new router
-func NewRouter(app *app.App, rc RouteConfig) http.Handler {
+func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
+	if err := app.Validate(); err != nil {
+		return nil, errors.Wrap(err, "validating the app parameters")
+	}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	webRouter := router.PathPrefix("/").Subrouter()
@@ -113,5 +119,5 @@ func NewRouter(app *app.App, rc RouteConfig) http.Handler {
 	// catch-all
 	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
 
-	return middleware.Global(router)
+	return middleware.Global(router), nil
 }

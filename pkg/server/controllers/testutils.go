@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/pkg/errors"
 )
 
 // MustNewServer is a test utility function to initialize a new server
@@ -36,7 +37,10 @@ func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 		APIRoutes:   NewAPIRoutes(&a, ctl),
 		Controllers: ctl,
 	}
-	r := NewRouter(&a, rc)
+	r, err := NewRouter(&a, rc)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "initializing router"))
+	}
 
 	server := httptest.NewServer(r)
 
