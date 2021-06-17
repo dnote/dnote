@@ -65,9 +65,10 @@ func NewView(baseDir string, c Config, files ...string) *View {
 		"headerTemplate": func() string {
 			return c.HeaderTemplate
 		},
-		"rootURL": func() string {
-			return buildinfo.RootURL
-		},
+		"rootURL":          rootURL,
+		"getFullMonthName": getFullMonthName,
+		"toDateTime":       toDateTime,
+		"excerpt":          excerpt,
 	}
 
 	if c.HelperFuncs != nil {

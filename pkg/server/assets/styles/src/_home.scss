@@ -1,0 +1,161 @@
+@import './theme';
+@import './font';
+
+.home-page {
+  .note-group-list {
+    flex-grow: 1;
+
+    @include breakpoint(lg) {
+      margin-top: rem(16px);
+    }
+
+    .content {
+      padding: rem(40px) rem(16px);
+      text-align: center;
+      color: $gray;
+    }
+  }
+
+  .note-group {
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+
+    &:not(.first) {
+      margin-top: rem(20px);
+
+      @include breakpoint(md) {
+        margin-top: rem(24px);
+      }
+    }
+
+    .header {
+      @include font-size('small');
+      display: flex;
+      justify-content: space-between;
+      color: white;
+      padding: rem(12px) rem(16px);
+      background: $light;
+      color: $black;
+      border-bottom: 1px solid $border-color;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+    }
+
+    .date {
+      font-weight: 600;
+      @include font-size('small');
+    }
+
+    .mask {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      z-index: 1;
+      opacity: 0.8;
+    }
+
+    .header {
+      @include font-size('small');
+      display: flex;
+      justify-content: space-between;
+      color: white;
+      padding: rem(12px) rem(16px);
+      background: $light;
+      color: $black;
+      border-bottom: 1px solid $border-color;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+    }
+
+    .header-date {
+      font-weight: 600;
+      @include font-size('regular');
+    }
+    .header-count {
+      font-weight: 300;
+    }
+
+    .list {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  .note-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+
+  .note-item {
+    background: white;
+    position: relative;
+
+    border-bottom: 1px solid $border-color;
+
+    .link {
+      color: $black;
+      display: block;
+      padding: rem(12px) rem(16px);
+      border: 2px solid transparent;
+
+      &:hover {
+        text-decoration: none;
+        background: $light-blue;
+        color: inherit;
+      }
+    }
+
+    .meta {
+      line-height: rem(16px);
+    }
+
+    .ts {
+      color: $gray;
+      @include font-size('small');
+    }
+
+    .body {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .content {
+      margin-top: rem(12px);
+      line-height: 1.6rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: $gray;
+    }
+
+    .book-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
+      @include font-size('small');
+
+      width: 212px;
+
+      @include breakpoint('md') {
+        width: 320px;
+      }
+    }
+
+    .match {
+      display: inline-block;
+      background: #f7f77d;
+      padding: rem(4px) rem(4px);
+    }
+  }
+}

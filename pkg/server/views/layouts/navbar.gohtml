@@ -3,12 +3,18 @@
   <div class="container">
     <div class="header-content">
       <div class="left">
-        <a href="/">Dnote</a>
+        <a href="/" class="brand">
+          {{template "logoWithText"}}
+        </a>
 
-        <nav>
-          <ul class="list-unstyled main-nav">
-            <li><a href="/new">New</a></li>
-            <li><a href="/books">Books</a></li>
+        <nav class="main-nav">
+          <ul class="list-unstyled list">
+            <li class="item">
+              <a class="nav-link" href="/new">New</a>
+            </li>
+            <li class="item">
+              <a class='nav-link' href="/books">Books</a>
+            </li>
           </ul>
         </nav>
       </div>

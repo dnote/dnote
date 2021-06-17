@@ -18,31 +18,31 @@
 
 package api
 
-import (
-	"net/http/httptest"
-	"testing"
-
-	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/pkg/errors"
-)
-
-// MustNewServer is a test utility function to initialize a new server
-// with the given app paratmers
-func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
-	api := NewTestAPI(appParams)
-	r, err := NewRouter(&api)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "initializing server"))
-	}
-
-	server := httptest.NewServer(r)
-
-	return server
-}
-
-// NewTestAPI returns a new API for test
-func NewTestAPI(appParams *app.App) API {
-	a := app.NewTest(appParams)
-
-	return API{App: &a}
-}
+// import (
+// 	"net/http/httptest"
+// 	"testing"
+//
+// 	"github.com/dnote/dnote/pkg/server/app"
+// 	"github.com/pkg/errors"
+// )
+//
+// // MustNewServer is a test utility function to initialize a new server
+// // with the given app paratmers
+// func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
+// 	api := NewTestAPI(appParams)
+// 	r, err := NewRouter(&api)
+// 	if err != nil {
+// 		t.Fatal(errors.Wrap(err, "initializing server"))
+// 	}
+//
+// 	server := httptest.NewServer(r)
+//
+// 	return server
+// }
+//
+// // NewTestAPI returns a new API for test
+// func NewTestAPI(appParams *app.App) API {
+// 	a := app.NewTest(appParams)
+//
+// 	return API{App: &a}
+// }

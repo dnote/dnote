@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
@@ -129,23 +131,88 @@ func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, error) {
 	return res, nil
 }
 
-// GetNotesResponse is a reponse by getNotesHandler
-type GetNotesResponse struct {
-	Notes []presenters.Note `json:"notes"`
-	Total int               `json:"total"`
+type noteGroup struct {
+	Year  int
+	Month int
+	Data  []database.Note
+}
+
+type bucketKey struct {
+	year  int
+	month time.Month
+}
+
+func groupNotes(notes []database.Note) []noteGroup {
+	ret := []noteGroup{}
+
+	buckets := map[bucketKey][]database.Note{}
+
+	for _, note := range notes {
+		year := note.UpdatedAt.Year()
+		month := note.UpdatedAt.Month()
+		key := bucketKey{year, month}
+
+		if _, ok := buckets[key]; !ok {
+			buckets[key] = []database.Note{}
+		}
+
+		buckets[key] = append(buckets[key], note)
+	}
+
+	keys := []bucketKey{}
+	for key := range buckets {
+		keys = append(keys, key)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		yearI := keys[i].year
+		yearJ := keys[j].year
+		monthI := keys[i].month
+		monthJ := keys[j].month
+
+		if yearI == yearJ {
+			return monthI < monthJ
+		}
+
+		return yearI < yearJ
+	})
+
+	for _, key := range keys {
+		group := noteGroup{
+			Year:  key.year,
+			Month: int(key.month),
+			Data:  buckets[key],
+		}
+		ret = append(ret, group)
+	}
+
+	return ret
 }
 
 // Index handles GET /
 func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	_, err := n.getNotes(r)
+	res, err := n.getNotes(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
 		return
 	}
 
+	noteGroups := groupNotes(res.Notes)
+
+	vd.Yield = map[string]interface{}{
+		"NoteGroups": noteGroups,
+		"Total":      res.Total,
+	}
+
 	n.IndexView.Render(w, r, &vd)
+}
+
+// GetNotesResponse is a reponse by getNotesHandler
+type GetNotesResponse struct {
+	Notes []presenters.Note `json:"notes"`
+	Total int               `json:"total"`
 }
 
 // V3Index is a v3 handler for getting notes

@@ -31,15 +31,45 @@
     display: flex;
   }
 
-  .main-nav {
+  .brand {
     display: flex;
-    height: 100%;
+    align-items: center;
 
-    a {
-      height: 100%;
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  .main-nav {
+    margin-left: rem(32px);
+    display: none;
+
+    @include breakpoint(lg) {
       display: flex;
+    }
+
+    .list {
+      display: flex;
+    }
+
+    .item {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .nav-link {
+      @include font-size('small');
+      display: flex;
+      font-weight: 600;
       align-items: center;
-      padding: 0 12px;
+      padding: 0 rem(16px);
+      color: $white;
+
+      &:hover {
+        color: $white;
+        text-decoration: none;
+        background: lighten($first, 10%);
+      }
     }
   }
 }

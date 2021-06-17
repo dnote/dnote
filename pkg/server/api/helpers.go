@@ -18,68 +18,68 @@
 
 package api
 
-import (
-	"net/http"
-	"strings"
-
-	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
-)
-
-func paginate(conn *gorm.DB, page int) *gorm.DB {
-	limit := 30
-
-	// Paginate
-	if page > 0 {
-		offset := limit * (page - 1)
-		conn = conn.Offset(offset)
-	}
-
-	conn = conn.Limit(limit)
-
-	return conn
-}
-
-func getBookIDs(books []database.Book) []int {
-	ret := []int{}
-
-	for _, book := range books {
-		ret = append(ret, book.ID)
-	}
-
-	return ret
-}
-
-func validatePassword(password string) error {
-	if len(password) < 8 {
-		return errors.New("Password should be longer than 8 characters")
-	}
-
-	return nil
-}
-
-func getClientType(r *http.Request) string {
-	origin := r.Header.Get("Origin")
-
-	if strings.HasPrefix(origin, "moz-extension://") {
-		return "firefox-extension"
-	}
-
-	if strings.HasPrefix(origin, "chrome-extension://") {
-		return "chrome-extension"
-	}
-
-	userAgent := r.Header.Get("User-Agent")
-	if strings.HasPrefix(userAgent, "Go-http-client") {
-		return "cli"
-	}
-
-	return "web"
-}
-
-// notSupported is the handler for the route that is no longer supported
-func (a *API) notSupported(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
-	return
-}
+// import (
+// 	"net/http"
+// 	"strings"
+//
+// 	"github.com/dnote/dnote/pkg/server/database"
+// 	"github.com/jinzhu/gorm"
+// 	"github.com/pkg/errors"
+// )
+//
+// func paginate(conn *gorm.DB, page int) *gorm.DB {
+// 	limit := 30
+//
+// 	// Paginate
+// 	if page > 0 {
+// 		offset := limit * (page - 1)
+// 		conn = conn.Offset(offset)
+// 	}
+//
+// 	conn = conn.Limit(limit)
+//
+// 	return conn
+// }
+//
+// func getBookIDs(books []database.Book) []int {
+// 	ret := []int{}
+//
+// 	for _, book := range books {
+// 		ret = append(ret, book.ID)
+// 	}
+//
+// 	return ret
+// }
+//
+// func validatePassword(password string) error {
+// 	if len(password) < 8 {
+// 		return errors.New("Password should be longer than 8 characters")
+// 	}
+//
+// 	return nil
+// }
+//
+// func getClientType(r *http.Request) string {
+// 	origin := r.Header.Get("Origin")
+//
+// 	if strings.HasPrefix(origin, "moz-extension://") {
+// 		return "firefox-extension"
+// 	}
+//
+// 	if strings.HasPrefix(origin, "chrome-extension://") {
+// 		return "chrome-extension"
+// 	}
+//
+// 	userAgent := r.Header.Get("User-Agent")
+// 	if strings.HasPrefix(userAgent, "Go-http-client") {
+// 		return "cli"
+// 	}
+//
+// 	return "web"
+// }
+//
+// // notSupported is the handler for the route that is no longer supported
+// func (a *API) notSupported(w http.ResponseWriter, r *http.Request) {
+// 	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
+// 	return
+// }

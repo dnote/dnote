@@ -52,7 +52,7 @@ type notePage struct {
 }
 
 func (a AppShell) newNotePage(r *http.Request, noteUUID string) (notePage, error) {
-	user, _, err := middleware.AuthWithSession(a.DB, r, nil)
+	user, _, err := middleware.AuthWithSession(a.DB, r)
 	if err != nil {
 		return notePage{}, errors.Wrap(err, "authenticating with session")
 	}

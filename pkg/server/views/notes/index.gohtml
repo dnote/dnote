@@ -1,9 +1,33 @@
 {{define "yield"}}
-  <ul>
-    {{range .Notes}}
-      <li>
-        {{ .Body }}
+<div id="T-home-page" class="container mobile-nopadding page page-mobile-full home-page">
+  <h1 class="sr-only">Notes</h1>
+
+  <div class="note-group-list">
+    {{range .NoteGroups}}
+      {{template "noteGroup" .}}
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{define "noteGroup"}}
+<section class="note-group">
+  <header class="header">
+    <h2 class="date">
+      <time datetime="{{ toDateTime .Year .Month }}">
+        {{ getFullMonthName .Month }} {{ .Year }}
+      </time>
+    </h2>
+  </header>
+
+  <ul class="list-unstyled note-list">
+    {{range .Data}}
+      <li class="note-item">
+        <a href="/notes/{{ .UUID }}" class="link">
+          {{ excerpt .Body 160 }}
+        </a>
       </li>
     {{end}}
   </ul>
+</section>
 {{end}}

@@ -272,16 +272,16 @@ func orderGetNotes(conn *gorm.DB) *gorm.DB {
 	return conn.Order("notes.updated_at DESC, notes.id DESC")
 }
 
-func paginate(conn *gorm.DB, page int) *gorm.DB {
-	limit := 30
+var notePerPage = 30
 
+func paginate(conn *gorm.DB, page int) *gorm.DB {
 	// Paginate
 	if page > 0 {
-		offset := limit * (page - 1)
+		offset := notePerPage * (page - 1)
 		conn = conn.Offset(offset)
 	}
 
-	conn = conn.Limit(limit)
+	conn = conn.Limit(notePerPage)
 
 	return conn
 }

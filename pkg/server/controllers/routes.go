@@ -24,8 +24,6 @@ type RouteConfig struct {
 	APIRoutes   []Route
 }
 
-var noop = func(w http.ResponseWriter, r *http.Request) {}
-
 // NewWebRoutes returns a new web routes
 func NewWebRoutes(app *app.App, c *Controllers) []Route {
 	ret := []Route{
