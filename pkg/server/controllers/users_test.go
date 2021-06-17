@@ -52,35 +52,40 @@ func assertResponseSessionCookie(t *testing.T, res *http.Response) {
 
 func TestJoin(t *testing.T) {
 	testCases := []struct {
-		email       string
-		password    string
-		onPremise   bool
-		expectedPro bool
+		email                string
+		password             string
+		passwordConfirmation string
+		onPremise            bool
+		expectedPro          bool
 	}{
 		{
-			email:       "alice@example.com",
-			password:    "pass1234",
-			onPremise:   false,
-			expectedPro: false,
+			email:                "alice@example.com",
+			password:             "pass1234",
+			passwordConfirmation: "pass1234",
+			onPremise:            false,
+			expectedPro:          false,
 		},
 		{
-			email:       "bob@example.com",
-			password:    "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
-			onPremise:   false,
-			expectedPro: false,
+			email:                "bob@example.com",
+			password:             "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
+			passwordConfirmation: "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
+			onPremise:            false,
+			expectedPro:          false,
 		},
 		{
-			email:       "chuck@example.com",
-			password:    "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
-			onPremise:   false,
-			expectedPro: false,
+			email:                "chuck@example.com",
+			password:             "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			passwordConfirmation: "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			onPremise:            false,
+			expectedPro:          false,
 		},
 		// on premise
 		{
-			email:       "dan@example.com",
-			password:    "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
-			onPremise:   true,
-			expectedPro: true,
+			email:                "dan@example.com",
+			password:             "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			passwordConfirmation: "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
+			onPremise:            true,
+			expectedPro:          true,
 		},
 	}
 
@@ -103,6 +108,7 @@ func TestJoin(t *testing.T) {
 			dat := url.Values{}
 			dat.Set("email", tc.email)
 			dat.Set("password", tc.password)
+			dat.Set("password_confirmation", tc.passwordConfirmation)
 			req := testutils.MakeFormReq(server.URL, "POST", "/join", dat)
 
 			// Execute
@@ -133,7 +139,7 @@ func TestJoin(t *testing.T) {
 	}
 }
 
-func TestJoinMissingParams(t *testing.T) {
+func TestJoniError(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
@@ -193,6 +199,38 @@ func TestJoinMissingParams(t *testing.T) {
 		assert.Equal(t, accountCount, 0, "accountCount mismatch")
 		assert.Equal(t, userCount, 0, "userCount mismatch")
 	})
+
+	t.Run("password confirmation mismatch", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		dat := url.Values{}
+		dat.Set("email", "alice@example.com")
+		dat.Set("password", "pass1234")
+		dat.Set("password_confirmation", "1234pass")
+		req := testutils.MakeFormReq(server.URL, "POST", "/join", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
+
+		var accountCount, userCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+
+		assert.Equal(t, accountCount, 0, "accountCount mismatch")
+		assert.Equal(t, userCount, 0, "userCount mismatch")
+	})
 }
 
 func TestJoinDuplicateEmail(t *testing.T) {
@@ -213,6 +251,7 @@ func TestJoinDuplicateEmail(t *testing.T) {
 	dat := url.Values{}
 	dat.Set("email", "alice@example.com")
 	dat.Set("password", "foobarbaz")
+	dat.Set("password_confirmation", "foobarbaz")
 	req := testutils.MakeFormReq(server.URL, "POST", "/join", dat)
 
 	// Execute
@@ -557,5 +596,269 @@ func TestLogout(t *testing.T) {
 
 		c := testutils.GetCookieByName(res.Cookies(), "id")
 		assert.Equal(t, c, (*http.Cookie)(nil), "id cookie should have not been set")
+	})
+}
+
+func TestResetPassword(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+		tok := database.Token{
+			UserID: u.ID,
+			Value:  "MivFxYiSMMA4An9dP24DNQ==",
+			Type:   database.TokenTypeResetPassword,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		otherTok := database.Token{
+			UserID: u.ID,
+			Value:  "somerandomvalue",
+			Type:   database.TokenTypeEmailVerification,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&otherTok), "preparing another token")
+
+		s1 := database.Session{
+			Key:       "some-session-key-1",
+			UserID:    u.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&s1), "preparing user session 1")
+
+		s2 := &database.Session{
+			Key:       "some-session-key-2",
+			UserID:    u.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}
+		testutils.MustExec(t, testutils.DB.Save(&s2), "preparing user session 2")
+
+		anotherUser := testutils.SetupUserData()
+		testutils.MustExec(t, testutils.DB.Save(&database.Session{
+			Key:       "some-session-key-3",
+			UserID:    anotherUser.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 10 * 24),
+		}), "preparing anotherUser session 1")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
+		dat.Set("password", "newpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
+
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusOK, "Status code mismatch")
+
+		var resetToken, verificationToken database.Token
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "somerandomvalue").First(&verificationToken), "finding reset token")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "finding account")
+
+		assert.NotEqual(t, resetToken.UsedAt, nil, "reset_token UsedAt mismatch")
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
+		assert.Equal(t, passwordErr, nil, "Password mismatch")
+		assert.Equal(t, verificationToken.UsedAt, (*time.Time)(nil), "verificationToken UsedAt mismatch")
+
+		var s1Count, s2Count int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s1.ID).Count(&s1Count), "counting s1")
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("id = ?", s2.ID).Count(&s2Count), "counting s2")
+
+		assert.Equal(t, s1Count, 0, "s1 should have been deleted")
+		assert.Equal(t, s2Count, 0, "s2 should have been deleted")
+
+		var userSessionCount, anotherUserSessionCount int
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", u.ID).Count(&userSessionCount), "counting user session")
+		testutils.MustExec(t, testutils.DB.Model(&database.Session{}).Where("user_id = ?", anotherUser.ID).Count(&anotherUserSessionCount), "counting anotherUser session")
+
+		assert.Equal(t, userSessionCount, 1, "should have created a new user session")
+		assert.Equal(t, anotherUserSessionCount, 1, "anotherUser session count mismatch")
+	})
+
+	t.Run("nonexistent token", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+		tok := database.Token{
+			UserID: u.ID,
+			Value:  "MivFxYiSMMA4An9dP24DNQ==",
+			Type:   database.TokenTypeResetPassword,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+
+		dat := url.Values{}
+		dat.Set("token", "-ApMnyvpg59uOU5b-Kf5uQ==")
+		dat.Set("password", "oldpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
+
+		var resetToken database.Token
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "finding account")
+
+		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
+	})
+
+	t.Run("expired token", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+		tok := database.Token{
+			UserID: u.ID,
+			Value:  "MivFxYiSMMA4An9dP24DNQ==",
+			Type:   database.TokenTypeResetPassword,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
+
+		dat := url.Values{}
+		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
+		dat.Set("password", "oldpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusGone, "Status code mismatch")
+
+		var resetToken database.Token
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
+		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
+	})
+
+	t.Run("used token", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+
+		usedAt := time.Now().Add(time.Hour * -11).UTC()
+		tok := database.Token{
+			UserID: u.ID,
+			Value:  "MivFxYiSMMA4An9dP24DNQ==",
+			Type:   database.TokenTypeResetPassword,
+			UsedAt: &usedAt,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
+
+		dat := url.Values{}
+		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
+		dat.Set("password", "oldpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
+
+		var resetToken database.Token
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
+		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+
+		if resetToken.UsedAt.Year() != usedAt.Year() ||
+			resetToken.UsedAt.Month() != usedAt.Month() ||
+			resetToken.UsedAt.Day() != usedAt.Day() ||
+			resetToken.UsedAt.Hour() != usedAt.Hour() ||
+			resetToken.UsedAt.Minute() != usedAt.Minute() ||
+			resetToken.UsedAt.Second() != usedAt.Second() {
+			t.Errorf("used_at should be %+v but got: %+v", usedAt, resetToken.UsedAt)
+		}
+	})
+
+	t.Run("using wrong type token: email_verification", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "somepassword")
+		tok := database.Token{
+			UserID: u.ID,
+			Value:  "MivFxYiSMMA4An9dP24DNQ==",
+			Type:   database.TokenTypeEmailVerification,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "Failed to prepare reset_token")
+		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-11)), "Failed to prepare reset_token created_at")
+
+		dat := url.Values{}
+		dat.Set("token", "MivFxYiSMMA4An9dP24DNQ==")
+		dat.Set("password", "oldpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/password-reset", dat)
+
+		// Execute
+		res := testutils.HTTPDo(t, req)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
+
+		var resetToken database.Token
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
+		testutils.MustExec(t, testutils.DB.Where("id = ?", a.ID).First(&account), "failed to find account")
+
+		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 }

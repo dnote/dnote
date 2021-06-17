@@ -208,6 +208,12 @@ func getStatusCode(err error) int {
 		return http.StatusBadRequest
 	case app.ErrDuplicateBook:
 		return http.StatusConflict
+	case app.ErrInvalidToken:
+		return http.StatusBadRequest
+	case app.ErrPasswordResetTokenExpired:
+		return http.StatusGone
+	case app.ErrPasswordConfirmationMismatch:
+		return http.StatusBadRequest
 	}
 
 	return http.StatusInternalServerError

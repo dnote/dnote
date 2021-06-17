@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	// "github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/middleware"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -188,17 +188,17 @@ func (a *API) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.App.CreateUser(params.Email, params.Password)
-	if err != nil {
-		middleware.DoError(w, "creating user", err, http.StatusInternalServerError)
-		return
-	}
+	// user, err := a.App.CreateUser(params.Email, params.Password)
+	// if err != nil {
+	// 	middleware.DoError(w, "creating user", err, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	a.respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
+	// a.respondWithSession(a.App.DB, w, user.ID, http.StatusCreated)
 
-	if err := a.App.SendWelcomeEmail(params.Email); err != nil {
-		log.ErrorWrap(err, "sending welcome email")
-	}
+	// if err := a.App.SendWelcomeEmail(params.Email); err != nil {
+	// 	log.ErrorWrap(err, "sending welcome email")
+	// }
 }
 
 // respondWithSession makes a HTTP response with the session from the user with the given userID.

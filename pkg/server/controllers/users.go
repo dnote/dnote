@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/database"
@@ -10,7 +11,9 @@ import (
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/dnote/dnote/pkg/server/views"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var commonHelpers = map[string]interface{}{
@@ -45,16 +48,22 @@ func NewUsers(app *app.App) *Users {
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset",
 		),
+		PasswordResetConfirmView: views.NewView(
+			app.Config.PageTemplateDir,
+			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
+			"users/password_reset_confirm",
+		),
 		app: app,
 	}
 }
 
 // Users is a user controller.
 type Users struct {
-	NewView           *views.View
-	LoginView         *views.View
-	PasswordResetView *views.View
-	app               *app.App
+	NewView                  *views.View
+	LoginView                *views.View
+	PasswordResetView        *views.View
+	PasswordResetConfirmView *views.View
+	app                      *app.App
 }
 
 // New renders user registration page
@@ -296,4 +305,117 @@ func (u *Users) CreateResetToken(w http.ResponseWriter, r *http.Request) {
 		Message: "Check your email for a link to reset your password.",
 	}
 	views.RedirectAlert(w, r, "/password-reset", http.StatusFound, alert)
+}
+
+// PasswordResetConfirm renders password reset view
+func (u *Users) PasswordResetConfirm(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	vars := mux.Vars(r)
+	token := vars["token"]
+
+	vd.Yield = map[string]interface{}{
+		"Token": token,
+	}
+
+	u.PasswordResetConfirmView.Render(w, r, &vd)
+}
+
+type resetPasswordPayload struct {
+	Password             string `schema:"password" json:"password"`
+	PasswordConfirmation string `schema:"password_confirmation" json:"password_confirmation"`
+	Token                string `schema:"token" json:"token"`
+}
+
+// PasswordReset renders password reset view
+func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	var params resetPasswordPayload
+	if err := parseForm(r, &params); err != nil {
+		handleHTMLError(w, r, err, "parsing params", u.NewView, vd)
+		return
+	}
+
+	vd.Yield = map[string]interface{}{
+		"Token": params.Token,
+	}
+
+	if params.Password != params.PasswordConfirmation {
+		handleHTMLError(w, r, app.ErrPasswordConfirmationMismatch, "password mismatch", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	var token database.Token
+	conn := u.app.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
+	if conn.RecordNotFound() {
+		handleHTMLError(w, r, app.ErrInvalidToken, "invalid token", u.PasswordResetConfirmView, vd)
+		return
+	}
+	if err := conn.Error; err != nil {
+		handleHTMLError(w, r, err, "finding token", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	if token.UsedAt != nil {
+		handleHTMLError(w, r, app.ErrInvalidToken, "invalid token", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	// Expire after 10 minutes
+	if time.Since(token.CreatedAt).Minutes() > 10 {
+		handleHTMLError(w, r, app.ErrPasswordResetTokenExpired, "expired token", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	tx := u.app.DB.Begin()
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+	if err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "hashing password", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	var account database.Account
+	if err := u.app.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "finding user", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	if err := tx.Model(&account).Update("password", string(hashedPassword)).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "updating password", u.PasswordResetConfirmView, vd)
+		return
+	}
+	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "updating password reset token", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	if err := u.app.DeleteUserSessions(tx, account.UserID); err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "deleting user sessions", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	tx.Commit()
+
+	var user database.User
+	if err := u.app.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
+		handleHTMLError(w, r, err, "finding user", u.PasswordResetConfirmView, vd)
+		return
+	}
+
+	alert := views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Password reset successful",
+	}
+	views.RedirectAlert(w, r, "/login", http.StatusFound, alert)
+
+	if err := u.app.SendPasswordResetAlertEmail(account.Email.String); err != nil {
+		log.ErrorWrap(err, "sending password reset email")
+	}
 }

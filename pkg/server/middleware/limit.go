@@ -20,6 +20,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -121,4 +122,15 @@ func Limit(next http.Handler) http.HandlerFunc {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// ApplyLimit applies rate limit conditionally
+func ApplyLimit(h http.HandlerFunc, rateLimit bool) http.Handler {
+	ret := h
+
+	if rateLimit && os.Getenv("GO_ENV") != "TEST" {
+		ret = Limit(ret)
+	}
+
+	return ret
 }

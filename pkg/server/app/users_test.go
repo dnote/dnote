@@ -55,7 +55,7 @@ func TestCreateUser_ProValue(t *testing.T) {
 			a := NewTest(&App{
 				Config: c,
 			})
-			if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
+			if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
@@ -78,7 +78,7 @@ func TestCreateUser(t *testing.T) {
 		a := NewTest(&App{
 			Config: c,
 		})
-		if _, err := a.CreateUser("alice@example.com", "pass1234"); err != nil {
+		if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
 
@@ -107,7 +107,7 @@ func TestCreateUser(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&aliceAccount), "preparing an account")
 
 		a := NewTest(nil)
-		_, err := a.CreateUser("alice@example.com", "newpassword")
+		_, err := a.CreateUser("alice@example.com", "newpassword", "newpassword")
 
 		assert.Equal(t, err, ErrDuplicateEmail, "error mismatch")
 

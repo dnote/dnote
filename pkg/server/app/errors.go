@@ -45,4 +45,10 @@ var (
 
 	// ErrInvalidSMTPConfig is an error for invalid SMTP configuration
 	ErrInvalidSMTPConfig appError = "SMTP is not configured"
+
+	// ErrInvalidToken is an error for invalid token
+	ErrInvalidToken appError = "invalid token"
+
+	// ErrPasswordResetTokenExpired is an error for expired password reset token
+	ErrPasswordResetTokenExpired appError = "this link has been expired. Please request a new password reset link."
 )
