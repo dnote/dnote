@@ -7,9 +7,8 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"strings"
 
-	"github.com/dnote/dnote/pkg/server/buildinfo"
+	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
@@ -32,6 +31,19 @@ type Config struct {
 	HeaderTemplate string
 	HelperFuncs    map[string]interface{}
 	AlertInBody    bool
+	Clock          clock.Clock
+}
+
+type viewCtx struct {
+	Clock  clock.Clock
+	Config Config
+}
+
+func newViewCtx(c Config) viewCtx {
+	return viewCtx{
+		Clock:  c.getClock(),
+		Config: c,
+	}
 }
 
 func (c Config) getLayout() string {
@@ -42,41 +54,21 @@ func (c Config) getLayout() string {
 	return c.Layout
 }
 
+func (c Config) getClock() clock.Clock {
+	if c.Clock != nil {
+		return c.Clock
+	}
+
+	return clock.New()
+}
+
 // NewView returns a new view by parsing  the given layout and files
 func NewView(baseDir string, c Config, files ...string) *View {
 	addTemplatePath(baseDir, files)
 	addTemplateExt(files)
 	files = append(files, layoutFiles(baseDir)...)
 
-	viewHelpers := template.FuncMap{
-		"csrfField": func() (template.HTML, error) {
-			return "", errors.New("csrfField is not implemented")
-		},
-		"css": func() []string {
-			return strings.Split(buildinfo.CSSFiles, ",")
-		},
-		"title": func() string {
-			if c.Title != "" {
-				return fmt.Sprintf("%s | %s", c.Title, siteTitle)
-			}
-
-			return siteTitle
-		},
-		"headerTemplate": func() string {
-			return c.HeaderTemplate
-		},
-		"rootURL":          rootURL,
-		"getFullMonthName": getFullMonthName,
-		"toDateTime":       toDateTime,
-		"excerpt":          excerpt,
-	}
-
-	if c.HelperFuncs != nil {
-		for k, v := range c.HelperFuncs {
-			viewHelpers[k] = v
-		}
-	}
-
+	viewHelpers := initHelpers(c)
 	t := template.New(c.Title).Funcs(viewHelpers)
 
 	t, err := t.ParseFiles(files...)

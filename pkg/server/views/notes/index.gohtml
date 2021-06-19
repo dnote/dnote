@@ -3,6 +3,10 @@
   <h1 class="sr-only">Notes</h1>
 
   <div class="note-group-list">
+    {{if eq (len .NoteGroups) 0 }}
+      <div class="note-group-list-empty">No notes found.</div>
+    {{end}}
+
     {{range .NoteGroups}}
       {{template "noteGroup" .}}
     {{end}}
@@ -12,7 +16,7 @@
 
 {{define "noteGroup"}}
 <section class="note-group">
-  <header class="header">
+  <header class="note-group-header">
     <h2 class="date">
       <time datetime="{{ toDateTime .Year .Month }}">
         {{ getFullMonthName .Month }} {{ .Year }}
@@ -22,12 +26,32 @@
 
   <ul class="list-unstyled note-list">
     {{range .Data}}
-      <li class="note-item">
-        <a href="/notes/{{ .UUID }}" class="link">
-          {{ excerpt .Body 160 }}
-        </a>
-      </li>
+      {{template "noteItem" .}}
     {{end}}
   </ul>
 </section>
+{{end}}
+
+{{define "noteItem"}}
+<li class="note-item">
+  <a href="/notes/{{ .UUID }}" class="link">
+    <div class="body">
+      <div class="note-header">
+        <h3 class="book-label">
+          {{ .Book.Label }}
+        </h3>
+
+        <time dateTime={dateTime} className={styles.time}>
+          <span>
+            <span>{{ timeAgo .UpdatedAt }}</span>
+          </span>
+        </time>
+      </div>
+
+      <div class="note-content">
+        {{ excerpt .Body 160 }}
+      </div>
+    </div>
+  </a>
+</li>
 {{end}}

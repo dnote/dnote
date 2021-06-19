@@ -1,7 +1,9 @@
 package views
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
 )
@@ -24,8 +26,10 @@ func TestToDateTime(t *testing.T) {
 		},
 	}
 
+	ctx := viewCtx{}
+
 	for _, tc := range testCases {
-		got := toDateTime(tc.year, tc.month)
+		got := ctx.toDateTime(tc.year, tc.month)
 
 		assert.Equal(t, got, tc.expected, "result mismatch")
 	}
@@ -46,8 +50,10 @@ func TestGetFullMonthName(t *testing.T) {
 		},
 	}
 
+	ctx := viewCtx{}
+
 	for _, tc := range testCases {
-		got := getFullMonthName(tc.input)
+		got := ctx.getFullMonthName(tc.input)
 
 		assert.Equal(t, got, tc.expected, "result mismatch")
 	}
@@ -81,8 +87,92 @@ func TestExcerpt(t *testing.T) {
 		},
 	}
 
+	ctx := viewCtx{}
+
 	for _, tc := range testCases {
-		got := exerpt(tc.str, tc.maxLength)
+		got := ctx.excerpt(tc.str, tc.maxLength)
 		assert.Equal(t, got, tc.expected, "result mismatch")
+	}
+}
+
+func TestTimeAgo(t *testing.T) {
+	now := time.Now()
+
+	testCases := []struct {
+		input    time.Time
+		expected string
+	}{
+		{
+			input:    now.Add(-2 * time.Hour),
+			expected: "2 hours ago",
+		},
+		{
+			input:    now.Add(-2*time.Hour - 59*time.Minute),
+			expected: "2 hours ago",
+		},
+		{
+			input:    now.Add(-23 * time.Hour),
+			expected: "23 hours ago",
+		},
+		{
+			input:    now.Add(-23*time.Hour - 59*time.Minute),
+			expected: "23 hours ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour),
+			expected: "1 day ago",
+		},
+		{
+			input:    now.Add(-47 * time.Hour),
+			expected: "1 day ago",
+		},
+		{
+			input:    now.Add(-48 * time.Hour),
+			expected: "2 days ago",
+		},
+
+		{
+			input:    now.Add(-24 * time.Hour * 7),
+			expected: "1 week ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 2),
+			expected: "2 weeks ago",
+		},
+
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 4),
+			expected: "1 month ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 7),
+			expected: "1 month ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 8),
+			expected: "2 months ago",
+		},
+
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 52),
+			expected: "1 year ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 55),
+			expected: "1 year ago",
+		},
+		{
+			input:    now.Add(-24 * time.Hour * 7 * 52 * 2),
+			expected: "2 years ago",
+		},
+	}
+
+	ctx := newViewCtx(Config{})
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("input %s", tc.input.String()), func(t *testing.T) {
+			got := ctx.timeAgo(tc.input)
+			assert.Equal(t, got, tc.expected, "result mismatch")
+		})
 	}
 }
