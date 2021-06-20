@@ -24,6 +24,9 @@ func initHelpers(c Config) template.FuncMap {
 		"toDateTime":       ctx.toDateTime,
 		"excerpt":          ctx.excerpt,
 		"timeAgo":          ctx.timeAgo,
+		"toISOString":      ctx.toISOString,
+		"dict":             ctx.dict,
+		"defaultValue":     ctx.defaultValue,
 	}
 
 	// extend with helpers that are defined specific to a view
@@ -127,4 +130,31 @@ func (v viewCtx) timeAgo(t time.Time) string {
 	}
 
 	return diff.text
+}
+
+func (v viewCtx) toISOString(t time.Time) string {
+	return t.Format(time.RFC3339)
+}
+
+func (v viewCtx) dict(values ...interface{}) (map[string]interface{}, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("invalid dict call")
+	}
+	dict := make(map[string]interface{}, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		dict[key] = values[i+1]
+	}
+	return dict, nil
+}
+
+func (v viewCtx) defaultValue(value, fallback interface{}) interface{} {
+	if value == nil {
+		return fallback
+	}
+
+	return value
 }

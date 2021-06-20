@@ -102,11 +102,6 @@
       line-height: rem(16px);
     }
 
-    .ts {
-      color: $gray;
-      @include font-size('small');
-    }
-
     .body {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -143,6 +138,48 @@
       display: inline-block;
       background: #f7f77d;
       padding: rem(4px) rem(4px);
+    }
+  }
+
+  .toolbar {
+    text-align: right;
+  }
+
+  .paginator {
+    display: inline-flex;
+    align-items: center;
+
+    .paginator-info {
+      @include font-size('small');
+      color: $gray;
+    }
+
+    .paginator-link {
+      padding: rem(12px) rem(12px);
+
+      &.disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    .paginator-link-prev {
+      margin-left: rem(8px);
+
+      @include breakpoint(md) {
+        margin-left: rem(20px);
+      }
+    }
+
+    .caret-next {
+      transform: rotate(-90deg);
+    }
+
+    .caret-prev {
+      transform: rotate(90deg);
+    }
+
+    .paginator-label {
+      font-weight: 600;
     }
   }
 }

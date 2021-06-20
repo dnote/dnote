@@ -2,6 +2,8 @@
 <div id="T-home-page" class="container mobile-nopadding page page-mobile-full home-page">
   <h1 class="sr-only">Notes</h1>
 
+  {{template "pageToolbar" dict "data" . "class" "toolbar"}}
+
   <div class="note-group-list">
     {{if eq (len .NoteGroups) 0 }}
       <div class="note-group-list-empty">No notes found.</div>
@@ -41,11 +43,7 @@
           {{ .Book.Label }}
         </h3>
 
-        <time dateTime={dateTime} className={styles.time}>
-          <span>
-            <span>{{ timeAgo .UpdatedAt }}</span>
-          </span>
-        </time>
+        {{template "time" dict "value" .UpdatedAt "text" (timeAgo .UpdatedAt)}}
       </div>
 
       <div class="note-content">
@@ -55,3 +53,29 @@
   </a>
 </li>
 {{end}}
+
+{{define "pageToolbarContent"}}
+<nav class="paginator">
+  <span class="paginator-info">
+    <span class="paginator-label">1</span> of
+    <span class="paginator-label">20</span>
+  </span>
+
+  <a
+    href="/"
+    aria-label="left"
+    class="paginator-link"
+  >
+    {{template "caret" "prev"}}
+  </a>
+
+  <a
+    href="/"
+    aria-label="left"
+    class="paginator-link"
+  >
+    {{template "caret" "next"}}
+  </a>
+</nav>
+{{end}}
+

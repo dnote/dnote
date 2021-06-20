@@ -66,7 +66,10 @@ func (c Config) getClock() clock.Clock {
 func NewView(baseDir string, c Config, files ...string) *View {
 	addTemplatePath(baseDir, files)
 	addTemplateExt(files)
+
+	files = append(files, iconFiles(baseDir)...)
 	files = append(files, layoutFiles(baseDir)...)
+	files = append(files, partialFiles(baseDir)...)
 
 	viewHelpers := initHelpers(c)
 	t := template.New(c.Title).Funcs(viewHelpers)
@@ -128,17 +131,29 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
 	io.Copy(w, &buf)
 }
 
-// layoutFiles returns a slice of strings representing
-// the layout files used in our application.
-func layoutFiles(baseDir string) []string {
-	pattern := fmt.Sprintf("%s/layouts/*%s", baseDir, templateExt)
-
+func getFiles(pattern string) []string {
 	files, err := filepath.Glob(pattern)
 	if err != nil {
 		panic(err)
 	}
 
 	return files
+}
+
+// layoutFiles returns a slice of strings representing
+// the layout files used in our application.
+func layoutFiles(baseDir string) []string {
+	return getFiles(fmt.Sprintf("%s/layouts/*%s", baseDir, templateExt))
+}
+
+// iconFiles returns a slice of strings representing
+// the icon files used in our application.
+func iconFiles(baseDir string) []string {
+	return getFiles(fmt.Sprintf("%s/icons/*%s", baseDir, templateExt))
+}
+
+func partialFiles(baseDir string) []string {
+	return getFiles(fmt.Sprintf("%s/partials/*%s", baseDir, templateExt))
 }
 
 // addTemplatePath takes in a slice of strings
