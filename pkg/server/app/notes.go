@@ -186,6 +186,7 @@ type GetNotesParams struct {
 	Books     []string
 	Search    string
 	Encrypted bool
+	PerPage   int
 }
 
 type ftsParams struct {
@@ -272,16 +273,14 @@ func orderGetNotes(conn *gorm.DB) *gorm.DB {
 	return conn.Order("notes.updated_at DESC, notes.id DESC")
 }
 
-var notePerPage = 30
-
-func paginate(conn *gorm.DB, page int) *gorm.DB {
+func paginate(conn *gorm.DB, page, perPage int) *gorm.DB {
 	// Paginate
 	if page > 0 {
-		offset := notePerPage * (page - 1)
+		offset := perPage * (page - 1)
 		conn = conn.Offset(offset)
 	}
 
-	conn = conn.Limit(notePerPage)
+	conn = conn.Limit(perPage)
 
 	return conn
 }
@@ -305,7 +304,7 @@ func (a *App) GetNotes(userID int, params GetNotesParams) (GetNotesResult, error
 	if total != 0 {
 		conn = orderGetNotes(conn)
 		conn = database.PreloadNote(conn)
-		conn = paginate(conn, params.Page)
+		conn = paginate(conn, params.Page, params.PerPage)
 
 		if err := conn.Find(&notes).Error; err != nil {
 			return GetNotesResult{}, errors.Wrap(err, "finding notes")

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -29,6 +30,8 @@ func NewNotes(app *app.App) *Notes {
 	}
 }
 
+var notesPerPage = 30
+
 // Notes is a user controller.
 type Notes struct {
 	IndexView *views.View
@@ -47,26 +50,29 @@ func parseSearchQuery(q url.Values) string {
 	return escapeSearchQuery(searchStr)
 }
 
+func parsePageQuery(q url.Values) (int, error) {
+	pageStr := q.Get("page")
+	if len(pageStr) == 0 {
+		return 1, nil
+	}
+
+	p, err := strconv.Atoi(pageStr)
+	return p, err
+}
+
 func parseGetNotesQuery(q url.Values) (app.GetNotesParams, error) {
 	yearStr := q.Get("year")
 	monthStr := q.Get("month")
 	books := q["book"]
-	pageStr := q.Get("page")
 	encryptedStr := q.Get("encrypted")
+	pageStr := q.Get("page")
 
-	var page int
-	if len(pageStr) > 0 {
-		p, err := strconv.Atoi(pageStr)
-		if err != nil {
-			return app.GetNotesParams{}, errors.Errorf("invalid page %s", pageStr)
-		}
-		if p < 1 {
-			return app.GetNotesParams{}, errors.Errorf("invalid page %s", pageStr)
-		}
-
-		page = p
-	} else {
-		page = 1
+	page, err := parsePageQuery(q)
+	if err != nil {
+		return app.GetNotesParams{}, errors.Errorf("invalid page %s", pageStr)
+	}
+	if page < 1 {
+		return app.GetNotesParams{}, errors.Errorf("invalid page %s", pageStr)
 	}
 
 	var year int
@@ -106,29 +112,30 @@ func parseGetNotesQuery(q url.Values) (app.GetNotesParams, error) {
 		Search:    parseSearchQuery(q),
 		Books:     books,
 		Encrypted: encrypted,
+		PerPage:   notesPerPage,
 	}
 
 	return ret, nil
 }
 
-func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, error) {
+func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, app.GetNotesParams, error) {
 	user := context.User(r.Context())
 	if user == nil {
-		return app.GetNotesResult{}, app.ErrLoginRequired
+		return app.GetNotesResult{}, app.GetNotesParams{}, app.ErrLoginRequired
 	}
 
 	query := r.URL.Query()
 	p, err := parseGetNotesQuery(query)
 	if err != nil {
-		return app.GetNotesResult{}, errors.Wrap(err, "parsing query")
+		return app.GetNotesResult{}, app.GetNotesParams{}, errors.Wrap(err, "parsing query")
 	}
 
 	res, err := n.app.GetNotes(user.ID, p)
 	if err != nil {
-		return app.GetNotesResult{}, errors.Wrap(err, "getting notes")
+		return app.GetNotesResult{}, app.GetNotesParams{}, errors.Wrap(err, "getting notes")
 	}
 
-	return res, nil
+	return res, p, nil
 }
 
 type noteGroup struct {
@@ -189,11 +196,16 @@ func groupNotes(notes []database.Note) []noteGroup {
 	return ret
 }
 
+func getMaxPage(page, total int) int {
+	tmp := float64(total) / float64(notesPerPage)
+	return int(math.Ceil(tmp))
+}
+
 // Index handles GET /
 func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	res, err := n.getNotes(r)
+	res, p, err := n.getNotes(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
 		return
@@ -202,8 +214,9 @@ func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 	noteGroups := groupNotes(res.Notes)
 
 	vd.Yield = map[string]interface{}{
-		"NoteGroups": noteGroups,
-		"Total":      res.Total,
+		"NoteGroups":  noteGroups,
+		"CurrentPage": p.Page,
+		"MaxPage":     getMaxPage(p.Page, res.Total),
 	}
 
 	n.IndexView.Render(w, r, &vd)
@@ -217,7 +230,7 @@ type GetNotesResponse struct {
 
 // V3Index is a v3 handler for getting notes
 func (n *Notes) V3Index(w http.ResponseWriter, r *http.Request) {
-	result, err := n.getNotes(r)
+	result, _, err := n.getNotes(r)
 	if err != nil {
 		handleJSONError(w, err, "getting notes")
 		return
