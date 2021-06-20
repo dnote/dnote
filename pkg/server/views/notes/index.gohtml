@@ -61,21 +61,31 @@
     <span class="paginator-label">{{ .MaxPage }}</span>
   </span>
 
-  <a
-    href="/"
-    aria-label="left"
-    class="paginator-link"
-  >
-    {{template "caret" "prev"}}
-  </a>
-
-  <a
-    href="/"
-    aria-label="left"
-    class="paginator-link"
-  >
-    {{template "caret" "next"}}
-  </a>
+  {{template "pager" dict "disabled" (not .HasPrev) "direction" "left" "page" (add .CurrentPage -1)}}
+  {{template "pager" dict "disabled" (not .HasNext) "direction" "right" "page" (add .CurrentPage 1)}}
 </nav>
 {{end}}
 
+{{define "pager"}}
+
+{{$ariaLabel := ""}}
+{{if eq .direction "left"}}
+  {{$ariaLabel = "Previous page"}}
+{{else}}
+  {{$ariaLabel = "Next page"}}
+{{end}}
+
+{{if .disabled}}
+<span class="paginator-link disabled">
+  {{template "caret" dict "direction" .direction "stroke" "gray"}}
+</span>
+{{else}}
+<a
+  href="/?page={{ .page }}"
+  aria-label="{{ $ariaLabel }}"
+  class="paginator-link"
+>
+  {{template "caret" dict "direction" .direction "stroke" "black"}}
+</a>
+{{end}}
+{{end}}

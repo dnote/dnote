@@ -27,6 +27,7 @@ func initHelpers(c Config) template.FuncMap {
 		"toISOString":      ctx.toISOString,
 		"dict":             ctx.dict,
 		"defaultValue":     ctx.defaultValue,
+		"add":              ctx.add,
 	}
 
 	// extend with helpers that are defined specific to a view
@@ -157,4 +158,8 @@ func (v viewCtx) defaultValue(value, fallback interface{}) interface{} {
 	}
 
 	return value
+}
+
+func (v viewCtx) add(a, b int) interface{} {
+	return a + b
 }

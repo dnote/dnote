@@ -217,6 +217,8 @@ func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 		"NoteGroups":  noteGroups,
 		"CurrentPage": p.Page,
 		"MaxPage":     getMaxPage(p.Page, res.Total),
+		"HasNext":     p.Page*notesPerPage < res.Total,
+		"HasPrev":     p.Page > 1,
 	}
 
 	n.IndexView.Render(w, r, &vd)
