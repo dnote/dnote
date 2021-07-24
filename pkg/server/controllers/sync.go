@@ -266,7 +266,7 @@ func (s *Sync) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
 	response := GetSyncFragmentResp{
 		Fragment: fragment,
 	}
-	middleware.RespondJSON(w, http.StatusOK, response)
+	respondJSON(w, http.StatusOK, response)
 }
 
 // GetSyncStateResp represents a response from GetSyncFragment handler
@@ -296,5 +296,5 @@ func (s *Sync) GetSyncState(w http.ResponseWriter, r *http.Request) {
 		"resp":    response,
 	}).Info("getting sync state")
 
-	middleware.RespondJSON(w, http.StatusOK, response)
+	respondJSON(w, http.StatusOK, response)
 }

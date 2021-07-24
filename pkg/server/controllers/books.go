@@ -18,8 +18,8 @@ import (
 // It panics if the necessary templates are not parsed.
 func NewBooks(app *app.App) *Books {
 	return &Books{
-		IndexView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/index"),
-		ShowView:  views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/show"),
+		IndexView: views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/index"),
+		ShowView:  views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/show"),
 		app:       app,
 	}
 }
@@ -80,7 +80,7 @@ func (b *Books) Index(w http.ResponseWriter, r *http.Request) {
 		"Books": result,
 	}
 
-	b.IndexView.Render(w, r, &vd)
+	b.IndexView.Render(w, r, &vd, http.StatusOK)
 }
 
 // V3Index gets books

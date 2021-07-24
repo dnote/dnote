@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
@@ -63,7 +64,8 @@ func (c Config) getClock() clock.Clock {
 }
 
 // NewView returns a new view by parsing  the given layout and files
-func NewView(baseDir string, c Config, files ...string) *View {
+func NewView(appConfig config.Config, viewConfig Config, files ...string) *View {
+	baseDir := appConfig.PageTemplateDir
 	addTemplatePath(baseDir, files)
 	addTemplateExt(files)
 
@@ -71,8 +73,8 @@ func NewView(baseDir string, c Config, files ...string) *View {
 	files = append(files, layoutFiles(baseDir)...)
 	files = append(files, partialFiles(baseDir)...)
 
-	viewHelpers := initHelpers(c)
-	t := template.New(c.Title).Funcs(viewHelpers)
+	viewHelpers := initHelpers(viewConfig)
+	t := template.New(viewConfig.Title).Funcs(viewHelpers)
 
 	t, err := t.ParseFiles(files...)
 	if err != nil {
@@ -81,8 +83,9 @@ func NewView(baseDir string, c Config, files ...string) *View {
 
 	return &View{
 		Template:    t,
-		Layout:      c.getLayout(),
-		AlertInBody: c.AlertInBody,
+		Layout:      viewConfig.getLayout(),
+		AlertInBody: viewConfig.AlertInBody,
+		StaticDir:   appConfig.StaticDir,
 	}
 }
 
@@ -92,14 +95,15 @@ type View struct {
 	Layout   string
 	// AlertInBody specifies if alert should be set in the body instead of the header
 	AlertInBody bool
+	StaticDir   string
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	v.Render(w, r, nil)
+	v.Render(w, r, nil, http.StatusOK)
 }
 
 // Render is used to render the view with the predefined layout
-func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
+func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, statusCode int) {
 	w.Header().Set("Content-Type", "text/html")
 
 	var vd Data
@@ -124,10 +128,12 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
 
 	if err := tpl.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		log.ErrorWrap(err, fmt.Sprintf("executing template: '%s' at '%s'", v.Template.Name(), r.RequestURI))
-		http.Error(w, AlertMsgGeneric, http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		http.ServeFile(w, r, fmt.Sprintf("%s/500.html", v.StaticDir))
 		return
 	}
 
+	w.WriteHeader(statusCode)
 	io.Copy(w, &buf)
 }
 

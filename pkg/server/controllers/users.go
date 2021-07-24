@@ -34,22 +34,22 @@ var commonHelpers = map[string]interface{}{
 func NewUsers(app *app.App) *Users {
 	return &Users{
 		NewView: views.NewView(
-			app.Config.PageTemplateDir,
+			app.Config,
 			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/new",
 		),
 		LoginView: views.NewView(
-			app.Config.PageTemplateDir,
+			app.Config,
 			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/login",
 		),
 		PasswordResetView: views.NewView(
-			app.Config.PageTemplateDir,
+			app.Config,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset",
 		),
 		PasswordResetConfirmView: views.NewView(
-			app.Config.PageTemplateDir,
+			app.Config,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset_confirm",
 		),
@@ -69,7 +69,7 @@ type Users struct {
 // New renders user registration page
 func (u *Users) New(w http.ResponseWriter, r *http.Request) {
 	vd := getDataWithReferrer(r)
-	u.NewView.Render(w, r, &vd)
+	u.NewView.Render(w, r, &vd, http.StatusOK)
 }
 
 // RegistrationForm is the form data for registering
@@ -169,7 +169,7 @@ func getDataWithReferrer(r *http.Request) views.Data {
 // NewLogin renders user login page
 func (u *Users) NewLogin(w http.ResponseWriter, r *http.Request) {
 	vd := getDataWithReferrer(r)
-	u.LoginView.Render(w, r, &vd)
+	u.LoginView.Render(w, r, &vd, http.StatusOK)
 }
 
 // Login handles login
@@ -318,7 +318,7 @@ func (u *Users) PasswordResetConfirm(w http.ResponseWriter, r *http.Request) {
 		"Token": token,
 	}
 
-	u.PasswordResetConfirmView.Render(w, r, &vd)
+	u.PasswordResetConfirmView.Render(w, r, &vd, http.StatusOK)
 }
 
 type resetPasswordPayload struct {

@@ -24,8 +24,8 @@ import (
 // It panics if the necessary templates are not parsed.
 func NewNotes(app *app.App) *Notes {
 	return &Notes{
-		IndexView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
-		ShowView:  views.NewView(app.Config.PageTemplateDir, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/show"),
+		IndexView: views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
+		ShowView:  views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/show"),
 		app:       app,
 	}
 }
@@ -221,7 +221,7 @@ func (n *Notes) Index(w http.ResponseWriter, r *http.Request) {
 		"HasPrev":     p.Page > 1,
 	}
 
-	n.IndexView.Render(w, r, &vd)
+	n.IndexView.Render(w, r, &vd, http.StatusOK)
 }
 
 // GetNotesResponse is a reponse by getNotesHandler
@@ -271,7 +271,7 @@ func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n.ShowView.Render(w, r, &vd)
+	n.ShowView.Render(w, r, &vd, http.StatusOK)
 }
 
 // V3Show is api for show

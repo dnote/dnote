@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -70,16 +69,6 @@ func DoError(w http.ResponseWriter, msg string, err error, statusCode int) {
 
 	statusText := http.StatusText(statusCode)
 	http.Error(w, statusText, statusCode)
-}
-
-// RespondJSON encodes the given payload into a JSON format and writes it to the given response writer
-func RespondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-
-	if err := json.NewEncoder(w).Encode(payload); err != nil {
-		DoError(w, "encoding response", err, http.StatusInternalServerError)
-	}
 }
 
 // NotSupported is the handler for the route that is no longer supported

@@ -222,12 +222,11 @@ func getStatusCode(err error) int {
 // handleHTMLError writes the error to the log and sets the error message in the data.
 func handleHTMLError(w http.ResponseWriter, r *http.Request, err error, msg string, v *views.View, d views.Data) {
 	statusCode := getStatusCode(err)
-	w.WriteHeader(statusCode)
 
 	logError(err, msg)
 
 	d.SetAlert(err, v.AlertInBody)
-	v.Render(w, r, &d)
+	v.Render(w, r, &d, statusCode)
 }
 
 // handleJSONError logs the error and responds with the given status code with a generic status text
@@ -258,21 +257,29 @@ func respondWithSession(w http.ResponseWriter, statusCode int, session *database
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		handleJSONError(w, err, "encoding payload")
+
+	dat, err := json.Marshal(response)
+	if err != nil {
+		handleJSONError(w, err, "encoding response")
 		return
 	}
+
+	w.WriteHeader(statusCode)
+	w.Write(dat)
 }
 
 // respondJSON encodes the given payload into a JSON format and writes it to the given response writer
 func respondJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
 
-	if err := json.NewEncoder(w).Encode(payload); err != nil {
+	dat, err := json.Marshal(payload)
+	if err != nil {
 		handleJSONError(w, err, "encoding response")
+		return
 	}
+
+	w.WriteHeader(statusCode)
+	w.Write(dat)
 }
 
 func getClientType(r *http.Request) string {

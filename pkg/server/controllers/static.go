@@ -11,7 +11,7 @@ import (
 // NewStatic creates a new Static controller.
 func NewStatic(app *app.App) *Static {
 	return &Static{
-		NotFoundView: views.NewView(app.Config.PageTemplateDir, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
+		NotFoundView: views.NewView(app.Config, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
 	}
 }
 
@@ -27,7 +27,7 @@ func (s *Static) NotFound(w http.ResponseWriter, r *http.Request) {
 	accept := r.Header.Get("Accept")
 
 	if strings.Contains(accept, "text/html") {
-		s.NotFoundView.Render(w, r, nil)
+		s.NotFoundView.Render(w, r, nil, http.StatusOK)
 	} else {
 		statusText := http.StatusText(http.StatusNotFound)
 		w.Write([]byte(statusText))
