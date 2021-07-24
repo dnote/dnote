@@ -1,4 +1,30 @@
 {{define "yield"}}
-  content
-  {{ .Note.Body }}
+<div id="T-note-page" class="note-page">
+  <div class="container mobile-nopadding page page-mobile-full">
+    <article class="frame collapsed">
+      <header class="header">
+        <div class="header-left">
+          {{template "book" dict "fill" "#000000"}}
+
+          <h1 class="book-label">
+            <a href="/">
+              {{ .Note.Book.Label }}
+            </a>
+          </h1>
+        </div>
+
+        <div class="header-right">
+          right
+        </div>
+      </header>
+
+
+      <section class="content-wrapper">
+        <div class="markdown-body">
+          {{ .Content }}
+        </div>
+      </section>
+    </article>
+  </div>
+</div>
 {{end}}

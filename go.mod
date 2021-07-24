@@ -30,6 +30,7 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/cobra v1.1.1
+	github.com/yuin/goldmark v1.4.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect

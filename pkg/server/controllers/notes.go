@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"math"
 	"net/http"
 	"net/url"
@@ -18,6 +20,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/yuin/goldmark"
 )
 
 // NewNotes creates a new Notes controller.
@@ -265,10 +268,18 @@ func (n *Notes) getNote(r *http.Request) (database.Note, error) {
 func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	_, err := n.getNote(r)
+	note, err := n.getNote(r)
 	if err != nil {
 		handleHTMLError(w, r, err, "getting notes", n.ShowView, vd)
 		return
+	}
+
+	var buf bytes.Buffer
+	goldmark.Convert([]byte(note.Body), &buf)
+
+	vd.Yield = map[string]interface{}{
+		"Note":    note,
+		"Content": template.HTML(buf.String()),
 	}
 
 	n.ShowView.Render(w, r, &vd, http.StatusOK)
