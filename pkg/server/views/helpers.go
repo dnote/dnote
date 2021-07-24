@@ -108,11 +108,8 @@ func (v viewCtx) excerpt(s string, maxLength int) string {
 		return s
 	}
 
-	ret := s[0 : maxLength+1]
-
-	last := max(0, min(len(ret), strings.LastIndex(ret, " ")))
-
-	ret = ret[0:last]
+	ret := s[0:maxLength]
+	ret = s[0:min(len(ret), max(0, strings.LastIndex(ret, " ")))]
 	ret += "..."
 
 	return ret

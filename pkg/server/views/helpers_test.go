@@ -68,7 +68,7 @@ func TestExcerpt(t *testing.T) {
 		{
 			str:       "hello world",
 			maxLength: 5,
-			expected:  "hello...",
+			expected:  "...",
 		},
 		{
 			str:       "hello world",
@@ -85,13 +85,18 @@ func TestExcerpt(t *testing.T) {
 			maxLength: 9,
 			expected:  "foo bar...",
 		},
+		{
+			str:       "foo",
+			maxLength: 4,
+			expected:  "foo",
+		},
 	}
 
 	ctx := viewCtx{}
 
-	for _, tc := range testCases {
+	for idx, tc := range testCases {
 		got := ctx.excerpt(tc.str, tc.maxLength)
-		assert.Equal(t, got, tc.expected, "result mismatch")
+		assert.Equal(t, got, tc.expected, fmt.Sprintf("result mismatch for case %d", idx))
 	}
 }
 
