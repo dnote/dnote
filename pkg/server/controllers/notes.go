@@ -267,7 +267,7 @@ func (n *Notes) Show(w http.ResponseWriter, r *http.Request) {
 
 	_, err := n.getNote(r)
 	if err != nil {
-		handleHTMLError(w, r, err, "getting notes", n.IndexView, vd)
+		handleHTMLError(w, r, err, "getting notes", n.ShowView, vd)
 		return
 	}
 

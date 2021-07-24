@@ -82,7 +82,7 @@ func NewView(app *app.App, viewConfig Config, files ...string) *View {
 
 	t, err := t.ParseFiles(files...)
 	if err != nil {
-		panic(errors.Wrap(err, "instantiating view."))
+		panic(errors.Wrap(err, "instantiating view"))
 	}
 
 	return &View{
@@ -131,7 +131,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	})
 
 	if err := tpl.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
-		log.ErrorWrap(err, fmt.Sprintf("executing template: '%s' at '%s'", v.Template.Name(), r.RequestURI))
+		log.ErrorWrap(err, fmt.Sprintf("executing template for URI '%s'", r.RequestURI))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(v.Files[ServerErrorPageFileKey])
 		return

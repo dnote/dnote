@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/middleware"
+	mw "github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -13,7 +13,7 @@ import (
 type Route struct {
 	Method    string
 	Pattern   string
-	Handler   http.Handler
+	Handler   http.HandlerFunc
 	RateLimit bool
 }
 
@@ -25,68 +25,70 @@ type RouteConfig struct {
 }
 
 // NewWebRoutes returns a new web routes
-func NewWebRoutes(app *app.App, c *Controllers) []Route {
-	ret := []Route{
-		{"GET", "/", middleware.Auth(app, http.HandlerFunc(c.Notes.Index), &middleware.AuthParams{RedirectGuestsToLogin: true}), true},
-		{"GET", "/login", middleware.GuestOnly(app, c.Users.NewLogin), true},
-		{"POST", "/login", middleware.GuestOnly(app, c.Users.Login), true},
-		{"POST", "/logout", http.HandlerFunc(c.Users.Logout), true},
-		{"GET", "/notes/{noteUUID}", http.HandlerFunc(c.Notes.Show), true},
-		{"POST", "/notes", middleware.Auth(app, http.HandlerFunc(c.Notes.Create), nil), true},
-		{"DELETE", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Delete), nil), true},
-		{"PATCH", "/notes/{noteUUID}", middleware.Auth(app, http.HandlerFunc(c.Notes.Update), nil), true},
-		{"GET", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Index), &middleware.AuthParams{RedirectGuestsToLogin: true}), true},
-		{"POST", "/books", middleware.Auth(app, http.HandlerFunc(c.Books.Create), nil), true},
-		{"PATCH", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Update), nil), true},
-		{"DELETE", "/books/{bookUUID}", middleware.Auth(app, http.HandlerFunc(c.Books.Delete), nil), true},
+func NewWebRoutes(a *app.App, c *Controllers) []Route {
+	redirectGuest := &mw.AuthParams{RedirectGuestsToLogin: true}
 
-		{"GET", "/password-reset", c.Users.PasswordResetView, true},
-		{"PATCH", "/password-reset", http.HandlerFunc(c.Users.PasswordReset), true},
-		{"GET", "/password-reset/{token}", http.HandlerFunc(c.Users.PasswordResetConfirm), true},
-		{"POST", "/reset-token", http.HandlerFunc(c.Users.CreateResetToken), true},
+	ret := []Route{
+		{"GET", "/", mw.Auth(a, c.Notes.Index, redirectGuest), true},
+		{"GET", "/login", mw.GuestOnly(a, c.Users.NewLogin), true},
+		{"POST", "/login", mw.GuestOnly(a, c.Users.Login), true},
+		{"POST", "/logout", c.Users.Logout, true},
+		{"GET", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Show, nil), true},
+		{"POST", "/notes", mw.Auth(a, c.Notes.Create, nil), true},
+		{"DELETE", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Delete, nil), true},
+		{"PATCH", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Update, nil), true},
+		{"GET", "/books", mw.Auth(a, c.Books.Index, redirectGuest), true},
+		{"POST", "/books", mw.Auth(a, c.Books.Create, nil), true},
+		{"PATCH", "/books/{bookUUID}", mw.Auth(a, c.Books.Update, nil), true},
+		{"DELETE", "/books/{bookUUID}", mw.Auth(a, c.Books.Delete, nil), true},
+
+		{"GET", "/password-reset", c.Users.PasswordResetView.ServeHTTP, true},
+		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
+		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
+		{"POST", "/reset-token", c.Users.CreateResetToken, true},
 	}
 
-	if !app.Config.DisableRegistration {
-		ret = append(ret, Route{"GET", "/join", http.HandlerFunc(c.Users.New), true})
-		ret = append(ret, Route{"POST", "/join", http.HandlerFunc(c.Users.Create), true})
+	if !a.Config.DisableRegistration {
+		ret = append(ret, Route{"GET", "/join", c.Users.New, true})
+		ret = append(ret, Route{"POST", "/join", c.Users.Create, true})
 	}
 
 	return ret
 }
 
 // NewAPIRoutes returns a new api routes
-func NewAPIRoutes(app *app.App, c *Controllers) []Route {
+func NewAPIRoutes(a *app.App, c *Controllers) []Route {
 
-	proOnly := middleware.AuthParams{ProOnly: true}
+	proOnly := mw.AuthParams{ProOnly: true}
 
 	return []Route{
 		// internal
-		{"GET", "/health", http.HandlerFunc(c.Health.Index), true},
+		{"GET", "/health", c.Health.Index, true},
 
 		// v3
-		{"GET", "/v3/sync/fragment", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Sync.GetSyncFragment), &proOnly)), false},
-		{"GET", "/v3/sync/state", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Sync.GetSyncState), &proOnly)), false},
-		{"POST", "/v3/signin", middleware.Cors(c.Users.V3Login), true},
-		{"POST", "/v3/signout", middleware.Cors(c.Users.V3Logout), true},
-		{"OPTIONS", "/v3/signout", middleware.Cors(http.HandlerFunc(c.Users.logoutOptions)), true},
-		{"GET", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Index), nil)), true},
-		{"GET", "/v3/notes/{noteUUID}", http.HandlerFunc(c.Notes.V3Show), true},
-		{"POST", "/v3/notes", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Create), nil)), true},
-		{"DELETE", "/v3/notes/{noteUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Delete), nil)), true},
-		{"PATCH", "/v3/notes/{noteUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Notes.V3Update), nil)), true},
-		{"OPTIONS", "/v3/notes", middleware.Cors(http.HandlerFunc(c.Notes.IndexOptions)), true},
-		{"GET", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Index), nil)), true},
-		{"GET", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Show), nil)), true},
-		{"POST", "/v3/books", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Create), nil)), true},
-		{"PATCH", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Update), nil)), true},
-		{"DELETE", "/v3/books/{bookUUID}", middleware.Cors(middleware.Auth(app, http.HandlerFunc(c.Books.V3Delete), nil)), true},
-		{"OPTIONS", "/v3/books", middleware.Cors(http.HandlerFunc(c.Books.IndexOptions)), true},
+		{"GET", "/v3/sync/fragment", mw.Cors(mw.Auth(a, c.Sync.GetSyncFragment, &proOnly)), false},
+		{"GET", "/v3/sync/state", mw.Cors(mw.Auth(a, c.Sync.GetSyncState, &proOnly)), false},
+		{"POST", "/v3/signin", mw.Cors(c.Users.V3Login), true},
+		{"POST", "/v3/signout", mw.Cors(c.Users.V3Logout), true},
+		{"OPTIONS", "/v3/signout", mw.Cors(c.Users.logoutOptions), true},
+		{"GET", "/v3/notes", mw.Cors(mw.Auth(a, c.Notes.V3Index, nil)), true},
+		{"GET", "/v3/notes/{noteUUID}", c.Notes.V3Show, true},
+		{"POST", "/v3/notes", mw.Cors(mw.Auth(a, c.Notes.V3Create, nil)), true},
+		{"DELETE", "/v3/notes/{noteUUID}", mw.Cors(mw.Auth(a, c.Notes.V3Delete, nil)), true},
+		{"PATCH", "/v3/notes/{noteUUID}", mw.Cors(mw.Auth(a, c.Notes.V3Update, nil)), true},
+		{"OPTIONS", "/v3/notes", mw.Cors(c.Notes.IndexOptions), true},
+		{"GET", "/v3/books", mw.Cors(mw.Auth(a, c.Books.V3Index, nil)), true},
+		{"GET", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Show, nil)), true},
+		{"POST", "/v3/books", mw.Cors(mw.Auth(a, c.Books.V3Create, nil)), true},
+		{"PATCH", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Update, nil)), true},
+		{"DELETE", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Delete, nil)), true},
+		{"OPTIONS", "/v3/books", mw.Cors(c.Books.IndexOptions), true},
 	}
 }
 
-func registerRoutes(router *mux.Router, mw middleware.Middleware, app *app.App, routes []Route) {
+func registerRoutes(router *mux.Router, wrapper mw.Middleware, app *app.App, routes []Route) {
 	for _, route := range routes {
-		wrappedHandler := mw(route.Handler, app, route.RateLimit)
+		wrappedHandler := wrapper(route.Handler, app, route.RateLimit)
 
 		router.
 			Handle(route.Pattern, wrappedHandler).
@@ -104,11 +106,11 @@ func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
 
 	webRouter := router.PathPrefix("/").Subrouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	registerRoutes(webRouter, middleware.WebMw, app, rc.WebRoutes)
-	registerRoutes(apiRouter, middleware.APIMw, app, rc.APIRoutes)
+	registerRoutes(webRouter, mw.WebMw, app, rc.WebRoutes)
+	registerRoutes(apiRouter, mw.APIMw, app, rc.APIRoutes)
 
-	router.PathPrefix("/api/v1").Handler(middleware.ApplyLimit(middleware.NotSupported, true))
-	router.PathPrefix("/api/v2").Handler(middleware.ApplyLimit(middleware.NotSupported, true))
+	router.PathPrefix("/api/v1").Handler(mw.ApplyLimit(mw.NotSupported, true))
+	router.PathPrefix("/api/v2").Handler(mw.ApplyLimit(mw.NotSupported, true))
 
 	// static
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
@@ -117,5 +119,5 @@ func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
 	// catch-all
 	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
 
-	return middleware.Global(router), nil
+	return mw.Global(router), nil
 }
