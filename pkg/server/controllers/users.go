@@ -33,23 +33,19 @@ var commonHelpers = map[string]interface{}{
 // It panics if the necessary templates are not parsed.
 func NewUsers(app *app.App) *Users {
 	return &Users{
-		NewView: views.NewView(
-			app.Config,
+		NewView: views.NewView(app,
 			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/new",
 		),
-		LoginView: views.NewView(
-			app.Config,
+		LoginView: views.NewView(app,
 			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/login",
 		),
-		PasswordResetView: views.NewView(
-			app.Config,
+		PasswordResetView: views.NewView(app,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset",
 		),
-		PasswordResetConfirmView: views.NewView(
-			app.Config,
+		PasswordResetConfirmView: views.NewView(app,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset_confirm",
 		),

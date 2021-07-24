@@ -18,8 +18,8 @@ import (
 // It panics if the necessary templates are not parsed.
 func NewBooks(app *app.App) *Books {
 	return &Books{
-		IndexView: views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/index"),
-		ShowView:  views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/show"),
+		IndexView: views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/index"),
+		ShowView:  views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/show"),
 		app:       app,
 	}
 }

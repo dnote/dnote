@@ -24,8 +24,8 @@ import (
 // It panics if the necessary templates are not parsed.
 func NewNotes(app *app.App) *Notes {
 	return &Notes{
-		IndexView: views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
-		ShowView:  views.NewView(app.Config, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/show"),
+		IndexView: views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/index"),
+		ShowView:  views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "notes/show"),
 		app:       app,
 	}
 }

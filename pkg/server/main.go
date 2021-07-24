@@ -21,6 +21,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
+	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/jinzhu/gorm"
 
 	"github.com/pkg/errors"
@@ -50,8 +52,20 @@ func initDB(c config.Config) *gorm.DB {
 	return db
 }
 
+func mustReadFile(path string) []byte {
+	ret, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(errors.Wrap(err, "reading file"))
+	}
+
+	return ret
+}
+
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
+
+	files := map[string][]byte{}
+	files[views.ServerErrorPageFileKey] = mustReadFile(fmt.Sprintf("%s/500.html", cfg.StaticDir))
 
 	return app.App{
 		DB:             db,
@@ -59,6 +73,7 @@ func initApp(cfg config.Config) app.App {
 		EmailTemplates: mailer.NewTemplates(nil),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
+		Files:          files,
 	}
 }
 
