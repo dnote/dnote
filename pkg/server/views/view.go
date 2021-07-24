@@ -123,7 +123,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data) {
 	})
 
 	if err := tpl.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
-		log.ErrorWrap(err, fmt.Sprintf("executing a template '%s'", v.Template.Name()))
+		log.ErrorWrap(err, fmt.Sprintf("executing template: '%s' at '%s'", v.Template.Name(), r.RequestURI))
 		http.Error(w, AlertMsgGeneric, http.StatusInternalServerError)
 		return
 	}
