@@ -17,6 +17,7 @@ func initHelpers(c Config) template.FuncMap {
 	ret := template.FuncMap{
 		"csrfField":        ctx.csrfField,
 		"css":              ctx.css,
+		"js":               ctx.js,
 		"title":            ctx.title,
 		"headerTemplate":   ctx.headerTemplate,
 		"rootURL":          ctx.rootURL,
@@ -45,6 +46,10 @@ func (v viewCtx) csrfField() (template.HTML, error) {
 }
 
 func (v viewCtx) css() []string {
+	return strings.Split(buildinfo.CSSFiles, ",")
+}
+
+func (v viewCtx) js() []string {
 	return strings.Split(buildinfo.CSSFiles, ",")
 }
 

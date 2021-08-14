@@ -1,27 +1,30 @@
 {{define "navbar"}}
 <header class="header-wrapper">
-  <div class="container">
+  <div class="container-wide">
     <div class="header-content">
       <div class="left">
         <a href="/" class="brand">
           {{template "logoWithText"}}
         </a>
 
-        <nav class="main-nav">
-          <ul class="list-unstyled list">
-            <li class="item">
-              <a class="nav-link" href="/new">New</a>
-            </li>
-            <li class="item">
-              <a class='nav-link' href="/books">Books</a>
-            </li>
-          </ul>
-        </nav>
+        <div class="search-wrapper">
+          <input class="search-input" type="text" placeholder="Search by keywords" />
+        </div>
       </div>
 
-      <div>
+      <div class="right">
+
         {{if .User}}
-          <li>{{template "logoutForm"}}</li>
+          <nav class="main-nav">
+            <ul class="list-unstyled list">
+              <li class="item">
+                <a class="nav-link" href="/new">Compose</a>
+              </li>
+              <li class="item">
+                <a class='nav-link' href="/books">Books</a>
+              </li>
+            </ul>
+          </nav>
         {{end}}
       </div>
     </div>

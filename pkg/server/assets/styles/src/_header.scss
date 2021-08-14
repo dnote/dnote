@@ -31,6 +31,24 @@
     display: flex;
   }
 
+  .right {
+    display: flex;
+  }
+
+  .search-wrapper {
+    align-items: center;
+    display: flex;
+    margin-left: rem(32px);
+  }
+
+  .search-input {
+    width: rem(356px);
+    border: 0;
+    padding: 4px 12px;
+    border-radius: rem(4px);
+    @include font-size('small');
+  }
+
   .brand {
     display: flex;
     align-items: center;
