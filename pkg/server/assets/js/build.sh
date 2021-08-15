@@ -3,20 +3,17 @@
 set -ex
 
 dir=$(dirname "${BASH_SOURCE[0]}")
+basePath="$dir/../../.."
 serverDir="$dir/../.."
 outputDir="$serverDir/static"
 inputDir="$dir/src"
 
-rm -rf "${outputDir:?}/*"
+task="cp $inputDir/*.js $outputDir"
 
-task="sass \
-  --style compressed \
-  --source-map \
-  $inputDir:$outputDir"
-
-# compile first then watch
-eval "$task"
-
-if [[ "$1" == "true" ]]; then
-  eval "$task --watch --poll"
-fi
+(
+  cd "$basePath/watcher" && \
+  go run main.go \
+  --task="$task" \
+  --context="$inputDir" \
+  "$inputDir"
+)

@@ -50,7 +50,7 @@ func (v viewCtx) css() []string {
 }
 
 func (v viewCtx) js() []string {
-	return strings.Split(buildinfo.CSSFiles, ",")
+	return strings.Split(buildinfo.JSFiles, ",")
 }
 
 func (v viewCtx) title() string {

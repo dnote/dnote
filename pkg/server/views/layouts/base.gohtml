@@ -23,7 +23,6 @@
     <meta name="theme-color" content="#ffffff" />
 
     {{template "css" .}}
-    {{template "js" .}}
   </head>
 
   <body>
@@ -34,6 +33,8 @@
     <main class="main">
       {{template "yield" .Yield}}
     </main>
+
+    {{template "js" .}}
   </body>
 </html>
 {{end}}
