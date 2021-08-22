@@ -121,6 +121,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	}
 
 	vd.User = context.User(r.Context())
+	vd.Account = context.Account(r.Context())
 
 	var buf bytes.Buffer
 	csrfField := csrf.TemplateField(r)

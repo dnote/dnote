@@ -8,7 +8,7 @@ serverDir="$dir/../.."
 outputDir="$serverDir/static"
 inputDir="$dir/src"
 
-task="cp $inputDir/*.js $outputDir"
+task="cp $inputDir/main.js $outputDir"
 
 (
   cd "$basePath/watcher" && \

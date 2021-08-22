@@ -18,19 +18,13 @@
           <nav class="main-nav">
             <ul class="list-unstyled list">
               <li class="item">
-                <a class="nav-link" href="/new">Compose</a>
+                <a class="nav-link nav-item" href="/new">Compose</a>
               </li>
               <li class="item">
-                <a class='nav-link' href="/books">Books</a>
+                <a class="nav-link nav-item" href="/books">Books</a>
               </li>
-              <li>
-                <div class="dropdown">
-                  <button id="account-dropdown">Dropdown</button>
-                  <ul>
-                    <li><a href="#">link 1</a></li>
-                    <li><a href="#">link 2</a></li>
-                  </ul>
-                </div>
+              <li class="item">
+                {{template "accountDropdown" .}}
               </li>
             </ul>
           </nav>
@@ -42,9 +36,47 @@
 </header>
 {{end}}
 
+{{define "accountDropdown"}}
+<div class="dropdown account-dropdown">
+  <button class="dropdown-trigger button-no-ui nav-item">Actions</button>
+
+  <div class="dropdown-content right-align show">
+    <header>
+      <div class="account-dropdown-header">
+        <div class="session-notice-wrapper">
+          {{template "lockIcon"}}
+
+          <div class="session-notice">
+            Signed in
+          </div>
+        </div>
+
+        <div class="email">
+          {{.Account.Email.String}}
+        </div>
+
+      </div>
+      <div class="divider"></div>
+    </header>
+
+    <ul class="list-unstyled" role="menu">
+      <li role="none">
+        <a class="dropdown-link" href="/" role="menuitem">Home</a>
+      </li>
+      <li role="none">
+        <a class="dropdown-link" href="/settings" role="menuitem">Settings</a>
+      </li>
+      <li role="none">
+        {{template "logoutForm"}}
+      </li>
+    </ul>
+  </div>
+</div>
+{{end}}
+
 {{define "logoutForm"}}
-<form class="navbar-form navbar-left" action="/logout" method="POST">
+<form action="/logout" method="POST">
   {{csrfField}}
-  <button type="submit" class="btn btn-default">Log out</button>
+  <input type="submit" class="button-no-ui dropdown-link" role="menuitem" tabindex="0" value="Logout"></input>
 </form>
 {{end}}

@@ -65,6 +65,8 @@ type AuthParams struct {
 
 // Auth is an authentication middleware
 func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
+	next = WithAccount(a, next)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok, err := AuthWithSession(a.DB, r)
 		if !ok {
@@ -94,6 +96,23 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 		}
 
 		ctx := context.WithUser(r.Context(), &user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+
+}
+
+func WithAccount(a *app.App, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := context.User(r.Context())
+
+		var account database.Account
+		if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+			DoError(w, "finding account", err, http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context.WithAccount(r.Context(), &account)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

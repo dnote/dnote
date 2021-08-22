@@ -33,8 +33,9 @@ type Alert struct {
 type Data struct {
 	Alert *Alert
 	// CSRF  template.HTML
-	User  *database.User
-	Yield map[string]interface{}
+	User    *database.User
+	Account *database.Account
+	Yield   map[string]interface{}
 }
 
 func getErrMessage(err error) string {
