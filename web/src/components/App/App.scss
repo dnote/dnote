@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
  *
  * This file is part of Dnote.
  *
