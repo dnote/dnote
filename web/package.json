@@ -56,7 +56,7 @@
     "core-js": "^3.6.5",
     "highlight.js": "^10.1.2",
     "history": "^4.10.1",
-    "markdown-it": "^9.0.0",
+    "markdown-it": "^12.3.2",
     "qs": "^6.9.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
