@@ -37,5 +37,4 @@ Please see [Dnote wiki](https://github.com/dnote/dnote/wiki) for the documentati
 ## See Also
 
 - [Homepage](https://www.getdnote.com)
-- [Forum](https://forum.getdnote.com)
 - [I Wrote Down Everything I Learned While Programming for a Month](https://www.getdnote.com/blog/writing-everything-i-learn-coding-for-a-month/)
