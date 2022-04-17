@@ -183,9 +183,10 @@ type SessionResponse struct {
 
 func logError(err error, msg string) {
 	// log if internal error
-	if _, ok := err.(views.PublicError); !ok {
-		log.ErrorWrap(err, msg)
-	}
+	// if _, ok := err.(views.PublicError); !ok {
+	// 	log.ErrorWrap(err, msg)
+	// }
+	log.ErrorWrap(err, msg)
 }
 
 func getStatusCode(err error) int {
@@ -214,6 +215,18 @@ func getStatusCode(err error) int {
 		return http.StatusGone
 	case app.ErrPasswordConfirmationMismatch:
 		return http.StatusBadRequest
+	case app.ErrInvalidPasswordChangeInput:
+		return http.StatusBadRequest
+	case app.ErrInvalidPassword:
+		return http.StatusUnauthorized
+	case app.ErrEmailTooLong:
+		return http.StatusBadRequest
+	case app.ErrEmailAlreadyVerified:
+		return http.StatusConflict
+	case app.ErrMissingToken:
+		return http.StatusBadRequest
+	case app.ErrExpiredToken:
+		return http.StatusGone
 	}
 
 	return http.StatusInternalServerError

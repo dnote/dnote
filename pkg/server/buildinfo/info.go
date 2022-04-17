@@ -9,4 +9,7 @@ var (
 	JSFiles = ""
 	// RootURL is the root url
 	RootURL = "/"
+	// Standalone reprsents whether the build is for on-premises. It is a string
+	// rather than a boolean, so that it can be overridden during compile time.
+	Standalone = "false"
 )

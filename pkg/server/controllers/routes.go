@@ -30,6 +30,7 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 
 	ret := []Route{
 		{"GET", "/", mw.Auth(a, c.Users.Settings, redirectGuest), true},
+		{"GET", "/about", mw.Auth(a, c.Users.About, redirectGuest), true},
 		{"GET", "/login", mw.GuestOnly(a, c.Users.NewLogin), true},
 		{"POST", "/login", mw.GuestOnly(a, c.Users.Login), true},
 		{"POST", "/logout", c.Users.Logout, true},
@@ -38,6 +39,10 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
 		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
 		{"POST", "/reset-token", c.Users.CreateResetToken, true},
+		{"POST", "/verification-token", mw.Auth(a, c.Users.CreateEmailVerificationToken, redirectGuest), true},
+		{"GET", "/verify-email/{token}", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
+		{"PATCH", "/account/profile", mw.Auth(a, c.Users.ProfileUpdate, nil), true},
+		{"PATCH", "/account/password", mw.Auth(a, c.Users.PasswordUpdate, nil), true},
 	}
 
 	if !a.Config.DisableRegistration {
@@ -107,6 +112,10 @@ func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
 	// static
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
 	router.PathPrefix("/static/").Handler(staticHandler)
+
+	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("User-agent: *\nAllow: /"))
+	})
 
 	// catch-all
 	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)

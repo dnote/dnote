@@ -29,9 +29,18 @@ import (
 // MustNewServer is a test utility function to initialize a new server
 // with the given app paratmers
 func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
+	server, err := NewServer(appParams)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "initializing router"))
+	}
+
+	return server
+}
+
+func NewServer(appParams *app.App) (*httptest.Server, error) {
 	a := app.NewTest(appParams)
 
-	ctl := New(&a)
+	ctl := New(&a, a.Config.PageTemplateDir)
 	rc := RouteConfig{
 		WebRoutes:   NewWebRoutes(&a, ctl),
 		APIRoutes:   NewAPIRoutes(&a, ctl),
@@ -39,10 +48,10 @@ func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 	}
 	r, err := NewRouter(&a, rc)
 	if err != nil {
-		t.Fatal(errors.Wrap(err, "initializing router"))
+		return nil, errors.Wrap(err, "initializing router")
 	}
 
 	server := httptest.NewServer(r)
 
-	return server
+	return server, nil
 }

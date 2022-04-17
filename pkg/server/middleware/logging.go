@@ -40,7 +40,7 @@ func (w *logResponseWriter) WriteHeader(code int) {
 }
 
 // logging is a logging middleware
-func logging(inner http.Handler) http.HandlerFunc {
+func Logging(inner http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 

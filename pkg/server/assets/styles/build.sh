@@ -9,6 +9,8 @@ inputDir="$dir/src"
 
 rm -rf "${outputDir:?}/*"
 
+sass --version
+
 task="sass \
   --style compressed \
   --source-map \

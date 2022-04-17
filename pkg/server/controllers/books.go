@@ -9,7 +9,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
-	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -18,17 +17,13 @@ import (
 // It panics if the necessary templates are not parsed.
 func NewBooks(app *app.App) *Books {
 	return &Books{
-		IndexView: views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/index"),
-		ShowView:  views.NewView(app, views.Config{Title: "", Layout: "base", HeaderTemplate: "navbar"}, "books/show"),
-		app:       app,
+		app: app,
 	}
 }
 
 // Books is a user controller.
 type Books struct {
-	IndexView *views.View
-	ShowView  *views.View
-	app       *app.App
+	app *app.App
 }
 
 func (b *Books) getBooks(r *http.Request) ([]database.Book, error) {
@@ -64,23 +59,6 @@ func (b *Books) getBooks(r *http.Request) ([]database.Book, error) {
 	}
 
 	return books, nil
-}
-
-// Index handles GET /
-func (b *Books) Index(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	result, err := b.getBooks(r)
-	if err != nil {
-		handleHTMLError(w, r, err, "getting books", b.IndexView, vd)
-		return
-	}
-
-	vd.Yield = map[string]interface{}{
-		"Books": result,
-	}
-
-	b.IndexView.Render(w, r, &vd, http.StatusOK)
 }
 
 // V3Index gets books
@@ -171,21 +149,8 @@ func (b *Books) create(r *http.Request) (database.Book, error) {
 	return book, nil
 }
 
-// Create creates a book
-func (b *Books) Create(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	_, err := b.create(r)
-	if err != nil {
-		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
-		return
-	}
-
-	http.Redirect(w, r, "/books", http.StatusCreated)
-}
-
-// createBookResp is the response from create book api
-type createBookResp struct {
+// CreateBookResp is the response from create book api
+type CreateBookResp struct {
 	Book presenters.Book `json:"book"`
 }
 
@@ -197,7 +162,7 @@ func (b *Books) V3Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := createBookResp{
+	resp := CreateBookResp{
 		Book: presenters.PresentBook(result),
 	}
 	respondJSON(w, http.StatusCreated, resp)
@@ -246,19 +211,6 @@ func (b *Books) update(r *http.Request) (database.Book, error) {
 	tx.Commit()
 
 	return book, nil
-}
-
-// Update updates a book
-func (b *Books) Update(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	_, err := b.update(r)
-	if err != nil {
-		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
-		return
-	}
-
-	http.Redirect(w, r, "/books", http.StatusOK)
 }
 
 // V3Update updates a book
@@ -317,19 +269,6 @@ func (b *Books) del(r *http.Request) (database.Book, error) {
 	return book, nil
 }
 
-// Delete updates a book
-func (b *Books) Delete(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	_, err := b.del(r)
-	if err != nil {
-		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
-		return
-	}
-
-	http.Redirect(w, r, "/", http.StatusOK)
-}
-
 // deleteBookResp is the response from create book api
 type deleteBookResp struct {
 	Status int             `json:"status"`
@@ -338,11 +277,9 @@ type deleteBookResp struct {
 
 // Delete updates a book
 func (b *Books) V3Delete(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
 	book, err := b.del(r)
 	if err != nil {
-		handleHTMLError(w, r, err, "creating a books", b.IndexView, vd)
+		handleJSONError(w, err, "creating a books")
 		return
 	}
 

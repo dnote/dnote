@@ -48,7 +48,20 @@ var (
 
 	// ErrInvalidToken is an error for invalid token
 	ErrInvalidToken appError = "invalid token"
+	// ErrMissingToken is an error for missing token
+	ErrMissingToken appError = "missing token"
+	// ErrExpiredToken is an error for missing token
+	ErrExpiredToken appError = "This token has expired."
 
 	// ErrPasswordResetTokenExpired is an error for expired password reset token
 	ErrPasswordResetTokenExpired appError = "this link has been expired. Please request a new password reset link."
+	// ErrInvalidPasswordChangeInput is an error for changing password
+	ErrInvalidPasswordChangeInput appError = "Both current and new passwords are required to change the password."
+
+	ErrInvalidPassword appError = "Invalid currnet password."
+	// ErrEmailTooLong is an error for email length exceeding the limit
+	ErrEmailTooLong appError = "Email is too long."
+
+	// ErrEmailAlreadyVerified is an error for trying to verify email that is already verified
+	ErrEmailAlreadyVerified appError = "Email is already verified."
 )

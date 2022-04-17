@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/pkg/errors"
@@ -263,8 +263,8 @@ type GetSyncFragmentResp struct {
 
 // GetSyncFragment responds with a sync fragment
 func (s *Sync) GetSyncFragment(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
-	if !ok {
+	user := context.User(r.Context())
+	if user == nil {
 		middleware.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}
@@ -296,8 +296,8 @@ type GetSyncStateResp struct {
 
 // GetSyncState responds with a sync fragment
 func (s *Sync) GetSyncState(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value(helpers.KeyUser).(database.User)
-	if !ok {
+	user := context.User(r.Context())
+	if user == nil {
 		middleware.DoError(w, "No authenticated user found", nil, http.StatusInternalServerError)
 		return
 	}

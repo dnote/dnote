@@ -10,6 +10,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
@@ -68,8 +69,7 @@ func (c Config) getClock() clock.Clock {
 }
 
 // NewView returns a new view by parsing  the given layout and files
-func NewView(app *app.App, viewConfig Config, files ...string) *View {
-	baseDir := app.Config.PageTemplateDir
+func NewView(baseDir string, app *app.App, viewConfig Config, files ...string) *View {
 	addTemplatePath(baseDir, files)
 	addTemplateExt(files)
 
@@ -77,7 +77,7 @@ func NewView(app *app.App, viewConfig Config, files ...string) *View {
 	files = append(files, layoutFiles(baseDir)...)
 	files = append(files, partialFiles(baseDir)...)
 
-	viewHelpers := initHelpers(viewConfig)
+	viewHelpers := initHelpers(viewConfig, app)
 	t := template.New(viewConfig.Title).Funcs(viewHelpers)
 
 	t, err := t.ParseFiles(files...)
@@ -122,6 +122,21 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 
 	vd.User = context.User(r.Context())
 	vd.Account = context.Account(r.Context())
+
+	// Put user data in Yield
+	if vd.Yield == nil {
+		vd.Yield = map[string]interface{}{}
+	}
+	if vd.Account != nil {
+		vd.Yield["Email"] = vd.Account.Email.String
+		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
+		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
+	}
+	if vd.User != nil {
+		vd.Yield["Cloud"] = vd.User.Cloud
+	}
+	vd.Yield["CurrentPath"] = r.URL.Path
+	vd.Yield["Standalone"] = buildinfo.Standalone
 
 	var buf bytes.Buffer
 	csrfField := csrf.TemplateField(r)

@@ -325,11 +325,11 @@ func TestCreateBook(t *testing.T) {
 		assert.Equal(t, bookRecord.USN, maxUSN, "book user_id mismatch")
 		assert.Equal(t, userRecord.MaxUSN, maxUSN, "user max_usn mismatch")
 
-		var got createBookResp
+		var got CreateBookResp
 		if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
 			t.Fatal(errors.Wrap(err, "decoding"))
 		}
-		expected := createBookResp{
+		expected := CreateBookResp{
 			Book: presenters.Book{
 				UUID:      bookRecord.UUID,
 				USN:       bookRecord.USN,

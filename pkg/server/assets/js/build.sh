@@ -10,6 +10,8 @@ inputDir="$dir/src"
 
 task="cp $inputDir/main.js $outputDir"
 
+
+if [[ "$1" == "true" ]]; then
 (
   cd "$basePath/watcher" && \
   go run main.go \
@@ -17,3 +19,6 @@ task="cp $inputDir/main.js $outputDir"
   --context="$inputDir" \
   "$inputDir"
 )
+else
+  eval "$task"
+fi

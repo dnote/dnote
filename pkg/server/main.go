@@ -93,6 +93,7 @@ func startCmd() {
 	cfg := config.Load()
 	cfg.SetPageTemplateDir(*pageDir)
 	cfg.SetStaticDir(*staticDir)
+	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)
 	defer app.DB.Close()
@@ -104,7 +105,7 @@ func startCmd() {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	ctl := controllers.New(&app)
+	ctl := controllers.New(&app, *pageDir)
 	rc := controllers.RouteConfig{
 		WebRoutes:   controllers.NewWebRoutes(&app, ctl),
 		APIRoutes:   controllers.NewAPIRoutes(&app, ctl),
