@@ -1,50 +1,180 @@
 {{define "yield"}}
-<div class="container page page-mobile-full">
-  <div class="page-header">
-    <h1 class="page-heading">Settings</h1>
-  </div>
+<div class="page page-mobile-full settings-page">
+  <div class="container mobile-fw">
+    <div class="page-header">
+      <h1 class="page-heading">Settings</h1>
+    </div>
 
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-3">
+        {{template "settingsSidebar" .}}
+      </div>
+
+      <div class="col-12 col-md-12 col-lg-9">
+        <div class="setting-section-wrapper">
+          <section class="setting-section">
+            <h2 class="section-heading">Email</h2>
+
+            <div class="setting-row">
+              <div class="setting-row-summary">
+                <div>
+                  <h3 class="setting-name">Email</h3>
+                </div>
+
+                <div class="setting-right">
+                  {{.Account.Email.String}}
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-row-summary">
+                <div>
+                  <h3 class="setting-name">Email Verified</h3>
+                </div>
+
+                <div class="setting-right">
+                  {{if .Account.EmailVerified}}
+                    Yes
+                  {{else}}
+                    No
+                  {{end}}
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-row-summary">
+                <div>
+                  <h3 class="setting-name">Change Email</h3>
+                </div>
+              </div>
+
+              <div class="setting-row-main">
+                {{template "emailForm" .}}
+              </div>
+            </div>
+          </section>
+
+          <section class="setting-section">
+            <h2 class="section-heading">Password</h2>
+
+            <div class="setting-row">
+              <div class="setting-row-summary">
+                <div>
+                  <h3 class="setting-name">Change Password</h3>
+                  <p class="setting-desc">
+                    Set a unique password to protect your data.
+                  </p>
+                </div>
+              </div>
+
+              <div class="setting-row-main">
+                {{template "passwordChangeForm" .}}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {{end}}
 
-{{define "settingsSidebar"}}
-<nav class="wrapper">
-  <ul class="list-unstyled">
-    <li>
-      <a href="/settings"></a>
-      <NavLink
-        class={styles.item}
-        activeClassName={styles.active}
-        to={getSettingsPath(SettingSections.account)}
-      >
-        Account
-      </NavLink>
-    </li>
-    {__STANDALONE__ ? null : (
-      <li>
-        <a class={styles.item} href="/subscriptions/manage">
-          Billing
-        </a>
-      </li>
-    )}
-    <li>
-      <NavLink
-        class={styles.item}
-        activeClassName={styles.active}
-        to={getSettingsPath(SettingSections.notifications)}
-      >
-        Notifications
-      </NavLink>
-    </li>
-    <li>
-      <NavLink
-        class={styles.item}
-        activeClassName={styles.active}
-        to={getSettingsPath(SettingSections.about)}
-      >
-        About
-      </NavLink>
-    </li>
-  </ul>
-</nav>
+{{define "emailForm"}}
+<form action="/account/profile">
+  <input type="password" style="display: none;" readonly />
+
+  <div class="input-row">
+    <label class="input-label" for="email-form-email-input">
+      New email
+    </label>
+
+    <input
+      id="email-form-email-input"
+      type="email"
+      placeholder="your@email.com"
+      class="form-control"
+      autocomplete="new-password"
+    />
+  </div>
+
+  <div class="input-row">
+    <label class="input-label" for="email-form-password-input">
+      Current password
+    </label>
+
+    <input
+      id="email-form-password-input"
+      type="password"
+      placeholder="********"
+      class="form-control"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="actions">
+    <button
+      class="button button-first button-normal"
+      type="submit"
+    >
+      Update email
+    </button>
+  </div>
+</form>
+{{end}}
+
+{{define "passwordChangeForm"}}
+<form action="/account/password">
+  <input type="password" style="display: none;" readOnly />
+
+  <div class="input-row">
+    <label class="input-label" for="old-password-input">
+      Current password
+    </label>
+    <input
+      id="old-password-input"
+      type="password"
+      placeholder="********"
+      class="form-control"
+      autocomplete="false"
+    />
+  </div>
+
+  <div class="input-row">
+    <label class="input-label" for="new-password-input">
+      New Password
+    </label>
+    <input
+      id="new-password-input"
+      type="password"
+      placeholder="********"
+      class="form-control"
+    />
+  </div>
+
+  <div class="input-row">
+    <label
+      class="input-label"
+      for="new-password-confirmation-input"
+    >
+      New Password Confirmation
+    </label>
+    <input
+      id="new-password-confirmation-input"
+      type="password"
+      placeholder="********"
+      class="form-control"
+    />
+  </div>
+
+  <div class="actions">
+    <button
+      class="button button-first button-normal"
+      type="submit"
+    >
+      Update password
+    </button>
+  </div>
+</form>
 {{end}}

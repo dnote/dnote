@@ -10,6 +10,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
@@ -122,6 +123,15 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 
 	vd.User = context.User(r.Context())
 	vd.Account = context.Account(r.Context())
+
+	// Put user data in Yield
+	if vd.Yield == nil {
+		vd.Yield = map[string]interface{}{}
+	}
+	vd.Yield["Account"] = &vd.Account
+	vd.Yield["User"] = &vd.User
+	vd.Yield["CurrentPath"] = r.URL.Path
+	vd.Yield["Standalone"] = buildinfo.Standalone
 
 	var buf bytes.Buffer
 	csrfField := csrf.TemplateField(r)

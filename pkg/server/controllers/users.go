@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -50,8 +51,12 @@ func NewUsers(app *app.App) *Users {
 			"users/password_reset_confirm",
 		),
 		SettingView: views.NewView(app,
-			views.Config{Title: "Settings", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true, HeaderTemplate: "navbar"},
+			views.Config{Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true, HeaderTemplate: "navbar"},
 			"users/settings",
+		),
+		AboutView: views.NewView(app,
+			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true, HeaderTemplate: "navbar"},
+			"users/settings_about",
 		),
 		app: app,
 	}
@@ -62,6 +67,7 @@ type Users struct {
 	NewView                  *views.View
 	LoginView                *views.View
 	SettingView              *views.View
+	AboutView                *views.View
 	PasswordResetView        *views.View
 	PasswordResetConfirmView *views.View
 	app                      *app.App
@@ -430,4 +436,14 @@ func (u *Users) Settings(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
 	u.SettingView.Render(w, r, &vd, http.StatusOK)
+}
+
+func (u *Users) About(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	vd.Yield = map[string]interface{}{
+		"Version": buildinfo.Version,
+	}
+
+	u.AboutView.Render(w, r, &vd, http.StatusOK)
 }

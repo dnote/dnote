@@ -30,12 +30,15 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 
 	ret := []Route{
 		{"GET", "/", mw.Auth(a, c.Users.Settings, redirectGuest), true},
+		{"GET", "/about", mw.Auth(a, c.Users.About, redirectGuest), true},
 		{"GET", "/login", mw.GuestOnly(a, c.Users.NewLogin), true},
 		{"POST", "/login", mw.GuestOnly(a, c.Users.Login), true},
 		{"POST", "/logout", c.Users.Logout, true},
 
 		{"GET", "/password-reset", c.Users.PasswordResetView.ServeHTTP, true},
 		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
+		{"PATCH", "/account/profile", c.Users.PasswordReset, true},
+		{"PATCH", "/account/password", c.Users.PasswordReset, true},
 		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
 		{"POST", "/reset-token", c.Users.CreateResetToken, true},
 	}
