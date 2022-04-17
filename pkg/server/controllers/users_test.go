@@ -139,7 +139,7 @@ func TestJoin(t *testing.T) {
 	}
 }
 
-func TestJoniError(t *testing.T) {
+func TestJoinError(t *testing.T) {
 	t.Run("missing email", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
@@ -933,5 +933,136 @@ func TestCreateResetToken(t *testing.T) {
 		var tokenCount int
 		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting tokens")
 		assert.Equal(t, tokenCount, 0, "reset_token count mismatch")
+	})
+}
+
+func TestUpdatePassword(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@example.com", "oldpassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("old_password", "oldpassword")
+		dat.Set("new_password", "newpassword")
+		dat.Set("new_password_confirmation", "newpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/password", dat)
+
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismsatch")
+
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
+		assert.Equal(t, passwordErr, nil, "Password mismatch")
+	})
+
+	t.Run("old password mismatch", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("old_password", "randompassword")
+		dat.Set("new_password", "newpassword")
+		dat.Set("new_password_confirmation", "newpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/password", dat)
+
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
+
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
+	})
+
+	t.Run("password too short", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("old_password", "oldpassword")
+		dat.Set("new_password", "a")
+		dat.Set("new_password_confirmation", "a")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/password", dat)
+
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
+
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
+	})
+
+	t.Run("password confirmation mismatch", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "oldpassword")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("old_password", "oldpassword")
+		dat.Set("new_password", "newpassword1")
+		dat.Set("new_password_confirmation", "newpassword2")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/password", dat)
+
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
+
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
 }
