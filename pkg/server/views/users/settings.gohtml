@@ -18,11 +18,11 @@
             <div class="setting-row">
               <div class="setting-row-summary">
                 <div>
-                  <h3 class="setting-name">Email</h3>
+                  <h3 class="setting-name">Current Email</h3>
                 </div>
 
                 <div class="setting-right">
-                  {{.Account.Email.String}}
+                  {{.Email}}
                 </div>
               </div>
             </div>
@@ -34,7 +34,7 @@
                 </div>
 
                 <div class="setting-right">
-                  {{if .Account.EmailVerified}}
+                  {{if .EmailVerified}}
                     Yes
                   {{else}}
                     No
@@ -125,8 +125,9 @@
 {{end}}
 
 {{define "passwordChangeForm"}}
-<form action="/account/password">
-  <input type="password" style="display: none;" readOnly />
+<form action="/account/password" method="POST">
+  <input type="password" style="display: none;" readonly />
+  <input type="hidden" name="_method" value="PATCH" />
 
   <div class="input-row">
     <label class="input-label" for="old-password-input">
@@ -134,6 +135,7 @@
     </label>
     <input
       id="old-password-input"
+      name="old_password"
       type="password"
       placeholder="********"
       class="form-control"
@@ -147,6 +149,7 @@
     </label>
     <input
       id="new-password-input"
+      name="new_password"
       type="password"
       placeholder="********"
       class="form-control"
@@ -162,6 +165,7 @@
     </label>
     <input
       id="new-password-confirmation-input"
+      name="new_password_confirmation"
       type="password"
       placeholder="********"
       class="form-control"

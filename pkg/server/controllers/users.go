@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/buildinfo"
+	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
@@ -51,11 +53,11 @@ func NewUsers(app *app.App) *Users {
 			"users/password_reset_confirm",
 		),
 		SettingView: views.NewView(app,
-			views.Config{Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true, HeaderTemplate: "navbar"},
+			views.Config{Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings",
 		),
 		AboutView: views.NewView(app,
-			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true, HeaderTemplate: "navbar"},
+			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings_about",
 		),
 		app: app,
@@ -446,4 +448,82 @@ func (u *Users) About(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.AboutView.Render(w, r, &vd, http.StatusOK)
+}
+
+type updatePasswordForm struct {
+	OldPassword             string `schema:"old_password"`
+	NewPassword             string `schema:"new_password"`
+	NewPasswordConfirmation string `schema:"new_password_confirmation"`
+}
+
+func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	user := context.User(r.Context())
+	if user == nil {
+		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.SettingView, vd)
+		return
+	}
+
+	var form updatePasswordForm
+	if err := parseRequestData(r, &form); err != nil {
+		handleHTMLError(w, r, err, "parsing payload", u.LoginView, vd)
+		return
+	}
+
+	fmt.Println(form)
+
+	if form.OldPassword == "" || form.NewPassword == "" {
+		handleHTMLError(w, r, app.ErrInvalidPasswordChangeInput, "invalid params", u.SettingView, vd)
+		return
+	}
+	if form.NewPassword != form.NewPasswordConfirmation {
+		handleHTMLError(w, r, app.ErrPasswordConfirmationMismatch, "passwords do not match", u.SettingView, vd)
+		return
+	}
+
+	var account database.Account
+	if err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		handleHTMLError(w, r, err, "getting account", u.SettingView, vd)
+		return
+	}
+
+	password := []byte(form.OldPassword)
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
+		log.WithFields(log.Fields{
+			"user_id": user.ID,
+		}).Warn("invalid password update attempt")
+		handleHTMLError(w, r, app.ErrInvalidCurrentPassword, "invalid password", u.SettingView, vd)
+		return
+	}
+
+	if err := validatePassword(form.NewPassword); err != nil {
+		handleHTMLError(w, r, err, "invalid password", u.SettingView, vd)
+		return
+	}
+
+	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(form.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		handleHTMLError(w, r, err, "hashing password", u.SettingView, vd)
+		return
+	}
+
+	if err := u.app.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+		handleHTMLError(w, r, err, "updating password", u.SettingView, vd)
+		return
+	}
+
+	alert := views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Password change successful",
+	}
+	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
+}
+
+func validatePassword(password string) error {
+	if len(password) < 8 {
+		return app.ErrPasswordTooShort
+	}
+
+	return nil
 }

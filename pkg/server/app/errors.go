@@ -51,4 +51,10 @@ var (
 
 	// ErrPasswordResetTokenExpired is an error for expired password reset token
 	ErrPasswordResetTokenExpired appError = "this link has been expired. Please request a new password reset link."
+
+	// ErrInvalidPasswordChangeInput is an error for changing password
+	ErrInvalidPasswordChangeInput appError = "Both current and new passwords are required to change the password."
+
+	// ErrInvalidCurrentPassword is an error for invalid current password while changing password
+	ErrInvalidCurrentPassword appError = "Current password does not match."
 )

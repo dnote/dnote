@@ -1,7 +1,6 @@
 package views
 
 import (
-	// "html/template"
 	"net/http"
 	"time"
 
@@ -92,12 +91,14 @@ func persistAlert(w http.ResponseWriter, alert Alert) {
 		Name:     "alert_level",
 		Value:    alert.Level,
 		Expires:  expiresAt,
+		Path:     "/",
 		HttpOnly: true,
 	}
 	msg := http.Cookie{
 		Name:     "alert_message",
 		Value:    alert.Message,
 		Expires:  expiresAt,
+		Path:     "/",
 		HttpOnly: true,
 	}
 	http.SetCookie(w, &lvl)

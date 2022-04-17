@@ -9,14 +9,14 @@
 
     <div class="body">
       {{if .Referrer}}
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info alert-slim" role="alert">
           Please sign in to continue to that page.
         </div>
       {{end}}
 
       <div class="panel">
         {{if .Alert}}
-          <div class="alert alert-{{.Alert.Level}}" role="alert">
+          <div class="alert alert-{{.Alert.Level}} alert-slim" role="alert">
             {{.Alert.Message}}
           </div>
         {{end}}

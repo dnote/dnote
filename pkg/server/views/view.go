@@ -128,10 +128,18 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	if vd.Yield == nil {
 		vd.Yield = map[string]interface{}{}
 	}
-	vd.Yield["Account"] = &vd.Account
-	vd.Yield["User"] = &vd.User
+	if vd.Account != nil {
+		vd.Yield["Email"] = &vd.Account.Email.String
+		vd.Yield["EmailVerified"] = &vd.Account.EmailVerified
+	}
+	if vd.User != nil {
+		vd.Yield["Cloud"] = &vd.User.Cloud
+	}
 	vd.Yield["CurrentPath"] = r.URL.Path
 	vd.Yield["Standalone"] = buildinfo.Standalone
+
+	fmt.Println("######")
+	fmt.Println(vd.Alert)
 
 	var buf bytes.Buffer
 	csrfField := csrf.TemplateField(r)
