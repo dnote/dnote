@@ -23,9 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"testing"
-	// "time"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
@@ -38,165 +36,151 @@ import (
 )
 
 func TestGetBooks(t *testing.T) {
-	testutils.RunForWebAndAPI(t, "get notes", func(t *testing.T, target testutils.EndpointType) {
-		defer testutils.ClearData(testutils.DB)
+	defer testutils.ClearData(testutils.DB)
 
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
-		defer server.Close()
-
-		user := testutils.SetupUserData()
-		anotherUser := testutils.SetupUserData()
-
-		b1 := database.Book{
-			UserID:  user.ID,
-			Label:   "js",
-			USN:     1123,
-			Deleted: false,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-		b2 := database.Book{
-			UserID:  user.ID,
-			Label:   "css",
-			USN:     1125,
-			Deleted: false,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-		b3 := database.Book{
-			UserID:  anotherUser.ID,
-			Label:   "css",
-			USN:     1128,
-			Deleted: false,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-		b4 := database.Book{
-			UserID:  user.ID,
-			Label:   "",
-			USN:     1129,
-			Deleted: true,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b4), "preparing b4")
-
-		// Execute
-		var endpoint string
-		if target == testutils.EndpointWeb {
-			endpoint = "/books"
-		} else {
-			endpoint = "/api/v3/books"
-		}
-
-		req := testutils.MakeReq(server.URL, "GET", endpoint, "")
-		res := testutils.HTTPAuthDo(t, req, user)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		if target == testutils.EndpointAPI {
-			var payload []presenters.Book
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var b1Record, b2Record database.Book
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
-
-			expected := []presenters.Book{
-				{
-					UUID:      b2Record.UUID,
-					CreatedAt: b2Record.CreatedAt,
-					UpdatedAt: b2Record.UpdatedAt,
-					Label:     b2Record.Label,
-					USN:       b2Record.USN,
-				},
-				{
-					UUID:      b1Record.UUID,
-					CreatedAt: b1Record.CreatedAt,
-					UpdatedAt: b1Record.UpdatedAt,
-					Label:     b1Record.Label,
-					USN:       b1Record.USN,
-				},
-			}
-
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
-		}
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
 	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+	anotherUser := testutils.SetupUserData()
+	testutils.SetupAccountData(anotherUser, "bob@test.com", "pass1234")
+
+	b1 := database.Book{
+		UserID:  user.ID,
+		Label:   "js",
+		USN:     1123,
+		Deleted: false,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	b2 := database.Book{
+		UserID:  user.ID,
+		Label:   "css",
+		USN:     1125,
+		Deleted: false,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	b3 := database.Book{
+		UserID:  anotherUser.ID,
+		Label:   "css",
+		USN:     1128,
+		Deleted: false,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+	b4 := database.Book{
+		UserID:  user.ID,
+		Label:   "",
+		USN:     1129,
+		Deleted: true,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b4), "preparing b4")
+
+	// Execute
+	endpoint := "/api/v3/books"
+
+	req := testutils.MakeReq(server.URL, "GET", endpoint, "")
+	res := testutils.HTTPAuthDo(t, req, user)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+	var payload []presenters.Book
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		t.Fatal(errors.Wrap(err, "decoding payload"))
+	}
+
+	var b1Record, b2Record database.Book
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b2.ID).First(&b2Record), "finding b2")
+
+	expected := []presenters.Book{
+		{
+			UUID:      b2Record.UUID,
+			CreatedAt: b2Record.CreatedAt,
+			UpdatedAt: b2Record.UpdatedAt,
+			Label:     b2Record.Label,
+			USN:       b2Record.USN,
+		},
+		{
+			UUID:      b1Record.UUID,
+			CreatedAt: b1Record.CreatedAt,
+			UpdatedAt: b1Record.UpdatedAt,
+			Label:     b1Record.Label,
+			USN:       b1Record.USN,
+		},
+	}
+
+	assert.DeepEqual(t, payload, expected, "payload mismatch")
 }
 
 func TestGetBooksByName(t *testing.T) {
-	testutils.RunForWebAndAPI(t, "get notes", func(t *testing.T, target testutils.EndpointType) {
-		defer testutils.ClearData(testutils.DB)
+	defer testutils.ClearData(testutils.DB)
 
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
-		defer server.Close()
-
-		user := testutils.SetupUserData()
-		anotherUser := testutils.SetupUserData()
-
-		b1 := database.Book{
-			UserID: user.ID,
-			Label:  "js",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-		b2 := database.Book{
-			UserID: user.ID,
-			Label:  "css",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-		b3 := database.Book{
-			UserID: anotherUser.ID,
-			Label:  "js",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-
-		// Execute
-		var endpoint string
-		if target == testutils.EndpointWeb {
-			endpoint = "/books?name=js"
-		} else {
-			endpoint = "/api/v3/books?name=js"
-		}
-
-		req := testutils.MakeReq(server.URL, "GET", endpoint, "")
-		res := testutils.HTTPAuthDo(t, req, user)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		if target == testutils.EndpointAPI {
-			var payload []presenters.Book
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var b1Record database.Book
-			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
-
-			expected := []presenters.Book{
-				{
-					UUID:      b1Record.UUID,
-					CreatedAt: b1Record.CreatedAt,
-					UpdatedAt: b1Record.UpdatedAt,
-					Label:     b1Record.Label,
-					USN:       b1Record.USN,
-				},
-			}
-
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
-		}
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
 	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+	anotherUser := testutils.SetupUserData()
+	testutils.SetupAccountData(anotherUser, "bob@test.com", "pass1234")
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	b2 := database.Book{
+		UserID: user.ID,
+		Label:  "css",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	b3 := database.Book{
+		UserID: anotherUser.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+
+	// Execute
+	endpoint := "/api/v3/books?name=js"
+
+	req := testutils.MakeReq(server.URL, "GET", endpoint, "")
+	res := testutils.HTTPAuthDo(t, req, user)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+	var payload []presenters.Book
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		t.Fatal(errors.Wrap(err, "decoding payload"))
+	}
+
+	var b1Record database.Book
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&b1Record), "finding b1")
+
+	expected := []presenters.Book{
+		{
+			UUID:      b1Record.UUID,
+			CreatedAt: b1Record.CreatedAt,
+			UpdatedAt: b1Record.UpdatedAt,
+			Label:     b1Record.Label,
+			USN:       b1Record.USN,
+		},
+	}
+
+	assert.DeepEqual(t, payload, expected, "payload mismatch")
 }
 
 func TestGetBook(t *testing.T) {
@@ -212,7 +196,9 @@ func TestGetBook(t *testing.T) {
 	defer server.Close()
 
 	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 	anotherUser := testutils.SetupUserData()
+	testutils.SetupAccountData(anotherUser, "bob@test.com", "pass1234")
 
 	b1 := database.Book{
 		UserID: user.ID,
@@ -270,7 +256,9 @@ func TestGetBookNonOwner(t *testing.T) {
 	defer server.Close()
 
 	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 	nonOwner := testutils.SetupUserData()
+	testutils.SetupAccountData(nonOwner, "bob@test.com", "pass1234")
 
 	b1 := database.Book{
 		UserID: user.ID,
@@ -294,7 +282,7 @@ func TestGetBookNonOwner(t *testing.T) {
 }
 
 func TestCreateBook(t *testing.T) {
-	testutils.RunForWebAndAPI(t, "success", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("success", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -307,16 +295,10 @@ func TestCreateBook(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
-		var req *http.Request
-		if target == testutils.EndpointWeb {
-			dat := url.Values{}
-			dat.Set("name", "js")
-			req = testutils.MakeFormReq(server.URL, "POST", "/books", dat)
-		} else {
-			req = testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
-		}
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
 
 		// Execute
 		res := testutils.HTTPAuthDo(t, req, user)
@@ -343,26 +325,24 @@ func TestCreateBook(t *testing.T) {
 		assert.Equal(t, bookRecord.USN, maxUSN, "book user_id mismatch")
 		assert.Equal(t, userRecord.MaxUSN, maxUSN, "user max_usn mismatch")
 
-		if target == testutils.EndpointAPI {
-			var got createBookResp
-			if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding"))
-			}
-			expected := createBookResp{
-				Book: presenters.Book{
-					UUID:      bookRecord.UUID,
-					USN:       bookRecord.USN,
-					CreatedAt: bookRecord.CreatedAt,
-					UpdatedAt: bookRecord.UpdatedAt,
-					Label:     "js",
-				},
-			}
-
-			assert.DeepEqual(t, got, expected, "payload mismatch")
+		var got createBookResp
+		if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
+			t.Fatal(errors.Wrap(err, "decoding"))
 		}
+		expected := createBookResp{
+			Book: presenters.Book{
+				UUID:      bookRecord.UUID,
+				USN:       bookRecord.USN,
+				CreatedAt: bookRecord.CreatedAt,
+				UpdatedAt: bookRecord.UpdatedAt,
+				Label:     "js",
+			},
+		}
+
+		assert.DeepEqual(t, got, expected, "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "duplicate", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("duplicate", func(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 
 		// Setup
@@ -375,6 +355,7 @@ func TestCreateBook(t *testing.T) {
 		defer server.Close()
 
 		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 		b1 := database.Book{
@@ -385,14 +366,7 @@ func TestCreateBook(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing book data")
 
 		// Execute
-		var req *http.Request
-		if target == testutils.EndpointWeb {
-			dat := url.Values{}
-			dat.Set("name", "js")
-			req = testutils.MakeFormReq(server.URL, "POST", "/books", dat)
-		} else {
-			req = testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
-		}
+		req := testutils.MakeReq(server.URL, "POST", "/api/v3/books", `{"name": "js"}`)
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -459,7 +433,7 @@ func TestUpdateBook(t *testing.T) {
 	}
 
 	for idx, tc := range testCases {
-		testutils.RunForWebAndAPI(t, fmt.Sprintf("test case %d", idx), func(t *testing.T, target testutils.EndpointType) {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			defer testutils.ClearData(testutils.DB)
 
 			// Setup
@@ -472,6 +446,7 @@ func TestUpdateBook(t *testing.T) {
 			defer server.Close()
 
 			user := testutils.SetupUserData()
+			testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 			b1 := database.Book{
@@ -489,14 +464,8 @@ func TestUpdateBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
 
 			// Execute
-			var req *http.Request
-			if target == testutils.EndpointWeb {
-				endpoint := fmt.Sprintf("/books/%s", tc.bookUUID)
-				req = testutils.MakeFormReq(server.URL, "PATCH", endpoint, tc.payload.ToURLValues())
-			} else {
-				endpoint := fmt.Sprintf("/api/v3/books/%s", tc.bookUUID)
-				req = testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
-			}
+			endpoint := fmt.Sprintf("/api/v3/books/%s", tc.bookUUID)
+			req := testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -551,7 +520,7 @@ func TestDeleteBook(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		testutils.RunForWebAndAPI(t, fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T, target testutils.EndpointType) {
+		t.Run(fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T) {
 			defer testutils.ClearData(testutils.DB)
 
 			// Setup
@@ -564,8 +533,10 @@ func TestDeleteBook(t *testing.T) {
 			defer server.Close()
 
 			user := testutils.SetupUserData()
+			testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 58), "preparing user max_usn")
 			anotherUser := testutils.SetupUserData()
+			testutils.SetupAccountData(anotherUser, "bob@test.com", "pass1234")
 			testutils.MustExec(t, testutils.DB.Model(&anotherUser).Update("max_usn", 109), "preparing another user max_usn")
 
 			b1 := database.Book{
@@ -637,12 +608,7 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Save(&n5), "preparing a note data")
 
 			// Execute
-			var endpoint string
-			if target == testutils.EndpointWeb {
-				endpoint = fmt.Sprintf("/books/%s", b2.UUID)
-			} else {
-				endpoint = fmt.Sprintf("/api/v3/books/%s", b2.UUID)
-			}
+			endpoint := fmt.Sprintf("/api/v3/books/%s", b2.UUID)
 
 			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
 			res := testutils.HTTPAuthDo(t, req, user)

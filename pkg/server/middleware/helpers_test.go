@@ -184,6 +184,8 @@ func TestAuthMiddleware(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+
 	session := database.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
 		UserID:    user.ID,
@@ -412,6 +414,8 @@ func TestAuthMiddleware_RedirectGuestsToLogin(t *testing.T) {
 		req := testutils.MakeReq(server.URL, "GET", "/", "")
 
 		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+
 		testutils.MustExec(t, testutils.DB.Model(&user).Update("cloud", false), "preparing session")
 		session := database.Session{
 			Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",

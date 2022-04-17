@@ -13,7 +13,7 @@ function run_test {
   if [ -z "$1" ]; then
     go test ./... -cover -p 1
   else
-    go test "$1" -cover -p 1
+    go test -run "$1" -cover -p 1
   fi
 }
 

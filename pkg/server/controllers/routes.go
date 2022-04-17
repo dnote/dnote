@@ -29,20 +29,11 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 	redirectGuest := &mw.AuthParams{RedirectGuestsToLogin: true}
 
 	ret := []Route{
-		{"GET", "/", mw.Auth(a, c.Notes.Index, redirectGuest), true},
+		{"GET", "/", mw.Auth(a, c.Users.Settings, redirectGuest), true},
 		{"GET", "/login", mw.GuestOnly(a, c.Users.NewLogin), true},
 		{"POST", "/login", mw.GuestOnly(a, c.Users.Login), true},
 		{"POST", "/logout", c.Users.Logout, true},
-		{"GET", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Show, nil), true},
-		{"POST", "/notes", mw.Auth(a, c.Notes.Create, nil), true},
-		{"DELETE", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Delete, nil), true},
-		{"PATCH", "/notes/{noteUUID}", mw.Auth(a, c.Notes.Update, nil), true},
-		{"GET", "/books", mw.Auth(a, c.Books.Index, redirectGuest), true},
-		{"POST", "/books", mw.Auth(a, c.Books.Create, nil), true},
-		{"PATCH", "/books/{bookUUID}", mw.Auth(a, c.Books.Update, nil), true},
-		{"DELETE", "/books/{bookUUID}", mw.Auth(a, c.Books.Delete, nil), true},
 
-		{"GET", "/settings", mw.Auth(a, c.Users.Settings, nil), true},
 		{"GET", "/password-reset", c.Users.PasswordResetView.ServeHTTP, true},
 		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
 		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},

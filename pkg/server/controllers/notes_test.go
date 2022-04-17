@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -57,127 +56,120 @@ func getExpectedNotePayload(n database.Note, b database.Book, u database.User) p
 }
 
 func TestGetNotes(t *testing.T) {
-	testutils.RunForWebAndAPI(t, "get notes", func(t *testing.T, target testutils.EndpointType) {
-		defer testutils.ClearData(testutils.DB)
+	defer testutils.ClearData(testutils.DB)
 
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
-		defer server.Close()
-
-		user := testutils.SetupUserData()
-		anotherUser := testutils.SetupUserData()
-
-		b1 := database.Book{
-			UserID: user.ID,
-			Label:  "js",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-		b2 := database.Book{
-			UserID: user.ID,
-			Label:  "css",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
-		b3 := database.Book{
-			UserID: anotherUser.ID,
-			Label:  "css",
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
-
-		n1 := database.Note{
-			UserID:   user.ID,
-			BookUUID: b1.UUID,
-			Body:     "n1 content",
-			USN:      11,
-			Deleted:  false,
-			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
-		n2 := database.Note{
-			UserID:   user.ID,
-			BookUUID: b1.UUID,
-			Body:     "n2 content",
-			USN:      14,
-			Deleted:  false,
-			AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
-		n3 := database.Note{
-			UserID:   user.ID,
-			BookUUID: b1.UUID,
-			Body:     "n3 content",
-			USN:      17,
-			Deleted:  false,
-			AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
-		n4 := database.Note{
-			UserID:   user.ID,
-			BookUUID: b2.UUID,
-			Body:     "n4 content",
-			USN:      18,
-			Deleted:  false,
-			AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
-		n5 := database.Note{
-			UserID:   anotherUser.ID,
-			BookUUID: b3.UUID,
-			Body:     "n5 content",
-			USN:      19,
-			Deleted:  false,
-			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
-		n6 := database.Note{
-			UserID:   user.ID,
-			BookUUID: b1.UUID,
-			Body:     "",
-			USN:      11,
-			Deleted:  true,
-			AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
-		}
-		testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
-
-		// Execute
-		var endpoint string
-		if target == testutils.EndpointWeb {
-			endpoint = "/"
-		} else {
-			endpoint = "/api/v3/notes"
-		}
-
-		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("%s?year=2018&month=8", endpoint), "")
-		res := testutils.HTTPAuthDo(t, req, user)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		if target == testutils.EndpointAPI {
-			var payload GetNotesResponse
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var n2Record, n1Record database.Note
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
-
-			expected := GetNotesResponse{
-				Notes: []presenters.Note{
-					getExpectedNotePayload(n2Record, b1, user),
-					getExpectedNotePayload(n1Record, b1, user),
-				},
-				Total: 2,
-			}
-
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
-		}
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
 	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+	anotherUser := testutils.SetupUserData()
+	testutils.SetupAccountData(anotherUser, "bob@test.com", "pass1234")
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	b2 := database.Book{
+		UserID: user.ID,
+		Label:  "css",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b2), "preparing b2")
+	b3 := database.Book{
+		UserID: anotherUser.ID,
+		Label:  "css",
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b3), "preparing b3")
+
+	n1 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "n1 content",
+		USN:      11,
+		Deleted:  false,
+		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+	n2 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "n2 content",
+		USN:      14,
+		Deleted:  false,
+		AddedOn:  time.Date(2018, time.August, 11, 22, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n2), "preparing n2")
+	n3 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "n3 content",
+		USN:      17,
+		Deleted:  false,
+		AddedOn:  time.Date(2017, time.January, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n3), "preparing n3")
+	n4 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b2.UUID,
+		Body:     "n4 content",
+		USN:      18,
+		Deleted:  false,
+		AddedOn:  time.Date(2018, time.September, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n4), "preparing n4")
+	n5 := database.Note{
+		UserID:   anotherUser.ID,
+		BookUUID: b3.UUID,
+		Body:     "n5 content",
+		USN:      19,
+		Deleted:  false,
+		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n5), "preparing n5")
+	n6 := database.Note{
+		UserID:   user.ID,
+		BookUUID: b1.UUID,
+		Body:     "",
+		USN:      11,
+		Deleted:  true,
+		AddedOn:  time.Date(2018, time.August, 10, 23, 0, 0, 0, time.UTC).UnixNano(),
+	}
+	testutils.MustExec(t, testutils.DB.Save(&n6), "preparing n6")
+
+	// Execute
+	endpoint := "/api/v3/notes"
+
+	req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("%s?year=2018&month=8", endpoint), "")
+	res := testutils.HTTPAuthDo(t, req, user)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusOK, "")
+
+	var payload GetNotesResponse
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+		t.Fatal(errors.Wrap(err, "decoding payload"))
+	}
+
+	var n2Record, n1Record database.Note
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n2.UUID).First(&n2Record), "finding n2Record")
+	testutils.MustExec(t, testutils.DB.Where("uuid = ?", n1.UUID).First(&n1Record), "finding n1Record")
+
+	expected := GetNotesResponse{
+		Notes: []presenters.Note{
+			getExpectedNotePayload(n2Record, b1, user),
+			getExpectedNotePayload(n1Record, b1, user),
+		},
+		Total: 2,
+	}
+
+	assert.DeepEqual(t, payload, expected, "payload mismatch")
 }
 
 func TestGetNote(t *testing.T) {
@@ -222,246 +214,217 @@ func TestGetNote(t *testing.T) {
 	}
 	testutils.MustExec(t, testutils.DB.Save(&deletedNote), "preparing deletedNote")
 
-	getURL := func(noteUUID string, target testutils.EndpointType) string {
-		if target == testutils.EndpointWeb {
-			return fmt.Sprintf("/notes/%s", noteUUID)
-		}
-
+	getURL := func(noteUUID string) string {
 		return fmt.Sprintf("/api/v3/notes/%s", noteUUID)
 	}
 
-	testutils.RunForWebAndAPI(t, "owner accessing private note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("owner accessing private note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID, target)
+		url := getURL(publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		if target == testutils.EndpointAPI {
-			var payload presenters.Note
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var n2Record database.Note
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-			expected := getExpectedNotePayload(n2Record, b1, user)
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		var payload presenters.Note
+		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
+
+		var n2Record database.Note
+		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+
+		expected := getExpectedNotePayload(n2Record, b1, user)
+		assert.DeepEqual(t, payload, expected, "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "owner accessing public note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("owner accessing public note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID, target)
+		url := getURL(publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		if target == testutils.EndpointAPI {
-			var payload presenters.Note
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var n2Record database.Note
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-			expected := getExpectedNotePayload(n2Record, b1, user)
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		var payload presenters.Note
+		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
+
+		var n2Record database.Note
+		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+
+		expected := getExpectedNotePayload(n2Record, b1, user)
+		assert.DeepEqual(t, payload, expected, "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "non-owner accessing public note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("non-owner accessing public note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID, target)
+		url := getURL(publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		if target == testutils.EndpointAPI {
-			var payload presenters.Note
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var n2Record database.Note
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-			expected := getExpectedNotePayload(n2Record, b1, user)
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		var payload presenters.Note
+		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
+
+		var n2Record database.Note
+		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+
+		expected := getExpectedNotePayload(n2Record, b1, user)
+		assert.DeepEqual(t, payload, expected, "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "non-owner accessing private note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("non-owner accessing private note", func(t *testing.T) {
 		// Execute
-		url := getURL(privateNote.UUID, target)
+		url := getURL(privateNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, anotherUser)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
 
-		if target == testutils.EndpointAPI {
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "reading body"))
-			}
-
-			assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reading body"))
 		}
+
+		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "guest accessing public note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("guest accessing public note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID, target)
+		url := getURL(publicNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusOK, "")
 
-		if target == testutils.EndpointAPI {
-			var payload presenters.Note
-			if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-				t.Fatal(errors.Wrap(err, "decoding payload"))
-			}
-
-			var n2Record database.Note
-			testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-			expected := getExpectedNotePayload(n2Record, b1, user)
-			assert.DeepEqual(t, payload, expected, "payload mismatch")
+		var payload presenters.Note
+		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
+
+		var n2Record database.Note
+		testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+
+		expected := getExpectedNotePayload(n2Record, b1, user)
+		assert.DeepEqual(t, payload, expected, "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "guest accessing private note", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("guest accessing private note", func(t *testing.T) {
 		// Execute
-		url := getURL(privateNote.UUID, target)
+		url := getURL(privateNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
 
-		if target == testutils.EndpointAPI {
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "reading body"))
-			}
-
-			assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reading body"))
 		}
+
+		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "nonexistent", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("nonexistent", func(t *testing.T) {
 		// Execute
-		url := getURL("somerandomstring", target)
+		url := getURL("somerandomstring")
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
 
-		if target == testutils.EndpointAPI {
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "reading body"))
-			}
-
-			assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reading body"))
 		}
+
+		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 	})
 
-	testutils.RunForWebAndAPI(t, "deleted", func(t *testing.T, target testutils.EndpointType) {
+	t.Run("deleted", func(t *testing.T) {
 		// Execute
-		url := getURL(deletedNote.UUID, target)
+		url := getURL(deletedNote.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
 
-		if target == testutils.EndpointAPI {
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "reading body"))
-			}
-
-			assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reading body"))
 		}
+
+		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 	})
 }
 
 func TestCreateNote(t *testing.T) {
-	testutils.RunForWebAndAPI(t, "success", func(t *testing.T, target testutils.EndpointType) {
-		defer testutils.ClearData(testutils.DB)
+	defer testutils.ClearData(testutils.DB)
 
-		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
-		})
-		defer server.Close()
-
-		user := testutils.SetupUserData()
-		testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
-
-		b1 := database.Book{
-			UserID: user.ID,
-			Label:  "js",
-			USN:    58,
-		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
-
-		// Execute
-
-		var req *http.Request
-		if target == testutils.EndpointAPI {
-			dat := fmt.Sprintf(`{"book_uuid": "%s", "content": "note content"}`, b1.UUID)
-			req = testutils.MakeReq(server.URL, "POST", "/api/v3/notes", dat)
-		} else {
-			dat := url.Values{}
-			dat.Set("book_uuid", b1.UUID)
-			dat.Set("content", "note content")
-			req = testutils.MakeFormReq(server.URL, "POST", "/notes", dat)
-		}
-		res := testutils.HTTPAuthDo(t, req, user)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusCreated, "")
-
-		var noteRecord database.Note
-		var bookRecord database.Book
-		var userRecord database.User
-		var bookCount, noteCount int
-		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
-		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
-		testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note")
-		testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
-		testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
-
-		assert.Equalf(t, bookCount, 1, "book count mismatch")
-		assert.Equalf(t, noteCount, 1, "note count mismatch")
-
-		assert.Equal(t, bookRecord.Label, b1.Label, "book name mismatch")
-		assert.Equal(t, bookRecord.UUID, b1.UUID, "book uuid mismatch")
-		assert.Equal(t, bookRecord.UserID, b1.UserID, "book user_id mismatch")
-		assert.Equal(t, bookRecord.USN, 58, "book usn mismatch")
-
-		assert.NotEqual(t, noteRecord.UUID, "", "note uuid should have been generated")
-		assert.Equal(t, noteRecord.BookUUID, b1.UUID, "note book_uuid mismatch")
-		assert.Equal(t, noteRecord.Body, "note content", "note content mismatch")
-		assert.Equal(t, noteRecord.USN, 102, "note usn mismatch")
+	// Setup
+	server := MustNewServer(t, &app.App{
+		Clock: clock.NewMock(),
+		Config: config.Config{
+			PageTemplateDir: "../views",
+		},
 	})
+	defer server.Close()
+
+	user := testutils.SetupUserData()
+	testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+	testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
+
+	b1 := database.Book{
+		UserID: user.ID,
+		Label:  "js",
+		USN:    58,
+	}
+	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+
+	// Execute
+
+	dat := fmt.Sprintf(`{"book_uuid": "%s", "content": "note content"}`, b1.UUID)
+	req := testutils.MakeReq(server.URL, "POST", "/api/v3/notes", dat)
+	res := testutils.HTTPAuthDo(t, req, user)
+
+	// Test
+	assert.StatusCodeEquals(t, res, http.StatusCreated, "")
+
+	var noteRecord database.Note
+	var bookRecord database.Book
+	var userRecord database.User
+	var bookCount, noteCount int
+	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
+	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
+	testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
+	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
+
+	assert.Equalf(t, bookCount, 1, "book count mismatch")
+	assert.Equalf(t, noteCount, 1, "note count mismatch")
+
+	assert.Equal(t, bookRecord.Label, b1.Label, "book name mismatch")
+	assert.Equal(t, bookRecord.UUID, b1.UUID, "book uuid mismatch")
+	assert.Equal(t, bookRecord.UserID, b1.UserID, "book user_id mismatch")
+	assert.Equal(t, bookRecord.USN, 58, "book usn mismatch")
+
+	assert.NotEqual(t, noteRecord.UUID, "", "note uuid should have been generated")
+	assert.Equal(t, noteRecord.BookUUID, b1.UUID, "note book_uuid mismatch")
+	assert.Equal(t, noteRecord.Body, "note content", "note content mismatch")
+	assert.Equal(t, noteRecord.USN, 102, "note usn mismatch")
 }
 
 func TestDeleteNote(t *testing.T) {
@@ -490,8 +453,8 @@ func TestDeleteNote(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		testutils.RunForWebAndAPI(t, fmt.Sprintf("originally deleted %t", tc.deleted), func(t *testing.T, target testutils.EndpointType) {
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			defer testutils.ClearData(testutils.DB)
 
 			// Setup
@@ -504,6 +467,7 @@ func TestDeleteNote(t *testing.T) {
 			defer server.Close()
 
 			user := testutils.SetupUserData()
+			testutils.SetupAccountData(user, "alice@test.com", "pass1234")
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 981), "preparing user max_usn")
 
 			b1 := database.Book{
@@ -522,14 +486,8 @@ func TestDeleteNote(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Save(&note), "preparing note")
 
 			// Execute
-			var req *http.Request
-			if target == testutils.EndpointAPI {
-				endpoint := fmt.Sprintf("/api/v3/notes/%s", note.UUID)
-				req = testutils.MakeReq(server.URL, "DELETE", endpoint, "")
-			} else {
-				endpoint := fmt.Sprintf("/notes/%s", note.UUID)
-				req = testutils.MakeFormReq(server.URL, "DELETE", endpoint, nil)
-			}
+			endpoint := fmt.Sprintf("/api/v3/notes/%s", note.UUID)
+			req := testutils.MakeReq(server.URL, "DELETE", endpoint, "")
 			res := testutils.HTTPAuthDo(t, req, user)
 
 			// Test
@@ -736,7 +694,7 @@ func TestUpdateNote(t *testing.T) {
 	}
 
 	for idx, tc := range testCases {
-		testutils.RunForWebAndAPI(t, fmt.Sprintf("test case %d", idx), func(t *testing.T, target testutils.EndpointType) {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			defer testutils.ClearData(testutils.DB)
 
 			// Setup
@@ -749,6 +707,8 @@ func TestUpdateNote(t *testing.T) {
 			defer server.Close()
 
 			user := testutils.SetupUserData()
+			testutils.SetupAccountData(user, "alice@test.com", "pass1234")
+
 			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 			b1 := database.Book{
@@ -777,13 +737,8 @@ func TestUpdateNote(t *testing.T) {
 			// Execute
 			var req *http.Request
 
-			if target == testutils.EndpointWeb {
-				endpoint := fmt.Sprintf("/notes/%s", note.UUID)
-				req = testutils.MakeFormReq(server.URL, "PATCH", endpoint, tc.payload.ToURLValues())
-			} else {
-				endpoint := fmt.Sprintf("/api/v3/notes/%s", note.UUID)
-				req = testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
-			}
+			endpoint := fmt.Sprintf("/api/v3/notes/%s", note.UUID)
+			req = testutils.MakeReq(server.URL, "PATCH", endpoint, tc.payload.ToJSON(t))
 
 			res := testutils.HTTPAuthDo(t, req, user)
 
