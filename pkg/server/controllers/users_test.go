@@ -1066,3 +1066,79 @@ func TestUpdatePassword(t *testing.T) {
 		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
 	})
 }
+
+func TestUpdateEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		a.EmailVerified = true
+		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("email", "alice-new@example.com")
+		dat.Set("password", "pass1234")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/profile", dat)
+
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismatch")
+
+		var user database.User
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+
+		assert.Equal(t, account.Email.String, "alice-new@example.com", "email mismatch")
+		assert.Equal(t, account.EmailVerified, false, "EmailVerified mismatch")
+	})
+
+	t.Run("password mismatch", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		u := testutils.SetupUserData()
+		a := testutils.SetupAccountData(u, "alice@example.com", "pass1234")
+		a.EmailVerified = true
+		testutils.MustExec(t, testutils.DB.Save(&a), "updating email_verified")
+
+		// Execute
+		dat := url.Values{}
+		dat.Set("email", "alice-new@example.com")
+		dat.Set("password", "wrongpassword")
+		req := testutils.MakeFormReq(server.URL, "PATCH", "/account/profile", dat)
+
+		res := testutils.HTTPAuthDo(t, req, u)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
+
+		var user database.User
+		var account database.Account
+		testutils.MustExec(t, testutils.DB.Where("id = ?", u.ID).First(&user), "finding user")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", u.ID).First(&account), "finding account")
+
+		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, account.EmailVerified, true, "EmailVerified mismatch")
+	})
+}
