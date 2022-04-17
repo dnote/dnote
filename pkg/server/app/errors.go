@@ -55,6 +55,9 @@ var (
 	// ErrInvalidPasswordChangeInput is an error for changing password
 	ErrInvalidPasswordChangeInput appError = "Both current and new passwords are required to change the password."
 
-	// ErrInvalidCurrentPassword is an error for invalid current password while changing password
-	ErrInvalidCurrentPassword appError = "Current password does not match."
+	// ErrInvalidPassword is an error for invalid current password while verifying account updates
+	ErrInvalidPassword appError = "Invalid currnet password."
+
+	// ErrEmailTooLong is an error for email length exceeding the limit
+	ErrEmailTooLong appError = "Email is too long."
 )

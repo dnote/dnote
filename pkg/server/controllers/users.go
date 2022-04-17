@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -471,8 +470,6 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(form)
-
 	if form.OldPassword == "" || form.NewPassword == "" {
 		handleHTMLError(w, r, app.ErrInvalidPasswordChangeInput, "invalid params", u.SettingView, vd)
 		return
@@ -493,7 +490,7 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		log.WithFields(log.Fields{
 			"user_id": user.ID,
 		}).Warn("invalid password update attempt")
-		handleHTMLError(w, r, app.ErrInvalidCurrentPassword, "invalid password", u.SettingView, vd)
+		handleHTMLError(w, r, app.ErrInvalidPassword, "invalid password", u.SettingView, vd)
 		return
 	}
 
@@ -526,4 +523,73 @@ func validatePassword(password string) error {
 	}
 
 	return nil
+}
+
+type updateProfileForm struct {
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
+}
+
+func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	user := context.User(r.Context())
+	if user == nil {
+		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.SettingView, vd)
+		return
+	}
+
+	var account database.Account
+	if err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		handleHTMLError(w, r, err, "getting account", u.SettingView, vd)
+		return
+	}
+
+	var form updateProfileForm
+	if err := parseRequestData(r, &form); err != nil {
+		handleHTMLError(w, r, err, "parsing payload", u.SettingView, vd)
+		return
+	}
+
+	password := []byte(form.Password)
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
+		log.WithFields(log.Fields{
+			"user_id": user.ID,
+		}).Warn("invalid email update attempt")
+		handleHTMLError(w, r, app.ErrInvalidPassword, "Wrong password", u.SettingView, vd)
+		return
+	}
+
+	// Validate
+	if len(form.Email) > 60 {
+		handleHTMLError(w, r, app.ErrEmailTooLong, "Email is too long", u.SettingView, vd)
+		return
+	}
+
+	tx := u.app.DB.Begin()
+	if err := tx.Save(&user).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "saving user", u.SettingView, vd)
+		return
+	}
+
+	// check if email was changed
+	if form.Email != account.Email.String {
+		account.EmailVerified = false
+	}
+	account.Email.String = form.Email
+
+	if err := tx.Save(&account).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "saving account", u.SettingView, vd)
+		return
+	}
+
+	tx.Commit()
+
+	alert := views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Email change successful",
+	}
+	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
 }

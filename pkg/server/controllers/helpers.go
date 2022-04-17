@@ -217,7 +217,9 @@ func getStatusCode(err error) int {
 		return http.StatusBadRequest
 	case app.ErrInvalidPasswordChangeInput:
 		return http.StatusBadRequest
-	case app.ErrInvalidCurrentPassword:
+	case app.ErrInvalidPassword:
+		return http.StatusUnauthorized
+	case app.ErrEmailTooLong:
 		return http.StatusBadRequest
 	}
 

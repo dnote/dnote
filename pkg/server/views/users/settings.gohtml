@@ -82,8 +82,10 @@
 {{end}}
 
 {{define "emailForm"}}
-<form action="/account/profile">
+<form action="/account/profile" method="POST">
+  {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
+  <input type="hidden" name="_method" value="PATCH" />
 
   <div class="input-row">
     <label class="input-label" for="email-form-email-input">
@@ -92,6 +94,7 @@
 
     <input
       id="email-form-email-input"
+      name="email"
       type="email"
       placeholder="your@email.com"
       class="form-control"
@@ -106,6 +109,7 @@
 
     <input
       id="email-form-password-input"
+      name="password"
       type="password"
       placeholder="********"
       class="form-control"
@@ -126,6 +130,7 @@
 
 {{define "passwordChangeForm"}}
 <form action="/account/password" method="POST">
+  {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
   <input type="hidden" name="_method" value="PATCH" />
 
