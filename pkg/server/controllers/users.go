@@ -33,29 +33,29 @@ var commonHelpers = map[string]interface{}{
 
 // NewUsers creates a new Users controller.
 // It panics if the necessary templates are not parsed.
-func NewUsers(app *app.App) *Users {
+func NewUsers(app *app.App, baseDir string) *Users {
 	return &Users{
-		NewView: views.NewView(app,
+		NewView: views.NewView(baseDir, app,
 			views.Config{Title: "Join", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/new",
 		),
-		LoginView: views.NewView(app,
+		LoginView: views.NewView(baseDir, app,
 			views.Config{Title: "Sign In", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/login",
 		),
-		PasswordResetView: views.NewView(app,
+		PasswordResetView: views.NewView(baseDir, app,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset",
 		),
-		PasswordResetConfirmView: views.NewView(app,
+		PasswordResetConfirmView: views.NewView(baseDir, app,
 			views.Config{Title: "Reset Password", Layout: "base", HelperFuncs: commonHelpers, AlertInBody: true},
 			"users/password_reset_confirm",
 		),
-		SettingView: views.NewView(app,
+		SettingView: views.NewView(baseDir, app,
 			views.Config{Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings",
 		),
-		AboutView: views.NewView(app,
+		AboutView: views.NewView(baseDir, app,
 			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings_about",
 		),

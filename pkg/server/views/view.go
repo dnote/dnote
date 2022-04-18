@@ -69,8 +69,7 @@ func (c Config) getClock() clock.Clock {
 }
 
 // NewView returns a new view by parsing  the given layout and files
-func NewView(app *app.App, viewConfig Config, files ...string) *View {
-	baseDir := app.Config.PageTemplateDir
+func NewView(baseDir string, app *app.App, viewConfig Config, files ...string) *View {
 	addTemplatePath(baseDir, files)
 	addTemplateExt(files)
 
@@ -137,9 +136,6 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	}
 	vd.Yield["CurrentPath"] = r.URL.Path
 	vd.Yield["Standalone"] = buildinfo.Standalone
-
-	fmt.Println("######")
-	fmt.Println(vd.Alert)
 
 	var buf bytes.Buffer
 	csrfField := csrf.TemplateField(r)

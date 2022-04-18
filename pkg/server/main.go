@@ -104,7 +104,7 @@ func startCmd() {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	ctl := controllers.New(&app)
+	ctl := controllers.New(&app, *pageDir)
 	rc := controllers.RouteConfig{
 		WebRoutes:   controllers.NewWebRoutes(&app, ctl),
 		APIRoutes:   controllers.NewAPIRoutes(&app, ctl),
