@@ -149,8 +149,8 @@ func (b *Books) create(r *http.Request) (database.Book, error) {
 	return book, nil
 }
 
-// createBookResp is the response from create book api
-type createBookResp struct {
+// CreateBookResp is the response from create book api
+type CreateBookResp struct {
 	Book presenters.Book `json:"book"`
 }
 
@@ -162,7 +162,7 @@ func (b *Books) V3Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := createBookResp{
+	resp := CreateBookResp{
 		Book: presenters.PresentBook(result),
 	}
 	respondJSON(w, http.StatusCreated, resp)

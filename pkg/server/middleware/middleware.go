@@ -69,7 +69,7 @@ func APIMw(h http.Handler, app *app.App, rateLimit bool) http.Handler {
 func Global(h http.Handler) http.Handler {
 	ret := h
 
-	ret = logging(ret)
+	ret = Logging(ret)
 	ret = methodOverride(ret)
 
 	return ret
