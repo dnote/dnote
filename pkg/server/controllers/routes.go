@@ -111,6 +111,10 @@ func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
 	router.PathPrefix("/static/").Handler(staticHandler)
 
+	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("User-agent: *\nAllow: /"))
+	})
+
 	// catch-all
 	router.PathPrefix("/").HandlerFunc(rc.Controllers.Static.NotFound)
 
