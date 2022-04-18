@@ -105,6 +105,7 @@ type Config struct {
 	DB                  PostgresConfig
 	PageTemplateDir     string
 	StaticDir           string
+	AssetBaseURL        string
 }
 
 func getAppEnv() string {
@@ -131,6 +132,7 @@ func Load() Config {
 		OnPremise:           readBoolEnv("OnPremise"),
 		DisableRegistration: readBoolEnv("DisableRegistration"),
 		DB:                  loadDBConfig(),
+		AssetBaseURL:        "",
 	}
 
 	if err := validate(c); err != nil {
@@ -153,6 +155,11 @@ func (c *Config) SetPageTemplateDir(d string) {
 // SetStaticDir sets static dir for the confi
 func (c *Config) SetStaticDir(d string) {
 	c.StaticDir = d
+}
+
+// SetAssetBaseURL sets static dir for the confi
+func (c *Config) SetAssetBaseURL(d string) {
+	c.AssetBaseURL = d
 }
 
 // IsProd checks if the app environment is configured to be production.

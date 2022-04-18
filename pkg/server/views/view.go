@@ -77,7 +77,7 @@ func NewView(baseDir string, app *app.App, viewConfig Config, files ...string) *
 	files = append(files, layoutFiles(baseDir)...)
 	files = append(files, partialFiles(baseDir)...)
 
-	viewHelpers := initHelpers(viewConfig)
+	viewHelpers := initHelpers(viewConfig, app)
 	t := template.New(viewConfig.Title).Funcs(viewHelpers)
 
 	t, err := t.ParseFiles(files...)

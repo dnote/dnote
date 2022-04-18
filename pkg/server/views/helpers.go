@@ -6,12 +6,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/pkg/errors"
 	"html/template"
 )
 
-func initHelpers(c Config) template.FuncMap {
+func initHelpers(c Config, a *app.App) template.FuncMap {
 	ctx := newViewCtx(c)
 
 	ret := template.FuncMap{
@@ -30,6 +31,9 @@ func initHelpers(c Config) template.FuncMap {
 		"dict":             ctx.dict,
 		"defaultValue":     ctx.defaultValue,
 		"add":              ctx.add,
+		"assetBaseURL": func() string {
+			return a.Config.AssetBaseURL
+		},
 	}
 
 	// extend with helpers that are defined specific to a view
