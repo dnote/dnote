@@ -59,6 +59,10 @@ func NewUsers(app *app.App, baseDir string) *Users {
 			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings_about",
 		),
+		EmailVerificationView: views.NewView(baseDir, app,
+			views.Config{Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
+			"users/email_verification",
+		),
 		app: app,
 	}
 }
@@ -71,6 +75,7 @@ type Users struct {
 	AboutView                *views.View
 	PasswordResetView        *views.View
 	PasswordResetConfirmView *views.View
+	EmailVerificationView    *views.View
 	app                      *app.App
 }
 
@@ -592,4 +597,72 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		Message: "Email change successful",
 	}
 	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
+}
+
+func (u *Users) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	tokenValue := r.URL.Query().Get("token")
+
+	if tokenValue == "" {
+		handleHTMLError(w, r, app.ErrMissingToken, "Missing email verification token", u.EmailVerificationView, vd)
+		return
+	}
+
+	var token database.Token
+	if err := u.app.DB.
+		Where("value = ? AND type = ?", tokenValue, database.TokenTypeEmailVerification).
+		First(&token).Error; err != nil {
+		handleHTMLError(w, r, app.ErrInvalidToken, "Finding token", u.EmailVerificationView, vd)
+		return
+	}
+
+	if token.UsedAt != nil {
+		handleHTMLError(w, r, app.ErrInvalidToken, "Token has already been used.", u.EmailVerificationView, vd)
+		return
+	}
+
+	// Expire after ttl
+	if time.Since(token.CreatedAt).Minutes() > 30 {
+		handleHTMLError(w, r, app.ErrExpiredToken, "Token has expired.", u.EmailVerificationView, vd)
+		return
+	}
+
+	var account database.Account
+	if err := u.app.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
+		handleHTMLError(w, r, err, "finding account", u.EmailVerificationView, vd)
+		return
+	}
+	if account.EmailVerified {
+		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "Already verified", u.EmailVerificationView, vd)
+		return
+	}
+
+	tx := u.app.DB.Begin()
+	account.EmailVerified = true
+	if err := tx.Save(&account).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "updating email_verified", u.EmailVerificationView, vd)
+		return
+	}
+	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
+		tx.Rollback()
+		handleHTMLError(w, r, err, "updating reset token", u.EmailVerificationView, vd)
+		return
+	}
+	tx.Commit()
+
+	var user database.User
+	if err := u.app.DB.Where("id = ?", token.UserID).First(&user).Error; err != nil {
+		handleHTMLError(w, r, err, "finding user", u.EmailVerificationView, vd)
+		return
+	}
+
+	session, err := u.app.SignIn(&user)
+	if err != nil {
+		handleHTMLError(w, r, err, "Creating session", u.EmailVerificationView, vd)
+	}
+
+	setSessionCookie(w, session.Key, session.ExpiresAt)
+	http.Redirect(w, r, "/", http.StatusFound)
 }

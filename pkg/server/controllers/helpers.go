@@ -221,6 +221,12 @@ func getStatusCode(err error) int {
 		return http.StatusUnauthorized
 	case app.ErrEmailTooLong:
 		return http.StatusBadRequest
+	case app.ErrEmailAlreadyVerified:
+		return http.StatusConflict
+	case app.ErrMissingToken:
+		return http.StatusBadRequest
+	case app.ErrExpiredToken:
+		return http.StatusGone
 	}
 
 	return http.StatusInternalServerError

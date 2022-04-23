@@ -37,10 +37,11 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 
 		{"GET", "/password-reset", c.Users.PasswordResetView.ServeHTTP, true},
 		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
+		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
+		{"GET", "/verify-email", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
+		{"POST", "/reset-token", c.Users.CreateResetToken, true},
 		{"PATCH", "/account/profile", mw.Auth(a, c.Users.ProfileUpdate, nil), true},
 		{"PATCH", "/account/password", mw.Auth(a, c.Users.PasswordUpdate, nil), true},
-		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
-		{"POST", "/reset-token", c.Users.CreateResetToken, true},
 	}
 
 	if !a.Config.DisableRegistration {

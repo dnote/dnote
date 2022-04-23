@@ -1142,3 +1142,175 @@ func TestUpdateEmail(t *testing.T) {
 		assert.Equal(t, account.EmailVerified, true, "EmailVerified mismatch")
 	})
 }
+
+func TestVerifyEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		tok := database.Token{
+			UserID: user.ID,
+			Type:   database.TokenTypeEmailVerification,
+			Value:  "someTokenValue",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismatch")
+
+		var account database.Account
+		var token database.Token
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
+		assert.NotEqual(t, token.Value, "", "token value should not have been updated")
+		assert.Equal(t, tokenCount, 1, "token count mismatch")
+		assert.NotEqual(t, token.UsedAt, (*time.Time)(nil), "token should have been used")
+	})
+
+	t.Run("used token", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+
+		usedAt := time.Now().Add(time.Hour * -11).UTC()
+		tok := database.Token{
+			UserID: user.ID,
+			Type:   database.TokenTypeEmailVerification,
+			Value:  "someTokenValue",
+			UsedAt: &usedAt,
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "")
+
+		var account database.Account
+		var token database.Token
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
+		assert.NotEqual(t, token.UsedAt, nil, "token used_at mismatch")
+		assert.Equal(t, tokenCount, 1, "token count mismatch")
+		assert.NotEqual(t, token.UsedAt, (*time.Time)(nil), "token should have been used")
+	})
+
+	t.Run("expired token", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+
+		tok := database.Token{
+			UserID: user.ID,
+			Type:   database.TokenTypeEmailVerification,
+			Value:  "someTokenValue",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-31)), "Failed to prepare token created_at")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusGone, "")
+
+		var account database.Account
+		var token database.Token
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, false, "email_verified mismatch")
+		assert.Equal(t, tokenCount, 1, "token count mismatch")
+		assert.Equal(t, token.UsedAt, (*time.Time)(nil), "token should have not been used")
+	})
+
+	t.Run("already verified", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		a := testutils.SetupAccountData(user, "alice@example.com", "oldpass1234")
+		a.EmailVerified = true
+		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
+
+		tok := database.Token{
+			UserID: user.ID,
+			Type:   database.TokenTypeEmailVerification,
+			Value:  "someTokenValue",
+		}
+		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusConflict, "")
+
+		var account database.Account
+		var token database.Token
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, true, "email_verified mismatch")
+		assert.Equal(t, tokenCount, 1, "token count mismatch")
+		assert.Equal(t, token.UsedAt, (*time.Time)(nil), "token should have not been used")
+	})
+}
