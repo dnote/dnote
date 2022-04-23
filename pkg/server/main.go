@@ -93,6 +93,7 @@ func startCmd() {
 	cfg := config.Load()
 	cfg.SetPageTemplateDir(*pageDir)
 	cfg.SetStaticDir(*staticDir)
+	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)
 	defer app.DB.Close()
