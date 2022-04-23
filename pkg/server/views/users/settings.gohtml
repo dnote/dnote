@@ -40,6 +40,15 @@
                     Yes
                   {{else}}
                     No
+
+                    <form action="/verification-token" method="POST" class="email-verification-form">
+                      <button
+                        class="button button-second button-small"
+                        type="submit"
+                      >
+                        Send verification email
+                      </button>
+                    </form>
                   {{end}}
                 </div>
               </div>

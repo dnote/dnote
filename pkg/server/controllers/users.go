@@ -673,37 +673,37 @@ func (u *Users) CreateEmailVerificationToken(w http.ResponseWriter, r *http.Requ
 
 	user := context.User(r.Context())
 	if user == nil {
-		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.EmailVerificationView, vd)
+		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.SettingView, vd)
 		return
 	}
 
 	var account database.Account
 	err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error
 	if err != nil {
-		handleHTMLError(w, r, err, "finding account", u.EmailVerificationView, vd)
+		handleHTMLError(w, r, err, "finding account", u.SettingView, vd)
 		return
 	}
 
 	if account.EmailVerified {
-		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "email is already verified.", u.EmailVerificationView, vd)
+		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "email is already verified.", u.SettingView, vd)
 		return
 	}
 	if account.Email.String == "" {
-		handleHTMLError(w, r, app.ErrEmailRequired, "email is empty.", u.EmailVerificationView, vd)
+		handleHTMLError(w, r, app.ErrEmailRequired, "email is empty.", u.SettingView, vd)
 		return
 	}
 
 	tok, err := token.Create(u.app.DB, account.UserID, database.TokenTypeEmailVerification)
 	if err != nil {
-		handleHTMLError(w, r, err, "saving token", u.EmailVerificationView, vd)
+		handleHTMLError(w, r, err, "saving token", u.SettingView, vd)
 		return
 	}
 
 	if err := u.app.SendVerificationEmail(account.Email.String, tok.Value); err != nil {
 		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
-			handleHTMLError(w, r, app.ErrInvalidSMTPConfig, "SMTP config is not configured correctly.", u.EmailVerificationView, vd)
+			handleHTMLError(w, r, app.ErrInvalidSMTPConfig, "SMTP config is not configured correctly.", u.SettingView, vd)
 		} else {
-			handleHTMLError(w, r, err, "sending verification email", u.EmailVerificationView, vd)
+			handleHTMLError(w, r, err, "sending verification email", u.SettingView, vd)
 		}
 
 		return

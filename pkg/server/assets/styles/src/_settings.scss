@@ -75,7 +75,7 @@
     .setting-row-summary {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      // align-items: flex-start;
 
       @include breakpoint(md) {
         flex-direction: row;
@@ -109,11 +109,13 @@
 
     .setting-right {
       display: flex;
-      flex-direction: column;
       word-break: break-all;
+      justify-content: space-between;
+      align-items: center;
 
       @include breakpoint(md) {
         flex-direction: row;
+        align-items: center;
       }
     }
 
@@ -135,5 +137,9 @@
         margin-top: rem(12px);
       }
     }
+  }
+
+  .email-verification-form {
+    margin-left: rem(12px);
   }
 }
