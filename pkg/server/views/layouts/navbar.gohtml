@@ -27,7 +27,7 @@
 
 {{define "accountDropdown"}}
 <div class="dropdown account-dropdown">
-  <button class="dropdown-trigger button-no-ui nav-item">Account</button>
+  <button id="T-account-menu" class="dropdown-trigger button-no-ui nav-item">Account</button>
 
   <div class="dropdown-content right-align">
     <header>
@@ -63,6 +63,6 @@
 {{define "logoutForm"}}
 <form action="/logout" method="POST">
   {{csrfField}}
-  <input type="submit" class="button-no-ui dropdown-link" role="menuitem" tabindex="0" value="Logout"></input>
+  <input id="T-logout-button" type="submit" class="button-no-ui dropdown-link" role="menuitem" tabindex="0" value="Logout"></input>
 </form>
 {{end}}

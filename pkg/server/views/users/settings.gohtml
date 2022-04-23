@@ -1,5 +1,5 @@
 {{define "yield"}}
-<div class="page page-mobile-full settings-page">
+<div id="T-home-page" class="page page-mobile-full settings-page">
   <div class="container mobile-fw">
     <div class="page-header">
       <h1 class="page-heading">Settings</h1>
@@ -12,79 +12,11 @@
 
       <div class="col-12 col-md-12 col-lg-9">
         <div class="setting-section-wrapper">
-          <section class="setting-section">
-            <h2 class="section-heading">Email</h2>
-
-            <div class="setting-row">
-              <div class="setting-row-summary">
-                <div>
-                  <h3 class="setting-name">Current Email</h3>
-                </div>
-
-                <div class="setting-right">
-                  {{.Email}}
-                </div>
-              </div>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-row-summary">
-                <div>
-                  <h3 class="setting-name">Email Verified</h3>
-                </div>
-
-                <div class="setting-right">
-                {{ if eq true false }} b{{end}}
-
-                  {{if .EmailVerified}}
-                    Yes
-                  {{else}}
-                    No
-
-                    <form action="/verification-token" method="POST" class="email-verification-form">
-                      <button
-                        class="button button-second button-small"
-                        type="submit"
-                      >
-                        Send verification email
-                      </button>
-                    </form>
-                  {{end}}
-                </div>
-              </div>
-            </div>
-
-            <div class="setting-row">
-              <div class="setting-row-summary">
-                <div>
-                  <h3 class="setting-name">Change Email</h3>
-                </div>
-              </div>
-
-              <div class="setting-row-main">
-                {{template "emailForm" .}}
-              </div>
-            </div>
-          </section>
-
-          <section class="setting-section">
-            <h2 class="section-heading">Password</h2>
-
-            <div class="setting-row">
-              <div class="setting-row-summary">
-                <div>
-                  <h3 class="setting-name">Change Password</h3>
-                  <p class="setting-desc">
-                    Set a unique password to protect your data.
-                  </p>
-                </div>
-              </div>
-
-              <div class="setting-row-main">
-                {{template "passwordChangeForm" .}}
-              </div>
-            </div>
-          </section>
+          {{if ne .Standalone "true"}}
+            {{template "planSection" .}}
+          {{end}}
+          {{template "emailSection" .}}
+          {{template "passwordSection" .}}
         </div>
       </div>
     </div>
@@ -93,7 +25,7 @@
 {{end}}
 
 {{define "emailForm"}}
-<form action="/account/profile" method="POST">
+<form id="T-email-change-form" action="/account/profile" method="POST">
   {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
   <input type="hidden" name="_method" value="PATCH" />
@@ -140,7 +72,7 @@
 {{end}}
 
 {{define "passwordChangeForm"}}
-<form action="/account/password" method="POST">
+<form id="T-password-change-form" action="/account/password" method="POST">
   {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
   <input type="hidden" name="_method" value="PATCH" />
@@ -197,4 +129,113 @@
     </button>
   </div>
 </form>
+{{end}}
+
+{{define "emailSection"}}
+<section class="setting-section">
+  <h2 class="section-heading">Email</h2>
+
+  <div class="setting-row">
+    <div class="setting-row-summary">
+      <div>
+        <h3 class="setting-name">Current Email</h3>
+      </div>
+
+      <div class="setting-right">
+        {{.Email}}
+      </div>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-row-summary">
+      <div>
+        <h3 class="setting-name">Email Verified</h3>
+      </div>
+
+      <div class="setting-right">
+      {{ if eq true false }} b{{end}}
+
+        {{if .EmailVerified}}
+          Yes
+        {{else}}
+          No
+
+          <form action="/verification-token" method="POST" class="email-verification-form">
+            <button
+              id="T-send-verification-button"
+              class="button button-second button-small"
+              type="submit"
+            >
+              Send verification email
+            </button>
+          </form>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-row-summary">
+      <div>
+        <h3 class="setting-name">Change Email</h3>
+      </div>
+    </div>
+
+    <div class="setting-row-main">
+      {{template "emailForm" .}}
+    </div>
+  </div>
+</section>
+{{end}}
+
+{{define "passwordSection"}}
+<section class="setting-section">
+  <h2 class="section-heading">Password</h2>
+
+  <div class="setting-row">
+    <div class="setting-row-summary">
+      <div>
+        <h3 class="setting-name">Change Password</h3>
+        <p class="setting-desc">
+          Set a unique password to protect your data.
+        </p>
+      </div>
+    </div>
+
+    <div class="setting-row-main">
+      {{template "passwordChangeForm" .}}
+    </div>
+  </div>
+</section>
+{{end}}
+
+{{define "planSection"}}
+<section class="setting-section">
+  <h2 class="section-heading">Plan</h2>
+
+  <div class="setting-row">
+    <div class="setting-row-summary">
+      <div>
+        <h3 class="setting-name">Dnote Pro</h3>
+        <p class="setting-desc">
+          Fully hosted and managed Dnote for you.
+        </p>
+      </div>
+
+      <div class="setting-right">
+        {{if .Cloud}}
+          Yes
+        {{else}}
+          <a id="T-unlock-pro-btn"
+            href="/subscriptions"
+            class="button button-first button-small">
+            Unlock
+          </a>
+        {{end}}
+      </div>
+    </div>
+
+  </div>
+</section>
 {{end}}

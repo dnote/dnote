@@ -36,7 +36,7 @@
 {{end}}
 
 {{define "signupForm"}}
-<form action="{{ if .Referrer }} {{ getPathWithReferrer "/join" .Referrer }} {{else}} /join {{end}}" method="POST">
+<form id="T-join-form" action="{{ if .Referrer }} {{ getPathWithReferrer "/join" .Referrer }} {{else}} /join {{end}}" method="POST">
   {{csrfField}}
 
   <div class="form-group">
