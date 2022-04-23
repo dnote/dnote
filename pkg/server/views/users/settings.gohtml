@@ -1,5 +1,5 @@
 {{define "yield"}}
-<div class="page page-mobile-full settings-page">
+<div id="T-home-page" class="page page-mobile-full settings-page">
   <div class="container mobile-fw">
     <div class="page-header">
       <h1 class="page-heading">Settings</h1>
@@ -25,7 +25,7 @@
 {{end}}
 
 {{define "emailForm"}}
-<form action="/account/profile" method="POST">
+<form id="T-email-change-form" action="/account/profile" method="POST">
   {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
   <input type="hidden" name="_method" value="PATCH" />
@@ -72,7 +72,7 @@
 {{end}}
 
 {{define "passwordChangeForm"}}
-<form action="/account/password" method="POST">
+<form id="T-password-change-form" action="/account/password" method="POST">
   {{/*  prevent browsers from automatically filling the input fields */}}
   <input type="password" style="display: none;" readonly />
   <input type="hidden" name="_method" value="PATCH" />
@@ -163,7 +163,7 @@
 
           <form action="/verification-token" method="POST" class="email-verification-form">
             <button
-              id="#T-send-verification-button"
+              id="T-send-verification-button"
               class="button button-second button-small"
               type="submit"
             >
@@ -227,7 +227,7 @@
         {{if .Cloud}}
           Yes
         {{else}}
-          <a id="#T-unlock-pro-btn"
+          <a id="T-unlock-pro-btn"
             href="/subscriptions"
             class="button button-first button-small">
             Unlock
