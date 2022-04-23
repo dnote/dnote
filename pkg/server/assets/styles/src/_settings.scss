@@ -112,10 +112,12 @@
       word-break: break-all;
       justify-content: space-between;
       align-items: center;
+      margin-top: rem(4px);
 
       @include breakpoint(md) {
         flex-direction: row;
         align-items: center;
+        margin-top: 0;
       }
     }
 

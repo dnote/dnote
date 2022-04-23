@@ -36,7 +36,7 @@
 {{end}}
 
 {{define "loginForm"}}
-<form action="{{ if .Referrer }} {{ getPathWithReferrer "/login" .Referrer }} {{else}} /login {{end}}" method="POST">
+<form id="T-login-form" action="{{ if .Referrer }} {{ getPathWithReferrer "/login" .Referrer }} {{else}} /login {{end}}" method="POST">
   {{csrfField}}
 
   <div class="input-row">
