@@ -11,6 +11,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
@@ -665,4 +666,52 @@ func (u *Users) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	setSessionCookie(w, session.Key, session.ExpiresAt)
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (u *Users) CreateEmailVerificationToken(w http.ResponseWriter, r *http.Request) {
+	vd := views.Data{}
+
+	user := context.User(r.Context())
+	if user == nil {
+		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.EmailVerificationView, vd)
+		return
+	}
+
+	var account database.Account
+	err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error
+	if err != nil {
+		handleHTMLError(w, r, err, "finding account", u.EmailVerificationView, vd)
+		return
+	}
+
+	if account.EmailVerified {
+		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "email is already verified.", u.EmailVerificationView, vd)
+		return
+	}
+	if account.Email.String == "" {
+		handleHTMLError(w, r, app.ErrEmailRequired, "email is empty.", u.EmailVerificationView, vd)
+		return
+	}
+
+	tok, err := token.Create(u.app.DB, account.UserID, database.TokenTypeEmailVerification)
+	if err != nil {
+		handleHTMLError(w, r, err, "saving token", u.EmailVerificationView, vd)
+		return
+	}
+
+	if err := u.app.SendVerificationEmail(account.Email.String, tok.Value); err != nil {
+		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
+			handleHTMLError(w, r, app.ErrInvalidSMTPConfig, "SMTP config is not configured correctly.", u.EmailVerificationView, vd)
+		} else {
+			handleHTMLError(w, r, err, "sending verification email", u.EmailVerificationView, vd)
+		}
+
+		return
+	}
+
+	alert := views.Alert{
+		Level:   views.AlertLvlSuccess,
+		Message: "Please check your email for the verification",
+	}
+	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
 }

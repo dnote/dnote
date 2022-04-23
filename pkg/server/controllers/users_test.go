@@ -1314,3 +1314,75 @@ func TestVerifyEmail(t *testing.T) {
 		assert.Equal(t, token.UsedAt, (*time.Time)(nil), "token should have not been used")
 	})
 }
+
+func TestCreateVerificationToken(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+
+		// Setup
+		emailBackend := testutils.MockEmailbackendImplementation{}
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+			EmailBackend: &emailBackend,
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusFound, "status code mismatch")
+
+		var account database.Account
+		var token database.Token
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Where("user_id = ? AND type = ?", user.ID, database.TokenTypeEmailVerification).First(&token), "finding token")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, false, "email_verified should not have been updated")
+		assert.NotEqual(t, token.Value, "", "token Value mismatch")
+		assert.Equal(t, tokenCount, 1, "token count mismatch")
+		assert.Equal(t, token.UsedAt, (*time.Time)(nil), "token UsedAt mismatch")
+		assert.Equal(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+	})
+
+	t.Run("already verified", func(t *testing.T) {
+		defer testutils.ClearData(testutils.DB)
+		// Setup
+		server := MustNewServer(t, &app.App{
+			Clock: clock.NewMock(),
+			Config: config.Config{
+				PageTemplateDir: "../views",
+			},
+		})
+		defer server.Close()
+
+		user := testutils.SetupUserData()
+		a := testutils.SetupAccountData(user, "alice@example.com", "pass1234")
+		a.EmailVerified = true
+		testutils.MustExec(t, testutils.DB.Save(&a), "preparing account")
+
+		// Execute
+		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")
+		res := testutils.HTTPAuthDo(t, req, user)
+
+		// Test
+		assert.StatusCodeEquals(t, res, http.StatusConflict, "Status code mismatch")
+
+		var account database.Account
+		var tokenCount int
+		testutils.MustExec(t, testutils.DB.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&tokenCount), "counting token")
+
+		assert.Equal(t, account.EmailVerified, true, "email_verified should not have been updated")
+		assert.Equal(t, tokenCount, 0, "token count mismatch")
+	})
+}
