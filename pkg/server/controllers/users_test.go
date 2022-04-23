@@ -1166,7 +1166,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email/%s", "someTokenValue"), "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -1210,7 +1210,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email/%s", "someTokenValue"), "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -1253,7 +1253,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Model(&tok).Update("created_at", time.Now().Add(time.Minute*-31)), "Failed to prepare token created_at")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email/%s", "someTokenValue"), "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test
@@ -1296,7 +1296,7 @@ func TestVerifyEmail(t *testing.T) {
 		testutils.MustExec(t, testutils.DB.Save(&tok), "preparing token")
 
 		// Execute
-		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email?token=%s", "someTokenValue"), "")
+		req := testutils.MakeReq(server.URL, "GET", fmt.Sprintf("/verify-email/%s", "someTokenValue"), "")
 		res := testutils.HTTPAuthDo(t, req, user)
 
 		// Test

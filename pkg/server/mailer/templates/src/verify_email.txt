@@ -2,7 +2,7 @@ Hi.
 
 Welcome to Dnote! To verify your email, visit the following link:
 
-    {{ .WebURL }}/verify-email?token={{ .Token }}
+    {{ .WebURL }}/verify-email/{{ .Token }}
 
 Thanks for using Dnote.
 

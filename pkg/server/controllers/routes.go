@@ -40,7 +40,7 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
 		{"POST", "/reset-token", c.Users.CreateResetToken, true},
 		{"POST", "/verification-token", mw.Auth(a, c.Users.CreateEmailVerificationToken, redirectGuest), true},
-		{"GET", "/verify-email", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
+		{"GET", "/verify-email/{token}", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
 		{"PATCH", "/account/profile", mw.Auth(a, c.Users.ProfileUpdate, nil), true},
 		{"PATCH", "/account/password", mw.Auth(a, c.Users.PasswordUpdate, nil), true},
 	}

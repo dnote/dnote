@@ -603,7 +603,8 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 func (u *Users) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	vd := views.Data{}
 
-	tokenValue := r.URL.Query().Get("token")
+	vars := mux.Vars(r)
+	tokenValue := vars["token"]
 
 	if tokenValue == "" {
 		handleHTMLError(w, r, app.ErrMissingToken, "Missing email verification token", u.EmailVerificationView, vd)
