@@ -9,9 +9,9 @@ inputDir="$dir/src"
 
 rm -rf "${outputDir:?}/*"
 
-sass --version
+"$dir/../node_modules/.bin/sass" --version
 
-task="sass \
+task="$dir/../node_modules/.bin/sass \
   --style compressed \
   --source-map \
   $inputDir:$outputDir"
