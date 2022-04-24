@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
  *
  * This file is part of Dnote.
  *
@@ -18,17 +18,12 @@
 
 /*
 MIT License
-
 Copyright (c) 2017 Pierre Burel
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-@use "sass:math";
 // assume 1 rem = 10 px
 // achieved by body { font-size: 62.5%; )
 $rem-baseline: 10px !default;
@@ -36,11 +31,11 @@ $rem-fallback: false !default;
 $rem-px-only: false !default;
 
 @function rem-separator($list, $separator: false) {
-  @if $separator == 'comma' or $separator == 'space' {
+  @if $separator == "comma" or $separator == "space" {
     @return append($list, null, $separator);
   }
 
-  @if function-exists('list-separator') == true {
+  @if function-exists("list-separator") == true {
     @return list-separator($list);
   }
 
@@ -62,22 +57,18 @@ $rem-px-only: false !default;
   $separator: rem-separator($values);
 
   @each $value in $values {
-    @if type-of($value) == 'number' and unit($value) == 'rem' and $to == 'px' {
+    @if type-of($value) == "number" and unit($value) == "rem" and $to == "px" {
       $result: append($result, $value / 1rem * $rem-baseline, $separator);
     } @else if
       type-of($value) ==
-      'number' and
+      "number" and
       unit($value) ==
-      'px' and
+      "px" and
       $to ==
-      'rem'
+      "rem"
     {
-      $result: append(
-        $result,
-        math.div($value, $rem-baseline) * 1rem,
-        $separator
-      );
-    } @else if type-of($value) == 'list' {
+      $result: append($result, $value / $rem-baseline * 1rem, $separator);
+    } @else if type-of($value) == "list" {
       $value-separator: rem-separator($value);
       $value: rem-convert($to, $value...);
       $value: rem-separator($value, $value-separator);
@@ -99,7 +90,7 @@ $rem-px-only: false !default;
 }
 
 @mixin rem($properties, $values...) {
-  @if type-of($properties) == 'map' {
+  @if type-of($properties) == "map" {
     @each $property in map-keys($properties) {
       @include rem($property, map-get($properties, $property));
     }

@@ -28,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var defaultSender = "sung@getdnote.com"
+var defaultSender = "admin@getdnote.com"
 
 // GetSenderEmail returns the sender email
 func GetSenderEmail(c config.Config, want string) (string, error) {
