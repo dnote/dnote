@@ -43,6 +43,8 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 		{"GET", "/verify-email/{token}", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
 		{"PATCH", "/account/profile", mw.Auth(a, c.Users.ProfileUpdate, nil), true},
 		{"PATCH", "/account/password", mw.Auth(a, c.Users.PasswordUpdate, nil), true},
+
+		{"GET", "/health", c.Health.Index, true},
 	}
 
 	if !a.Config.DisableRegistration {
@@ -59,9 +61,6 @@ func NewAPIRoutes(a *app.App, c *Controllers) []Route {
 	proOnly := mw.AuthParams{ProOnly: true}
 
 	return []Route{
-		// internal
-		{"GET", "/health", c.Health.Index, true},
-
 		// v3
 		{"GET", "/v3/sync/fragment", mw.Cors(mw.Auth(a, c.Sync.GetSyncFragment, &proOnly)), false},
 		{"GET", "/v3/sync/state", mw.Cors(mw.Auth(a, c.Sync.GetSyncState, &proOnly)), false},
