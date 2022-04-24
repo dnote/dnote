@@ -19,11 +19,13 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -31,6 +33,23 @@ import (
 	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
 )
+
+// splitCommandParts splits the given commad string at space, except
+// when inside a double quotation mark.
+func splitCommandParts(cmd string) []string {
+	re := regexp.MustCompile(`\r?\n`)
+	s := re.ReplaceAllString(cmd, " ")
+
+	r := csv.NewReader(strings.NewReader(s))
+	r.Comma = ' '
+
+	fields, err := r.Read()
+	if err != nil {
+		panic(err)
+	}
+
+	return fields
+}
 
 func command(binary string, args []string, entryPoint string) *exec.Cmd {
 	cmd := exec.Command(binary, args...)
@@ -52,7 +71,7 @@ func command(binary string, args []string, entryPoint string) *exec.Cmd {
 }
 
 func execCmd(task string, watchDir string) *exec.Cmd {
-	parts := strings.Fields(task)
+	parts := splitCommandParts(task)
 
 	return command(parts[0], parts[1:], watchDir)
 }

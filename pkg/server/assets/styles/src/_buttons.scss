@@ -1,0 +1,182 @@
+/* Copyright (C) 2019, 2020 Monomax Software Pty Ltd
+ *
+ * This file is part of Dnote.
+ *
+ * Dnote is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Dnote is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import './theme';
+@import './rem';
+@import './font';
+
+@mixin button($text-color, $background-color) {
+  color: $text-color;
+  background-color: $background-color;
+
+  &:not(:disabled):hover {
+    color: $text-color;
+    background-color: darken($background-color, 5%);
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+@mixin button-outline($color, $border-color) {
+  background: transparent;
+  color: $color;
+
+  &:not(.button-no-ui) {
+    border-color: $border-color;
+    border-width: 2px;
+  }
+
+  &:not(:disabled):hover {
+    color: $color;
+    box-shadow: 0px 0px 4px 2px #cacaca;
+  }
+}
+
+.button {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border-image: initial;
+  transition-property: color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  &:not(.button-no-ui) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+  }
+
+  &:not(:disabled):hover {
+    text-decoration: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: 2px dotted #9c9c9c;
+  }
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-small {
+  @include font-size('small');
+  padding: rem(4px) rem(12px);
+}
+
+.button-normal {
+  // @include font-size('small');
+  padding: rem(8px) rem(16px);
+}
+
+.button-large {
+  @include font-size('medium');
+
+  padding: rem(8px) rem(24px);
+
+  @include breakpoint(md) {
+    padding: rem(12px) rem(36px);
+  }
+
+  @include breakpoint(lg) {
+    padding: rem(12px) rem(48px);
+  }
+}
+
+.button-xlarge {
+  @include font-size('x-large');
+
+  padding: rem(16px) rem(24px);
+
+  @include breakpoint(md) {
+    padding: rem(12px) rem(36px);
+  }
+
+  @include breakpoint(lg) {
+    padding: rem(16px) rem(48px);
+  }
+}
+
+.button-first {
+  @include button(#ffffff, #333745);
+}
+
+.button-first-outline {
+  @include button-outline(#333745, #333745);
+}
+
+.button-second {
+  @include button($black, $second);
+}
+
+.button-second-outline {
+  @include button-outline($black, $second);
+}
+
+.button-third {
+  @include button(#ffffff, $third);
+}
+
+.button-third-outline {
+  @include button-outline($third, $third);
+}
+
+.button-danger {
+  @include button-outline($danger-text, $danger-text);
+  font-weight: 600;
+}
+
+.button-stretch {
+  width: 100%;
+}
+
+.button ~ .button {
+  margin-left: rem(12px);
+}
+
+.button-no-ui {
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.button-no-padding {
+  padding: 0;
+}
+
+.button-link {
+  color: $link;
+
+  &:hover {
+    color: $link-hover;
+    text-decoration: underline;
+  }
+}

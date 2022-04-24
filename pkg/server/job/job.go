@@ -23,8 +23,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/dnote/dnote/pkg/server/job/remind"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -102,7 +100,6 @@ func scheduleJob(c *cron.Cron, spec string, cmd func()) {
 func (r *Runner) schedule(ch chan error) {
 	// Schedule jobs
 	cr := cron.New()
-	scheduleJob(cr, "0 8 * * *", func() { r.RemindNoRecentNotes() })
 	cr.Start()
 
 	ch <- nil
@@ -127,27 +124,4 @@ func (r *Runner) Do() error {
 	slog.Println("Started background tasks")
 
 	return nil
-}
-
-// RemindNoRecentNotes remind users if no notes have been added recently
-func (r *Runner) RemindNoRecentNotes() {
-	c := remind.Context{
-		DB:           r.DB,
-		Clock:        r.Clock,
-		EmailTmpl:    r.EmailTmpl,
-		EmailBackend: r.EmailBackend,
-		Config:       r.Config,
-	}
-
-	result, err := remind.DoInactive(c)
-	m := log.WithFields(log.Fields{
-		"success_count":   result.SuccessCount,
-		"failed_user_ids": result.FailedUserIDs,
-	})
-
-	if err == nil {
-		m.Info("successfully processed no recent note reminder job")
-	} else {
-		m.ErrorWrap(err, "error processing no recent note reminder job")
-	}
 }

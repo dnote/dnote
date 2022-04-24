@@ -1,0 +1,23 @@
+{{define "settingsSidebar"}}
+<nav class="sidebar">
+  <ul class="list-unstyled">
+    <li>
+      <a class="sidebar-item {{if eq .CurrentPath "/"}}active{{end}}" href="/">Account</a>
+    </li>
+
+    {{if ne .Standalone "true"}}
+    <li>
+      <a class="sidebar-item"  href="/subscriptions/manage">
+        Billing
+      </a>
+    </li>
+    {{end}}
+
+    <li>
+      <a class="sidebar-item {{if eq .CurrentPath "/about"}}active{{end}}" href="/about">
+        About
+      </a>
+    </li>
+  </ul>
+</nav>
+{{end}}

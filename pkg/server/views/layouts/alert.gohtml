@@ -1,0 +1,9 @@
+{{define "alert"}}
+{{if .}}
+  <div class="alert alert-{{.Level}}" role="alert">
+    <div class="container">
+      {{.Message}}
+    </div>
+  </div>
+{{end}}
+{{end}}

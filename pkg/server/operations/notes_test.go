@@ -107,7 +107,7 @@ func TestGetNote(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			note, ok, err := GetNote(testutils.DB, tc.note.UUID, tc.user)
+			note, ok, err := GetNote(testutils.DB, tc.note.UUID, &tc.user)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
@@ -141,7 +141,7 @@ func TestGetNote_nonexistent(t *testing.T) {
 	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
 
 	nonexistentUUID := "4fd19336-671e-4ff3-8f22-662b80e22edd"
-	note, ok, err := GetNote(testutils.DB, nonexistentUUID, user)
+	note, ok, err := GetNote(testutils.DB, nonexistentUUID, &user)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "executing"))
 	}

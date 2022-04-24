@@ -46,6 +46,7 @@ type App struct {
 	EmailTemplates mailer.Templates
 	EmailBackend   mailer.Backend
 	Config         config.Config
+	Files          map[string][]byte
 }
 
 // Validate validates the app configuration

@@ -25,6 +25,11 @@ import (
 	"os"
 )
 
+const (
+	// AppEnvProduction represents an app environment for production.
+	AppEnvProduction string = "PRODUCTION"
+)
+
 var (
 	// ErrDBMissingHost is an error for an incomplete configuration missing the host
 	ErrDBMissingHost = errors.New("DB Host is empty")
@@ -92,11 +97,25 @@ func loadDBConfig() PostgresConfig {
 
 // Config is an application configuration
 type Config struct {
+	AppEnv              string
 	WebURL              string
 	OnPremise           bool
 	DisableRegistration bool
 	Port                string
 	DB                  PostgresConfig
+	PageTemplateDir     string
+	StaticDir           string
+	AssetBaseURL        string
+}
+
+func getAppEnv() string {
+	// DEPRECATED
+	goEnv := os.Getenv("GO_ENV")
+	if goEnv != "" {
+		return goEnv
+	}
+
+	return os.Getenv("APP_ENV")
 }
 
 // Load constructs and returns a new config based on the environment variables.
@@ -107,11 +126,13 @@ func Load() Config {
 	}
 
 	c := Config{
+		AppEnv:              getAppEnv(),
 		WebURL:              os.Getenv("WebURL"),
 		Port:                port,
 		OnPremise:           readBoolEnv("OnPremise"),
 		DisableRegistration: readBoolEnv("DisableRegistration"),
 		DB:                  loadDBConfig(),
+		AssetBaseURL:        "",
 	}
 
 	if err := validate(c); err != nil {
@@ -124,6 +145,26 @@ func Load() Config {
 // SetOnPremise sets the OnPremise value
 func (c *Config) SetOnPremise(val bool) {
 	c.OnPremise = val
+}
+
+// SetPageTemplateDir sets page template dir for the config
+func (c *Config) SetPageTemplateDir(d string) {
+	c.PageTemplateDir = d
+}
+
+// SetStaticDir sets static dir for the confi
+func (c *Config) SetStaticDir(d string) {
+	c.StaticDir = d
+}
+
+// SetAssetBaseURL sets static dir for the confi
+func (c *Config) SetAssetBaseURL(d string) {
+	c.AssetBaseURL = d
+}
+
+// IsProd checks if the app environment is configured to be production.
+func (c Config) IsProd() bool {
+	return c.AppEnv == AppEnvProduction
 }
 
 func validate(c Config) error {

@@ -1,0 +1,147 @@
+@import './theme';
+@import './font';
+
+.settings-page {
+  .sidebar {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+    background: white;
+    margin-bottom: rem(20px);
+    margin-top: rem(20px);
+
+    @include breakpoint(lg) {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+  }
+
+  .sidebar-item {
+    display: block;
+    padding: rem(12px) rem(16px);
+    border-left: 4px solid transparent;
+    @include font-size('regular');
+
+    &:hover {
+      text-decoration: none;
+      background: $light;
+    }
+
+    &.active {
+      font-weight: 600;
+      border-left-color: $first;
+    }
+  }
+
+  .setting-section-wrapper {
+    .header {
+      @include breakpoint(lg) {
+        display: none;
+      }
+    }
+
+    .setting-section {
+      margin-top: rem(24px);
+      background: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    .section-heading {
+      @include font-size('regular');
+      font-weight: 600;
+      padding-bottom: rem(4px);
+      background: $light;
+      padding: rem(16px) rem(20px);
+    }
+    .section-content {
+      margin-top: rem(20px);
+    }
+
+    .actions {
+      margin-top: rem(18px);
+      text-align: right;
+    }
+  }
+
+  .setting-row {
+    padding: rem(16px) rem(20px);
+
+    &:not(:last-child) {
+      border-bottom: 1px solid $border-color;
+    }
+
+    .setting-row-summary {
+      display: flex;
+      flex-direction: column;
+      // align-items: flex-start;
+
+      @include breakpoint(md) {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    .setting-row-main {
+      padding-top: rem(24px);
+    }
+
+    .setting-name {
+      font-weight: 400;
+      @include font-size('regular');
+      margin-bottom: 0;
+    }
+    .setting-desc {
+      margin-bottom: 0;
+      @include font-size('small');
+      color: $gray;
+    }
+    .setting-action {
+      display: flex;
+      flex-direction: column;
+
+      @include breakpoint(md) {
+        flex-direction: row;
+      }
+    }
+
+    .setting-right {
+      display: flex;
+      word-break: break-all;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: rem(4px);
+
+      @include breakpoint(md) {
+        flex-direction: row;
+        align-items: center;
+        margin-top: 0;
+      }
+    }
+
+    .setting-edit {
+      color: $link;
+      padding: 0;
+
+      &:hover {
+        color: $link-hover;
+      }
+      @include breakpoint(md) {
+        margin-left: rem(16px);
+      }
+    }
+
+    .input-row {
+      & ~ .input-row,
+      .input-row {
+        margin-top: rem(12px);
+      }
+    }
+  }
+
+  .email-verification-form {
+    margin-left: rem(12px);
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "assets",
+  "version": "1.0.0",
+  "description": "assets",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Dnote",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "sass": "^1.50.1"
+  }
+}
