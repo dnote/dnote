@@ -3,3 +3,4 @@
 .vagrant
 *.log
 node_modules
+/test
