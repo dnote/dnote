@@ -29,34 +29,14 @@ endif
 	@echo "==> installing js dependencies"
 
 ifeq ($(CI), true)
-	@(cd ${currentDir} && npm ci --cache $(NPM_CACHE_DIR) --prefer-offline --unsafe-perm=true)
 	@(cd ${currentDir}/pkg/server/assets && npm ci --cache $(NPM_CACHE_DIR) --prefer-offline --unsafe-perm=true)
-	@(cd ${currentDir}/web && npm ci --cache $(NPM_CACHE_DIR) --prefer-offline --unsafe-perm=true)
-	@(cd ${currentDir}/browser && npm ci --cache $(NPM_CACHE_DIR) --prefer-offline --unsafe-perm=true)
-	@(cd ${currentDir}/jslib && npm ci --cache $(NPM_CACHE_DIR) --prefer-offline --unsafe-perm=true)
 else
-	@(cd ${currentDir} && npm install)
 	@(cd ${currentDir}/pkg/server/assets && npm install)
-	@(cd ${currentDir}/web && npm install)
-	@(cd ${currentDir}/browser && npm install)
-	@(cd ${currentDir}/jslib && npm install)
 endif
 .PHONY: install-js
 
-lint:
-	@(cd ${currentDir}/web && npm run lint)
-	@(cd ${currentDir}/jslib && npm run lint)
-	@(cd ${currentDir}/browser && npm run lint)
-.PHONY: lint
-
-lint-fix:
-	@(cd ${currentDir}/web && npm run lint:fix)
-	@(cd ${currentDir}/jslib && npm run lint:fix)
-	@(cd ${currentDir}/browser && npm run lint:fix)
-.PHONY: lint
-
 ## test
-test: test-cli test-api test-web test-jslib
+test: test-cli test-api
 .PHONY: test
 
 test-cli:
@@ -69,48 +49,19 @@ test-api:
 	@(${currentDir}/scripts/server/test-local.sh)
 .PHONY: test-api
 
-test-web:
-	@echo "==> running web test"
-
-ifeq ($(WATCH), true)
-	@(cd ${currentDir}/web && npm run test:watch)
-else 
-	@(cd ${currentDir}/web && npm run test)
-endif
-.PHONY: test-web
-
-test-jslib:
-	@echo "==> running jslib test"
-
-ifeq ($(WATCH), true)
-	@(cd ${currentDir}/jslib && npm run test:watch)
-else
-	@(cd ${currentDir}/jslib && npm run test)
-endif
-.PHONY: test-jslib
-
 test-selfhost:
 	@echo "==> running a smoke test for self-hosting"
 
 	@${currentDir}/host/smoketest/run_test.sh ${tarballPath}
-.PHONY: test-jslib
+.PHONY: test-selfhost
 
 # development
 dev-server:
 	@echo "==> running dev environment"
-	@VERSION=master ${currentDir}/scripts/web/dev.sh
+	@VERSION=master ${currentDir}/scripts/server/dev.sh
 .PHONY: dev-server
 
-## build
-build-web:
-ifndef version
-	$(error version is required. Usage: make version=0.1.0 build-web)
-endif
-	@echo "==> building web"
-	@VERSION=${version} ${currentDir}/scripts/web/build-prod.sh
-.PHONY: build-web
-
-build-server: build-web
+build-server:
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 build-server)
 endif
@@ -184,11 +135,4 @@ endif
 clean:
 	@git clean -f
 	@rm -rf build
-	@rm -rf web/public
 .PHONY: clean
-
-clean-dep:
-	@rm -rf ${currentDir}/web/node_modules
-	@rm -rf ${currentDir}/jslib/node_modules
-	@rm -rf ${currentDir}/browser/node_modules
-.PHONY: clean-dep
