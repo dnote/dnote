@@ -34,7 +34,7 @@ func TestSendVerificationEmail(t *testing.T) {
 	}{
 		{
 			onPremise:      false,
-			expectedSender: "sung@getdnote.com",
+			expectedSender: "admin@getdnote.com",
 		},
 		{
 			onPremise:      true,
@@ -72,7 +72,7 @@ func TestSendWelcomeEmail(t *testing.T) {
 	}{
 		{
 			onPremise:      false,
-			expectedSender: "sung@getdnote.com",
+			expectedSender: "admin@getdnote.com",
 		},
 		{
 			onPremise:      true,
@@ -110,7 +110,7 @@ func TestSendPasswordResetEmail(t *testing.T) {
 	}{
 		{
 			onPremise:      false,
-			expectedSender: "sung@getdnote.com",
+			expectedSender: "admin@getdnote.com",
 		},
 		{
 			onPremise:      true,
@@ -157,7 +157,7 @@ func TestSendSubscriptionConfirmationEmail(t *testing.T) {
 	}
 
 	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-	assert.Equal(t, emailBackend.Emails[0].From, "sung@getdnote.com", "email sender mismatch")
+	assert.Equal(t, emailBackend.Emails[0].From, "admin@getdnote.com", "email sender mismatch")
 	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 }
 
