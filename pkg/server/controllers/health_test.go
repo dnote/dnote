@@ -39,7 +39,7 @@ func TestHealth(t *testing.T) {
 	defer server.Close()
 
 	// Execute
-	req := testutils.MakeReq(server.URL, "GET", "/api/health", "")
+	req := testutils.MakeReq(server.URL, "GET", "/health", "")
 	res := testutils.HTTPDo(t, req)
 
 	// Test
