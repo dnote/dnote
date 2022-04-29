@@ -19,11 +19,6 @@ projectDir="$dir/../.."
 basedir="$projectDir/pkg/cli"
 outputDir="$projectDir/build/cli"
 
-# xgo has issues when using modules
-# https://github.com/karalabe/xgo/issues/176
-# bypass it by copying the project inside a GOPATH
-goPathBasedir="$GOPATH/src/github.com/dnote/dnote"
-
 command_exists () {
   command -v "$1" >/dev/null 2>&1;
 }
@@ -41,7 +36,7 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=1.13.x
+goVersion=go-1.17.x
 
 get_binary_name() {
   platform=$1
@@ -65,6 +60,8 @@ build() {
   ldflags="-X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=$version"
   tags="fts5"
 
+  pushd "$projectDir"
+
   mkdir -p "$destDir"
 
   if [ "$native" == true ]; then
@@ -75,16 +72,24 @@ build() {
         -o="$destDir/cli-$platform-$arch" \
         "$basedir"
   else
+    flags=()
+    if [ "$platform" == "windows" ]; then
+      flags+=("-buildmode=exe")
+    fi
+
     xgo \
       -go "$goVersion" \
-      --targets="$platform/$arch" \
+      -targets="$platform/$arch" \
       -ldflags "$ldflags" \
-      --tags "$tags" \
-      --dest="$destDir" \
-      -x \
-      -v \
-      "$goPathBasedir/pkg/cli"
+      -dest="$destDir" \
+      -out="cli" \
+      "${flags[@]}" \
+      -tags "$tags" \
+      -pkg pkg/cli \
+      .
   fi
+
+  popd
 
   binaryName=$(get_binary_name "$platform")
   mv "$destDir/cli-${platform}-"* "$destDir/$binaryName"
@@ -105,11 +110,8 @@ build() {
 }
 
 if [ -z "$GOOS" ] && [ -z "$GOARCH" ]; then
-  # fetch tool
-  go get -u github.com/dnote/xgo
-
-  rm -rf "$GOPATH/src/github.com/dnote/dnote"
-  cp -R  "$projectDir" "$goPathBasedir"
+  # install the tool
+  go install src.techknowlogick.com/xgo@latest
 
   build linux amd64
   build linux arm64
