@@ -19,9 +19,13 @@ projectDir="$dir/../.."
 basedir="$projectDir/pkg/cli"
 outputDir="$projectDir/build/cli"
 
-# xgo has issues when using modules
-# https://github.com/karalabe/xgo/issues/176
-# bypass it by copying the project inside a GOPATH
+echo "projectDir: $projectDir"
+echo "basedir: $basedir"
+echo "outputDir: $projectDir"
+
+xgo has issues when using modules
+https://github.com/karalabe/xgo/issues/176
+bypass it by copying the project inside a GOPATH
 goPathBasedir="$GOPATH/src/github.com/dnote/dnote"
 
 command_exists () {
@@ -41,7 +45,7 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=1.13.x
+goVersion=1.18.x
 
 get_binary_name() {
   platform=$1
@@ -77,10 +81,10 @@ build() {
   else
     xgo \
       -go "$goVersion" \
-      --targets="$platform/$arch" \
+      -targets="$platform/$arch" \
       -ldflags "$ldflags" \
-      --tags "$tags" \
-      --dest="$destDir" \
+      -tags "$tags" \
+      -dest="$destDir" \
       -x \
       -v \
       "$goPathBasedir/pkg/cli"
@@ -106,7 +110,7 @@ build() {
 
 if [ -z "$GOOS" ] && [ -z "$GOARCH" ]; then
   # fetch tool
-  go get -u github.com/dnote/xgo
+  # go get -u github.com/dnote/xgo
 
   rm -rf "$GOPATH/src/github.com/dnote/dnote"
   cp -R  "$projectDir" "$goPathBasedir"

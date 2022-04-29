@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.6.0 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/aymerick/douceur v0.2.0
+	github.com/crazy-max/xgo v0.14.1 // indirect
 	github.com/dnote/actions v0.2.0
 	github.com/dnote/color v1.7.0
 	github.com/gobuffalo/packr/v2 v2.8.1
