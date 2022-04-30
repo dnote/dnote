@@ -23,10 +23,10 @@ echo "projectDir: $projectDir"
 echo "basedir: $basedir"
 echo "outputDir: $projectDir"
 
-xgo has issues when using modules
-https://github.com/karalabe/xgo/issues/176
-bypass it by copying the project inside a GOPATH
-goPathBasedir="$GOPATH/src/github.com/dnote/dnote"
+# xgo has issues when using modules
+# https://github.com/karalabe/xgo/issues/176
+# bypass it by copying the project inside a GOPATH
+# g="$GOPATH/src/github.com/dnote/dnote"
 
 command_exists () {
   command -v "$1" >/dev/null 2>&1;
@@ -45,7 +45,8 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=1.18.x
+goVersion=go-1.17.x
+# goVersion=1.17.x
 
 get_binary_name() {
   platform=$1
@@ -69,6 +70,8 @@ build() {
   ldflags="-X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=$version"
   tags="fts5"
 
+  pushd "$projectDir"
+
   mkdir -p "$destDir"
 
   if [ "$native" == true ]; then
@@ -79,45 +82,53 @@ build() {
         -o="$destDir/cli-$platform-$arch" \
         "$basedir"
   else
+    flags=()
+    if [ "$platform" == "windows" ]; then
+      flags+=("-buildmode=exe")
+    fi
+
     xgo \
       -go "$goVersion" \
       -targets="$platform/$arch" \
       -ldflags "$ldflags" \
+      "${flags[@]}" \
       -tags "$tags" \
-      -dest="$destDir" \
+      -pkg pkg/cli \
       -x \
       -v \
-      "$goPathBasedir/pkg/cli"
+      .
   fi
 
-  binaryName=$(get_binary_name "$platform")
-  mv "$destDir/cli-${platform}-"* "$destDir/$binaryName"
-
-  # build tarball
-  tarballName="dnote_${version}_${platform}_${arch}.tar.gz"
-  tarballPath="$outputDir/$tarballName"
-
-  cp "$projectDir/licenses/GPLv3.txt" "$destDir"
-  cp "$basedir/README.md" "$destDir"
-  tar -C "$destDir" -zcvf "$tarballPath" "."
-  rm -rf "$destDir"
-
-  # calculate checksum
-  pushd "$outputDir"
-  shasum -a 256 "$tarballName" >> "$outputDir/dnote_${version}_checksums.txt"
   popd
+
+#  binaryName=$(get_binary_name "$platform")
+#  mv "$destDir/cli-${platform}-"* "$destDir/$binaryName"
+#
+#  # build tarball
+#  tarballName="dnote_${version}_${platform}_${arch}.tar.gz"
+#  tarballPath="$outputDir/$tarballName"
+#
+#  cp "$projectDir/licenses/GPLv3.txt" "$destDir"
+#  cp "$basedir/README.md" "$destDir"
+#  tar -C "$destDir" -zcvf "$tarballPath" "."
+#  rm -rf "$destDir"
+#
+#  # calculate checksum
+#  pushd "$outputDir"
+#  shasum -a 256 "$tarballName" >> "$outputDir/dnote_${version}_checksums.txt"
+#  popd
 }
 
 if [ -z "$GOOS" ] && [ -z "$GOARCH" ]; then
   # fetch tool
   # go get -u github.com/dnote/xgo
 
-  rm -rf "$GOPATH/src/github.com/dnote/dnote"
-  cp -R  "$projectDir" "$goPathBasedir"
+  # rm -rf "$GOPATH/src/github.com/dnote/dnote"
+  # cp -R  "$projectDir" "$goPathBasedir"
 
-  build linux amd64
-  build linux arm64
-  build darwin amd64
+  # build linux amd64
+  # build linux arm64
+  # build darwin amd64
   build windows amd64
 else
   build "$GOOS" "$GOARCH" true
