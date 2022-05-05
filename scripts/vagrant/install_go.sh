@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091
 set -eux
 
-VERSION=1.13.4
+VERSION=1.18.1
 OS=linux
 ARCH=amd64
 

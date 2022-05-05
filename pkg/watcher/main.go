@@ -52,6 +52,7 @@ func splitCommandParts(cmd string) []string {
 }
 
 func command(binary string, args []string, entryPoint string) *exec.Cmd {
+	log.Printf("executing command: %s %s", binary, args)
 	cmd := exec.Command(binary, args...)
 
 	// Notice this change.
