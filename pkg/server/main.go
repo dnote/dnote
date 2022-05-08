@@ -19,8 +19,10 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -33,14 +35,15 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/jinzhu/gorm"
 
 	"github.com/pkg/errors"
 )
 
 var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
-var staticDir = flag.String("staticDir", "./static/", "the path to the static directory ")
+
+//go:embed static
+var staticFs embed.FS
 
 func initDB(c config.Config) *gorm.DB {
 	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
@@ -52,7 +55,8 @@ func initDB(c config.Config) *gorm.DB {
 	return db
 }
 
-func mustReadFile(path string) []byte {
+func mustReadFile(f embed.FS, path string) []byte {
+	// static.Files.ReadFile(path)
 	ret, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(errors.Wrap(err, "reading file"))
@@ -61,11 +65,21 @@ func mustReadFile(path string) []byte {
 	return ret
 }
 
+func subFs(f embed.FS, path string) fs.FS {
+	ret, err := fs.Sub(f, path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ret
+
+}
+
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
 
 	files := map[string][]byte{}
-	files[views.ServerErrorPageFileKey] = mustReadFile(fmt.Sprintf("%s/500.html", cfg.StaticDir))
+	// files[views.ServerErrorPageFileKey] = static.MustReadFile(staticFS, "500.html")
 
 	return app.App{
 		DB:             db,
@@ -74,6 +88,8 @@ func initApp(cfg config.Config) app.App {
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
 		Files:          files,
+		StaticFS:       subFs(staticFs, "static"),
+		ViewFS:         subFs(staticFs, "static"),
 	}
 }
 
@@ -92,7 +108,6 @@ func runJob(a app.App) error {
 func startCmd() {
 	cfg := config.Load()
 	cfg.SetPageTemplateDir(*pageDir)
-	cfg.SetStaticDir(*staticDir)
 	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)
@@ -105,7 +120,7 @@ func startCmd() {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	ctl := controllers.New(&app, *pageDir)
+	ctl := controllers.New(&app)
 	rc := controllers.RouteConfig{
 		WebRoutes:   controllers.NewWebRoutes(&app, ctl),
 		APIRoutes:   controllers.NewAPIRoutes(&app, ctl),

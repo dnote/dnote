@@ -16,16 +16,16 @@ type Controllers struct {
 }
 
 // New returns a new group of controllers
-func New(app *app.App, baseDir string) *Controllers {
+func New(app *app.App) *Controllers {
 	log.Info(app.Config.PageTemplateDir)
 
 	c := Controllers{}
 
-	c.Users = NewUsers(app, baseDir)
+	c.Users = NewUsers(app)
 	c.Notes = NewNotes(app)
 	c.Books = NewBooks(app)
 	c.Sync = NewSync(app)
-	c.Static = NewStatic(app, baseDir)
+	c.Static = NewStatic(app)
 	c.Health = NewHealth(app)
 
 	return &c

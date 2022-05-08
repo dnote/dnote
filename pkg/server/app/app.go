@@ -24,6 +24,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"io/fs"
 )
 
 var (
@@ -37,6 +38,10 @@ var (
 	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
 	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
+	// ErrEmptyStaticFS is an error for missing StaticFS
+	ErrEmptyStaticFS = errors.New("No embedded filesystem for static assets was set")
+	// ErrEmptyViewFS is an error for missing ViewFS
+	ErrEmptyViewFS = errors.New("No embedded filesystem for view assets was set")
 )
 
 // App is an application context
@@ -47,6 +52,8 @@ type App struct {
 	EmailBackend   mailer.Backend
 	Config         config.Config
 	Files          map[string][]byte
+	StaticFS       fs.FS
+	ViewFS         fs.FS
 }
 
 // Validate validates the app configuration
@@ -65,6 +72,12 @@ func (a *App) Validate() error {
 	}
 	if a.DB == nil {
 		return ErrEmptyDB
+	}
+	if a.StaticFS == nil {
+		return ErrEmptyStaticFS
+	}
+	if a.ViewFS == nil {
+		return ErrEmptyViewFS
 	}
 
 	return nil

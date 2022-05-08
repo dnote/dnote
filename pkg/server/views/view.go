@@ -2,6 +2,7 @@ package views
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"html/template"
 	"io"
@@ -45,6 +46,9 @@ type viewCtx struct {
 	Config Config
 }
 
+//go:embed templates
+var templateFs embed.FS
+
 func newViewCtx(c Config) viewCtx {
 	return viewCtx{
 		Clock:  c.getClock(),
@@ -69,18 +73,18 @@ func (c Config) getClock() clock.Clock {
 }
 
 // NewView returns a new view by parsing  the given layout and files
-func NewView(baseDir string, app *app.App, viewConfig Config, files ...string) *View {
-	addTemplatePath(baseDir, files)
+func NewView(app *app.App, viewConfig Config, files ...string) *View {
+	addTemplatePath(files)
 	addTemplateExt(files)
 
-	files = append(files, iconFiles(baseDir)...)
-	files = append(files, layoutFiles(baseDir)...)
-	files = append(files, partialFiles(baseDir)...)
+	files = append(files, iconFiles())
+	files = append(files, layoutFiles())
+	files = append(files, partialFiles())
 
 	viewHelpers := initHelpers(viewConfig, app)
 	t := template.New(viewConfig.Title).Funcs(viewHelpers)
 
-	t, err := t.ParseFiles(files...)
+	t, err := t.ParseFS(templateFs, files...)
 	if err != nil {
 		panic(errors.Wrap(err, "instantiating view"))
 	}
@@ -168,25 +172,25 @@ func getFiles(pattern string) []string {
 
 // layoutFiles returns a slice of strings representing
 // the layout files used in our application.
-func layoutFiles(baseDir string) []string {
-	return getFiles(fmt.Sprintf("%s/layouts/*%s", baseDir, templateExt))
+func layoutFiles() string {
+	return fmt.Sprintf("templates/layouts/*%s", templateExt)
 }
 
 // iconFiles returns a slice of strings representing
 // the icon files used in our application.
-func iconFiles(baseDir string) []string {
-	return getFiles(fmt.Sprintf("%s/icons/*%s", baseDir, templateExt))
+func iconFiles() string {
+	return fmt.Sprintf("templates/icons/*%s", templateExt)
 }
 
-func partialFiles(baseDir string) []string {
-	return getFiles(fmt.Sprintf("%s/partials/*%s", baseDir, templateExt))
+func partialFiles() string {
+	return fmt.Sprintf("templates/partials/*%s", templateExt)
 }
 
 // addTemplatePath takes in a slice of strings
 // representing file paths for templates.
-func addTemplatePath(baseDir string, files []string) {
+func addTemplatePath(files []string) {
 	for i, f := range files {
-		files[i] = fmt.Sprintf("%s/%s", baseDir, f)
+		files[i] = fmt.Sprintf("templates/%s", f)
 	}
 }
 
