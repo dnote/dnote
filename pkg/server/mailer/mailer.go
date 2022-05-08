@@ -21,13 +21,13 @@ package mailer
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	htemplate "html/template"
 	"io"
 	ttemplate "text/template"
 
 	"github.com/aymerick/douceur/inliner"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
 )
 
@@ -62,6 +62,9 @@ type template interface {
 // Templates holds the parsed email templates
 type Templates map[string]template
 
+//go:embed templates/src
+var templateDir embed.FS
+
 func getTemplateKey(name, kind string) string {
 	return fmt.Sprintf("%s.%s", name, kind)
 }
@@ -82,36 +85,28 @@ func (tmpl Templates) set(name, kind string, t template) {
 }
 
 // NewTemplates initializes templates
-func NewTemplates(srcDir *string) Templates {
-	var box *packr.Box
-
-	if srcDir != nil {
-		box = packr.Folder(*srcDir)
-	} else {
-		box = packr.New("emailTemplates", "./templates/src")
-	}
-
-	welcomeText, err := initTextTmpl(box, EmailTypeWelcome)
+func NewTemplates() Templates {
+	welcomeText, err := initTextTmpl(EmailTypeWelcome)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing welcome template"))
 	}
-	verifyEmailText, err := initTextTmpl(box, EmailTypeEmailVerification)
+	verifyEmailText, err := initTextTmpl(EmailTypeEmailVerification)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing email verification template"))
 	}
-	passwordResetText, err := initTextTmpl(box, EmailTypeResetPassword)
+	passwordResetText, err := initTextTmpl(EmailTypeResetPassword)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	passwordResetAlertText, err := initTextTmpl(box, EmailTypeResetPasswordAlert)
+	passwordResetAlertText, err := initTextTmpl(EmailTypeResetPasswordAlert)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	inactiveReminderText, err := initTextTmpl(box, EmailTypeInactiveReminder)
+	inactiveReminderText, err := initTextTmpl(EmailTypeInactiveReminder)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	subscriptionConfirmationText, err := initTextTmpl(box, EmailTypeSubscriptionConfirmation)
+	subscriptionConfirmationText, err := initTextTmpl(EmailTypeSubscriptionConfirmation)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
@@ -129,30 +124,30 @@ func NewTemplates(srcDir *string) Templates {
 
 // initHTMLTmpl returns a template instance by parsing the template with the
 // given name along with partials
-func initHTMLTmpl(box *packr.Box, templateName string) (template, error) {
-	filename := fmt.Sprintf("%s.html", templateName)
+func initHTMLTmpl(templateName string) (template, error) {
+	filename := fmt.Sprintf("templates/src/%s.html", templateName)
 
-	content, err := box.FindString(filename)
+	content, err := templateDir.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading template")
 	}
-	headerContent, err := box.FindString("header.html")
+	headerContent, err := templateDir.ReadFile("templates/header.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading header template")
 	}
-	footerContent, err := box.FindString("footer.html")
+	footerContent, err := templateDir.ReadFile("templates/footer.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "reading footer template")
 	}
 
 	t := htemplate.New(templateName)
-	if _, err = t.Parse(content); err != nil {
+	if _, err = t.Parse(string(content)); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
-	if _, err = t.Parse(headerContent); err != nil {
+	if _, err = t.Parse(string(headerContent)); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
-	if _, err = t.Parse(footerContent); err != nil {
+	if _, err = t.Parse(string(footerContent)); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
 
@@ -160,16 +155,16 @@ func initHTMLTmpl(box *packr.Box, templateName string) (template, error) {
 }
 
 // initTextTmpl returns a template instance by parsing the template with the given name
-func initTextTmpl(box *packr.Box, templateName string) (template, error) {
-	filename := fmt.Sprintf("%s.txt", templateName)
+func initTextTmpl(templateName string) (template, error) {
+	filename := fmt.Sprintf("templates/src/%s.txt", templateName)
 
-	content, err := box.FindString(filename)
+	content, err := templateDir.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading template")
 	}
 
 	t := ttemplate.New(templateName)
-	if _, err = t.Parse(content); err != nil {
+	if _, err = t.Parse(string(content)); err != nil {
 		return nil, errors.Wrap(err, "parsing template")
 	}
 

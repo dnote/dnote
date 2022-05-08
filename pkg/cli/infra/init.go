@@ -34,6 +34,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/dirs"
 	"github.com/dnote/dnote/pkg/cli/log"
+	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
@@ -108,6 +109,13 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 	}
 	if err := InitSystem(ctx); err != nil {
 		return nil, errors.Wrap(err, "initializing system data")
+	}
+
+	if err := migrate.Legacy(ctx); err != nil {
+		return nil, errors.Wrap(err, "running legacy migration")
+	}
+	if err := migrate.Run(ctx, migrate.LocalSequence, migrate.LocalMode); err != nil {
+		return nil, errors.Wrap(err, "running migration")
 	}
 
 	ctx, err = SetupCtx(ctx)

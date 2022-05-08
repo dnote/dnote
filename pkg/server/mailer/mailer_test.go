@@ -20,7 +20,6 @@ package mailer
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -42,8 +41,7 @@ func TestEmailVerificationEmail(t *testing.T) {
 		},
 	}
 
-	tmplPath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-	tmpl := NewTemplates(&tmplPath)
+	tmpl := NewTemplates()
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
@@ -81,8 +79,7 @@ func TestResetPasswordEmail(t *testing.T) {
 		},
 	}
 
-	tmplPath := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
-	tmpl := NewTemplates(&tmplPath)
+	tmpl := NewTemplates()
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {

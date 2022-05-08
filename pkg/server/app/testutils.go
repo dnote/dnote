@@ -20,7 +20,6 @@ package app
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/config"
@@ -30,14 +29,13 @@ import (
 
 // NewTest returns an app for a testing environment
 func NewTest(appParams *App) App {
-	emailTmplDir := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
 	c := config.Load()
 	c.SetOnPremise(false)
 
 	a := App{
 		DB:             testutils.DB,
 		Clock:          clock.NewMock(),
-		EmailTemplates: mailer.NewTemplates(&emailTmplDir),
+		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &testutils.MockEmailbackendImplementation{},
 		Config:         c,
 	}

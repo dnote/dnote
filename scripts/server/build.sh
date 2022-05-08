@@ -35,15 +35,11 @@ build() {
   mkdir -p "$destDir"
 
   # build binary
-  packr2
-
   GOOS="$platform" \
   GOARCH="$arch" go build \
     -o "$destDir/dnote-server" \
     -ldflags "-X main.versionTag=$version" \
     "$basedir"/*.go
-
-  packr2 clean
 
   popd
 

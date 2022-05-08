@@ -70,7 +70,7 @@ func initApp(cfg config.Config) app.App {
 	return app.App{
 		DB:             db,
 		Clock:          clock.New(),
-		EmailTemplates: mailer.NewTemplates(nil),
+		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
 		Files:          files,
