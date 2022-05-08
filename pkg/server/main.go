@@ -26,7 +26,6 @@ import (
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/assets"
 	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
@@ -57,7 +56,7 @@ func initApp(cfg config.Config) app.App {
 		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
-		HTTP500Page:    assets.MustGetHTTP500ErrorPage(),
+		HTTP500Page:    cfg.HTTP500Page,
 	}
 }
 

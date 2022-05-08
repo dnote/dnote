@@ -2,12 +2,10 @@ package views
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
-	"path/filepath"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
@@ -15,12 +13,11 @@ import (
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/gorilla/csrf"
-	"github.com/pkg/errors"
 )
 
 const (
-	// templateExt is the template extension
-	templateExt string = ".gohtml"
+	// TemplateExt is the template extension
+	TemplateExt string = ".gohtml"
 )
 
 const (
@@ -41,9 +38,6 @@ type viewCtx struct {
 	Clock  clock.Clock
 	Config Config
 }
-
-//go:embed templates
-var templateFs embed.FS
 
 func newViewCtx(c Config) viewCtx {
 	return viewCtx{
@@ -66,31 +60,6 @@ func (c Config) getClock() clock.Clock {
 	}
 
 	return clock.New()
-}
-
-// NewView returns a new view by parsing  the given layout and files
-func NewView(app *app.App, viewConfig Config, files ...string) *View {
-	addTemplatePath(files)
-	addTemplateExt(files)
-
-	files = append(files, iconFiles())
-	files = append(files, layoutFiles())
-	files = append(files, partialFiles())
-
-	viewHelpers := initHelpers(viewConfig, app)
-	t := template.New(viewConfig.Title).Funcs(viewHelpers)
-
-	t, err := t.ParseFS(templateFs, files...)
-	if err != nil {
-		panic(errors.Wrap(err, "instantiating view"))
-	}
-
-	return &View{
-		Template:    t,
-		Layout:      viewConfig.getLayout(),
-		AlertInBody: viewConfig.AlertInBody,
-		App:         app,
-	}
 }
 
 // View holds the information about a view
@@ -155,49 +124,4 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 
 	w.WriteHeader(statusCode)
 	io.Copy(w, &buf)
-}
-
-func getFiles(pattern string) []string {
-	files, err := filepath.Glob(pattern)
-	if err != nil {
-		panic(err)
-	}
-
-	return files
-}
-
-// layoutFiles returns a slice of strings representing
-// the layout files used in our application.
-func layoutFiles() string {
-	return fmt.Sprintf("templates/layouts/*%s", templateExt)
-}
-
-// iconFiles returns a slice of strings representing
-// the icon files used in our application.
-func iconFiles() string {
-	return fmt.Sprintf("templates/icons/*%s", templateExt)
-}
-
-func partialFiles() string {
-	return fmt.Sprintf("templates/partials/*%s", templateExt)
-}
-
-// addTemplatePath takes in a slice of strings
-// representing file paths for templates.
-func addTemplatePath(files []string) {
-	for i, f := range files {
-		files[i] = fmt.Sprintf("templates/%s", f)
-	}
-}
-
-// addTemplateExt takes in a slice of strings
-// representing file paths for templates and it appends
-// the templateExt extension to each string in the slice
-//
-// Eg the input {"home"} would result in the output
-// {"home.gohtml"} if templateExt == ".gohtml"
-func addTemplateExt(files []string) {
-	for i, f := range files {
-		files[i] = f + templateExt
-	}
 }

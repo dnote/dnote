@@ -60,9 +60,6 @@ func NewTest(appParams *App) App {
 	if appParams != nil && appParams.Config.DisableRegistration {
 		a.Config.DisableRegistration = appParams.Config.DisableRegistration
 	}
-	if appParams != nil && appParams.Config.PageTemplateDir != "" {
-		a.Config.PageTemplateDir = appParams.Config.PageTemplateDir
-	}
 
 	fmt.Printf("%+v\n", appParams)
 	fmt.Printf("%+v\n", a)

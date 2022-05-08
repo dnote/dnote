@@ -37,7 +37,7 @@ var (
 	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
 	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
-	// ErrEmptyEmailBackend is an error for missing HTTP 500 page content
+	// ErrEmptyHTTP500Page is an error for missing HTTP 500 page content
 	ErrEmptyHTTP500Page = errors.New("No HTTP 500 error page was set")
 )
 

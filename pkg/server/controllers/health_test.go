@@ -32,9 +32,7 @@ func TestHealth(t *testing.T) {
 	defer testutils.ClearData(testutils.DB)
 
 	server := MustNewServer(t, &app.App{
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Config: config.Config{},
 	})
 	defer server.Close()
 

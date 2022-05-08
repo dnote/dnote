@@ -99,8 +99,7 @@ func TestJoin(t *testing.T) {
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
 				Config: config.Config{
-					OnPremise:       tc.onPremise,
-					PageTemplateDir: "../views",
+					OnPremise: tc.onPremise,
 				},
 			})
 			defer server.Close()
@@ -145,10 +144,8 @@ func TestJoinError(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -175,10 +172,8 @@ func TestJoinError(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -205,10 +200,8 @@ func TestJoinError(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -238,10 +231,8 @@ func TestJoinDuplicateEmail(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -281,7 +272,6 @@ func TestJoinDisabled(t *testing.T) {
 	server := MustNewServer(t, &app.App{
 		Clock: clock.NewMock(),
 		Config: config.Config{
-			PageTemplateDir:     "../views",
 			DisableRegistration: true,
 		},
 	})
@@ -312,10 +302,8 @@ func TestLogin(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 
 		u := testutils.SetupUserData()
@@ -374,10 +362,8 @@ func TestLogin(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 
 		u := testutils.SetupUserData()
@@ -415,10 +401,8 @@ func TestLogin(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -456,10 +440,8 @@ func TestLogin(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -490,10 +472,8 @@ func TestLogout(t *testing.T) {
 	setupLogoutTest := func(t *testing.T) (*httptest.Server, *database.Session, *database.Session) {
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 
 		aliceUser := testutils.SetupUserData()
@@ -605,10 +585,8 @@ func TestResetPassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -691,10 +669,8 @@ func TestResetPassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -734,10 +710,8 @@ func TestResetPassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -776,10 +750,8 @@ func TestResetPassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -829,10 +801,8 @@ func TestResetPassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -874,10 +844,8 @@ func TestCreateResetToken(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -910,10 +878,8 @@ func TestCreateResetToken(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -942,10 +908,8 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -975,10 +939,8 @@ func TestUpdatePassword(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1007,10 +969,8 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1039,10 +999,8 @@ func TestUpdatePassword(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1073,10 +1031,8 @@ func TestUpdateEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1110,10 +1066,8 @@ func TestUpdateEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1149,10 +1103,8 @@ func TestVerifyEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1190,10 +1142,8 @@ func TestVerifyEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1234,10 +1184,8 @@ func TestVerifyEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1276,10 +1224,8 @@ func TestVerifyEmail(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -1322,10 +1268,8 @@ func TestCreateVerificationToken(t *testing.T) {
 		// Setup
 		emailBackend := testutils.MockEmailbackendImplementation{}
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:        clock.NewMock(),
+			Config:       config.Config{},
 			EmailBackend: &emailBackend,
 		})
 		defer server.Close()
@@ -1358,10 +1302,8 @@ func TestCreateVerificationToken(t *testing.T) {
 		defer testutils.ClearData(testutils.DB)
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
