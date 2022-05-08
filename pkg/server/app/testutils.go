@@ -38,6 +38,7 @@ func NewTest(appParams *App) App {
 		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &testutils.MockEmailbackendImplementation{},
 		Config:         c,
+		HTTP500Page:    []byte("<html></html>"),
 	}
 
 	// Allow to override with appParams

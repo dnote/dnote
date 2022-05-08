@@ -5,7 +5,7 @@ set -ex
 dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../../.."
 serverDir="$dir/../.."
-outputDir="$serverDir/static"
+outputDir="$serverDir/assets/static"
 inputDir="$dir/src"
 
 task="cp $inputDir/main.js $outputDir"

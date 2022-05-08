@@ -19,16 +19,14 @@
 package main
 
 import (
-	"embed"
 	"flag"
 	"fmt"
-	"io/fs"
-	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/assets"
 	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
@@ -40,11 +38,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
-
-//go:embed static
-var staticFs embed.FS
-
 func initDB(c config.Config) *gorm.DB {
 	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
 	if err != nil {
@@ -55,31 +48,8 @@ func initDB(c config.Config) *gorm.DB {
 	return db
 }
 
-func mustReadFile(f embed.FS, path string) []byte {
-	// static.Files.ReadFile(path)
-	ret, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(errors.Wrap(err, "reading file"))
-	}
-
-	return ret
-}
-
-func subFs(f embed.FS, path string) fs.FS {
-	ret, err := fs.Sub(f, path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return ret
-
-}
-
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
-
-	files := map[string][]byte{}
-	// files[views.ServerErrorPageFileKey] = static.MustReadFile(staticFS, "500.html")
 
 	return app.App{
 		DB:             db,
@@ -87,9 +57,7 @@ func initApp(cfg config.Config) app.App {
 		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
-		Files:          files,
-		StaticFS:       subFs(staticFs, "static"),
-		ViewFS:         subFs(staticFs, "static"),
+		HTTP500Page:    assets.MustGetHTTP500ErrorPage(),
 	}
 }
 
@@ -107,7 +75,6 @@ func runJob(a app.App) error {
 
 func startCmd() {
 	cfg := config.Load()
-	cfg.SetPageTemplateDir(*pageDir)
 	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)

@@ -27,10 +27,6 @@ const (
 	siteTitle = "Dnote"
 )
 
-const (
-	ServerErrorPageFileKey = "500"
-)
-
 // Config is a view config
 type Config struct {
 	Title          string
@@ -93,7 +89,7 @@ func NewView(app *app.App, viewConfig Config, files ...string) *View {
 		Template:    t,
 		Layout:      viewConfig.getLayout(),
 		AlertInBody: viewConfig.AlertInBody,
-		Files:       app.Files,
+		App:         app,
 	}
 }
 
@@ -103,7 +99,7 @@ type View struct {
 	Layout   string
 	// AlertInBody specifies if alert should be set in the body instead of the header
 	AlertInBody bool
-	Files       map[string][]byte
+	App         *app.App
 }
 
 func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +149,7 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	if err := tpl.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		log.ErrorWrap(err, fmt.Sprintf("executing template for URI '%s'", r.RequestURI))
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(v.Files[ServerErrorPageFileKey])
+		w.Write(v.App.HTTP500Page)
 		return
 	}
 
