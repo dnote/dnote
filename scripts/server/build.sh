@@ -35,10 +35,13 @@ build() {
   mkdir -p "$destDir"
 
   # build binary
+  moduleName="github.com/dnote/dnote"
+  ldflags="-X '$moduleName/pkg/server/buildinfo.CSSFiles=main.css' -X '$moduleName/pkg/server/buildinfo.JSFiles=main.js' -X '$moduleName/pkg/server/buildinfo.Version=$version' -X '$moduleName/pkg/server/buildinfo.Standalone=true'"
+
   GOOS="$platform" \
   GOARCH="$arch" go build \
     -o "$destDir/dnote-server" \
-    -ldflags "-X main.versionTag=$version" \
+    -ldflags "$ldflags" \
     "$basedir"/*.go
 
   popd

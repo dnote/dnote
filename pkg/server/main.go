@@ -37,6 +37,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var port = flag.String("port", "3000", "port to connect to")
+
 func initDB(c config.Config) *gorm.DB {
 	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
 	if err != nil {
@@ -98,8 +100,8 @@ func startCmd() {
 		panic(errors.Wrap(err, "initializing router"))
 	}
 
-	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, cfg.Port)
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
+	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, *port)
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", *port), r))
 }
 
 func versionCmd() {
