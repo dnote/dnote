@@ -14,6 +14,12 @@ The following log documents the history of the server project.
 
 None
 
+### 2.0.0 2021-05-09
+
+#### Removed
+
+- The web interface for managing notes and books (#594)
+
 ### 1.0.4 2020-05-23
 
 #### Removed
