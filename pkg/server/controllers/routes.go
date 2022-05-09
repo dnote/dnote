@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/app"
+	"github.com/dnote/dnote/pkg/server/assets"
 	mw "github.com/dnote/dnote/pkg/server/middleware"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -109,7 +110,12 @@ func NewRouter(app *app.App, rc RouteConfig) (http.Handler, error) {
 	router.PathPrefix("/api/v2").Handler(mw.ApplyLimit(mw.NotSupported, true))
 
 	// static
-	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir(app.Config.StaticDir)))
+	staticFs, err := assets.GetStaticFS()
+	if err != nil {
+		return nil, errors.Wrap(err, "getting the filesystem for static files")
+	}
+
+	staticHandler := http.StripPrefix("/static/", http.FileServer(http.FS(staticFs)))
 	router.PathPrefix("/static/").Handler(staticHandler)
 
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

@@ -4,7 +4,7 @@ set -ex
 
 dir=$(dirname "${BASH_SOURCE[0]}")
 serverDir="$dir/../.."
-outputDir="$serverDir/static"
+outputDir="$serverDir/assets/static"
 inputDir="$dir/src"
 
 rm -rf "${outputDir:?}/*"

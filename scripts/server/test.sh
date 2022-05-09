@@ -6,9 +6,6 @@ set -ex
 dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
 pushd "$dir/../../pkg/server"
 
-emailTemplateDir=$(realpath "$dir/../../pkg/server/mailer/templates/src")
-export DNOTE_TEST_EMAIL_TEMPLATE_DIR="$emailTemplateDir"
-
 function run_test {
   if [ -z "$1" ]; then
     go test ./... -cover -p 1

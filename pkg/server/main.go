@@ -21,7 +21,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -33,14 +32,12 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/jinzhu/gorm"
 
 	"github.com/pkg/errors"
 )
 
-var pageDir = flag.String("pageDir", "views", "the path to a directory containing page templates")
-var staticDir = flag.String("staticDir", "./static/", "the path to the static directory ")
+var port = flag.String("port", "3000", "port to connect to")
 
 func initDB(c config.Config) *gorm.DB {
 	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
@@ -52,28 +49,16 @@ func initDB(c config.Config) *gorm.DB {
 	return db
 }
 
-func mustReadFile(path string) []byte {
-	ret, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(errors.Wrap(err, "reading file"))
-	}
-
-	return ret
-}
-
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
-
-	files := map[string][]byte{}
-	files[views.ServerErrorPageFileKey] = mustReadFile(fmt.Sprintf("%s/500.html", cfg.StaticDir))
 
 	return app.App{
 		DB:             db,
 		Clock:          clock.New(),
-		EmailTemplates: mailer.NewTemplates(nil),
+		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &mailer.SimpleBackendImplementation{},
 		Config:         cfg,
-		Files:          files,
+		HTTP500Page:    cfg.HTTP500Page,
 	}
 }
 
@@ -91,8 +76,6 @@ func runJob(a app.App) error {
 
 func startCmd() {
 	cfg := config.Load()
-	cfg.SetPageTemplateDir(*pageDir)
-	cfg.SetStaticDir(*staticDir)
 	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)
@@ -105,7 +88,7 @@ func startCmd() {
 		panic(errors.Wrap(err, "running job"))
 	}
 
-	ctl := controllers.New(&app, *pageDir)
+	ctl := controllers.New(&app)
 	rc := controllers.RouteConfig{
 		WebRoutes:   controllers.NewWebRoutes(&app, ctl),
 		APIRoutes:   controllers.NewAPIRoutes(&app, ctl),
@@ -117,8 +100,8 @@ func startCmd() {
 		panic(errors.Wrap(err, "initializing router"))
 	}
 
-	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, cfg.Port)
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
+	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, *port)
+	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", *port), r))
 }
 
 func versionCmd() {

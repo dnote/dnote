@@ -20,9 +20,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"net/url"
 	"os"
+
+	"github.com/dnote/dnote/pkg/server/assets"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -103,9 +105,8 @@ type Config struct {
 	DisableRegistration bool
 	Port                string
 	DB                  PostgresConfig
-	PageTemplateDir     string
-	StaticDir           string
 	AssetBaseURL        string
+	HTTP500Page         []byte
 }
 
 func getAppEnv() string {
@@ -133,6 +134,7 @@ func Load() Config {
 		DisableRegistration: readBoolEnv("DisableRegistration"),
 		DB:                  loadDBConfig(),
 		AssetBaseURL:        "",
+		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}
 
 	if err := validate(c); err != nil {
@@ -145,16 +147,6 @@ func Load() Config {
 // SetOnPremise sets the OnPremise value
 func (c *Config) SetOnPremise(val bool) {
 	c.OnPremise = val
-}
-
-// SetPageTemplateDir sets page template dir for the config
-func (c *Config) SetPageTemplateDir(d string) {
-	c.PageTemplateDir = d
-}
-
-// SetStaticDir sets static dir for the confi
-func (c *Config) SetStaticDir(d string) {
-	c.StaticDir = d
 }
 
 // SetAssetBaseURL sets static dir for the confi

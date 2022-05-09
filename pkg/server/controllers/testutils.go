@@ -40,7 +40,7 @@ func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 func NewServer(appParams *app.App) (*httptest.Server, error) {
 	a := app.NewTest(appParams)
 
-	ctl := New(&a, a.Config.PageTemplateDir)
+	ctl := New(&a)
 	rc := RouteConfig{
 		WebRoutes:   NewWebRoutes(&a, ctl),
 		APIRoutes:   NewAPIRoutes(&a, ctl),

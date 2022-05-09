@@ -37,6 +37,8 @@ var (
 	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
 	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
+	// ErrEmptyHTTP500Page is an error for missing HTTP 500 page content
+	ErrEmptyHTTP500Page = errors.New("No HTTP 500 error page was set")
 )
 
 // App is an application context
@@ -47,6 +49,7 @@ type App struct {
 	EmailBackend   mailer.Backend
 	Config         config.Config
 	Files          map[string][]byte
+	HTTP500Page    []byte
 }
 
 // Validate validates the app configuration
@@ -65,6 +68,9 @@ func (a *App) Validate() error {
 	}
 	if a.DB == nil {
 		return ErrEmptyDB
+	}
+	if a.HTTP500Page == nil {
+		return ErrEmptyHTTP500Page
 	}
 
 	return nil

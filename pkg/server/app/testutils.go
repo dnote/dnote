@@ -20,7 +20,6 @@ package app
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/config"
@@ -30,16 +29,16 @@ import (
 
 // NewTest returns an app for a testing environment
 func NewTest(appParams *App) App {
-	emailTmplDir := os.Getenv("DNOTE_TEST_EMAIL_TEMPLATE_DIR")
 	c := config.Load()
 	c.SetOnPremise(false)
 
 	a := App{
 		DB:             testutils.DB,
 		Clock:          clock.NewMock(),
-		EmailTemplates: mailer.NewTemplates(&emailTmplDir),
+		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &testutils.MockEmailbackendImplementation{},
 		Config:         c,
+		HTTP500Page:    []byte("<html></html>"),
 	}
 
 	// Allow to override with appParams
@@ -60,9 +59,6 @@ func NewTest(appParams *App) App {
 	}
 	if appParams != nil && appParams.Config.DisableRegistration {
 		a.Config.DisableRegistration = appParams.Config.DisableRegistration
-	}
-	if appParams != nil && appParams.Config.PageTemplateDir != "" {
-		a.Config.PageTemplateDir = appParams.Config.PageTemplateDir
 	}
 
 	fmt.Printf("%+v\n", appParams)

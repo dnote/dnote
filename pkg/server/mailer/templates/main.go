@@ -126,7 +126,7 @@ func main() {
 
 	log.Println("Email template development server running on http://127.0.0.1:2300")
 
-	tmpl := mailer.NewTemplates(nil)
+	tmpl := mailer.NewTemplates()
 	ctx := Context{DB: db, Tmpl: tmpl}
 
 	http.HandleFunc("/", ctx.homeHandler)

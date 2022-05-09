@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/log"
+	"github.com/dnote/dnote/pkg/server/views"
 )
 
 // Controllers is a group of controllers
@@ -16,16 +16,16 @@ type Controllers struct {
 }
 
 // New returns a new group of controllers
-func New(app *app.App, baseDir string) *Controllers {
-	log.Info(app.Config.PageTemplateDir)
-
+func New(app *app.App) *Controllers {
 	c := Controllers{}
 
-	c.Users = NewUsers(app, baseDir)
+	viewEngine := views.NewDefaultEngine()
+
+	c.Users = NewUsers(app, viewEngine)
 	c.Notes = NewNotes(app)
 	c.Books = NewBooks(app)
 	c.Sync = NewSync(app)
-	c.Static = NewStatic(app, baseDir)
+	c.Static = NewStatic(app, viewEngine)
 	c.Health = NewHealth(app)
 
 	return &c

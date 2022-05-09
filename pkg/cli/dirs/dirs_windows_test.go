@@ -1,3 +1,5 @@
+//go:build windows
+
 /* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
  *
  * This file is part of Dnote.
@@ -15,8 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-// +build windows
 
 package dirs
 

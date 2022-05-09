@@ -60,10 +60,8 @@ func TestGetNotes(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -177,10 +175,8 @@ func TestGetNote(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -376,10 +372,8 @@ func TestCreateNote(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -459,10 +453,8 @@ func TestDeleteNote(t *testing.T) {
 
 			// Setup
 			server := MustNewServer(t, &app.App{
-				Clock: clock.NewMock(),
-				Config: config.Config{
-					PageTemplateDir: "../views",
-				},
+				Clock:  clock.NewMock(),
+				Config: config.Config{},
 			})
 			defer server.Close()
 
@@ -699,10 +691,8 @@ func TestUpdateNote(t *testing.T) {
 
 			// Setup
 			server := MustNewServer(t, &app.App{
-				Clock: clock.NewMock(),
-				Config: config.Config{
-					PageTemplateDir: "../views",
-				},
+				Clock:  clock.NewMock(),
+				Config: config.Config{},
 			})
 			defer server.Close()
 

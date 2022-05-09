@@ -20,8 +20,9 @@ package database
 
 import (
 	"log"
+	"net/http"
 
-	"github.com/gobuffalo/packr/v2"
+	"github.com/dnote/dnote/pkg/server/database/migrations"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/rubenv/sql-migrate"
@@ -29,8 +30,8 @@ import (
 
 // Migrate runs the migrations
 func Migrate(db *gorm.DB) error {
-	migrations := &migrate.PackrMigrationSource{
-		Box: packr.New("migrations", "../database/migrations/"),
+	migrations := &migrate.HttpFileSystemMigrationSource{
+		FileSystem: http.FileSystem(http.FS(migrations.Files)),
 	}
 
 	migrate.SetTable(MigrationTableName)

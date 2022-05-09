@@ -40,10 +40,8 @@ func TestGetBooks(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -125,10 +123,8 @@ func TestGetBooksByName(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -188,10 +184,8 @@ func TestGetBook(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -248,10 +242,8 @@ func TestGetBookNonOwner(t *testing.T) {
 
 	// Setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 
@@ -287,10 +279,8 @@ func TestCreateBook(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -347,10 +337,8 @@ func TestCreateBook(t *testing.T) {
 
 		// Setup
 		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			Config: config.Config{
-				PageTemplateDir: "../views",
-			},
+			Clock:  clock.NewMock(),
+			Config: config.Config{},
 		})
 		defer server.Close()
 
@@ -438,10 +426,8 @@ func TestUpdateBook(t *testing.T) {
 
 			// Setup
 			server := MustNewServer(t, &app.App{
-				Clock: clock.NewMock(),
-				Config: config.Config{
-					PageTemplateDir: "../views",
-				},
+				Clock:  clock.NewMock(),
+				Config: config.Config{},
 			})
 			defer server.Close()
 
@@ -525,10 +511,8 @@ func TestDeleteBook(t *testing.T) {
 
 			// Setup
 			server := MustNewServer(t, &app.App{
-				Clock: clock.NewMock(),
-				Config: config.Config{
-					PageTemplateDir: "../views",
-				},
+				Clock:  clock.NewMock(),
+				Config: config.Config{},
 			})
 			defer server.Close()
 

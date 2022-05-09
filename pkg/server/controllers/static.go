@@ -9,9 +9,9 @@ import (
 )
 
 // NewStatic creates a new Static controller.
-func NewStatic(app *app.App, baseDir string) *Static {
+func NewStatic(app *app.App, viewEngine *views.Engine) *Static {
 	return &Static{
-		NotFoundView: views.NewView(baseDir, app, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
+		NotFoundView: viewEngine.NewView(app, views.Config{Title: "Not Found", Layout: "base"}, "static/not_found"),
 	}
 }
 

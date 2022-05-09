@@ -38,7 +38,7 @@ assert_http_status() {
   fi
 }
 
-assert_http_status http://localhost:2300 "200"
-assert_http_status http://localhost:2300/api/health "200"
+assert_http_status http://localhost:2300 "302"
+assert_http_status http://localhost:2300/health "200"
 
 echo "======== [SUCCESS] TEST PASSED! ========"

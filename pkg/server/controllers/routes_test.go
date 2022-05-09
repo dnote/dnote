@@ -57,10 +57,8 @@ func TestNotSupportedVersions(t *testing.T) {
 
 	// setup
 	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		Config: config.Config{
-			PageTemplateDir: "../views",
-		},
+		Clock:  clock.NewMock(),
+		Config: config.Config{},
 	})
 	defer server.Close()
 

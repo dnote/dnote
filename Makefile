@@ -1,4 +1,3 @@
-PACKR2 := $(shell command -v packr2 2> /dev/null)
 NPM := $(shell command -v npm 2> /dev/null)
 HUB := $(shell command -v hub 2> /dev/null)
 
@@ -12,11 +11,6 @@ install: install-go install-js
 .PHONY: install
 
 install-go:
-ifndef PACKR2
-	@echo "==> installing packr2"
-	@go get -u github.com/gobuffalo/packr/v2/packr2
-endif
-
 	@echo "==> installing go dependencies"
 	@go mod download
 .PHONY: install-go
