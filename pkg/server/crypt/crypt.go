@@ -20,15 +20,10 @@ package crypt
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 
 	"encoding/base64"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/pbkdf2"
 )
-
-// ServerKDFIteration is the iteration count for PBKDF on the server
-var ServerKDFIteration = 100000
 
 // getRandomBytes generates a cryptographically secure pseudorandom numbers of the
 // given size in byte
@@ -50,11 +45,4 @@ func GetRandomStr(numBytes int) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(b), nil
-}
-
-// HashAuthKey hashes the authKey provided by a client
-func HashAuthKey(authKey, salt string, iteration int) string {
-	keyHashBits := pbkdf2.Key([]byte(authKey), []byte(salt), iteration, 32, sha256.New)
-
-	return base64.StdEncoding.EncodeToString(keyHashBits)
 }
