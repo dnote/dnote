@@ -19,7 +19,7 @@ q
 END
 }
 
-gpl="/* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
+gpl="/* Copyright (C) 2019, 2020, 2021, 2022 Monomax Software Pty Ltd
  *
  * This file is part of Dnote.
  *
@@ -37,7 +37,7 @@ gpl="/* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */"
 
-agpl="/* Copyright (C) 2019, 2020, 2021 Monomax Software Pty Ltd
+agpl="/* Copyright (C) 2019, 2020, 2021, 2022 Monomax Software Pty Ltd
  *
  * This file is part of Dnote.
  *
@@ -59,18 +59,15 @@ dir=$(dirname "${BASH_SOURCE[0]}")
 basedir="$dir/.."
 pkgPath="$basedir/pkg"
 serverPath="$basedir/pkg/server"
-browserPath="$basedir/browser"
 
-gplFiles=$(find "$pkgPath" "$browserPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "$serverPath/*")
+gplFiles=$(find "$pkgPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "$serverPath/*")
 
 for file in $gplFiles; do
   remove_notice "$file"
   add_notice "$file" "$gpl"
 done
 
-webPath="$basedir/web"
-jslibPath="$basedir/jslib/src"
-agplFiles=$(find "$serverPath" "$webPath" "$jslibPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css" \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
+agplFiles=$(find "$serverPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css" \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
 
 for file in $agplFiles; do
   remove_notice "$file"
