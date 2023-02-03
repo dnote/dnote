@@ -77,7 +77,7 @@ func getContent(ctx context.DnoteCtx) (string, error) {
 
 	// check for piped content
 	fInfo, _ := os.Stdin.Stat()
-    if fInfo.Mode() & os.ModeCharDevice == 0 {
+	if fInfo.Mode() & os.ModeCharDevice == 0 {
 		c, err := ui.ReadStdInput()
 		if err != nil {
 			return "", errors.Wrap(err, "Failed to get piped input")
