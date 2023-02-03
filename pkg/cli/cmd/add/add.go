@@ -21,6 +21,7 @@ package add
 import (
 	"database/sql"
 	"time"
+	"os"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -72,6 +73,16 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 func getContent(ctx context.DnoteCtx) (string, error) {
 	if contentFlag != "" {
 		return contentFlag, nil
+	}
+
+	// check for piped content
+	fInfo, _ := os.Stdin.Stat()
+    if fInfo.Mode() & os.ModeCharDevice == 0 {
+		c, err := ui.ReadStdInput()
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to get piped input")
+		}
+		return c, nil
 	}
 
 	fpath, err := ui.GetTmpContentPath(ctx)
