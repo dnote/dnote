@@ -39,13 +39,7 @@ The server consists of the frontend web application and a web server.
 ### Test
 
 ```bash
-# Run tests for the frontend web application
-make test-web
-
-# Run in watch mode
-WATCH=true make test-web
-
-# Run tests for API
+# Run tests for app
 make test-api
 
 # Run in watch mode

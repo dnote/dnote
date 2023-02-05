@@ -6,12 +6,12 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
 
 sudo apt-get update
-sudo apt-get install -y postgresql-11
+sudo apt-get install -y postgresql-14
 
 # set up database
 sudo -u postgres createdb dnote
 # allow connection from host and allow to connect without password
-sudo sed -i  "/port*/a listen_addresses = '*'" /etc/postgresql/11/main/postgresql.conf
-sudo sed -i 's/host.*all.*.all.*md5/# &/' /etc/postgresql/11/main/pg_hba.conf
-sudo sed -i "$ a host all all all trust" /etc/postgresql/11/main/pg_hba.conf
+sudo sed -i  "/port*/a listen_addresses = '*'" /etc/postgresql/14/main/postgresql.conf
+sudo sed -i 's/host.*all.*.all.*md5/# &/' /etc/postgresql/14/main/pg_hba.conf
+sudo sed -i "$ a host all all all trust" /etc/postgresql/14/main/pg_hba.conf
 sudo service postgresql restart
