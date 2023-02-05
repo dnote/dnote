@@ -160,7 +160,7 @@ Let's configure Dnote clients to connect to the self-hosted web API endpoint.
 
 #### CLI
 
-We need to modify the configuration file for the CLI. It should have been generated at `~/.dnote/dnoterc` upon running the CLI for the first time.
+We need to modify the configuration file for the CLI. It should have been generated at `~/.config/dnote/dnoterc` upon running the CLI for the first time.
 
 The following is an example configuration:
 
