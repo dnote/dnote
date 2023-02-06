@@ -2,7 +2,7 @@ version: "3"
 
 services:
   postgres:
-    image: postgres:11-alpine
+    image: postgres:14-alpine
     environment:
       POSTGRES_USER: dnote
       POSTGRES_PASSWORD: dnote

@@ -1,11 +1,11 @@
 ![Dnote](assets/logo.png)
 =========================
 
-[![Build Status](https://travis-ci.org/dnote/dnote.svg?branch=master)](https://travis-ci.org/dnote/dnote)
+![Build Status](https://github.com/dnote/dnote/actions/workflows/ci.yml/badge.svg)
 
 Dnote is a simple command line notebook for programmers.
 
-It **keeps you focused** by providing a way of effortlessly capturing and retrieving information **without leaving your terminal**. It also offers a seamless **multi-device sync** and a **web interface**.
+It **keeps you focused** by providing a way of effortlessly capturing and retrieving information **without leaving your terminal**. It also offers a seamless **multi-device sync**.
 
 ![A demo of Dnote command line interface](assets/cli.gif "Dnote command line interface")
 
