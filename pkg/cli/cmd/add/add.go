@@ -43,7 +43,14 @@ var example = `
  dnote add git
 
  * Skip the editor by providing content directly
- dnote add git -c "time is a part of the commit hash"`
+ dnote add git -c "time is a part of the commit hash"
+
+ * Send stdin content to a note
+ echo "a branch is just a pointer to a commit" | dnote add git
+ # or
+ dnote add git << EOF
+ pull is fetch with a merge
+ EOF`
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {

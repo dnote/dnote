@@ -204,6 +204,22 @@ func UserConfirm(stdin io.WriteCloser) error {
 	return nil
 }
 
+// UserContent simulates content from the user by writing to stdin
+func UserContent(stdin io.WriteCloser) error {
+	longText := `Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+	sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`
+
+	if _, err := io.WriteString(stdin, longText); err != nil {
+		return errors.Wrap(err, "creating note from stdin")
+	}
+
+	// stdin needs to close so stdin reader knows to stop reading
+	// otherwise test case would wait until test timeout
+	stdin.Close()
+
+	return nil
+}
+
 // MustMarshalJSON marshalls the given interface into JSON.
 // If there is any error, it fails the test.
 func MustMarshalJSON(t *testing.T, v interface{}) []byte {
