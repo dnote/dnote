@@ -4,7 +4,6 @@ All notable changes to the projects under this repository will be documented in 
 
 * [Server](#server)
 * [CLI](#cli)
-* [Browser Extensions](#browser-extensions)
 
 ## Server
 
@@ -199,6 +198,19 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.13.0 - 2023-02-10
+
+* Allow to add note from stdin.
+
+```
+echo "test" | dnote add mybook
+
+dnote add mybook << EOF
+test line 1
+test line 2
+EOF
+```
+
 ### 0.12.0 - 2020-01-03
 
 #### Upgrade guide
@@ -253,24 +265,3 @@ If `~/.dnote` directory exists, dnote will continue to use that directory for ba
 
 - If you are using Dnote Pro, change the value of `apiEndpoint` in `~/.dnote/dnoterc` to `https://api.getdnote.com`.
 
-## Browser Extensions
-
-The following log documentes the history of the browser extensions project
-
-### [Unreleased]
-
-N/A
-
-### 2.0.0 - 2019-10-29
-
-- Allow to customize API and web URLs (#285)
-
-### 1.1.1 - 2019-10-02
-
-- Fix failing requests (#263)
-
-### 1.1.0 - 2019-09-30
-
-#### Removed
-
-- **Breaking Change**: End-to-end encryption was removed. Previous versions will no longer be able to interact with the web API, because `v1` and `v2` endpoints were replaced by a new `v3` endpoint to remove encryption.
