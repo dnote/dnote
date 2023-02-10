@@ -57,7 +57,7 @@ build() {
 
   # build binary
   destDir="$outputDir/$platform-$arch"
-  ldflags="-X main.apiEndpoint=https://api.getdnote.com -X github.com/dnote/dnote/pkg/server/buildinfo.Version=$version"
+  ldflags="-X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=$version"
   tags="fts5"
 
   pushd "$projectDir"
