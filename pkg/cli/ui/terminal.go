@@ -95,3 +95,19 @@ func Confirm(question string, optimistic bool) (bool, error) {
 
 	return confirmed, nil
 }
+
+// Grab text from stdin content
+func ReadStdInput() (string, error) {
+	var lines []string
+
+	s := bufio.NewScanner(os.Stdin)
+	for s.Scan() {
+		lines = append(lines, s.Text())
+	}
+	err := s.Err()
+	if err != nil {
+		return "", errors.Wrap(err, "reading pipe")
+	}
+
+	return strings.Join(lines, "\n"), nil
+}

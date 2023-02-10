@@ -21,6 +21,7 @@ package add
 import (
 	"database/sql"
 	"time"
+	"os"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -42,7 +43,14 @@ var example = `
  dnote add git
 
  * Skip the editor by providing content directly
- dnote add git -c "time is a part of the commit hash"`
+ dnote add git -c "time is a part of the commit hash"
+
+ * Send stdin content to a note
+ echo "a branch is just a pointer to a commit" | dnote add git
+ # or
+ dnote add git << EOF
+ pull is fetch with a merge
+ EOF`
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
@@ -72,6 +80,16 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 func getContent(ctx context.DnoteCtx) (string, error) {
 	if contentFlag != "" {
 		return contentFlag, nil
+	}
+
+	// check for piped content
+	fInfo, _ := os.Stdin.Stat()
+	if fInfo.Mode() & os.ModeCharDevice == 0 {
+		c, err := ui.ReadStdInput()
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to get piped input")
+		}
+		return c, nil
 	}
 
 	fpath, err := ui.GetTmpContentPath(ctx)

@@ -109,6 +109,8 @@ func TestAddNote(t *testing.T) {
 	t.Run("new book", func(t *testing.T) {
 		// Set up and execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
+		testutils.WaitDnoteCmd(t, opts, testutils.UserContent, binaryName, "add", "js")
+
 		defer testutils.RemoveDir(t, testDir)
 
 		db := database.OpenTestDB(t, testDir)
@@ -119,7 +121,7 @@ func TestAddNote(t *testing.T) {
 		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
 
 		assert.Equalf(t, bookCount, 1, "book count mismatch")
-		assert.Equalf(t, noteCount, 1, "note count mismatch")
+		assert.Equalf(t, noteCount, 2, "note count mismatch")
 
 		var book database.Book
 		database.MustScan(t, "getting book", db.QueryRow("SELECT uuid, dirty FROM books where label = ?", "js"), &book.UUID, &book.Dirty)
