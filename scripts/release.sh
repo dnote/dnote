@@ -34,7 +34,7 @@ git push --tags
 files=("$assetPath"/*)
 file_flags=()
 for file in "${files[@]}"; do
-  file_flags+=("--attach=$file")
+  file_flags+=("$file")
 done
 
 # mark as prerelease if version is not in a form of major.minor.patch
@@ -47,10 +47,11 @@ fi
 echo "* creating release"
 set -x
 
-# first message is the title and the following are body in markdown
-hub release create \
+# Create release
+gh release create \
+  "$version_tag" \
   "${file_flags[@]}" \
   "${flags[@]}" \
-  --message="$version_tag"\
-  --message="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
-  "$version_tag"
+  --title="$version_tag"\
+  --notes="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
+  --draft

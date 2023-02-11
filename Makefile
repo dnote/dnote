@@ -1,5 +1,5 @@
 NPM := $(shell command -v npm 2> /dev/null)
-HUB := $(shell command -v hub 2> /dev/null)
+GH := $(shell command -v gh 2> /dev/null)
 
 currentDir = $(shell pwd)
 serverOutputDir = ${currentDir}/build/server
@@ -84,8 +84,8 @@ release-cli: clean build-cli
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 release-cli)
 endif
-ifndef HUB
-	$(error please install hub)
+ifndef GH
+	$(error please install github-cli)
 endif
 
 	if [ ! -d ${cliHomebrewDir} ]; then \
@@ -96,7 +96,7 @@ endif
 	@echo "==> releasing cli"
 	@${currentDir}/scripts/release.sh cli $(version) ${cliOutputDir}
 
-	@echo "===> releading on Homebrew"
+	@echo "===> releasing on Homebrew"
 	@(cd "${cliHomebrewDir}" && \
 		./release.sh "$(version)" "${cliOutputDir}/dnote_$(version)_darwin_amd64.tar.gz")
 .PHONY: release-cli
@@ -105,8 +105,8 @@ release-server:
 ifndef version
 	$(error version is required. Usage: make version=0.1.0 release-server)
 endif
-ifndef HUB
-	$(error please install hub)
+ifndef GH
+	$(error please install github-cli)
 endif
 
 	@echo "==> releasing server"
