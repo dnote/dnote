@@ -88,17 +88,17 @@ ifndef GH
 	$(error please install github-cli)
 endif
 
-	if [ ! -d ${cliHomebrewDir} ]; then \
-		@echo "homebrew-dnote not found locally. did you clone it?"; \
-		@exit 1; \
-	fi
-
 	@echo "==> releasing cli"
 	@${currentDir}/scripts/release.sh cli $(version) ${cliOutputDir}
+.PHONY: release-cli
 
-	@echo "===> releasing on Homebrew"
-	@(cd "${cliHomebrewDir}" && \
-		./release.sh "$(version)" "${cliOutputDir}/dnote_$(version)_darwin_amd64.tar.gz")
+release-cli-homebrew: clean build-cli
+ifndef version
+	$(error version is required. Usage: make version=0.1.0 release-cli)
+endif
+
+	@echo "==> releasing cli on Homebrew"
+	@${currentDir}/scripts/cli/release-homebrew.sh $(version) ${cliOutputDir}
 .PHONY: release-cli
 
 release-server:
