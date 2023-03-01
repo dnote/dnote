@@ -168,6 +168,22 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 	return nil
 }
 
+func printNoteLine(info noteInfo, showTimestamp bool) {
+	body, isExcerpt := formatBody(info.Body)
+
+	rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
+	preface := ""
+	if showTimestamp {
+		local_time := time.Unix(0, info.AddedOn).Format(time.DateTime)
+		preface = log.ColorYellow.Sprintf(" [%s]", local_time)
+	}
+	if isExcerpt {
+		body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
+	}
+
+	log.Plainf("%s%s %s\n", rowid, preface, body)
+}
+
 func printNotes(ctx context.DnoteCtx, bookName string, timestamps bool) error {
 	db := ctx.DB
 
@@ -199,18 +215,7 @@ func printNotes(ctx context.DnoteCtx, bookName string, timestamps bool) error {
 	log.Infof("on book %s\n", bookName)
 
 	for _, info := range infos {
-		body, isExcerpt := formatBody(info.Body)
-
-		preface := log.ColorYellow.Sprintf("(%d)", info.RowID)
-		if timestamps {
-			local_time := time.Unix(0, info.AddedOn).Format(time.DateTime)
-			preface = log.ColorYellow.Sprintf("(%s)", local_time)
-		}
-		if isExcerpt {
-			body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
-		}
-
-		log.Plainf("%s %s\n", preface, body)
+		printNoteLine(info, timestamps)
 	}
 
 	return nil
