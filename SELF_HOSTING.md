@@ -22,7 +22,7 @@ mv ./dnote-server /usr/local/bin
 
 ```bash
 GO_ENV=PRODUCTION \
-OnPremise=true \
+OnPremises=true \
 DBHost=localhost \
 DBPort=5432 \
 DBName=dnote \
@@ -33,7 +33,7 @@ SmtpHost=$SmtpHost \
 SmtpPort=$SmtpPort \
 SmtpUsername=$SmtpUsername \
 SmtpPassword=$SmtpPassword \
-DisableRegistration=false
+DisableRegistration=false \
   dnote-server start
 ```
 
@@ -129,7 +129,7 @@ RestartSec=3
 WorkingDirectory=/home/$user
 ExecStart=/usr/local/bin/dnote-server start
 Environment=GO_ENV=PRODUCTION
-Environment=OnPremise=true
+Environment=OnPremises=true
 Environment=DBHost=localhost
 Environment=DBPort=5432
 Environment=DBName=dnote

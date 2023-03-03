@@ -22,7 +22,7 @@ services:
       DBUser: dnote
       DBPassword: dnote
       WebURL: localhost:3000
-      OnPremise: "true"
+      OnPremises: "true"
       SmtpHost:
       SmtpPort:
       SmtpUsername:

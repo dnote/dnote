@@ -32,23 +32,23 @@ import (
 
 func TestCreateUser_ProValue(t *testing.T) {
 	testCases := []struct {
-		onPremise   bool
+		onPremises  bool
 		expectedPro bool
 	}{
 		{
-			onPremise:   true,
+			onPremises:  true,
 			expectedPro: true,
 		},
 		{
-			onPremise:   false,
+			onPremises:  false,
 			expectedPro: false,
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosting %t", tc.onPremise), func(t *testing.T) {
+		t.Run(fmt.Sprintf("self hosting %t", tc.onPremises), func(t *testing.T) {
 			c := config.Load()
-			c.SetOnPremise(tc.onPremise)
+			c.SetOnPremises(tc.onPremises)
 
 			defer testutils.ClearData(testutils.DB)
 

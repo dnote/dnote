@@ -45,7 +45,7 @@ func TestSendVerificationEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			c := config.Load()
-			c.SetOnPremise(tc.onPremise)
+			c.SetOnPremises(tc.onPremise)
 			c.WebURL = "http://example.com"
 
 			emailBackend := testutils.MockEmailbackendImplementation{}
@@ -83,7 +83,7 @@ func TestSendWelcomeEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			c := config.Load()
-			c.SetOnPremise(tc.onPremise)
+			c.SetOnPremises(tc.onPremise)
 			c.WebURL = "http://example.com"
 
 			emailBackend := testutils.MockEmailbackendImplementation{}
@@ -121,7 +121,7 @@ func TestSendPasswordResetEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
 			c := config.Load()
-			c.SetOnPremise(tc.onPremise)
+			c.SetOnPremises(tc.onPremise)
 			c.WebURL = "http://example.com"
 
 			emailBackend := testutils.MockEmailbackendImplementation{}
@@ -143,7 +143,7 @@ func TestSendPasswordResetEmail(t *testing.T) {
 
 func TestSendSubscriptionConfirmationEmail(t *testing.T) {
 	c := config.Load()
-	c.SetOnPremise(false)
+	c.SetOnPremises(false)
 	c.WebURL = "http://example.com"
 
 	emailBackend := testutils.MockEmailbackendImplementation{}
@@ -185,7 +185,7 @@ func TestGetSenderEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("on premise %t candidate %s", tc.onPremise, tc.candidate), func(t *testing.T) {
 			c := config.Load()
-			c.SetOnPremise(tc.onPremise)
+			c.SetOnPremises(tc.onPremise)
 			c.WebURL = tc.webURL
 
 			got, err := GetSenderEmail(c, tc.candidate)

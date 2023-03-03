@@ -24,6 +24,7 @@ import (
 	"os"
 
 	"github.com/dnote/dnote/pkg/server/assets"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
 
@@ -101,7 +102,7 @@ func loadDBConfig() PostgresConfig {
 type Config struct {
 	AppEnv              string
 	WebURL              string
-	OnPremise           bool
+	OnPremises          bool
 	DisableRegistration bool
 	Port                string
 	DB                  PostgresConfig
@@ -119,6 +120,13 @@ func getAppEnv() string {
 	return os.Getenv("APP_ENV")
 }
 
+func checkDeprecatedEnvVars() {
+	if os.Getenv("OnPremise") != "" {
+
+		log.WithFields(log.Fields{}).Warn("Environment variable 'OnPremise' is deprecated. Please use OnPremises.")
+	}
+}
+
 // Load constructs and returns a new config based on the environment variables.
 func Load() Config {
 	port := os.Getenv("PORT")
@@ -126,11 +134,13 @@ func Load() Config {
 		port = "3000"
 	}
 
+	checkDeprecatedEnvVars()
+
 	c := Config{
 		AppEnv:              getAppEnv(),
 		WebURL:              os.Getenv("WebURL"),
 		Port:                port,
-		OnPremise:           readBoolEnv("OnPremise"),
+		OnPremises:          readBoolEnv("OnPremise") || readBoolEnv("OnPremises"),
 		DisableRegistration: readBoolEnv("DisableRegistration"),
 		DB:                  loadDBConfig(),
 		AssetBaseURL:        "",
@@ -144,9 +154,9 @@ func Load() Config {
 	return c
 }
 
-// SetOnPremise sets the OnPremise value
-func (c *Config) SetOnPremise(val bool) {
-	c.OnPremise = val
+// SetOnPremises sets the OnPremise value
+func (c *Config) SetOnPremises(val bool) {
+	c.OnPremises = val
 }
 
 // SetAssetBaseURL sets static dir for the confi
