@@ -32,8 +32,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// upgradeInterval is 3 weeks
-var upgradeInterval int64 = 86400 * 7 * 3
+// upgradeInterval is 8 weeks
+var upgradeInterval int64 = 86400 * 7 * 8
 
 // shouldCheckUpdate checks if update should be checked
 func shouldCheckUpdate(ctx context.DnoteCtx) (bool, error) {
