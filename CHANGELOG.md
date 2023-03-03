@@ -13,7 +13,14 @@ The following log documents the history of the server project.
 
 None
 
-### 2.0.0 2021-05-09
+### 3.0.0 2022-03-04
+
+#### Changed
+
+- `OnPremise` environment variable is deprecated and is replaced with `OnPremises`
+
+
+### 2.0.0 2022-05-09
 
 #### Removed
 
