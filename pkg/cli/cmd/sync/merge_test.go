@@ -131,9 +131,12 @@ fuuz
 			expected: `foo
 <<<<<<< Local
 quz
-baz
 =======
 quzz
+>>>>>>> Server
+<<<<<<< Local
+baz
+=======
 bazz
 >>>>>>> Server
 bar
