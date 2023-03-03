@@ -30,7 +30,7 @@ import (
 // NewTest returns an app for a testing environment
 func NewTest(appParams *App) App {
 	c := config.Load()
-	c.SetOnPremise(false)
+	c.SetOnPremises(false)
 
 	a := App{
 		DB:             testutils.DB,
@@ -51,8 +51,8 @@ func NewTest(appParams *App) App {
 	if appParams != nil && appParams.EmailTemplates != nil {
 		a.EmailTemplates = appParams.EmailTemplates
 	}
-	if appParams != nil && appParams.Config.OnPremise {
-		a.Config.OnPremise = appParams.Config.OnPremise
+	if appParams != nil && appParams.Config.OnPremises {
+		a.Config.OnPremises = appParams.Config.OnPremises
 	}
 	if appParams != nil && appParams.Config.WebURL != "" {
 		a.Config.WebURL = appParams.Config.WebURL

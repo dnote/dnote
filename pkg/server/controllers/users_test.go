@@ -55,28 +55,28 @@ func TestJoin(t *testing.T) {
 		email                string
 		password             string
 		passwordConfirmation string
-		onPremise            bool
+		onPremises           bool
 		expectedPro          bool
 	}{
 		{
 			email:                "alice@example.com",
 			password:             "pass1234",
 			passwordConfirmation: "pass1234",
-			onPremise:            false,
+			onPremises:           false,
 			expectedPro:          false,
 		},
 		{
 			email:                "bob@example.com",
 			password:             "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
 			passwordConfirmation: "Y9EwmjH@Jq6y5a64MSACUoM4w7SAhzvY",
-			onPremise:            false,
+			onPremises:           false,
 			expectedPro:          false,
 		},
 		{
 			email:                "chuck@example.com",
 			password:             "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
 			passwordConfirmation: "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
-			onPremise:            false,
+			onPremises:           false,
 			expectedPro:          false,
 		},
 		// on premise
@@ -84,7 +84,7 @@ func TestJoin(t *testing.T) {
 			email:                "dan@example.com",
 			password:             "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
 			passwordConfirmation: "e*H@kJi^vXbWEcD9T5^Am!Y@7#Po2@PC",
-			onPremise:            true,
+			onPremises:           true,
 			expectedPro:          true,
 		},
 	}
@@ -99,7 +99,7 @@ func TestJoin(t *testing.T) {
 				Clock:        clock.NewMock(),
 				EmailBackend: &emailBackend,
 				Config: config.Config{
-					OnPremise: tc.onPremise,
+					OnPremises: tc.onPremises,
 				},
 			})
 			defer server.Close()

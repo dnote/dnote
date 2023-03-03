@@ -32,7 +32,7 @@ var defaultSender = "admin@getdnote.com"
 
 // GetSenderEmail returns the sender email
 func GetSenderEmail(c config.Config, want string) (string, error) {
-	if !c.OnPremise {
+	if !c.OnPremises {
 		return want, nil
 	}
 

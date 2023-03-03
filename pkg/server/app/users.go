@@ -80,7 +80,7 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 
 	// Grant all privileges if self-hosting
 	var pro bool
-	if a.Config.OnPremise {
+	if a.Config.OnPremises {
 		pro = true
 	} else {
 		pro = false
