@@ -9,7 +9,11 @@ sudo apt-get update
 sudo apt-get install -y postgresql-14
 
 # set up database
+sudo usermod -a -G sudo postgres
+cd /var/lib/postgresql
 sudo -u postgres createdb dnote
+sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+
 # allow connection from host and allow to connect without password
 sudo sed -i  "/port*/a listen_addresses = '*'" /etc/postgresql/14/main/postgresql.conf
 sudo sed -i 's/host.*all.*.all.*md5/# &/' /etc/postgresql/14/main/pg_hba.conf
