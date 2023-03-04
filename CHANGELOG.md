@@ -13,6 +13,12 @@ The following log documents the history of the server project.
 
 None
 
+### 2.1.1 2023-03-04
+
+#### Fixed
+
+- Added the missing CSS and JS in the server release
+
 ### 2.1.0 2023-03-04
 
 #### Changed
