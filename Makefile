@@ -60,6 +60,10 @@ ifndef version
 	$(error version is required. Usage: make version=0.1.0 build-server)
 endif
 
+	@echo "==> building server assets"
+	@(cd "${currentDir}/pkg/server/assets/" && ./styles/build.sh)
+	@(cd "${currentDir}/pkg/server/assets/" && ./js/build.sh)
+
 	@echo "==> building server"
 	@${currentDir}/scripts/server/build.sh $(version)
 .PHONY: build-server
