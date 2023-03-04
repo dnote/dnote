@@ -2,10 +2,11 @@
 # testsuite.sh runs the smoke tests for a self-hosted instance.
 # It is meant to be run inside a virtual machine which has been
 # set up by an entry script.
-set -eu
+set -eux
 
 echo 'Running a smoke test'
 
+cd /var/lib/postgresql
 sudo -u postgres dropdb dnote
 sudo -u postgres createdb dnote
 
@@ -18,7 +19,7 @@ GO_ENV=PRODUCTION \
   DBPort=5432 \
   DBName=dnote \
   DBUser=postgres \
-  DBPassword="" \
+  DBPassword=postgres \
   WebURL=localhost:3000 \
   ./dnote-server -port 2300 start & sleep 3
 
