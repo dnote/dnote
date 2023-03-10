@@ -211,6 +211,10 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.14.0 - 2023-03-10
+
+* Remove `autocomplete` subcommand that was accidentally added by a dependency (#637)
+
 ### 0.13.0 - 2023-02-10
 
 * Allow to add note from stdin.
