@@ -43,6 +43,6 @@ EOF
 
 git add .
 git commit --author="Monomax Bot <bot@monomaxlabs.com>" -m "Release ${version}"
-git push --author="Monomax Bot <bot@monomaxlabs.com>" origin master
+git push origin master
 
 popd
