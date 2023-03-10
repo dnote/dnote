@@ -27,6 +27,9 @@ var root = &cobra.Command{
 	Short:         "Dnote - a simple command line notebook",
 	SilenceErrors: true,
 	SilenceUsage:  true,
+	CompletionOptions: cobra.CompletionOptions{
+		DisableDefaultCmd: true,
+	},
 }
 
 // Register adds a new command
