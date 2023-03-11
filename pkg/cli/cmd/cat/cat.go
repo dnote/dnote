@@ -21,13 +21,13 @@ package cat
 import (
 	"strconv"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/output"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var example = `
@@ -40,7 +40,7 @@ var deprecationWarning = `and "view" will replace it in the future version.
  Run "dnote view --help" for more information.
 `
 
-func preRun(cmd *cobra.Command, args []string) error {
+func preRun(cmd *command.Command, args []string) error {
 	if len(args) != 2 {
 		return errors.New("Incorrect number of arguments")
 	}
@@ -49,8 +49,8 @@ func preRun(cmd *cobra.Command, args []string) error {
 }
 
 // NewCmd returns a new cat command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:        "cat <book name> <note index>",
 		Aliases:    []string{"c"},
 		Short:      "See a note",
@@ -65,7 +65,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 // NewRun returns a new run function
 func NewRun(ctx context.DnoteCtx, contentOnly bool) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		var noteRowIDArg string
 
 		if len(args) == 2 {

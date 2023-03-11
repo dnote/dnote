@@ -19,10 +19,10 @@
 package view
 
 import (
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 
 	"github.com/dnote/dnote/pkg/cli/cmd/cat"
 	"github.com/dnote/dnote/pkg/cli/cmd/ls"
@@ -43,7 +43,7 @@ var example = `
 var nameOnly bool
 var contentOnly bool
 
-func preRun(cmd *cobra.Command, args []string) error {
+func preRun(cmd *command.Command, args []string) error {
 	if len(args) > 2 {
 		return errors.New("Incorrect number of argument")
 	}
@@ -52,8 +52,8 @@ func preRun(cmd *cobra.Command, args []string) error {
 }
 
 // NewCmd returns a new view command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "view <book name?> <note index?>",
 		Aliases: []string{"v"},
 		Short:   "List books, notes or view a content",
@@ -70,7 +70,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		var run infra.RunEFunc
 
 		if len(args) == 0 {

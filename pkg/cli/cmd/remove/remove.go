@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -30,7 +31,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var bookFlag string
@@ -45,8 +45,8 @@ var example = `
 `
 
 // NewCmd returns a new remove command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "remove <note id|book name>",
 		Short:   "Remove a note or a book",
 		Aliases: []string{"rm", "d", "delete"},
@@ -64,7 +64,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	return cmd
 }
 
-func preRun(cmd *cobra.Command, args []string) error {
+func preRun(cmd *command.Command, args []string) error {
 	if len(args) != 1 && len(args) != 2 {
 		return errors.New("Incorrect number of argument")
 	}
@@ -81,7 +81,7 @@ func maybeConfirm(message string, defaultValue bool) (bool, error) {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		// DEPRECATED: Remove in 1.0.0
 		if bookFlag != "" {
 			if err := runBook(ctx, bookFlag); err != nil {

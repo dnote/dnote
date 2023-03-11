@@ -20,9 +20,10 @@ package add
 
 import (
 	"database/sql"
-	"time"
 	"os"
+	"time"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -33,7 +34,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/dnote/dnote/pkg/cli/validate"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var contentFlag string
@@ -52,7 +52,7 @@ var example = `
  pull is fetch with a merge
  EOF`
 
-func preRun(cmd *cobra.Command, args []string) error {
+func preRun(cmd *command.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("Incorrect number of argument")
 	}
@@ -61,8 +61,9 @@ func preRun(cmd *cobra.Command, args []string) error {
 }
 
 // NewCmd returns a new add command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
+		Name:    "add",
 		Use:     "add <book>",
 		Short:   "Add a new note",
 		Aliases: []string{"a", "n", "new"},
@@ -84,7 +85,7 @@ func getContent(ctx context.DnoteCtx) (string, error) {
 
 	// check for piped content
 	fInfo, _ := os.Stdin.Stat()
-	if fInfo.Mode() & os.ModeCharDevice == 0 {
+	if fInfo.Mode()&os.ModeCharDevice == 0 {
 		c, err := ui.ReadStdInput()
 		if err != nil {
 			return "", errors.Wrap(err, "Failed to get piped input")
@@ -106,7 +107,7 @@ func getContent(ctx context.DnoteCtx) (string, error) {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		bookName := args[0]
 		if err := validate.BookName(bookName); err != nil {
 			return errors.Wrap(err, "invalid book name")

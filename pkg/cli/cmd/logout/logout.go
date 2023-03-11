@@ -22,13 +22,13 @@ import (
 	"database/sql"
 
 	"github.com/dnote/dnote/pkg/cli/client"
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 // ErrNotLoggedIn is an error for logging out when not logged in
@@ -38,8 +38,8 @@ var example = `
   dnote logout`
 
 // NewCmd returns a new logout command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "logout",
 		Short:   "Logout from the server",
 		Example: example,
@@ -83,7 +83,7 @@ func Do(ctx context.DnoteCtx) error {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		err := Do(ctx)
 		if err == ErrNotLoggedIn {
 			log.Error("not logged in\n")

@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/config"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -38,11 +39,10 @@ import (
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 // RunEFunc is a function type of dnote commands
-type RunEFunc func(*cobra.Command, []string) error
+type RunEFunc func(*command.Command, []string) error
 
 func checkLegacyDBPath() (string, bool) {
 	legacyDnoteDir := getLegacyDnotePath(dirs.Home)
