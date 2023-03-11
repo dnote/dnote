@@ -19,21 +19,18 @@
 package root
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/dnote/dnote/pkg/cli/command"
 )
 
-var root = &cobra.Command{
+var root = &command.Command{
 	Use:           "dnote",
 	Short:         "Dnote - a simple command line notebook",
 	SilenceErrors: true,
 	SilenceUsage:  true,
-	CompletionOptions: cobra.CompletionOptions{
-		DisableDefaultCmd: true,
-	},
 }
 
 // Register adds a new command
-func Register(cmd *cobra.Command) {
+func Register(cmd *command.Command) {
 	root.AddCommand(cmd)
 }
 

@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/dnote/dnote/pkg/cli/client"
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -31,7 +32,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/upgrade"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -45,8 +45,8 @@ var example = `
 var isFullSync bool
 
 // NewCmd returns a new sync command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "sync",
 		Aliases: []string{"s"},
 		Short:   "Sync data with the server",
@@ -55,7 +55,8 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVarP(&isFullSync, "full", "f", false, "perform a full sync instead of incrementally syncing only the changed data.")
+	f.BoolVar(&isFullSync, "full", false, "perform a full sync instead of incrementally syncing only the changed data.")
+	f.BoolVar(&isFullSync, "f", false, "Alias for --full")
 
 	return cmd
 }
@@ -886,7 +887,7 @@ func saveSyncState(tx *database.DB, serverTime int64, serverMaxUSN int) error {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		if ctx.SessionKey == "" {
 			return errors.New("not logged in")
 		}

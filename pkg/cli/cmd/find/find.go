@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var example = `
@@ -43,7 +43,7 @@ var example = `
 
 var bookName string
 
-func preRun(cmd *cobra.Command, args []string) error {
+func preRun(cmd *command.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New("Incorrect number of argument")
 	}
@@ -52,8 +52,8 @@ func preRun(cmd *cobra.Command, args []string) error {
 }
 
 // NewCmd returns a new remove command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "find",
 		Short:   "Find notes by keywords",
 		Aliases: []string{"f"},
@@ -63,7 +63,8 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&bookName, "book", "b", "", "book name to find notes in")
+	f.StringVar(&bookName, "book", "", "book name to find notes in")
+	f.StringVar(&bookName, "b", "", "Shorthand for --book")
 
 	return cmd
 }
@@ -154,7 +155,7 @@ func doQuery(ctx context.DnoteCtx, query, bookName string) (*sql.Rows, error) {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		phrase, err := escapePhrase(args[0])
 		if err != nil {
 			return errors.Wrap(err, "escaping phrase")

@@ -24,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/client"
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -31,7 +32,6 @@ import (
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var example = `
@@ -40,8 +40,8 @@ var example = `
 var usernameFlag, passwordFlag string
 
 // NewCmd returns a new login command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:     "login",
 		Short:   "Login to dnote server",
 		Example: example,
@@ -49,8 +49,11 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVarP(&usernameFlag, "username", "u", "", "email address for authentication")
-	f.StringVarP(&passwordFlag, "password", "p", "", "password for authentication")
+	f.String("username", "", "email address for authentication")
+	f.StringVar(&usernameFlag, "u", "", "email address for authentication")
+
+	f.String("password", "", "password for authentication")
+	f.StringVar(&passwordFlag, "p", "", "password for authentication")
 
 	return cmd
 }
@@ -150,7 +153,7 @@ func getGreeting(ctx context.DnoteCtx) string {
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
+	return func(cmd *command.Command, args []string) error {
 		greeting := getGreeting(ctx)
 		log.Plain(greeting)
 

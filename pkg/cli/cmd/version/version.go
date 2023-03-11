@@ -21,17 +21,17 @@ package version
 import (
 	"fmt"
 
+	"github.com/dnote/dnote/pkg/cli/command"
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/spf13/cobra"
 )
 
 // NewCmd returns a new version command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
+func NewCmd(ctx context.DnoteCtx) *command.Command {
+	cmd := &command.Command{
 		Use:   "version",
 		Short: "Print the version number of Dnote",
 		Long:  "Print the version number of Dnote",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *command.Command, args []string) {
 			fmt.Printf("dnote %s\n", ctx.Version)
 		},
 	}
