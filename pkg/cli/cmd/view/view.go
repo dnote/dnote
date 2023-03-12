@@ -64,8 +64,8 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVar(&nameOnly, "name-only", false, "print book names only")
-	f.BoolVar(&contentOnly, "content-only", false, "print the note content only")
+	f.BoolVarP(&nameOnly, "name-only", "", false, "print book names only")
+	f.BoolVarP(&contentOnly, "content-only", "", false, "print the note content only")
 
 	return cmd
 }

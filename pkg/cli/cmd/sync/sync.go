@@ -55,8 +55,7 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.BoolVar(&isFullSync, "full", false, "perform a full sync instead of incrementally syncing only the changed data.")
-	f.BoolVar(&isFullSync, "f", false, "Alias for --full")
+	f.BoolVarP(&isFullSync, "full", "f", false, "perform a full sync instead of incrementally syncing only the changed data.")
 
 	return cmd
 }

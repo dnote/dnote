@@ -99,6 +99,7 @@ func TestFindSubcommand(t *testing.T) {
 	assert.Equal(t, subCommand1.findSubCommand("bar"), (*Command)(nil), "Subcommand 'bar' mismatch")
 }
 
-func executeCommand(root *Command, args ...string) error {
-	return root.Execute()
+func executeCommand(cmd *Command, args ...string) error {
+	cmd.setArgs(args)
+	return cmd.Execute()
 }

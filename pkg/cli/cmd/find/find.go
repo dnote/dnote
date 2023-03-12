@@ -63,8 +63,7 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&bookName, "book", "", "book name to find notes in")
-	f.StringVar(&bookName, "b", "", "Shorthand for --book")
+	f.StringVarP(&bookName, "book", "b", "", "book name to find notes in")
 
 	return cmd
 }

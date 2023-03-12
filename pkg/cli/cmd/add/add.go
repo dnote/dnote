@@ -73,8 +73,7 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&contentFlag, "c", "", "Shorthand for --content")
-	f.StringVar(&contentFlag, "content", "", "The new content for the note")
+	f.StringVarP(&contentFlag, "content", "c", "", "The new content for the note")
 
 	return cmd
 }

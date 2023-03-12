@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -39,6 +40,13 @@ type Command struct {
 	Deprecated    string
 	Long          string
 	Run           func(cmd *Command, args []string)
+}
+
+func (c *Command) HelpFunc() {
+	err := tmpl(os.Stdout, c.HelpTemplate(), c)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // Flags returns a flag set for the command. If not initialized yet, it initializes
@@ -96,16 +104,23 @@ func (c *Command) Execute() error {
 	args := c.Args()
 	log.Debug("root command received arguments: %s\n", args)
 
-	cmd := c.findSubCommand(args[0])
+	cmd, args := c.findCommand(args)
 	if cmd == nil {
 		// not found. show suggestion
 		return nil
 	}
 
-	cmd.execute(args[1:])
+	if err := cmd.execute(args); err != nil {
+		if errors.Cause(err) == errNotRunnable {
+			cmd.Help()
+		}
+
+	}
 
 	return nil
 }
+
+var errNotRunnable = errors.New("Command is not runnable.")
 
 // execute runs the command.
 func (c *Command) execute(args []string) error {
@@ -117,6 +132,10 @@ func (c *Command) execute(args []string) error {
 
 	nonFlagArgs := c.Flags().Args()
 	log.Debug("command '%s' called with non-flag arguments: %s\n", c.Name, nonFlagArgs)
+
+	if c.RunE == nil {
+		return errNotRunnable
+	}
 
 	if err := c.RunE(c, nonFlagArgs); err != nil {
 		return err
@@ -136,19 +155,24 @@ func (c *Command) hasAlias(targetAlias string) bool {
 	return false
 }
 
-// findSubCommand finds and returns an appropriate subcommand to be called, based
+// findCommand finds and returns an appropriate subcommand to be called, based
 // on the given slice of arguments. It also returns a slice of arguments with which
 // the subcommand should be called.
-func (c *Command) findSubCommand(name string) *Command {
+func (c *Command) findCommand(args []string) (*Command, []string) {
+	if len(args) == 0 {
+		return c, args
+	}
+
+	name := args[0]
 	log.Debug("sub-command: '%s'\n", name)
 
 	for _, cmd := range c.commands {
 		if cmd.Name == name || cmd.hasAlias(name) {
-			return cmd
+			return cmd, args[1:]
 		}
 	}
 
-	return nil
+	return c, args
 }
 
 // AddCommand adds the given command as a subcommand.

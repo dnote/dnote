@@ -60,12 +60,9 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&contentFlag, "content", "", "a new content for the note")
-	f.StringVar(&contentFlag, "c", "", "a new content for the note")
-	f.StringVar(&bookFlag, "book", "", "the name of the book to move the note to")
-	f.StringVar(&bookFlag, "b", "", "the name of the book to move the note to")
-	f.StringVar(&nameFlag, "name", "", "a new name for a book")
-	f.StringVar(&nameFlag, "n", "", "a new name for a book")
+	f.StringVarP(&contentFlag, "content", "c", "", "a new content for the note")
+	f.StringVarP(&bookFlag, "book", "b", "", "the name of the book to move the note to")
+	f.StringVarP(&nameFlag, "name", "n", "", "a new name for a book")
 
 	return cmd
 }

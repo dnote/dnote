@@ -56,10 +56,8 @@ func NewCmd(ctx context.DnoteCtx) *command.Command {
 	}
 
 	f := cmd.Flags()
-	f.StringVar(&bookFlag, "book", "", "The book name to delete")
-	f.StringVar(&bookFlag, "b", "", "Alias for --book")
-	f.BoolVar(&yesFlag, "yes", false, "Assume yes to the prompts and run in non-interactive mode")
-	f.BoolVar(&yesFlag, "y", false, "Assume yes to the prompts and run in non-interactive mode")
+	f.StringVarP(&bookFlag, "book", "b", "", "The book name to delete")
+	f.BoolVarP(&yesFlag, "yes", "y", false, "Assume yes to the prompts and run in non-interactive mode")
 
 	// f.MarkDeprecated("book", "Pass the book name as an argument. e.g. `dnote rm book_name`")
 
