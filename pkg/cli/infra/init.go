@@ -150,14 +150,15 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 	}
 
 	ret := context.DnoteCtx{
-		Paths:            ctx.Paths,
-		Version:          ctx.Version,
-		DB:               ctx.DB,
-		SessionKey:       sessionKey,
-		SessionKeyExpiry: sessionKeyExpiry,
-		APIEndpoint:      cf.APIEndpoint,
-		Editor:           cf.Editor,
-		Clock:            clock.New(),
+		Paths:              ctx.Paths,
+		Version:            ctx.Version,
+		DB:                 ctx.DB,
+		SessionKey:         sessionKey,
+		SessionKeyExpiry:   sessionKeyExpiry,
+		APIEndpoint:        cf.APIEndpoint,
+		Editor:             cf.Editor,
+		Clock:              clock.New(),
+		EnableUpgradeCheck: cf.EnableUpgradeCheck,
 	}
 
 	return ret, nil
@@ -354,8 +355,9 @@ func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
 	editor := getEditorCommand()
 
 	cf := config.Config{
-		Editor:      editor,
-		APIEndpoint: apiEndpoint,
+		Editor:             editor,
+		APIEndpoint:        apiEndpoint,
+		EnableUpgradeCheck: true,
 	}
 
 	if err := config.Write(ctx, cf); err != nil {

@@ -32,8 +32,9 @@ import (
 
 // Config holds dnote configuration
 type Config struct {
-	Editor      string `yaml:"editor"`
-	APIEndpoint string `yaml:"apiEndpoint"`
+	Editor             string `yaml:"editor"`
+	APIEndpoint        string `yaml:"apiEndpoint"`
+	EnableUpgradeCheck bool   `yaml:"enableUpgradeCheck"`
 }
 
 func checkLegacyPath(ctx context.DnoteCtx) (string, bool) {

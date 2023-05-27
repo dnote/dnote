@@ -112,6 +112,11 @@ func checkVersion(ctx context.DnoteCtx) error {
 
 // Check triggers update if needed
 func Check(ctx context.DnoteCtx) error {
+	// If upgrade check is not enabled, do not proceed further
+	if !ctx.EnableUpgradeCheck {
+		return nil
+	}
+
 	shouldCheck, err := shouldCheckUpdate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "checking if dnote should check update")

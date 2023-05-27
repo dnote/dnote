@@ -20,6 +20,7 @@ package migrate
 
 import (
 	"database/sql"
+
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/log"
@@ -47,6 +48,7 @@ var LocalSequence = []migration{
 	lm10,
 	lm11,
 	lm12,
+	lm13,
 }
 
 // RemoteSequence is a list of remote migrations to be run

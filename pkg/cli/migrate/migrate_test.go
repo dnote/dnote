@@ -21,12 +21,13 @@ package migrate
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/dnote/actions"
 	"github.com/dnote/dnote/pkg/assert"
@@ -38,11 +39,10 @@ import (
 )
 
 var paths context.Paths = context.Paths{
-	Home:        "../../tmp",
-	Cache:       "../../tmp",
-	Config:      "../../tmp",
-	Data:        "../../tmp",
-	LegacyDnote: "../../tmp",
+	Home:   "../../tmp",
+	Cache:  "../../tmp",
+	Config: "../../tmp",
+	Data:   "../../tmp",
 }
 
 func TestExecute_bump_schema(t *testing.T) {
@@ -1078,7 +1078,7 @@ func TestLocalMigration12(t *testing.T) {
 	defer context.TeardownTestCtx(t, ctx)
 
 	data := []byte("editor: vim")
-	path := fmt.Sprintf("%s/dnoterc", ctx.Paths.LegacyDnote)
+	path := fmt.Sprintf("%s/%s/dnoterc", ctx.Paths.Config, consts.DnoteDirName)
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
 	}
@@ -1106,6 +1106,48 @@ func TestLocalMigration12(t *testing.T) {
 	}
 
 	assert.NotEqual(t, cf.APIEndpoint, "", "apiEndpoint was not populated")
+}
+
+func TestLocalMigration13(t *testing.T) {
+	// set up
+	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-12-pre-schema.sql", SkipMigration: true}
+	ctx := context.InitTestCtx(t, paths, &opts)
+	defer context.TeardownTestCtx(t, ctx)
+
+	data := []byte("editor: vim\napiEndpoint: https://test.com/api")
+
+	path := fmt.Sprintf("%s/%s/dnoterc", ctx.Paths.Config, consts.DnoteDirName)
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
+	}
+
+	// execute
+	err := lm13.run(ctx, nil)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	// test
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "reading config"))
+	}
+
+	type config struct {
+		Editor             string `yaml:"editor"`
+		ApiEndpoint        string `yaml:"apiEndpoint"`
+		EnableUpgradeCheck bool   `yaml:"enableUpgradeCheck"`
+	}
+
+	var cf config
+	err = yaml.Unmarshal(b, &cf)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "unmarshalling config"))
+	}
+
+	assert.Equal(t, cf.Editor, "vim", "editor mismatch")
+	assert.Equal(t, cf.ApiEndpoint, "https://test.com/api", "apiEndpoint mismatch")
+	assert.Equal(t, cf.EnableUpgradeCheck, true, "enableUpgradeCheck mismatch")
 }
 
 func TestRemoteMigration1(t *testing.T) {
