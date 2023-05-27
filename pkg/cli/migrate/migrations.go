@@ -550,6 +550,25 @@ var lm12 = migration{
 	},
 }
 
+var lm13 = migration{
+	name: "add enableUpgradeCheck to the configuration file",
+	run: func(ctx context.DnoteCtx, tx *database.DB) error {
+		cf, err := config.Read(ctx)
+		if err != nil {
+			return errors.Wrap(err, "reading config")
+		}
+
+		cf.EnableUpgradeCheck = true
+
+		err = config.Write(ctx, cf)
+		if err != nil {
+			return errors.Wrap(err, "writing config")
+		}
+
+		return nil
+	},
+}
+
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx context.DnoteCtx, tx *database.DB) error {

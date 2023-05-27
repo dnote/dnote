@@ -35,14 +35,15 @@ type Paths struct {
 
 // DnoteCtx is a context holding the information of the current runtime
 type DnoteCtx struct {
-	Paths            Paths
-	APIEndpoint      string
-	Version          string
-	DB               *database.DB
-	SessionKey       string
-	SessionKeyExpiry int64
-	Editor           string
-	Clock            clock.Clock
+	Paths              Paths
+	APIEndpoint        string
+	Version            string
+	DB                 *database.DB
+	SessionKey         string
+	SessionKeyExpiry   int64
+	Editor             string
+	Clock              clock.Clock
+	EnableUpgradeCheck bool
 }
 
 // Redact replaces private information from the context with a set of
