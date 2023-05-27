@@ -211,6 +211,10 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.15.0 - 2023-05-27
+
+* Add `enableUpgradeCheck` configuration to allow to opt out of automatic update check.
+
 ### 0.14.0 - 2023-03-10
 
 * Remove `autocomplete` subcommand that was accidentally added by a dependency (#637)
