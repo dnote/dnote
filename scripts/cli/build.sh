@@ -36,7 +36,7 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=go-1.20.x
+goVersion=go-1.21.x
 
 get_binary_name() {
   platform=$1
