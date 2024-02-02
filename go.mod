@@ -7,7 +7,7 @@ toolchain go1.21.6
 require (
 	github.com/aymerick/douceur v0.2.0
 	github.com/dnote/actions v0.2.0
-	github.com/dnote/color v1.7.0
+	github.com/fatih/color v1.15.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.6.0

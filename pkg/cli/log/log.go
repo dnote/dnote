@@ -20,7 +20,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/dnote/color"
+	"github.com/fatih/color"
 	"os"
 )
 
