@@ -211,6 +211,11 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.15.1 - 2024-02-03
+
+* Upgrade `color` dependency (#660).
+* Use Go 1.21 (#658).
+
 ### 0.15.0 - 2023-05-27
 
 * Add `enableUpgradeCheck` configuration to allow to opt out of automatic update check.
