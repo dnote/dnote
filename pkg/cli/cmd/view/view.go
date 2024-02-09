@@ -42,6 +42,7 @@ var example = `
 
 var nameOnly bool
 var contentOnly bool
+var timestamps bool
 
 func preRun(cmd *cobra.Command, args []string) error {
 	if len(args) > 2 {
@@ -65,6 +66,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	f := cmd.Flags()
 	f.BoolVarP(&nameOnly, "name-only", "", false, "print book names only")
 	f.BoolVarP(&contentOnly, "content-only", "", false, "print the note content only")
+	f.BoolVarP(&timestamps, "timestamps", "t", false, "print creation timestamp of notes rather than IDs")
 
 	return cmd
 }
@@ -74,7 +76,11 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		var run infra.RunEFunc
 
 		if len(args) == 0 {
-			run = ls.NewRun(ctx, nameOnly)
+			if timestamps {
+				return errors.New("timestamps flag is only valid when viewing notes")
+			}
+
+			run = ls.NewRun(ctx, nameOnly, false)
 		} else if len(args) == 1 {
 			if nameOnly {
 				return errors.New("--name-only flag is only valid when viewing books")
@@ -83,7 +89,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			if utils.IsNumber(args[0]) {
 				run = cat.NewRun(ctx, contentOnly)
 			} else {
-				run = ls.NewRun(ctx, false)
+				run = ls.NewRun(ctx, false, timestamps)
 			}
 		} else if len(args) == 2 {
 			// DEPRECATED: passing book name to view command is deprecated

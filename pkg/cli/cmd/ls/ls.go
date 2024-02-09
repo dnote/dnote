@@ -22,6 +22,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -58,7 +59,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Aliases:    []string{"l", "notes"},
 		Short:      "List all notes",
 		Example:    example,
-		RunE:       NewRun(ctx, false),
+		RunE:       NewRun(ctx, false, false),
 		PreRunE:    preRun,
 		Deprecated: deprecationWarning,
 	}
@@ -67,7 +68,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 }
 
 // NewRun returns a new run function for ls
-func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
+func NewRun(ctx context.DnoteCtx, nameOnly bool, timestamps bool) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			if err := printBooks(ctx, nameOnly); err != nil {
@@ -78,7 +79,7 @@ func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
 		}
 
 		bookName := args[0]
-		if err := printNotes(ctx, bookName); err != nil {
+		if err := printNotes(ctx, bookName, timestamps); err != nil {
 			return errors.Wrapf(err, "viewing book '%s'", bookName)
 		}
 
@@ -95,6 +96,7 @@ type bookInfo struct {
 // noteInfo is an information about the note to be printed on screen
 type noteInfo struct {
 	RowID int
+	AddedOn int64
 	Body  string
 }
 
@@ -166,7 +168,23 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 	return nil
 }
 
-func printNotes(ctx context.DnoteCtx, bookName string) error {
+func printNoteLine(info noteInfo, showTimestamp bool) {
+	body, isExcerpt := formatBody(info.Body)
+
+	rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
+	preface := ""
+	if showTimestamp {
+		local_time := time.Unix(0, info.AddedOn).Format(time.DateTime)
+		preface = log.ColorYellow.Sprintf(" [%s]", local_time)
+	}
+	if isExcerpt {
+		body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
+	}
+
+	log.Plainf("%s%s %s\n", rowid, preface, body)
+}
+
+func printNotes(ctx context.DnoteCtx, bookName string, timestamps bool) error {
 	db := ctx.DB
 
 	var bookUUID string
@@ -177,7 +195,7 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 		return errors.Wrap(err, "querying the book")
 	}
 
-	rows, err := db.Query(`SELECT rowid, body FROM notes WHERE book_uuid = ? AND deleted = ? ORDER BY added_on ASC;`, bookUUID, false)
+	rows, err := db.Query(`SELECT rowid, added_on, body FROM notes WHERE book_uuid = ? AND deleted = ? ORDER BY added_on ASC;`, bookUUID, false)
 	if err != nil {
 		return errors.Wrap(err, "querying notes")
 	}
@@ -186,7 +204,7 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 	infos := []noteInfo{}
 	for rows.Next() {
 		var info noteInfo
-		err = rows.Scan(&info.RowID, &info.Body)
+		err = rows.Scan(&info.RowID, &info.AddedOn, &info.Body)
 		if err != nil {
 			return errors.Wrap(err, "scanning a row")
 		}
@@ -197,14 +215,7 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 	log.Infof("on book %s\n", bookName)
 
 	for _, info := range infos {
-		body, isExcerpt := formatBody(info.Body)
-
-		rowid := log.ColorYellow.Sprintf("(%d)", info.RowID)
-		if isExcerpt {
-			body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
-		}
-
-		log.Plainf("%s %s\n", rowid, body)
+		printNoteLine(info, timestamps)
 	}
 
 	return nil
