@@ -2,8 +2,13 @@
 
 All notable changes to the projects under this repository will be documented in this file.
 
-* [Server](#server)
-* [CLI](#cli)
+- [Server](#server)
+- [CLI](#cli)
+
+## CLI
+
+- `search` not matches partial words.
+- `view` Accepts a list of ids and shows the content of all them.
 
 ## Server
 
@@ -57,7 +62,7 @@ None
 
 #### Changed
 
-* Support arm64.
+- Support arm64.
 
 ### 1.0.1 - 2020-03-29
 
@@ -109,7 +114,7 @@ None
 
 #### Fixed
 
-- Implement syntax highlighting for code blocks ($377)
+- Implement syntax highlighting for code blocks (\$377)
 
 ### 0.3.3 - 2019-12-17
 
@@ -148,10 +153,10 @@ None
 
 #### Upgrade Guide
 
-* Please define the follwoing new environment variables:
+- Please define the follwoing new environment variables:
 
   - `WebURL`: the URL to your Dnote server, without the trailing slash. (e.g. `https://my-server.com`) (Please see #290)
-  - `SmtpPort`: the SMTP port. (e.g. `465`) optional - required *if you want to configure email*
+  - `SmtpPort`: the SMTP port. (e.g. `465`) optional - required _if you want to configure email_
 
 #### Added
 
@@ -184,7 +189,6 @@ None
 
 - Fix asset loading (#257)
 
-
 ### 0.1.0 - 2019-09-30
 
 #### Added
@@ -202,7 +206,6 @@ None
 
 - In your application, navigate to `/classic` and follow the automated migration steps.
 
-
 ## CLI
 
 The following log documentes the history of the CLI project
@@ -213,20 +216,20 @@ None
 
 ### 0.15.1 - 2024-02-03
 
-* Upgrade `color` dependency (#660).
-* Use Go 1.21 (#658).
+- Upgrade `color` dependency (#660).
+- Use Go 1.21 (#658).
 
 ### 0.15.0 - 2023-05-27
 
-* Add `enableUpgradeCheck` configuration to allow to opt out of automatic update check.
+- Add `enableUpgradeCheck` configuration to allow to opt out of automatic update check.
 
 ### 0.14.0 - 2023-03-10
 
-* Remove `autocomplete` subcommand that was accidentally added by a dependency (#637)
+- Remove `autocomplete` subcommand that was accidentally added by a dependency (#637)
 
 ### 0.13.0 - 2023-02-10
 
-* Allow to add note from stdin.
+- Allow to add note from stdin.
 
 ```
 echo "test" | dnote add mybook
@@ -241,11 +244,11 @@ EOF
 
 #### Upgrade guide
 
-* **On Linux or macOS** Please move your Dnote files to new directories based on the XDG base directory specfication. **On Windows**, no action is required.
+- **On Linux or macOS** Please move your Dnote files to new directories based on the XDG base directory specfication. **On Windows**, no action is required.
 
 ```
 # Move the database file
-mv ~/.dnote/dnote.db ~/.local/share/dnote/dnote.db 
+mv ~/.dnote/dnote.db ~/.local/share/dnote/dnote.db
 
 # Move the config file
 mv ~/.dnote/dnoterc ~/.config/dnote/dnoterc
@@ -290,4 +293,3 @@ If `~/.dnote` directory exists, dnote will continue to use that directory for ba
 #### Migration guide
 
 - If you are using Dnote Pro, change the value of `apiEndpoint` in `~/.dnote/dnoterc` to `https://api.getdnote.com`.
-
