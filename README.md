@@ -38,3 +38,10 @@ Please see [Dnote wiki](https://github.com/dnote/dnote/wiki) for the documentati
 
 - [Homepage](https://www.getdnote.com)
 - [I Wrote Down Everything I Learned While Programming for a Month](https://www.getdnote.com/blog/writing-everything-i-learn-coding-for-a-month/)
+
+
+## How to create a new version with your modifications
+
+```bash
+make version=0.2.2 build-cli
+```

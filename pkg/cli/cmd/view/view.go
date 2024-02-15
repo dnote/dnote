@@ -44,10 +44,6 @@ var nameOnly bool
 var contentOnly bool
 
 func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) > 2 {
-		return errors.New("Incorrect number of argument")
-	}
-
 	return nil
 }
 
@@ -71,27 +67,37 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		var run infra.RunEFunc
-
 		if len(args) == 0 {
-			run = ls.NewRun(ctx, nameOnly)
+			run := ls.NewRun(ctx, nameOnly)
+			return run(cmd, args)
 		} else if len(args) == 1 {
 			if nameOnly {
 				return errors.New("--name-only flag is only valid when viewing books")
 			}
 
 			if utils.IsNumber(args[0]) {
-				run = cat.NewRun(ctx, contentOnly)
+				run := cat.NewRun(ctx, contentOnly)
+				return run(cmd, args)
 			} else {
-				run = ls.NewRun(ctx, false)
+				run := ls.NewRun(ctx, false)
+				return run(cmd, args)
 			}
-		} else if len(args) == 2 {
-			// DEPRECATED: passing book name to view command is deprecated
-			run = cat.NewRun(ctx, false)
 		} else {
-			return errors.New("Incorrect number of arguments")
+			// Manejo de múltiples IDs
+			for _, arg := range args {
+				if !utils.IsNumber(arg) {
+					return errors.New("all arguments must be numeric note IDs")
+				}
+
+				// Ejecutar cat.NewRun para cada ID individualmente
+				run := cat.NewRun(ctx, contentOnly)
+				err := run(cmd, []string{arg})
+				if err != nil {
+					return err
+				}
+			}
 		}
 
-		return run(cmd, args)
+		return nil
 	}
 }
