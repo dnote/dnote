@@ -120,7 +120,7 @@ func escapePhrase(s string) (string, error) {
 			return "", errors.Wrap(err, "writing string to builder")
 		}
 
-		if idx != len(term)-1 {
+		if idx != len(terms)-1 {
 			if err := b.WriteByte(' '); err != nil {
 				return "", errors.Wrap(err, "writing space to builder")
 			}
