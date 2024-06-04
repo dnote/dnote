@@ -105,6 +105,39 @@ func TestInit(t *testing.T) {
 	assert.NotEqual(t, lastSyncAt, "", "last sync at should not be empty")
 }
 
+func TestViewNote(t *testing.T) {
+	// tests successful if command does not return an error
+	t.Run("using default", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		testutils.Setup3(t, db)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "view", "js")
+		defer testutils.RemoveDir(t, testDir)
+	})
+
+	t.Run("content only", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		testutils.Setup3(t, db)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "view", "js", "--content-only")
+		defer testutils.RemoveDir(t, testDir)
+	})
+
+	t.Run("with timestamps", func(t *testing.T) {
+		// Setup
+		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		testutils.Setup3(t, db)
+
+		// Execute
+		testutils.RunDnoteCmd(t, opts, binaryName, "view", "js", "-t")
+		defer testutils.RemoveDir(t, testDir)
+	})
+}
+
 func TestAddNote(t *testing.T) {
 	t.Run("new book", func(t *testing.T) {
 		// Set up and execute
