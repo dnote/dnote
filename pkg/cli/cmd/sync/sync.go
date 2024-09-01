@@ -291,8 +291,8 @@ func mergeNote(tx *database.DB, serverNote client.SyncFragNote, localNote databa
 		return errors.Wrapf(err, "reporting note conflict for note %s", localNote.UUID)
 	}
 
-	if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?  WHERE uuid = ?",
-		serverNote.USN, mr.bookUUID, mr.body, mr.editedOn, serverNote.Deleted, serverNote.UUID); err != nil {
+	if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?, public = ?  WHERE uuid = ?",
+		serverNote.USN, mr.bookUUID, mr.body, mr.editedOn, serverNote.Deleted, serverNote.Public, serverNote.UUID); err != nil {
 		return errors.Wrapf(err, "updating local note %s", serverNote.UUID)
 	}
 
