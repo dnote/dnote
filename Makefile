@@ -30,7 +30,7 @@ endif
 .PHONY: install-js
 
 ## test
-test: test-cli test-api
+test: test-cli test-api test-e2e
 .PHONY: test
 
 test-cli:
@@ -42,6 +42,11 @@ test-api:
 	@echo "==> running API test"
 	@(${currentDir}/scripts/server/test-local.sh)
 .PHONY: test-api
+
+test-e2e:
+	@echo "==> running E2E test"
+	@(${currentDir}/scripts/e2e/test.sh)
+.PHONY: test-e2e
 
 test-selfhost:
 	@echo "==> running a smoke test for self-hosting"

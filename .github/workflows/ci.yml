@@ -47,3 +47,7 @@ jobs:
       - name: Test app
         run: |
           make test-api
+
+      - name: Test e2e
+        run: |
+          make test-e2e
