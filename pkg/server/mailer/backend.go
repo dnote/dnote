@@ -19,6 +19,7 @@
 package mailer
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
@@ -42,10 +43,11 @@ type SimpleBackendImplementation struct {
 }
 
 type dialerParams struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	Host          string
+	Port          int
+	Username      string
+	Password      string
+	TlsSkipVerify bool
 }
 
 func getSMTPParams() (*dialerParams, error) {
@@ -68,6 +70,10 @@ func getSMTPParams() (*dialerParams, error) {
 		Port:     port,
 		Username: usernameEnv,
 		Password: passwordEnv,
+	}
+
+	if os.Getenv("SmtpTlsSkipVerify") == "true" {
+		p.TlsSkipVerify = true
 	}
 
 	return p, nil
@@ -94,7 +100,12 @@ func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, c
 		return errors.Wrap(err, "getting dialer params")
 	}
 
-	d := gomail.NewPlainDialer(p.Host, p.Port, p.Username, p.Password)
+	d := gomail.NewDialer(p.Host, p.Port, p.Username, p.Password)
+
+	if p.TlsSkipVerify {
+		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
 	if err := d.DialAndSend(m); err != nil {
 		return errors.Wrap(err, "dialing and sending email")
 	}
