@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *
@@ -43,7 +43,7 @@ func RespondForbidden(w http.ResponseWriter) {
 // RespondUnauthorized responds with unauthorized
 func RespondUnauthorized(w http.ResponseWriter) {
 	UnsetSessionCookie(w)
-	w.Header().Add("WWW-Authenticate", `Bearer realm="Dnote Pro", charset="UTF-8"`)
+	w.Header().Add("WWW-Authenticate", `Bearer realm="Dnote", charset="UTF-8"`)
 	http.Error(w, "unauthorized", http.StatusUnauthorized)
 }
 

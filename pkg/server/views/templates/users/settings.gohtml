@@ -12,9 +12,6 @@
 
       <div class="col-12 col-md-12 col-lg-9">
         <div class="setting-section-wrapper">
-          {{if ne .Standalone "true"}}
-            {{template "planSection" .}}
-          {{end}}
           {{template "emailSection" .}}
           {{template "passwordSection" .}}
         </div>
@@ -206,36 +203,6 @@
     <div class="setting-row-main">
       {{template "passwordChangeForm" .}}
     </div>
-  </div>
-</section>
-{{end}}
-
-{{define "planSection"}}
-<section class="setting-section">
-  <h2 class="section-heading">Plan</h2>
-
-  <div class="setting-row">
-    <div class="setting-row-summary">
-      <div>
-        <h3 class="setting-name">Dnote Pro</h3>
-        <p class="setting-desc">
-          Fully hosted and managed Dnote for you.
-        </p>
-      </div>
-
-      <div class="setting-right">
-        {{if .Cloud}}
-          Yes
-        {{else}}
-          <a id="T-unlock-pro-btn"
-            href="/subscriptions"
-            class="button button-first button-small">
-            Unlock
-          </a>
-        {{end}}
-      </div>
-    </div>
-
   </div>
 </section>
 {{end}}

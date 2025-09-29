@@ -19,7 +19,7 @@ q
 END
 }
 
-gpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Monomax Software Pty Ltd
+gpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *
@@ -37,7 +37,7 @@ gpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Monomax Software 
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */"
 
-agpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024 Monomax Software Pty Ltd
+agpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *

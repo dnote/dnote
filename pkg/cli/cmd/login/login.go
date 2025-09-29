@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *
@@ -139,7 +139,7 @@ func getServerDisplayURL(ctx context.DnoteCtx) string {
 }
 
 func getGreeting(ctx context.DnoteCtx) string {
-	base := "Welcome to Dnote Pro"
+	base := "Welcome to Dnote"
 
 	serverURL := getServerDisplayURL(ctx)
 	if serverURL == "" {

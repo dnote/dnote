@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *
@@ -139,26 +139,6 @@ func TestSendPasswordResetEmail(t *testing.T) {
 			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 		})
 	}
-}
-
-func TestSendSubscriptionConfirmationEmail(t *testing.T) {
-	c := config.Load()
-	c.SetOnPremises(false)
-	c.WebURL = "http://example.com"
-
-	emailBackend := testutils.MockEmailbackendImplementation{}
-	a := NewTest(&App{
-		EmailBackend: &emailBackend,
-		Config:       c,
-	})
-
-	if err := a.SendSubscriptionConfirmationEmail("alice@example.com"); err != nil {
-		t.Fatal(err, "failed to perform")
-	}
-
-	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-	assert.Equal(t, emailBackend.Emails[0].From, "admin@getdnote.com", "email sender mismatch")
-	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 }
 
 func TestGetSenderEmail(t *testing.T) {

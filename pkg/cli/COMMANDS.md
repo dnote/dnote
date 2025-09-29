@@ -94,20 +94,14 @@ dnote find "merge sort" -b algorithm
 
 ## dnote sync
 
-_Dnote Pro only_
-
 _alias: s_
 
 Sync notes with Dnote server. All your data is encrypted before being sent to the server.
 
 ## dnote login
 
-_Dnote Pro only_
-
 Start a login prompt.
 
 ## dnote logout
-
-_Dnote Pro only_
 
 Log out of Dnote.

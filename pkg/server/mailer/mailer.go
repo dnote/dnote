@@ -1,4 +1,4 @@
-/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024 Monomax Software Pty Ltd
+/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
  *
@@ -42,8 +42,6 @@ var (
 	EmailTypeWelcome = "welcome"
 	// EmailTypeInactiveReminder represents an inactivity reminder email
 	EmailTypeInactiveReminder = "inactive"
-	// EmailTypeSubscriptionConfirmation represents an inactivity reminder email
-	EmailTypeSubscriptionConfirmation = "subscription_confirmation"
 )
 
 var (
@@ -106,10 +104,6 @@ func NewTemplates() Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	subscriptionConfirmationText, err := initTextTmpl(EmailTypeSubscriptionConfirmation)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing password reset template"))
-	}
 
 	T := Templates{}
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
@@ -117,7 +111,6 @@ func NewTemplates() Templates {
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
 	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
-	T.set(EmailTypeSubscriptionConfirmation, EmailKindText, subscriptionConfirmationText)
 
 	return T
 }
