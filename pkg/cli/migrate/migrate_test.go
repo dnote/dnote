@@ -21,8 +21,8 @@ package migrate
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -1079,7 +1079,7 @@ func TestLocalMigration12(t *testing.T) {
 
 	data := []byte("editor: vim")
 	path := fmt.Sprintf("%s/%s/dnoterc", ctx.Paths.Config, consts.DnoteDirName)
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
 	}
 
@@ -1090,7 +1090,7 @@ func TestLocalMigration12(t *testing.T) {
 	}
 
 	// test
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "reading config"))
 	}
@@ -1117,7 +1117,7 @@ func TestLocalMigration13(t *testing.T) {
 	data := []byte("editor: vim\napiEndpoint: https://test.com/api")
 
 	path := fmt.Sprintf("%s/%s/dnoterc", ctx.Paths.Config, consts.DnoteDirName)
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		t.Fatal(errors.Wrap(err, "Failed to write schema file"))
 	}
 
@@ -1128,7 +1128,7 @@ func TestLocalMigration13(t *testing.T) {
 	}
 
 	// test
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "reading config"))
 	}

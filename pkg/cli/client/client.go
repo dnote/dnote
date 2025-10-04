@@ -23,7 +23,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -95,7 +95,7 @@ func checkRespErr(res *http.Response) error {
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return errors.Wrapf(err, "server responded with %d but client could not read the response body", res.StatusCode)
 	}
@@ -169,7 +169,7 @@ func GetSyncState(ctx context.DnoteCtx) (GetSyncStateResp, error) {
 		return ret, errors.Wrap(err, "constructing http request")
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return ret, errors.Wrap(err, "reading the response body")
 	}
@@ -233,7 +233,7 @@ func GetSyncFragment(ctx context.DnoteCtx, afterUSN int) (GetSyncFragmentResp, e
 	path := fmt.Sprintf("/v3/sync/fragment?%s", queryStr)
 	res, err := doAuthorizedReq(ctx, "GET", path, "", nil)
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return GetSyncFragmentResp{}, errors.Wrap(err, "reading the response body")
 	}

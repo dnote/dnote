@@ -8,9 +8,9 @@ pushd "$dir/../../pkg/server"
 
 function run_test {
   if [ -z "$1" ]; then
-    go test ./... -cover -p 1
+    go test -tags "fts5" ./... -cover
   else
-    go test -run "$1" -cover -p 1
+    go test -tags "fts5" -run "$1" -cover
   fi
 }
 

@@ -32,10 +32,6 @@ var defaultSender = "admin@getdnote.com"
 
 // GetSenderEmail returns the sender email
 func GetSenderEmail(c config.Config, want string) (string, error) {
-	if !c.OnPremises {
-		return want, nil
-	}
-
 	addr, err := getNoreplySender(c)
 	if err != nil {
 		return "", errors.Wrap(err, "getting sender email address")

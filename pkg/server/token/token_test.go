@@ -39,24 +39,24 @@ func TestCreate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("token type %s", tc.kind), func(t *testing.T) {
-			defer testutils.ClearData(testutils.DB)
+			db := testutils.InitMemoryDB(t)
 
 			// Set up
-			u := testutils.SetupUserData()
+			u := testutils.SetupUserData(db)
 
 			// Execute
-			tok, err := Create(testutils.DB, u.ID, tc.kind)
+			tok, err := Create(db, u.ID, tc.kind)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "performing"))
 			}
 
 			// Test
 			var count int64
-			testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&count), "counting token")
+			testutils.MustExec(t, db.Model(&database.Token{}).Count(&count), "counting token")
 			assert.Equalf(t, count, int64(1), "error mismatch")
 
 			var tokenRecord database.Token
-			testutils.MustExec(t, testutils.DB.First(&tokenRecord), "finding token")
+			testutils.MustExec(t, db.First(&tokenRecord), "finding token")
 			assert.Equalf(t, tokenRecord.UserID, tok.UserID, "UserID mismatch")
 			assert.Equalf(t, tokenRecord.Value, tok.Value, "Value mismatch")
 			assert.Equalf(t, tokenRecord.Type, tok.Type, "Type mismatch")

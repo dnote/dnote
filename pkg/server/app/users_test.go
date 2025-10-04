@@ -19,11 +19,9 @@
 package app
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -31,65 +29,44 @@ import (
 )
 
 func TestCreateUser_ProValue(t *testing.T) {
-	testCases := []struct {
-		onPremises  bool
-		expectedPro bool
-	}{
-		{
-			onPremises:  true,
-			expectedPro: true,
-		},
-		{
-			onPremises:  false,
-			expectedPro: false,
-		},
+	db := testutils.InitMemoryDB(t)
+
+	a := NewTest(&App{
+		DB: db,
+	})
+	if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
+		t.Fatal(errors.Wrap(err, "executing"))
 	}
 
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosting %t", tc.onPremises), func(t *testing.T) {
-			c := config.Load()
-			c.SetOnPremises(tc.onPremises)
+	var userCount int64
+	var userRecord database.User
+	testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
+	testutils.MustExec(t, db.First(&userRecord), "finding user")
 
-			defer testutils.ClearData(testutils.DB)
+	assert.Equal(t, userCount, int64(1), "book count mismatch")
+	assert.Equal(t, userRecord.Cloud, true, "user pro mismatch")
 
-			a := NewTest(&App{
-				Config: c,
-			})
-			if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
-				t.Fatal(errors.Wrap(err, "executing"))
-			}
-
-			var userCount int64
-			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
-			testutils.MustExec(t, testutils.DB.First(&userRecord), "finding user")
-
-			assert.Equal(t, userCount, int64(1), "book count mismatch")
-			assert.Equal(t, userRecord.Cloud, tc.expectedPro, "user pro mismatch")
-		})
-	}
 }
 
 func TestCreateUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		db := testutils.InitMemoryDB(t)
 
-		c := config.Load()
 		a := NewTest(&App{
-			Config: c,
+			DB: db,
 		})
 		if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
 
 		var userCount int64
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 		assert.Equal(t, userCount, int64(1), "book count mismatch")
 
 		var accountCount int64
 		var accountRecord database.Account
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, testutils.DB.First(&accountRecord), "finding account")
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, db.First(&accountRecord), "finding account")
 
 		assert.Equal(t, accountCount, int64(1), "account count mismatch")
 		assert.Equal(t, accountRecord.Email.String, "alice@example.com", "account email mismatch")
@@ -99,19 +76,21 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("duplicate email", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		db := testutils.InitMemoryDB(t)
 
-		aliceUser := testutils.SetupUserData()
-		testutils.SetupAccountData(aliceUser, "alice@example.com", "somepassword")
+		aliceUser := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, aliceUser, "alice@example.com", "somepassword")
 
-		a := NewTest(nil)
+		a := NewTest(&App{
+			DB: db,
+		})
 		_, err := a.CreateUser("alice@example.com", "newpassword", "newpassword")
 
 		assert.Equal(t, err, ErrDuplicateEmail, "error mismatch")
 
 		var userCount, accountCount int64
-		testutils.MustExec(t, testutils.DB.Model(&database.User{}).Count(&userCount), "counting user")
-		testutils.MustExec(t, testutils.DB.Model(&database.Account{}).Count(&accountCount), "counting account")
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
 
 		assert.Equal(t, userCount, int64(1), "user count mismatch")
 		assert.Equal(t, accountCount, int64(1), "account count mismatch")

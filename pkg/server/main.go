@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
@@ -32,20 +33,16 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 var port = flag.String("port", "3000", "port to connect to")
 
 func initDB(c config.Config) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(c.DB.GetConnectionStr()), &gorm.Config{})
-	if err != nil {
-		panic(errors.Wrap(err, "opening database connection"))
-	}
+	db := database.Open(c.DB.Path)
 	database.InitSchema(db)
+	database.Migrate(db)
 
 	return db
 }
@@ -53,11 +50,18 @@ func initDB(c config.Config) *gorm.DB {
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
 
+	isProduction := os.Getenv("GO_ENV") == "PRODUCTION"
+	emailBackend, err := mailer.NewDefaultBackend(isProduction)
+	if err != nil {
+		log.Printf("Email backend not fully configured: %v. Emails will only be logged.", err)
+		emailBackend = &mailer.DefaultBackend{Enabled: false}
+	}
+
 	return app.App{
 		DB:             db,
 		Clock:          clock.New(),
 		EmailTemplates: mailer.NewTemplates(),
-		EmailBackend:   &mailer.SimpleBackendImplementation{},
+		EmailBackend:   emailBackend,
 		Config:         cfg,
 		HTTP500Page:    cfg.HTTP500Page,
 	}

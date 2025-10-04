@@ -32,11 +32,11 @@ import (
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
-	"github.com/dnote/dnote/pkg/cli/dirs"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/migrate"
 	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/dirs"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

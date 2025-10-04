@@ -21,13 +21,11 @@ package mailer
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
-	htemplate "html/template"
 	"io"
 	ttemplate "text/template"
 
-	"github.com/aymerick/douceur/inliner"
+	"github.com/dnote/dnote/pkg/server/mailer/templates"
 	"github.com/pkg/errors"
 )
 
@@ -40,13 +38,9 @@ var (
 	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
-	// EmailTypeInactiveReminder represents an inactivity reminder email
-	EmailTypeInactiveReminder = "inactive"
 )
 
 var (
-	// EmailKindHTML is the type of html email
-	EmailKindHTML = "text/html"
 	// EmailKindText is the type of text email
 	EmailKindText = "text/plain"
 )
@@ -59,9 +53,6 @@ type template interface {
 
 // Templates holds the parsed email templates
 type Templates map[string]template
-
-//go:embed templates/src
-var templateDir embed.FS
 
 func getTemplateKey(name, kind string) string {
 	return fmt.Sprintf("%s.%s", name, kind)
@@ -100,58 +91,21 @@ func NewTemplates() Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
 	}
-	inactiveReminderText, err := initTextTmpl(EmailTypeInactiveReminder)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing password reset template"))
-	}
 
 	T := Templates{}
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
 	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
 	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
-	T.set(EmailTypeInactiveReminder, EmailKindText, inactiveReminderText)
 
 	return T
 }
 
-// initHTMLTmpl returns a template instance by parsing the template with the
-// given name along with partials
-func initHTMLTmpl(templateName string) (template, error) {
-	filename := fmt.Sprintf("templates/src/%s.html", templateName)
-
-	content, err := templateDir.ReadFile(filename)
-	if err != nil {
-		return nil, errors.Wrap(err, "reading template")
-	}
-	headerContent, err := templateDir.ReadFile("templates/header.html")
-	if err != nil {
-		return nil, errors.Wrap(err, "reading header template")
-	}
-	footerContent, err := templateDir.ReadFile("templates/footer.html")
-	if err != nil {
-		return nil, errors.Wrap(err, "reading footer template")
-	}
-
-	t := htemplate.New(templateName)
-	if _, err = t.Parse(string(content)); err != nil {
-		return nil, errors.Wrap(err, "parsing template")
-	}
-	if _, err = t.Parse(string(headerContent)); err != nil {
-		return nil, errors.Wrap(err, "parsing template")
-	}
-	if _, err = t.Parse(string(footerContent)); err != nil {
-		return nil, errors.Wrap(err, "parsing template")
-	}
-
-	return t, nil
-}
-
 // initTextTmpl returns a template instance by parsing the template with the given name
 func initTextTmpl(templateName string) (template, error) {
-	filename := fmt.Sprintf("templates/src/%s.txt", templateName)
+	filename := fmt.Sprintf("%s.txt", templateName)
 
-	content, err := templateDir.ReadFile(filename)
+	content, err := templates.Files.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(err, "reading template")
 	}
@@ -165,7 +119,7 @@ func initTextTmpl(templateName string) (template, error) {
 }
 
 // Execute executes the template with the given name with the givn data
-func (tmpl Templates) Execute(name, kind string, data interface{}) (string, error) {
+func (tmpl Templates) Execute(name, kind string, data any) (string, error) {
 	t, err := tmpl.get(name, kind)
 	if err != nil {
 		return "", errors.Wrap(err, "getting template")
@@ -174,16 +128,6 @@ func (tmpl Templates) Execute(name, kind string, data interface{}) (string, erro
 	buf := new(bytes.Buffer)
 	if err := t.Execute(buf, data); err != nil {
 		return "", errors.Wrap(err, "executing the template")
-	}
-
-	// If HTML email, inline the CSS rules
-	if kind == EmailKindHTML {
-		html, err := inliner.Inline(buf.String())
-		if err != nil {
-			return "", errors.Wrap(err, "inlining the css rules")
-		}
-
-		return html, nil
 	}
 
 	return buf.String(), nil

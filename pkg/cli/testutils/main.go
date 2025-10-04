@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -81,7 +80,7 @@ func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile(dp, content, 0644); err != nil {
+	if err := os.WriteFile(dp, content, 0644); err != nil {
 		panic(err)
 	}
 }
@@ -90,7 +89,7 @@ func WriteFile(ctx context.DnoteCtx, content []byte, filename string) {
 func ReadFile(ctx context.DnoteCtx, filename string) []byte {
 	path := filepath.Join(ctx.Paths.LegacyDnote, filename)
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +100,7 @@ func ReadFile(ctx context.DnoteCtx, filename string) []byte {
 // ReadJSON reads JSON fixture to the struct at the destination address
 func ReadJSON(path string, destination interface{}) {
 	var dat []byte
-	dat, err := ioutil.ReadFile(path)
+	dat, err := os.ReadFile(path)
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to load fixture payload"))
 	}

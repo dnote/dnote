@@ -19,7 +19,6 @@
 package dirs
 
 import (
-	"os"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -34,7 +33,7 @@ type envTestCase struct {
 
 func testCustomDirs(t *testing.T, testCases []envTestCase) {
 	for _, tc := range testCases {
-		os.Setenv(tc.envKey, tc.envVal)
+		t.Setenv(tc.envKey, tc.envVal)
 
 		Reload()
 

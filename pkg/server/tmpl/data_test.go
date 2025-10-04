@@ -42,7 +42,8 @@ func TestNotePageGetData(t *testing.T) {
 	// Set time.Local to UTC for deterministic test
 	time.Local = time.UTC
 
-	a, err := NewAppShell(testutils.DB, nil)
+	db := testutils.InitMemoryDB(t)
+	a, err := NewAppShell(db, nil)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "preparing app shell"))
 	}

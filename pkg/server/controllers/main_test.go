@@ -21,15 +21,13 @@ package controllers
 import (
 	"os"
 	"testing"
-
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"time"
 )
 
 func TestMain(m *testing.M) {
-	testutils.InitTestDB()
+	// Set timezone to UTC to match database timestamps
+	time.Local = time.UTC
 
 	code := m.Run()
-	testutils.ClearData(testutils.DB)
-
 	os.Exit(code)
 }

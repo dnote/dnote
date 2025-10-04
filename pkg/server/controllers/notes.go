@@ -19,13 +19,10 @@
 package controllers
 
 import (
-	"math"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
@@ -148,69 +145,6 @@ func (n *Notes) getNotes(r *http.Request) (app.GetNotesResult, app.GetNotesParam
 	}
 
 	return res, p, nil
-}
-
-type noteGroup struct {
-	Year  int
-	Month int
-	Data  []database.Note
-}
-
-type bucketKey struct {
-	year  int
-	month time.Month
-}
-
-func groupNotes(notes []database.Note) []noteGroup {
-	ret := []noteGroup{}
-
-	buckets := map[bucketKey][]database.Note{}
-
-	for _, note := range notes {
-		year := note.UpdatedAt.Year()
-		month := note.UpdatedAt.Month()
-		key := bucketKey{year, month}
-
-		if _, ok := buckets[key]; !ok {
-			buckets[key] = []database.Note{}
-		}
-
-		buckets[key] = append(buckets[key], note)
-	}
-
-	keys := []bucketKey{}
-	for key := range buckets {
-		keys = append(keys, key)
-	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		yearI := keys[i].year
-		yearJ := keys[j].year
-		monthI := keys[i].month
-		monthJ := keys[j].month
-
-		if yearI == yearJ {
-			return monthI < monthJ
-		}
-
-		return yearI < yearJ
-	})
-
-	for _, key := range keys {
-		group := noteGroup{
-			Year:  key.year,
-			Month: int(key.month),
-			Data:  buckets[key],
-		}
-		ret = append(ret, group)
-	}
-
-	return ret
-}
-
-func getMaxPage(page, total int) int {
-	tmp := float64(total) / float64(notesPerPage)
-	return int(math.Ceil(tmp))
 }
 
 // GetNotesResponse is a reponse by getNotesHandler

@@ -80,7 +80,7 @@ func cleanupVisitors() {
 		mtx.Lock()
 
 		for identifier, v := range visitors {
-			if time.Now().Sub(v.lastSeen) > 3*time.Minute {
+			if time.Since(v.lastSeen) > 3*time.Minute {
 				delete(visitors, identifier)
 			}
 		}

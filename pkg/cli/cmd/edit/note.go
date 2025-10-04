@@ -20,7 +20,7 @@ package edit
 
 import (
 	"database/sql"
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -45,7 +45,7 @@ func waitEditorNoteContent(ctx context.DnoteCtx, note database.Note) (string, er
 		return "", errors.Wrap(err, "getting temporarily content file path")
 	}
 
-	if err := ioutil.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
+	if err := os.WriteFile(fpath, []byte(note.Body), 0644); err != nil {
 		return "", errors.Wrap(err, "preparing tmp content file")
 	}
 

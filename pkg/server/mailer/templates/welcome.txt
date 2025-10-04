@@ -10,7 +10,3 @@ If you ever forget your password, you can reset it at {{ .WebURL }}/password-res
 SOURCE CODE
 
 Dnote is open source and you can see the source code at https://github.com/dnote/dnote
-
-Feel free to reply anytime. Thanks for using Dnote.
-
-- Dnote team

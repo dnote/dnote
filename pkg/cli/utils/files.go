@@ -20,7 +20,6 @@ package utils
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -35,7 +34,7 @@ func ReadFileAbs(relpath string) []byte {
 		panic(err)
 	}
 
-	b, err := ioutil.ReadFile(fp)
+	b, err := os.ReadFile(fp)
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +79,7 @@ func CopyDir(src, dest string) error {
 		return errors.Wrap(err, "creating destination")
 	}
 
-	entries, err := ioutil.ReadDir(src)
+	entries, err := os.ReadDir(src)
 	if err != nil {
 		return errors.Wrap(err, "reading the directory listing for the input")
 	}

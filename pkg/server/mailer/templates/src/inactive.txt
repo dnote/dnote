@@ -1,9 +1,0 @@
-Hi, nothing has been added to your Dnote for some time.
-
-What about revisiting one of your previous notes? {{ .WebURL }}/notes/{{ .SampleNoteUUID }}
-
-You can add new notes at {{ .WebURL }}/new or using Dnote apps.
-
-- Dnote team
-
-UNSUBSCRIBE: {{ .WebURL }}/settings/notifications?token={{ .Token }}

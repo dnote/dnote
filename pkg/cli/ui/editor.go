@@ -21,7 +21,6 @@ package ui
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -122,7 +121,7 @@ func GetEditorInput(ctx context.DnoteCtx, fpath string) (string, error) {
 		return "", errors.Wrap(err, "waiting for the editor")
 	}
 
-	b, err := ioutil.ReadFile(fpath)
+	b, err := os.ReadFile(fpath)
 	if err != nil {
 		return "", errors.Wrap(err, "reading the temporary content file")
 	}

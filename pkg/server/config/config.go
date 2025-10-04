@@ -19,12 +19,12 @@
 package config
 
 import (
-	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 
+	"github.com/dnote/dnote/pkg/dirs"
 	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
 
@@ -34,28 +34,17 @@ const (
 )
 
 var (
-	// ErrDBMissingHost is an error for an incomplete configuration missing the host
-	ErrDBMissingHost = errors.New("DB Host is empty")
-	// ErrDBMissingPort is an error for an incomplete configuration missing the port
-	ErrDBMissingPort = errors.New("DB Port is empty")
-	// ErrDBMissingName is an error for an incomplete configuration missing the name
-	ErrDBMissingName = errors.New("DB Name is empty")
-	// ErrDBMissingUser is an error for an incomplete configuration missing the user
-	ErrDBMissingUser = errors.New("DB User is empty")
+	// ErrDBMissingPath is an error for an incomplete configuration missing the database path
+	ErrDBMissingPath = errors.New("DB Path is empty")
 	// ErrWebURLInvalid is an error for an incomplete configuration with invalid web url
 	ErrWebURLInvalid = errors.New("Invalid WebURL")
 	// ErrPortInvalid is an error for an incomplete configuration with invalid port
 	ErrPortInvalid = errors.New("Invalid Port")
 )
 
-// PostgresConfig holds the postgres connection configuration.
-type PostgresConfig struct {
-	SSLMode  string
-	Host     string
-	Port     string
-	Name     string
-	User     string
-	Password string
+// DBConfig holds the database connection configuration.
+type DBConfig struct {
+	Path string
 }
 
 func readBoolEnv(name string) bool {
@@ -66,35 +55,14 @@ func readBoolEnv(name string) bool {
 	return false
 }
 
-// checkSSLMode checks if SSL is required for the database connection
-func checkSSLMode() bool {
-	// TODO: deprecate DB_NOSSL in favor of DBSkipSSL
-	if os.Getenv("DB_NOSSL") != "" {
-		return true
+func LoadDBConfig() DBConfig {
+	path := os.Getenv("DBPath")
+	if path == "" {
+		path = filepath.Join(dirs.DataHome, "dnote", "server.db")
 	}
 
-	if os.Getenv("DBSkipSSL") == "true" {
-		return true
-	}
-
-	return os.Getenv("GO_ENV") != "PRODUCTION"
-}
-
-func loadDBConfig() PostgresConfig {
-	var sslmode string
-	if checkSSLMode() {
-		sslmode = "disable"
-	} else {
-		sslmode = "require"
-	}
-
-	return PostgresConfig{
-		SSLMode:  sslmode,
-		Host:     os.Getenv("DBHost"),
-		Port:     os.Getenv("DBPort"),
-		Name:     os.Getenv("DBName"),
-		User:     os.Getenv("DBUser"),
-		Password: os.Getenv("DBPassword"),
+	return DBConfig{
+		Path: path,
 	}
 }
 
@@ -102,10 +70,9 @@ func loadDBConfig() PostgresConfig {
 type Config struct {
 	AppEnv              string
 	WebURL              string
-	OnPremises          bool
 	DisableRegistration bool
 	Port                string
-	DB                  PostgresConfig
+	DB                  DBConfig
 	AssetBaseURL        string
 	HTTP500Page         []byte
 }
@@ -121,10 +88,6 @@ func getAppEnv() string {
 }
 
 func checkDeprecatedEnvVars() {
-	if os.Getenv("OnPremise") != "" {
-
-		log.WithFields(log.Fields{}).Warn("Environment variable 'OnPremise' is deprecated. Please use OnPremises.")
-	}
 }
 
 // Load constructs and returns a new config based on the environment variables.
@@ -140,9 +103,8 @@ func Load() Config {
 		AppEnv:              getAppEnv(),
 		WebURL:              os.Getenv("WebURL"),
 		Port:                port,
-		OnPremises:          readBoolEnv("OnPremise") || readBoolEnv("OnPremises"),
 		DisableRegistration: readBoolEnv("DisableRegistration"),
-		DB:                  loadDBConfig(),
+		DB:                  LoadDBConfig(),
 		AssetBaseURL:        "",
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}
@@ -152,11 +114,6 @@ func Load() Config {
 	}
 
 	return c
-}
-
-// SetOnPremises sets the OnPremise value
-func (c *Config) SetOnPremises(val bool) {
-	c.OnPremises = val
 }
 
 // SetAssetBaseURL sets static dir for the confi
@@ -177,25 +134,9 @@ func validate(c Config) error {
 		return ErrPortInvalid
 	}
 
-	if c.DB.Host == "" {
-		return ErrDBMissingHost
-	}
-	if c.DB.Port == "" {
-		return ErrDBMissingPort
-	}
-	if c.DB.Name == "" {
-		return ErrDBMissingName
-	}
-	if c.DB.User == "" {
-		return ErrDBMissingUser
+	if c.DB.Path == "" {
+		return ErrDBMissingPath
 	}
 
 	return nil
-}
-
-// GetConnectionStr returns a postgres connection string.
-func (c PostgresConfig) GetConnectionStr() string {
-	return fmt.Sprintf(
-		"sslmode=%s host=%s port=%s dbname=%s user=%s password=%s",
-		c.SSLMode, c.Host, c.Port, c.Name, c.User, c.Password)
 }

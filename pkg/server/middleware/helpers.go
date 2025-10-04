@@ -92,7 +92,6 @@ func DoError(w http.ResponseWriter, msg string, err error, statusCode int) {
 // NotSupported is the handler for the route that is no longer supported
 func NotSupported(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "API version is not supported. Please upgrade your client.", http.StatusGone)
-	return
 }
 
 // getSessionKeyFromCookie reads and returns a session key from the cookie sent by the

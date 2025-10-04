@@ -23,7 +23,6 @@ package migrate
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -232,7 +231,7 @@ func readSchema(ctx context.DnoteCtx) (schema, error) {
 
 	path := getSchemaPath(ctx)
 
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return ret, errors.Wrap(err, "Failed to read schema file")
 	}
@@ -252,7 +251,7 @@ func writeSchema(ctx context.DnoteCtx, s schema) error {
 		return errors.Wrap(err, "Failed to marshal schema into yaml")
 	}
 
-	if err := ioutil.WriteFile(path, d, 0644); err != nil {
+	if err := os.WriteFile(path, d, 0644); err != nil {
 		return errors.Wrap(err, "Failed to write schema file")
 	}
 
@@ -504,7 +503,7 @@ func migrateToV1(ctx context.DnoteCtx) error {
 func migrateToV2(ctx context.DnoteCtx) error {
 	notePath := fmt.Sprintf("%s/dnote", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(notePath)
+	b, err := os.ReadFile(notePath)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the note file")
 	}
@@ -548,7 +547,7 @@ func migrateToV2(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to marshal new dnote into JSON")
 	}
 
-	err = ioutil.WriteFile(notePath, d, 0644)
+	err = os.WriteFile(notePath, d, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the new dnote into the file")
 	}
@@ -561,7 +560,7 @@ func migrateToV3(ctx context.DnoteCtx) error {
 	notePath := fmt.Sprintf("%s/dnote", ctx.Paths.LegacyDnote)
 	actionsPath := fmt.Sprintf("%s/actions", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(notePath)
+	b, err := os.ReadFile(notePath)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the note file")
 	}
@@ -615,7 +614,7 @@ func migrateToV3(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to marshal actions into JSON")
 	}
 
-	err = ioutil.WriteFile(actionsPath, a, 0644)
+	err = os.WriteFile(actionsPath, a, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the actions into a file")
 	}
@@ -647,7 +646,7 @@ func getEditorCommand() string {
 func migrateToV4(ctx context.DnoteCtx) error {
 	configPath := fmt.Sprintf("%s/dnoterc", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the config file")
 	}
@@ -668,7 +667,7 @@ func migrateToV4(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to marshal config into JSON")
 	}
 
-	err = ioutil.WriteFile(configPath, data, 0644)
+	err = os.WriteFile(configPath, data, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the config into a file")
 	}
@@ -680,7 +679,7 @@ func migrateToV4(ctx context.DnoteCtx) error {
 func migrateToV5(ctx context.DnoteCtx) error {
 	actionsPath := fmt.Sprintf("%s/actions", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(actionsPath)
+	b, err := os.ReadFile(actionsPath)
 	if err != nil {
 		return errors.Wrap(err, "reading the actions file")
 	}
@@ -738,7 +737,7 @@ func migrateToV5(ctx context.DnoteCtx) error {
 	if err != nil {
 		return errors.Wrap(err, "marshalling result into JSON")
 	}
-	err = ioutil.WriteFile(actionsPath, a, 0644)
+	err = os.WriteFile(actionsPath, a, 0644)
 	if err != nil {
 		return errors.Wrap(err, "writing the result into a file")
 	}
@@ -750,7 +749,7 @@ func migrateToV5(ctx context.DnoteCtx) error {
 func migrateToV6(ctx context.DnoteCtx) error {
 	notePath := fmt.Sprintf("%s/dnote", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(notePath)
+	b, err := os.ReadFile(notePath)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read the note file")
 	}
@@ -791,7 +790,7 @@ func migrateToV6(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "Failed to marshal new dnote into JSON")
 	}
 
-	err = ioutil.WriteFile(notePath, d, 0644)
+	err = os.WriteFile(notePath, d, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Failed to write the new dnote into the file")
 	}
@@ -805,7 +804,7 @@ func migrateToV6(ctx context.DnoteCtx) error {
 func migrateToV7(ctx context.DnoteCtx) error {
 	actionPath := fmt.Sprintf("%s/actions", ctx.Paths.LegacyDnote)
 
-	b, err := ioutil.ReadFile(actionPath)
+	b, err := os.ReadFile(actionPath)
 	if err != nil {
 		return errors.Wrap(err, "reading actions file")
 	}
@@ -857,7 +856,7 @@ func migrateToV7(ctx context.DnoteCtx) error {
 		return errors.Wrap(err, "marshalling new actions")
 	}
 
-	err = ioutil.WriteFile(actionPath, d, 0644)
+	err = os.WriteFile(actionPath, d, 0644)
 	if err != nil {
 		return errors.Wrap(err, "writing new actions to a file")
 	}
@@ -874,7 +873,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 
 	// 1. Migrate the the dnote file
 	dnoteFilePath := fmt.Sprintf("%s/dnote", ctx.Paths.LegacyDnote)
-	b, err := ioutil.ReadFile(dnoteFilePath)
+	b, err := os.ReadFile(dnoteFilePath)
 	if err != nil {
 		return errors.Wrap(err, "reading the notes")
 	}
@@ -914,7 +913,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 
 	// 2. Migrate the actions file
 	actionsPath := fmt.Sprintf("%s/actions", ctx.Paths.LegacyDnote)
-	b, err = ioutil.ReadFile(actionsPath)
+	b, err = os.ReadFile(actionsPath)
 	if err != nil {
 		return errors.Wrap(err, "reading the actions")
 	}
@@ -939,7 +938,7 @@ func migrateToV8(ctx context.DnoteCtx) error {
 
 	// 3. Migrate the timestamps file
 	timestampsPath := fmt.Sprintf("%s/timestamps", ctx.Paths.LegacyDnote)
-	b, err = ioutil.ReadFile(timestampsPath)
+	b, err = os.ReadFile(timestampsPath)
 	if err != nil {
 		return errors.Wrap(err, "reading the timestamps")
 	}

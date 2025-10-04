@@ -26,6 +26,26 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestAllTemplatesInitialized(t *testing.T) {
+	tmpl := NewTemplates()
+
+	emailTypes := []string{
+		EmailTypeResetPassword,
+		EmailTypeResetPasswordAlert,
+		EmailTypeEmailVerification,
+		EmailTypeWelcome,
+	}
+
+	for _, emailType := range emailTypes {
+		t.Run(emailType, func(t *testing.T) {
+			_, err := tmpl.get(emailType, EmailKindText)
+			if err != nil {
+				t.Errorf("template %s not initialized: %v", emailType, err)
+			}
+		})
+	}
+}
+
 func TestEmailVerificationEmail(t *testing.T) {
 	testCases := []struct {
 		token  string
@@ -97,6 +117,82 @@ func TestResetPasswordEmail(t *testing.T) {
 			}
 			if ok := strings.Contains(body, tc.token); !ok {
 				t.Errorf("email body did not contain %s", tc.token)
+			}
+		})
+	}
+}
+
+func TestWelcomeEmail(t *testing.T) {
+	testCases := []struct {
+		accountEmail string
+		webURL       string
+	}{
+		{
+			accountEmail: "test@example.com",
+			webURL:       "http://localhost:3000",
+		},
+		{
+			accountEmail: "user@example.org",
+			webURL:       "http://localhost:3001",
+		},
+	}
+
+	tmpl := NewTemplates()
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("with WebURL %s and email %s", tc.webURL, tc.accountEmail), func(t *testing.T) {
+			dat := WelcomeTmplData{
+				AccountEmail: tc.accountEmail,
+				WebURL:       tc.webURL,
+			}
+			body, err := tmpl.Execute(EmailTypeWelcome, EmailKindText, dat)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "executing"))
+			}
+
+			if ok := strings.Contains(body, tc.webURL); !ok {
+				t.Errorf("email body did not contain %s", tc.webURL)
+			}
+			if ok := strings.Contains(body, tc.accountEmail); !ok {
+				t.Errorf("email body did not contain %s", tc.accountEmail)
+			}
+		})
+	}
+}
+
+func TestResetPasswordAlertEmail(t *testing.T) {
+	testCases := []struct {
+		accountEmail string
+		webURL       string
+	}{
+		{
+			accountEmail: "test@example.com",
+			webURL:       "http://localhost:3000",
+		},
+		{
+			accountEmail: "user@example.org",
+			webURL:       "http://localhost:3001",
+		},
+	}
+
+	tmpl := NewTemplates()
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("with WebURL %s and email %s", tc.webURL, tc.accountEmail), func(t *testing.T) {
+			dat := EmailResetPasswordAlertTmplData{
+				AccountEmail: tc.accountEmail,
+				WebURL:       tc.webURL,
+			}
+			body, err := tmpl.Execute(EmailTypeResetPasswordAlert, EmailKindText, dat)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "executing"))
+			}
+
+			if ok := strings.Contains(body, tc.webURL); !ok {
+				t.Errorf("email body did not contain %s", tc.webURL)
+			}
+			if ok := strings.Contains(body, tc.accountEmail); !ok {
+				t.Errorf("email body did not contain %s", tc.accountEmail)
 			}
 		})
 	}

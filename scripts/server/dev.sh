@@ -23,7 +23,7 @@ cp "$basePath"/pkg/server/assets/static/* "$basePath/pkg/server/static"
 # run server
 moduleName="github.com/dnote/dnote"
 ldflags="-X '$moduleName/pkg/server/buildinfo.CSSFiles=main.css' -X '$moduleName/pkg/server/buildinfo.JSFiles=main.js' -X '$moduleName/pkg/server/buildinfo.Version=dev' -X '$moduleName/pkg/server/buildinfo.Standalone=true'"
-task="go run -ldflags \"$ldflags\" main.go start -port 3000"
+task="go run -ldflags \"$ldflags\" --tags fts5 main.go start -port 3000"
 
 (
   cd "$basePath/pkg/watcher" && \

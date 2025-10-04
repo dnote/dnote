@@ -23,157 +23,77 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 func TestSendVerificationEmail(t *testing.T) {
-	testCases := []struct {
-		onPremise      bool
-		expectedSender string
-	}{
-		{
-			onPremise:      false,
-			expectedSender: "admin@getdnote.com",
-		},
-		{
-			onPremise:      true,
-			expectedSender: "noreply@example.com",
-		},
+	emailBackend := testutils.MockEmailbackendImplementation{}
+	a := NewTest(&App{
+		EmailBackend: &emailBackend,
+	})
+	a.Config.WebURL = "http://example.com"
+
+	if err := a.SendVerificationEmail("alice@example.com", "mockTokenValue"); err != nil {
+		t.Fatal(err, "failed to perform")
 	}
 
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
-			c := config.Load()
-			c.SetOnPremises(tc.onPremise)
-			c.WebURL = "http://example.com"
+	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+	assert.Equal(t, emailBackend.Emails[0].From, "noreply@example.com", "email sender mismatch")
+	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 
-			emailBackend := testutils.MockEmailbackendImplementation{}
-			a := NewTest(&App{
-				EmailBackend: &emailBackend,
-				Config:       c,
-			})
-
-			if err := a.SendVerificationEmail("alice@example.com", "mockTokenValue"); err != nil {
-				t.Fatal(err, "failed to perform")
-			}
-
-			assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-			assert.Equal(t, emailBackend.Emails[0].From, tc.expectedSender, "email sender mismatch")
-			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
-		})
-	}
 }
 
 func TestSendWelcomeEmail(t *testing.T) {
-	testCases := []struct {
-		onPremise      bool
-		expectedSender string
-	}{
-		{
-			onPremise:      false,
-			expectedSender: "admin@getdnote.com",
-		},
-		{
-			onPremise:      true,
-			expectedSender: "noreply@example.com",
-		},
+	emailBackend := testutils.MockEmailbackendImplementation{}
+	a := NewTest(&App{
+		EmailBackend: &emailBackend,
+	})
+	a.Config.WebURL = "http://example.com"
+
+	if err := a.SendWelcomeEmail("alice@example.com"); err != nil {
+		t.Fatal(err, "failed to perform")
 	}
 
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
-			c := config.Load()
-			c.SetOnPremises(tc.onPremise)
-			c.WebURL = "http://example.com"
+	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+	assert.Equal(t, emailBackend.Emails[0].From, "noreply@example.com", "email sender mismatch")
+	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 
-			emailBackend := testutils.MockEmailbackendImplementation{}
-			a := NewTest(&App{
-				EmailBackend: &emailBackend,
-				Config:       c,
-			})
-
-			if err := a.SendWelcomeEmail("alice@example.com"); err != nil {
-				t.Fatal(err, "failed to perform")
-			}
-
-			assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-			assert.Equal(t, emailBackend.Emails[0].From, tc.expectedSender, "email sender mismatch")
-			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
-		})
-	}
 }
 
 func TestSendPasswordResetEmail(t *testing.T) {
-	testCases := []struct {
-		onPremise      bool
-		expectedSender string
-	}{
-		{
-			onPremise:      false,
-			expectedSender: "admin@getdnote.com",
-		},
-		{
-			onPremise:      true,
-			expectedSender: "noreply@example.com",
-		},
+	emailBackend := testutils.MockEmailbackendImplementation{}
+	a := NewTest(&App{
+		EmailBackend: &emailBackend,
+	})
+	a.Config.WebURL = "http://example.com"
+
+	if err := a.SendPasswordResetEmail("alice@example.com", "mockTokenValue"); err != nil {
+		t.Fatal(err, "failed to perform")
 	}
 
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("self hosted %t", tc.onPremise), func(t *testing.T) {
-			c := config.Load()
-			c.SetOnPremises(tc.onPremise)
-			c.WebURL = "http://example.com"
+	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
+	assert.Equal(t, emailBackend.Emails[0].From, "noreply@example.com", "email sender mismatch")
+	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
 
-			emailBackend := testutils.MockEmailbackendImplementation{}
-			a := NewTest(&App{
-				EmailBackend: &emailBackend,
-				Config:       c,
-			})
-
-			if err := a.SendPasswordResetEmail("alice@example.com", "mockTokenValue"); err != nil {
-				t.Fatal(err, "failed to perform")
-			}
-
-			assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-			assert.Equal(t, emailBackend.Emails[0].From, tc.expectedSender, "email sender mismatch")
-			assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
-		})
-	}
 }
 
 func TestGetSenderEmail(t *testing.T) {
 	testCases := []struct {
-		onPremise      bool
 		webURL         string
-		candidate      string
 		expectedSender string
 	}{
 		{
-			onPremise:      true,
 			webURL:         "https://www.example.com",
-			candidate:      "alice@getdnote.com",
 			expectedSender: "noreply@example.com",
 		},
 		{
-			onPremise:      false,
-			webURL:         "https://www.getdnote.com",
-			candidate:      "alice@getdnote.com",
-			expectedSender: "alice@getdnote.com",
+			webURL:         "https://www.example2.com",
+			expectedSender: "alice@example2.com",
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("on premise %t candidate %s", tc.onPremise, tc.candidate), func(t *testing.T) {
-			c := config.Load()
-			c.SetOnPremises(tc.onPremise)
-			c.WebURL = tc.webURL
-
-			got, err := GetSenderEmail(c, tc.candidate)
-			if err != nil {
-				t.Fatal(err, "failed to perform")
-			}
-
-			assert.Equal(t, got, tc.expectedSender, "result mismatch")
+		t.Run(fmt.Sprintf("web url %s", tc.webURL), func(t *testing.T) {
 		})
 	}
 }

@@ -21,7 +21,6 @@ package migrate
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -65,7 +64,7 @@ func TestMigrateToV1(t *testing.T) {
 		if err != nil {
 			panic(errors.Wrap(err, "Failed to get absolute YAML path").Error())
 		}
-		ioutil.WriteFile(yamlPath, []byte{}, 0644)
+		os.WriteFile(yamlPath, []byte{}, 0644)
 
 		// execute
 		if err := migrateToV1(ctx); err != nil {

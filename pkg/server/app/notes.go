@@ -20,13 +20,12 @@ package app
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"gorm.io/gorm"
 	pkgErrors "github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
@@ -194,24 +193,16 @@ type ftsParams struct {
 	HighlightAll bool
 }
 
-func getHeadlineOptions(params *ftsParams) string {
-	headlineOptions := []string{
-		"StartSel=<dnotehl>",
-		"StopSel=</dnotehl>",
-		"ShortWord=0",
-	}
-
+func getFTSBodyExpression(params *ftsParams) string {
 	if params != nil && params.HighlightAll {
-		headlineOptions = append(headlineOptions, "HighlightAll=true")
-	} else {
-		headlineOptions = append(headlineOptions, "MaxFragments=3, MaxWords=50, MinWords=10")
+		return "highlight(notes_fts, 0, '<dnotehl>', '</dnotehl>') AS body"
 	}
 
-	return strings.Join(headlineOptions, ",")
+	return "snippet(notes_fts, 0, '<dnotehl>', '</dnotehl>', '...', 50) AS body"
 }
 
-func selectFTSFields(conn *gorm.DB, search string, params *ftsParams) *gorm.DB {
-	headlineOpts := getHeadlineOptions(params)
+func selectFTSFields(conn *gorm.DB, params *ftsParams) *gorm.DB {
+	bodyExpr := getFTSBodyExpression(params)
 
 	return conn.Select(`
 notes.id,
@@ -225,8 +216,7 @@ notes.edited_on,
 notes.usn,
 notes.deleted,
 notes.encrypted,
-ts_headline('english_nostop', notes.body, plainto_tsquery('english_nostop', ?), ?) AS body
-	`, search, headlineOpts)
+` + bodyExpr)
 }
 
 func getNotesBaseQuery(db *gorm.DB, userID int, q GetNotesParams) *gorm.DB {
@@ -236,8 +226,9 @@ func getNotesBaseQuery(db *gorm.DB, userID int, q GetNotesParams) *gorm.DB {
 	)
 
 	if q.Search != "" {
-		conn = selectFTSFields(conn, q.Search, nil)
-		conn = conn.Where("tsv @@ plainto_tsquery('english_nostop', ?)", q.Search)
+		conn = selectFTSFields(conn, nil)
+		conn = conn.Joins("INNER JOIN notes_fts ON notes_fts.rowid = notes.id")
+		conn = conn.Where("notes_fts MATCH ?", q.Search)
 	}
 
 	if len(q.Books) > 0 {

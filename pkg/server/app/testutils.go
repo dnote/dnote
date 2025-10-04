@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/dnote/dnote/pkg/clock"
+	"github.com/dnote/dnote/pkg/server/assets"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
@@ -29,11 +30,18 @@ import (
 
 // NewTest returns an app for a testing environment
 func NewTest(appParams *App) App {
-	c := config.Load()
-	c.SetOnPremises(false)
+	c := config.Config{
+		AppEnv:              "TEST",
+		WebURL:              "http://127.0.0.0.1",
+		Port:                "3000",
+		DisableRegistration: false,
+		DB:                  config.LoadDBConfig(),
+		AssetBaseURL:        "",
+		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
+	}
 
 	a := App{
-		DB:             testutils.DB,
+		DB:             appParams.DB,
 		Clock:          clock.NewMock(),
 		EmailTemplates: mailer.NewTemplates(),
 		EmailBackend:   &testutils.MockEmailbackendImplementation{},
@@ -50,9 +58,6 @@ func NewTest(appParams *App) App {
 	}
 	if appParams != nil && appParams.EmailTemplates != nil {
 		a.EmailTemplates = appParams.EmailTemplates
-	}
-	if appParams != nil && appParams.Config.OnPremises {
-		a.Config.OnPremises = appParams.Config.OnPremises
 	}
 	if appParams != nil && appParams.Config.WebURL != "" {
 		a.Config.WebURL = appParams.Config.WebURL

@@ -15,14 +15,7 @@ services:
     image: dnote/dnote:latest
     environment:
       GO_ENV: PRODUCTION
-      DBSkipSSL: "true"
-      DBHost: postgres
-      DBPort: 5432
-      DBName: dnote
-      DBUser: dnote
-      DBPassword: dnote
       WebURL: localhost:3000
-      OnPremises: "true"
       SmtpHost:
       SmtpPort:
       SmtpUsername:

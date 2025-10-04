@@ -36,9 +36,21 @@ type Backend interface {
 	Queue(subject, from string, to []string, contentType, body string) error
 }
 
-// SimpleBackendImplementation is an implementation of the Backend
+// EmailDialer is an interface for sending email messages
+type EmailDialer interface {
+	DialAndSend(m ...*gomail.Message) error
+}
+
+// gomailDialer wraps gomail.Dialer to implement EmailDialer interface
+type gomailDialer struct {
+	*gomail.Dialer
+}
+
+// DefaultBackend is an implementation of the Backend
 // that sends an email without queueing.
-type SimpleBackendImplementation struct {
+type DefaultBackend struct {
+	Dialer  EmailDialer
+	Enabled bool
 }
 
 type dialerParams struct {
@@ -73,11 +85,26 @@ func getSMTPParams() (*dialerParams, error) {
 	return p, nil
 }
 
+// NewDefaultBackend creates a default backend
+func NewDefaultBackend(enabled bool) (*DefaultBackend, error) {
+	p, err := getSMTPParams()
+	if err != nil {
+		return nil, err
+	}
+
+	d := gomail.NewDialer(p.Host, p.Port, p.Username, p.Password)
+
+	return &DefaultBackend{
+		Dialer:  &gomailDialer{Dialer: d},
+		Enabled: enabled,
+	}, nil
+}
+
 // Queue is an implementation of Backend.Queue.
-func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, contentType, body string) error {
-	// If not production, never actually send an email
-	if os.Getenv("GO_ENV") != "PRODUCTION" {
-		log.Println("Not sending email because Dnote is not running in a production environment.")
+func (b *DefaultBackend) Queue(subject, from string, to []string, contentType, body string) error {
+	// If not enabled, just log the email
+	if !b.Enabled {
+		log.Println("Not sending email because backend is disabled.")
 		log.Printf("Subject: %s, to: %s, from: %s", subject, to, from)
 		fmt.Println(body)
 		return nil
@@ -89,13 +116,7 @@ func (b *SimpleBackendImplementation) Queue(subject, from string, to []string, c
 	m.SetHeader("Subject", subject)
 	m.SetBody(contentType, body)
 
-	p, err := getSMTPParams()
-	if err != nil {
-		return errors.Wrap(err, "getting dialer params")
-	}
-
-	d := gomail.NewPlainDialer(p.Host, p.Port, p.Username, p.Password)
-	if err := d.DialAndSend(m); err != nil {
+	if err := b.Dialer.DialAndSend(m); err != nil {
 		return errors.Wrap(err, "dialing and sending email")
 	}
 

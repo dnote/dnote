@@ -22,7 +22,6 @@ mv ./dnote-server /usr/local/bin
 
 ```bash
 GO_ENV=PRODUCTION \
-OnPremises=true \
 DBHost=localhost \
 DBPort=5432 \
 DBName=dnote \
@@ -129,13 +128,6 @@ RestartSec=3
 WorkingDirectory=/home/$user
 ExecStart=/usr/local/bin/dnote-server start
 Environment=GO_ENV=PRODUCTION
-Environment=OnPremises=true
-Environment=DBHost=localhost
-Environment=DBPort=5432
-Environment=DBName=dnote
-Environment=DBUser=$DBUser
-Environment=DBPassword=$DBPassword
-Environment=DBSkipSSL=true
 Environment=WebURL=$WebURL
 Environment=SmtpHost=
 Environment=SmtpPort=

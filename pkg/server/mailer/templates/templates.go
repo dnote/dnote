@@ -16,20 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package token
+// Package mailer provides a functionality to send emails
+package templates
 
-import (
-	"os"
-	"testing"
+import "embed"
 
-	"github.com/dnote/dnote/pkg/server/testutils"
-)
-
-func TestMain(m *testing.M) {
-	testutils.InitTestDB()
-
-	code := m.Run()
-	testutils.ClearData(testutils.DB)
-
-	os.Exit(code)
-}
+//go:embed *.txt
+var Files embed.FS

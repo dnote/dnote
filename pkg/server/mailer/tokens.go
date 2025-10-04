@@ -21,19 +21,17 @@ package mailer
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	pkgErrors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 func generateRandomToken(bits int) (string, error) {
 	b := make([]byte, bits)
 
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", pkgErrors.Wrap(err, "generating random bytes")
+	if _, err := rand.Read(b); err != nil {
+		return "", errors.Wrap(err, "generating random bytes")
 	}
 
 	return base64.URLEncoding.EncodeToString(b), nil
@@ -49,7 +47,7 @@ func GetToken(db *gorm.DB, userID int, kind string) (database.Token, error) {
 
 	tokenVal, genErr := generateRandomToken(16)
 	if genErr != nil {
-		return tok, pkgErrors.Wrap(genErr, "generating token value")
+		return tok, errors.Wrap(genErr, "generating token value")
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -59,12 +57,12 @@ func GetToken(db *gorm.DB, userID int, kind string) (database.Token, error) {
 			Value:  tokenVal,
 		}
 		if err := db.Save(&tok).Error; err != nil {
-			return tok, pkgErrors.Wrap(err, "saving token")
+			return tok, errors.Wrap(err, "saving token")
 		}
 
 		return tok, nil
 	} else if err != nil {
-		return tok, pkgErrors.Wrap(err, "finding token")
+		return tok, errors.Wrap(err, "finding token")
 	}
 
 	return tok, nil

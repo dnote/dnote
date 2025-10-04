@@ -20,7 +20,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -66,7 +66,7 @@ func Read(ctx context.DnoteCtx) (Config, error) {
 	var ret Config
 
 	configPath := GetPath(ctx)
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if err != nil {
 		return ret, errors.Wrap(err, "reading config file")
 	}
@@ -88,7 +88,7 @@ func Write(ctx context.DnoteCtx, cf Config) error {
 		return errors.Wrap(err, "marshalling config into YAML")
 	}
 
-	err = ioutil.WriteFile(path, b, 0644)
+	err = os.WriteFile(path, b, 0644)
 	if err != nil {
 		return errors.Wrap(err, "writing the config file")
 	}

@@ -20,31 +20,12 @@ package middleware
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/gorilla/schema"
 )
 
 // Middleware is a middleware for request handlers
 type Middleware func(h http.Handler, app *app.App, rateLimit bool) http.Handler
-
-type payload struct {
-	Method string `schema:"_method"`
-}
-
-func parseValues(values url.Values, dst interface{}) error {
-	dec := schema.NewDecoder()
-
-	// Ignore CSRF token field
-	dec.IgnoreUnknownKeys(true)
-
-	if err := dec.Decode(dst, values); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // methodOverrideKey is the form key for overriding the method
 var methodOverrideKey = "_method"

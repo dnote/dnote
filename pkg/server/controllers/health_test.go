@@ -24,15 +24,14 @@ import (
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 func TestHealth(t *testing.T) {
-	defer testutils.ClearData(testutils.DB)
+	db := testutils.InitMemoryDB(t)
 
 	server := MustNewServer(t, &app.App{
-		Config: config.Config{},
+		DB: db,
 	})
 	defer server.Close()
 

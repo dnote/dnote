@@ -22,7 +22,7 @@ package assert
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"runtime/debug"
@@ -138,7 +138,7 @@ func EqualJSON(t *testing.T, a, b, message string) {
 // expected
 func StatusCodeEquals(t *testing.T, res *http.Response, expected int, message string) {
 	if res.StatusCode != expected {
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "reading body"))
 		}

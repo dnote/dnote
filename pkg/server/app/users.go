@@ -22,11 +22,12 @@ import (
 	"errors"
 
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/token"
-	"gorm.io/gorm"
 	pkgErrors "github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // TouchLastLoginAt updates the last login timestamp
@@ -81,14 +82,16 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	}
 
 	// Grant all privileges if self-hosting
-	var pro bool
-	if a.Config.OnPremises {
-		pro = true
-	} else {
-		pro = false
+	var pro = true
+
+	uuid, err := helpers.GenUUID()
+	if err != nil {
+		tx.Rollback()
+		return database.User{}, pkgErrors.Wrap(err, "generating UUID")
 	}
 
 	user := database.User{
+		UUID:  uuid,
 		Cloud: pro,
 	}
 	if err = tx.Save(&user).Error; err != nil {

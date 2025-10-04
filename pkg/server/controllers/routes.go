@@ -48,20 +48,20 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 	redirectGuest := &mw.AuthParams{RedirectGuestsToLogin: true}
 
 	ret := []Route{
-		{"GET", "/", mw.Auth(a, c.Users.Settings, redirectGuest), true},
-		{"GET", "/about", mw.Auth(a, c.Users.About, redirectGuest), true},
-		{"GET", "/login", mw.GuestOnly(a, c.Users.NewLogin), true},
-		{"POST", "/login", mw.GuestOnly(a, c.Users.Login), true},
+		{"GET", "/", mw.Auth(a.DB, c.Users.Settings, redirectGuest), true},
+		{"GET", "/about", mw.Auth(a.DB, c.Users.About, redirectGuest), true},
+		{"GET", "/login", mw.GuestOnly(a.DB, c.Users.NewLogin), true},
+		{"POST", "/login", mw.GuestOnly(a.DB, c.Users.Login), true},
 		{"POST", "/logout", c.Users.Logout, true},
 
 		{"GET", "/password-reset", c.Users.PasswordResetView.ServeHTTP, true},
 		{"PATCH", "/password-reset", c.Users.PasswordReset, true},
 		{"GET", "/password-reset/{token}", c.Users.PasswordResetConfirm, true},
 		{"POST", "/reset-token", c.Users.CreateResetToken, true},
-		{"POST", "/verification-token", mw.Auth(a, c.Users.CreateEmailVerificationToken, redirectGuest), true},
-		{"GET", "/verify-email/{token}", mw.Auth(a, c.Users.VerifyEmail, redirectGuest), true},
-		{"PATCH", "/account/profile", mw.Auth(a, c.Users.ProfileUpdate, nil), true},
-		{"PATCH", "/account/password", mw.Auth(a, c.Users.PasswordUpdate, nil), true},
+		{"POST", "/verification-token", mw.Auth(a.DB, c.Users.CreateEmailVerificationToken, redirectGuest), true},
+		{"GET", "/verify-email/{token}", mw.Auth(a.DB, c.Users.VerifyEmail, redirectGuest), true},
+		{"PATCH", "/account/profile", mw.Auth(a.DB, c.Users.ProfileUpdate, nil), true},
+		{"PATCH", "/account/password", mw.Auth(a.DB, c.Users.PasswordUpdate, nil), true},
 
 		{"GET", "/health", c.Health.Index, true},
 	}
@@ -76,28 +76,25 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 
 // NewAPIRoutes returns a new api routes
 func NewAPIRoutes(a *app.App, c *Controllers) []Route {
-
-	proOnly := mw.AuthParams{ProOnly: true}
-
 	return []Route{
 		// v3
-		{"GET", "/v3/sync/fragment", mw.Cors(mw.Auth(a, c.Sync.GetSyncFragment, &proOnly)), false},
-		{"GET", "/v3/sync/state", mw.Cors(mw.Auth(a, c.Sync.GetSyncState, &proOnly)), false},
-		{"POST", "/v3/signin", mw.Cors(c.Users.V3Login), true},
-		{"POST", "/v3/signout", mw.Cors(c.Users.V3Logout), true},
-		{"OPTIONS", "/v3/signout", mw.Cors(c.Users.logoutOptions), true},
-		{"GET", "/v3/notes", mw.Cors(mw.Auth(a, c.Notes.V3Index, nil)), true},
+		{"GET", "/v3/sync/fragment", mw.Auth(a.DB, c.Sync.GetSyncFragment, nil), false},
+		{"GET", "/v3/sync/state", mw.Auth(a.DB, c.Sync.GetSyncState, nil), false},
+		{"POST", "/v3/signin", c.Users.V3Login, true},
+		{"POST", "/v3/signout", c.Users.V3Logout, true},
+		{"OPTIONS", "/v3/signout", c.Users.logoutOptions, true},
+		{"GET", "/v3/notes", mw.Auth(a.DB, c.Notes.V3Index, nil), true},
 		{"GET", "/v3/notes/{noteUUID}", c.Notes.V3Show, true},
-		{"POST", "/v3/notes", mw.Cors(mw.Auth(a, c.Notes.V3Create, nil)), true},
-		{"DELETE", "/v3/notes/{noteUUID}", mw.Cors(mw.Auth(a, c.Notes.V3Delete, nil)), true},
-		{"PATCH", "/v3/notes/{noteUUID}", mw.Cors(mw.Auth(a, c.Notes.V3Update, nil)), true},
-		{"OPTIONS", "/v3/notes", mw.Cors(c.Notes.IndexOptions), true},
-		{"GET", "/v3/books", mw.Cors(mw.Auth(a, c.Books.V3Index, nil)), true},
-		{"GET", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Show, nil)), true},
-		{"POST", "/v3/books", mw.Cors(mw.Auth(a, c.Books.V3Create, nil)), true},
-		{"PATCH", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Update, nil)), true},
-		{"DELETE", "/v3/books/{bookUUID}", mw.Cors(mw.Auth(a, c.Books.V3Delete, nil)), true},
-		{"OPTIONS", "/v3/books", mw.Cors(c.Books.IndexOptions), true},
+		{"POST", "/v3/notes", mw.Auth(a.DB, c.Notes.V3Create, nil), true},
+		{"DELETE", "/v3/notes/{noteUUID}", mw.Auth(a.DB, c.Notes.V3Delete, nil), true},
+		{"PATCH", "/v3/notes/{noteUUID}", mw.Auth(a.DB, c.Notes.V3Update, nil), true},
+		{"OPTIONS", "/v3/notes", c.Notes.IndexOptions, true},
+		{"GET", "/v3/books", mw.Auth(a.DB, c.Books.V3Index, nil), true},
+		{"GET", "/v3/books/{bookUUID}", mw.Auth(a.DB, c.Books.V3Show, nil), true},
+		{"POST", "/v3/books", mw.Auth(a.DB, c.Books.V3Create, nil), true},
+		{"PATCH", "/v3/books/{bookUUID}", mw.Auth(a.DB, c.Books.V3Update, nil), true},
+		{"DELETE", "/v3/books/{bookUUID}", mw.Auth(a.DB, c.Books.V3Delete, nil), true},
+		{"OPTIONS", "/v3/books", c.Books.IndexOptions, true},
 	}
 }
 

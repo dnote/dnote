@@ -19,7 +19,6 @@
 package permissions
 
 import (
-	"os"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -27,44 +26,38 @@ import (
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-func TestMain(m *testing.M) {
-	testutils.InitTestDB()
-
-	code := m.Run()
-	testutils.ClearData(testutils.DB)
-
-	os.Exit(code)
-}
-
 func TestViewNote(t *testing.T) {
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	db := testutils.InitMemoryDB(t)
 
-	defer testutils.ClearData(testutils.DB)
+	user := testutils.SetupUserData(db)
+	anotherUser := testutils.SetupUserData(db)
 
 	b1 := database.Book{
+		UUID:   testutils.MustUUID(t),
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
 	privateNote := database.Note{
+		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
 		Deleted:  false,
 		Public:   false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&privateNote), "preparing privateNote")
 
 	publicNote := database.Note{
+		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
 		Deleted:  false,
 		Public:   true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&publicNote), "preparing privateNote")
 
 	t.Run("owner accessing private note", func(t *testing.T) {
 		result := ViewNote(&user, privateNote)

@@ -46,13 +46,13 @@ func TestIncremenetUserUSN(t *testing.T) {
 	// set up
 	for idx, tc := range testCases {
 		func() {
-			defer testutils.ClearData(testutils.DB)
+			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData()
-			testutils.MustExec(t, testutils.DB.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
+			user := testutils.SetupUserData(db)
+			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			// execute
-			tx := testutils.DB.Begin()
+			tx := db.Begin()
 			nextUSN, err := incrementUserUSN(tx, user.ID)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "incrementing the user usn"))
@@ -61,7 +61,7 @@ func TestIncremenetUserUSN(t *testing.T) {
 
 			// test
 			var userRecord database.User
-			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
+			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
 			assert.Equal(t, userRecord.MaxUSN, tc.expectedMaxUSN, fmt.Sprintf("user max_usn mismatch for case %d", idx))
 			assert.Equal(t, nextUSN, tc.expectedMaxUSN, fmt.Sprintf("next_usn mismatch for case %d", idx))

@@ -28,38 +28,41 @@ import (
 )
 
 func TestGetNote(t *testing.T) {
-	user := testutils.SetupUserData()
-	anotherUser := testutils.SetupUserData()
+	db := testutils.InitMemoryDB(t)
 
-	defer testutils.ClearData(testutils.DB)
+	user := testutils.SetupUserData(db)
+	anotherUser := testutils.SetupUserData(db)
 
 	b1 := database.Book{
+		UUID:   testutils.MustUUID(t),
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
 	privateNote := database.Note{
+		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
 		Deleted:  false,
 		Public:   false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&privateNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&privateNote), "preparing privateNote")
 
 	publicNote := database.Note{
+		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "privateNote content",
 		Deleted:  false,
 		Public:   true,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&publicNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&publicNote), "preparing privateNote")
 
 	var privateNoteRecord, publicNoteRecord database.Note
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", privateNote.UUID).Preload("Book").Preload("User").First(&privateNoteRecord), "finding privateNote")
-	testutils.MustExec(t, testutils.DB.Where("uuid = ?", publicNote.UUID).Preload("Book").Preload("User").First(&publicNoteRecord), "finding publicNote")
+	testutils.MustExec(t, db.Where("uuid = ?", privateNote.UUID).Preload("Book").Preload("User").First(&privateNoteRecord), "finding privateNote")
+	testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).Preload("Book").Preload("User").First(&publicNoteRecord), "finding publicNote")
 
 	testCases := []struct {
 		name         string
@@ -107,7 +110,7 @@ func TestGetNote(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			note, ok, err := GetNote(testutils.DB, tc.note.UUID, &tc.user)
+			note, ok, err := GetNote(db, tc.note.UUID, &tc.user)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
@@ -119,29 +122,29 @@ func TestGetNote(t *testing.T) {
 }
 
 func TestGetNote_nonexistent(t *testing.T) {
-	user := testutils.SetupUserData()
+	db := testutils.InitMemoryDB(t)
 
-	defer testutils.ClearData(testutils.DB)
+	user := testutils.SetupUserData(db)
 
 	b1 := database.Book{
+		UUID:   testutils.MustUUID(t),
 		UserID: user.ID,
 		Label:  "js",
 	}
-	testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
-	n1UUID := "4fd19336-671e-4ff3-8f22-662b80e22edc"
 	n1 := database.Note{
-		UUID:     n1UUID,
+		UUID:     "4fd19336-671e-4ff3-8f22-662b80e22edc",
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
 		Body:     "n1 content",
 		Deleted:  false,
 		Public:   false,
 	}
-	testutils.MustExec(t, testutils.DB.Save(&n1), "preparing n1")
+	testutils.MustExec(t, db.Save(&n1), "preparing n1")
 
 	nonexistentUUID := "4fd19336-671e-4ff3-8f22-662b80e22edd"
-	note, ok, err := GetNote(testutils.DB, nonexistentUUID, &user)
+	note, ok, err := GetNote(db, nonexistentUUID, &user)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "executing"))
 	}

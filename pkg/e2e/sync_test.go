@@ -22,7 +22,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -45,10 +45,12 @@ import (
 	"github.com/dnote/dnote/pkg/server/mailer"
 	apitest "github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 var cliBinaryName string
 var server *httptest.Server
+var serverDb *gorm.DB
 var serverTime = time.Date(2017, time.March, 14, 21, 15, 0, 0, time.UTC)
 
 var tmpDirPath string
@@ -83,7 +85,7 @@ func clearTmp(t *testing.T) {
 
 func TestMain(m *testing.M) {
 	// Set up server database
-	apitest.InitTestDB()
+	serverDb = apitest.InitTestDB()
 
 	mockClock := clock.NewMock()
 	mockClock.SetNow(serverTime)
@@ -93,7 +95,7 @@ func TestMain(m *testing.M) {
 		Clock:          mockClock,
 		EmailTemplates: mailer.Templates{},
 		EmailBackend:   &apitest.MockEmailbackendImplementation{},
-		DB:             apitest.DB,
+		DB:             serverDb,
 		Config: config.Config{
 			WebURL: os.Getenv("WebURL"),
 		},
@@ -124,11 +126,11 @@ func TestMain(m *testing.M) {
 
 // helpers
 func setupUser(t *testing.T, ctx *context.DnoteCtx) database.User {
-	user := apitest.SetupUserData()
-	apitest.SetupAccountData(user, "alice@example.com", "pass1234")
+	user := apitest.SetupUserData(serverDb)
+	apitest.SetupAccountData(serverDb, user, "alice@example.com", "pass1234")
 
 	// log in the user in CLI
-	session := apitest.SetupSession(t, user)
+	session := apitest.SetupSession(serverDb, user)
 	cliDatabase.MustExec(t, "inserting session_key", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, session.Key)
 	cliDatabase.MustExec(t, "inserting session_key_expiry", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, session.ExpiresAt.Unix())
 
@@ -184,9 +186,9 @@ func doHTTPReq(t *testing.T, method, path, payload, message string, user databas
 		panic(errors.Wrap(err, "constructing http request"))
 	}
 
-	res := apitest.HTTPAuthDo(t, req, user)
+	res := apitest.HTTPAuthDo(t, serverDb, req, user)
 	if res.StatusCode >= 400 {
-		bs, err := ioutil.ReadAll(res.Body)
+		bs, err := io.ReadAll(res.Body)
 		if err != nil {
 			panic(errors.Wrap(err, "parsing response body for error"))
 		}
@@ -202,8 +204,8 @@ type assertFunc func(t *testing.T, ctx context.DnoteCtx, user database.User, ids
 
 func testSyncCmd(t *testing.T, fullSync bool, setup setupFunc, assert assertFunc) {
 	// clean up
-	apitest.ClearData(apitest.DB)
-	defer apitest.ClearData(apitest.DB)
+	apitest.ClearData(serverDb)
+	defer apitest.ClearData(serverDb)
 
 	clearTmp(t)
 
@@ -234,7 +236,6 @@ type systemState struct {
 
 // checkState compares the state of the client and the server with the given system state
 func checkState(t *testing.T, ctx context.DnoteCtx, user database.User, expected systemState) {
-	serverDB := apitest.DB
 	clientDB := ctx.DB
 
 	var clientBookCount, clientNoteCount int
@@ -251,12 +252,12 @@ func checkState(t *testing.T, ctx context.DnoteCtx, user database.User, expected
 	assert.Equal(t, clientLastSyncAt, expected.clientLastSyncAt, "client last_sync_at mismatch")
 
 	var serverBookCount, serverNoteCount int64
-	apitest.MustExec(t, serverDB.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
-	apitest.MustExec(t, serverDB.Model(&database.Book{}).Count(&serverBookCount), "counting api notes")
+	apitest.MustExec(t, serverDb.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
+	apitest.MustExec(t, serverDb.Model(&database.Book{}).Count(&serverBookCount), "counting api notes")
 	assert.Equal(t, serverNoteCount, expected.serverNoteCount, "server note count mismatch")
 	assert.Equal(t, serverBookCount, expected.serverBookCount, "server book count mismatch")
 	var serverUser database.User
-	apitest.MustExec(t, serverDB.Where("id = ?", user.ID).First(&serverUser), "finding user")
+	apitest.MustExec(t, serverDb.Where("id = ?", user.ID).First(&serverUser), "finding user")
 	assert.Equal(t, serverUser.MaxUSN, expected.serverUserMaxUSN, "user max_usn mismatch")
 }
 
@@ -286,8 +287,7 @@ func TestSync_Empty(t *testing.T) {
 func TestSync_oneway(t *testing.T) {
 	t.Run("cli to api only", func(t *testing.T) {
 		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			apiDB := apitest.DB
-			apitest.MustExec(t, apiDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
+			apitest.MustExec(t, serverDb.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
@@ -295,7 +295,6 @@ func TestSync_oneway(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			apiDB := apitest.DB
 			cliDB := ctx.DB
 
 			// test client
@@ -339,11 +338,11 @@ func TestSync_oneway(t *testing.T) {
 			// test server
 			var apiBookJS, apiBookCSS database.Book
 			var apiNote1JS, apiNote2JS, apiNote1CSS database.Note
-			apitest.MustExec(t, apiDB.Model(&database.Note{}).Where("uuid = ?", cliNote1JS.UUID).First(&apiNote1JS), "getting js1 note")
-			apitest.MustExec(t, apiDB.Model(&database.Note{}).Where("uuid = ?", cliNote2JS.UUID).First(&apiNote2JS), "getting js2 note")
-			apitest.MustExec(t, apiDB.Model(&database.Note{}).Where("uuid = ?", cliNote1CSS.UUID).First(&apiNote1CSS), "getting css1 note")
-			apitest.MustExec(t, apiDB.Model(&database.Book{}).Where("uuid = ?", cliBookJS.UUID).First(&apiBookJS), "getting js book")
-			apitest.MustExec(t, apiDB.Model(&database.Book{}).Where("uuid = ?", cliBookCSS.UUID).First(&apiBookCSS), "getting css book")
+			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote1JS.UUID).First(&apiNote1JS), "getting js1 note")
+			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote2JS.UUID).First(&apiNote2JS), "getting js2 note")
+			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote1CSS.UUID).First(&apiNote1CSS), "getting css1 note")
+			apitest.MustExec(t, serverDb.Model(&database.Book{}).Where("uuid = ?", cliBookJS.UUID).First(&apiBookJS), "getting js book")
+			apitest.MustExec(t, serverDb.Model(&database.Book{}).Where("uuid = ?", cliBookCSS.UUID).First(&apiBookCSS), "getting css book")
 
 			// assert usn
 			assert.NotEqual(t, apiNote1JS.USN, 0, "apiNote1JS usn mismatch")
@@ -371,7 +370,7 @@ func TestSync_oneway(t *testing.T) {
 
 		t.Run("stepSync", func(t *testing.T) {
 			clearTmp(t)
-			defer apitest.ClearData(apitest.DB)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
@@ -385,7 +384,7 @@ func TestSync_oneway(t *testing.T) {
 
 		t.Run("fullSync", func(t *testing.T) {
 			clearTmp(t)
-			defer apitest.ClearData(apitest.DB)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
@@ -400,7 +399,7 @@ func TestSync_oneway(t *testing.T) {
 
 	t.Run("cli to api with edit and delete", func(t *testing.T) {
 		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 			apitest.MustExec(t, apiDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -423,7 +422,7 @@ func TestSync_oneway(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  6,
@@ -527,7 +526,7 @@ func TestSync_oneway(t *testing.T) {
 
 		t.Run("stepSync", func(t *testing.T) {
 			clearTmp(t)
-			defer apitest.ClearData(apitest.DB)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
@@ -541,7 +540,7 @@ func TestSync_oneway(t *testing.T) {
 
 		t.Run("fullSync", func(t *testing.T) {
 			clearTmp(t)
-			defer apitest.ClearData(apitest.DB)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
@@ -556,7 +555,7 @@ func TestSync_oneway(t *testing.T) {
 
 	t.Run("api to cli", func(t *testing.T) {
 		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			apitest.MustExec(t, apiDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
@@ -603,7 +602,7 @@ func TestSync_oneway(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  6,
@@ -804,7 +803,7 @@ func TestSync_twoway(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  9,
@@ -1033,7 +1032,7 @@ func TestSync_twoway(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 			cliDB := ctx.DB
 
 			checkState(t, ctx, user, systemState{
@@ -1188,7 +1187,7 @@ func TestSync_twoway(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  4,
@@ -1287,7 +1286,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1349,7 +1348,7 @@ func TestSync(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -1404,7 +1403,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -1471,7 +1470,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1537,7 +1536,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1601,7 +1600,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -1655,7 +1654,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -1708,7 +1707,7 @@ func TestSync(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -1750,7 +1749,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1816,7 +1815,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1884,7 +1883,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -1957,7 +1956,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -2021,7 +2020,7 @@ func TestSync(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -2081,7 +2080,7 @@ func TestSync(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 			cliDB := ctx.DB
 
 			checkState(t, ctx, user, systemState{
@@ -2150,7 +2149,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -2218,7 +2217,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -2298,7 +2297,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  4,
@@ -2404,7 +2403,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -2472,7 +2471,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -2555,7 +2554,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			resolvedBody := "<<<<<<< Local\njs1-edited-from-client\n=======\njs1-edited-from-server\n>>>>>>> Server\n"
 
@@ -2630,7 +2629,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -2705,7 +2704,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -2789,7 +2788,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -2862,7 +2861,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -2934,7 +2933,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -3005,7 +3004,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -3072,7 +3071,7 @@ func TestSync(t *testing.T) {
 		}
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  0,
@@ -3127,7 +3126,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -3203,7 +3202,7 @@ func TestSync(t *testing.T) {
 			// In this case, server's change wins and overwrites that of client's
 
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -3278,7 +3277,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -3365,7 +3364,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  1,
@@ -3454,7 +3453,7 @@ func TestSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			expectedNote1JSBody := `<<<<<<< Local
 Moved to the book linux
@@ -3566,7 +3565,7 @@ js1`
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -3668,7 +3667,7 @@ js1`
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -3768,7 +3767,7 @@ func TestFullSync(t *testing.T) {
 
 		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
 			cliDB := ctx.DB
-			apiDB := apitest.DB
+			apiDB := serverDb
 
 			checkState(t, ctx, user, systemState{
 				clientNoteCount:  2,
@@ -3832,8 +3831,8 @@ func TestFullSync(t *testing.T) {
 		t.Run("stepSync then fullSync", func(t *testing.T) {
 			// clean up
 			os.RemoveAll(tmpDirPath)
-			apitest.ClearData(apitest.DB)
-			defer apitest.ClearData(apitest.DB)
+			apitest.ClearData(serverDb)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
@@ -3849,8 +3848,8 @@ func TestFullSync(t *testing.T) {
 		t.Run("fullSync then stepSync", func(t *testing.T) {
 			// clean up
 			os.RemoveAll(tmpDirPath)
-			apitest.ClearData(apitest.DB)
-			defer apitest.ClearData(apitest.DB)
+			apitest.ClearData(serverDb)
+			defer apitest.ClearData(serverDb)
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)

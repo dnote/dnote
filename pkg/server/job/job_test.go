@@ -93,8 +93,9 @@ func TestNewRunner(t *testing.T) {
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 
-			c := config.Load()
-			c.WebURL = tc.webURL
+			c := config.Config{
+				WebURL: tc.webURL,
+			}
 
 			_, err := NewRunner(tc.db, tc.clock, tc.emailTmpl, tc.emailBackend, c)
 

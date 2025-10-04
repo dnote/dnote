@@ -22,19 +22,17 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/context"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"gorm.io/gorm"
 	pkgErrors "github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
-func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams) (database.User, database.Token, bool, error) {
+func authWithToken(db *gorm.DB, r *http.Request, tokenType string) (database.User, database.Token, bool, error) {
 	var user database.User
 	var token database.Token
 
@@ -62,32 +60,17 @@ func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams
 	return user, token, true, nil
 }
 
-// Cors allows browser extensions to load resources
-func Cors(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-
-		// Allow browser extensions
-		if strings.HasPrefix(origin, "moz-extension://") || strings.HasPrefix(origin, "chrome-extension://") {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 // AuthParams is the params for the authentication middleware
 type AuthParams struct {
-	ProOnly               bool
 	RedirectGuestsToLogin bool
 }
 
 // Auth is an authentication middleware
-func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
-	next = WithAccount(a, next)
+func Auth(db *gorm.DB, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
+	next = WithAccount(db, next)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok, err := AuthWithSession(a.DB, r)
+		user, ok, err := AuthWithSession(db, r)
 		if !ok {
 			if p != nil && p.RedirectGuestsToLogin {
 
@@ -107,25 +90,18 @@ func Auth(a *app.App, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 			return
 		}
 
-		if p != nil && p.ProOnly {
-			if !user.Cloud {
-				RespondForbidden(w)
-				return
-			}
-		}
-
 		ctx := context.WithUser(r.Context(), &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 
 }
 
-func WithAccount(a *app.App, next http.HandlerFunc) http.HandlerFunc {
+func WithAccount(db *gorm.DB, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := context.User(r.Context())
 
 		var account database.Account
-		if err := a.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
 			DoError(w, "finding account", err, http.StatusInternalServerError)
 			return
 		}
@@ -137,9 +113,9 @@ func WithAccount(a *app.App, next http.HandlerFunc) http.HandlerFunc {
 }
 
 // TokenAuth is an authentication middleware with token
-func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParams) http.HandlerFunc {
+func TokenAuth(db *gorm.DB, next http.HandlerFunc, tokenType string, p *AuthParams) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, token, ok, err := authWithToken(a.DB, r, tokenType, p)
+		user, token, ok, err := authWithToken(db, r, tokenType)
 		if err != nil {
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with token")
@@ -151,7 +127,7 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 			ctx = context.WithToken(ctx, &token)
 		} else {
 			// If token-based auth fails, fall back to session-based auth
-			user, ok, err = AuthWithSession(a.DB, r)
+			user, ok, err = AuthWithSession(db, r)
 			if err != nil {
 				DoError(w, "authenticating with session", err, http.StatusInternalServerError)
 				return
@@ -159,13 +135,6 @@ func TokenAuth(a *app.App, next http.HandlerFunc, tokenType string, p *AuthParam
 
 			if !ok {
 				RespondUnauthorized(w)
-				return
-			}
-		}
-
-		if p != nil && p.ProOnly {
-			if !user.Cloud {
-				RespondForbidden(w)
 				return
 			}
 		}
@@ -211,9 +180,9 @@ func AuthWithSession(db *gorm.DB, r *http.Request) (database.User, bool, error) 
 	return user, true, nil
 }
 
-func GuestOnly(a *app.App, next http.HandlerFunc) http.HandlerFunc {
+func GuestOnly(db *gorm.DB, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, ok, err := AuthWithSession(a.DB, r)
+		_, ok, err := AuthWithSession(db, r)
 		if err != nil {
 			// log the error and continue
 			log.ErrorWrap(err, "authenticating with session")

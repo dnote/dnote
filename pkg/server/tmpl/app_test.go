@@ -31,7 +31,9 @@ import (
 
 func TestAppShellExecute(t *testing.T) {
 	t.Run("home", func(t *testing.T) {
-		a, err := NewAppShell(testutils.DB, []byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
+		db := testutils.InitMemoryDB(t)
+
+		a, err := NewAppShell(db, []byte("<head><title>{{ .Title }}</title>{{ .MetaTags }}</head>"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}
@@ -50,23 +52,25 @@ func TestAppShellExecute(t *testing.T) {
 	})
 
 	t.Run("note", func(t *testing.T) {
-		defer testutils.ClearData(testutils.DB)
+		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData()
+		user := testutils.SetupUserData(db)
 		b1 := database.Book{
+			UUID:   testutils.MustUUID(t),
 			UserID: user.ID,
 			Label:  "js",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&b1), "preparing b1")
+		testutils.MustExec(t, db.Save(&b1), "preparing b1")
 		n1 := database.Note{
+			UUID:     testutils.MustUUID(t),
 			UserID:   user.ID,
 			BookUUID: b1.UUID,
 			Public:   true,
 			Body:     "n1 content",
 		}
-		testutils.MustExec(t, testutils.DB.Save(&n1), "preparing note")
+		testutils.MustExec(t, db.Save(&n1), "preparing note")
 
-		a, err := NewAppShell(testutils.DB, []byte("{{ .MetaTags }}"))
+		a, err := NewAppShell(db, []byte("{{ .MetaTags }}"))
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "preparing app shell"))
 		}

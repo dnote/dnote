@@ -16,20 +16,20 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package operations
+package presenters
 
 import (
-	"os"
 	"testing"
+	"time"
 
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"github.com/dnote/dnote/pkg/assert"
 )
 
-func TestMain(m *testing.M) {
-	testutils.InitTestDB()
+func TestFormatTS(t *testing.T) {
+	input := time.Date(2025, 1, 15, 10, 30, 45, 123456789, time.UTC)
+	expected := time.Date(2025, 1, 15, 10, 30, 45, 123457000, time.UTC)
 
-	code := m.Run()
-	testutils.ClearData(testutils.DB)
+	got := FormatTS(input)
 
-	os.Exit(code)
+	assert.Equal(t, got, expected, "FormatTS mismatch")
 }
