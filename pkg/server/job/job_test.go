@@ -27,7 +27,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 )
 

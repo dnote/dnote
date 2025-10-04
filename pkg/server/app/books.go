@@ -21,7 +21,7 @@ package app
 import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 )
 
@@ -70,7 +70,7 @@ func (a *App) DeleteBook(tx *gorm.DB, user database.User, book database.Book) (d
 	}
 
 	if err := tx.Model(&book).
-		Update(map[string]interface{}{
+		Updates(map[string]interface{}{
 			"usn":     nextUSN,
 			"deleted": true,
 			"label":   "",

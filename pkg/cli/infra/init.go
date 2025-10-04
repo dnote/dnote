@@ -52,7 +52,7 @@ func checkLegacyDBPath() (string, bool) {
 	}
 
 	if err != nil {
-		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyDnoteDir).Error())
+		log.Error(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyDnoteDir).Error())
 	}
 
 	return "", false

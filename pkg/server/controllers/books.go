@@ -19,6 +19,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -28,7 +29,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/presenters"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 )
 
 // NewBooks creates a new Books controller.
@@ -107,13 +109,13 @@ func (b *Books) V3Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var book database.Book
-	conn := b.app.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book)
+	err := b.app.DB.Where("uuid = ? AND user_id = ?", bookUUID, user.ID).First(&book).Error
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	if err := conn.Error; err != nil {
+	if err != nil {
 		handleJSONError(w, err, "finding the book")
 		return
 	}
@@ -141,19 +143,19 @@ func (b *Books) create(r *http.Request) (database.Book, error) {
 
 	var params createBookPayload
 	if err := parseRequestData(r, &params); err != nil {
-		return database.Book{}, errors.Wrap(err, "parsing request payload")
+		return database.Book{}, pkgErrors.Wrap(err, "parsing request payload")
 	}
 
 	if err := validateCreateBookPayload(params); err != nil {
-		return database.Book{}, errors.Wrap(err, "validating payload")
+		return database.Book{}, pkgErrors.Wrap(err, "validating payload")
 	}
 
-	var bookCount int
+	var bookCount int64
 	err := b.app.DB.Model(database.Book{}).
 		Where("user_id = ? AND label = ?", user.ID, params.Name).
 		Count(&bookCount).Error
 	if err != nil {
-		return database.Book{}, errors.Wrap(err, "checking duplicate")
+		return database.Book{}, pkgErrors.Wrap(err, "checking duplicate")
 	}
 	if bookCount > 0 {
 		return database.Book{}, app.ErrDuplicateBook
@@ -161,7 +163,7 @@ func (b *Books) create(r *http.Request) (database.Book, error) {
 
 	book, err := b.app.CreateBook(*user, params.Name)
 	if err != nil {
-		return database.Book{}, errors.Wrap(err, "inserting a book")
+		return database.Book{}, pkgErrors.Wrap(err, "inserting a book")
 	}
 
 	return book, nil
@@ -212,18 +214,18 @@ func (b *Books) update(r *http.Request) (database.Book, error) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		return database.Book{}, errors.Wrap(err, "finding book")
+		return database.Book{}, pkgErrors.Wrap(err, "finding book")
 	}
 
 	var params updateBookPayload
 	if err := parseRequestData(r, &params); err != nil {
-		return database.Book{}, errors.Wrap(err, "decoding payload")
+		return database.Book{}, pkgErrors.Wrap(err, "decoding payload")
 	}
 
 	book, err := b.app.UpdateBook(tx, *user, book, params.Name)
 	if err != nil {
 		tx.Rollback()
-		return database.Book{}, errors.Wrap(err, "updating a book")
+		return database.Book{}, pkgErrors.Wrap(err, "updating a book")
 	}
 
 	tx.Commit()
@@ -262,24 +264,24 @@ func (b *Books) del(r *http.Request) (database.Book, error) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
-		return database.Book{}, errors.Wrap(err, "finding a book")
+		return database.Book{}, pkgErrors.Wrap(err, "finding a book")
 	}
 
 	var notes []database.Note
 	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
-		return database.Book{}, errors.Wrap(err, "finding notes for the book")
+		return database.Book{}, pkgErrors.Wrap(err, "finding notes for the book")
 	}
 
 	for _, note := range notes {
 		if _, err := b.app.DeleteNote(tx, *user, note); err != nil {
 			tx.Rollback()
-			return database.Book{}, errors.Wrap(err, "deleting a note in the book")
+			return database.Book{}, pkgErrors.Wrap(err, "deleting a note in the book")
 		}
 	}
 
 	book, err := b.app.DeleteBook(tx, *user, book)
 	if err != nil {
-		return database.Book{}, errors.Wrap(err, "deleting the book")
+		return database.Book{}, pkgErrors.Wrap(err, "deleting the book")
 	}
 
 	tx.Commit()

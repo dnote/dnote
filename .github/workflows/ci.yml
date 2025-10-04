@@ -31,10 +31,10 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: '1.21.0'
+          go-version: '>=1.25.0'
 
       - name: Install dependencies
         run: |

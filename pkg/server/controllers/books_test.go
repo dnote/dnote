@@ -298,7 +298,7 @@ func TestCreateBook(t *testing.T) {
 
 		var bookRecord database.Book
 		var userRecord database.User
-		var bookCount, noteCount int
+		var bookCount, noteCount int64
 		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 		testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
@@ -306,8 +306,8 @@ func TestCreateBook(t *testing.T) {
 
 		maxUSN := 102
 
-		assert.Equalf(t, bookCount, 1, "book count mismatch")
-		assert.Equalf(t, noteCount, 0, "note count mismatch")
+		assert.Equalf(t, bookCount, int64(1), "book count mismatch")
+		assert.Equalf(t, noteCount, int64(0), "note count mismatch")
 
 		assert.NotEqual(t, bookRecord.UUID, "", "book uuid should have been generated")
 		assert.Equal(t, bookRecord.Label, "js", "book name mismatch")
@@ -361,15 +361,15 @@ func TestCreateBook(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusConflict, "")
 
 		var bookRecord database.Book
-		var bookCount, noteCount int
+		var bookCount, noteCount int64
 		var userRecord database.User
 		testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 		testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 		testutils.MustExec(t, testutils.DB.First(&bookRecord), "finding book")
 		testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-		assert.Equalf(t, bookCount, 1, "book count mismatch")
-		assert.Equalf(t, noteCount, 0, "note count mismatch")
+		assert.Equalf(t, bookCount, int64(1), "book count mismatch")
+		assert.Equalf(t, noteCount, int64(0), "note count mismatch")
 
 		assert.Equal(t, bookRecord.Label, "js", "book name mismatch")
 		assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
@@ -459,14 +459,14 @@ func TestUpdateBook(t *testing.T) {
 
 			var bookRecord database.Book
 			var userRecord database.User
-			var noteCount, bookCount int
+			var noteCount, bookCount int64
 			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-			assert.Equalf(t, bookCount, 2, "book count mismatch")
-			assert.Equalf(t, noteCount, 0, "note count mismatch")
+			assert.Equalf(t, bookCount, int64(2), "book count mismatch")
+			assert.Equalf(t, noteCount, int64(0), "note count mismatch")
 
 			assert.Equalf(t, bookRecord.UUID, tc.bookUUID, "book uuid mismatch")
 			assert.Equalf(t, bookRecord.Label, tc.expectedBookLabel, "book label mismatch")
@@ -603,7 +603,7 @@ func TestDeleteBook(t *testing.T) {
 			var b1Record, b2Record, b3Record database.Book
 			var n1Record, n2Record, n3Record, n4Record, n5Record database.Note
 			var userRecord database.User
-			var bookCount, noteCount int
+			var bookCount, noteCount int64
 
 			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
@@ -617,8 +617,8 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Where("id = ?", n5.ID).First(&n5Record), "finding n5")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-			assert.Equal(t, bookCount, 3, "book count mismatch")
-			assert.Equal(t, noteCount, 5, "note count mismatch")
+			assert.Equal(t, bookCount, int64(3), "book count mismatch")
+			assert.Equal(t, noteCount, int64(5), "note count mismatch")
 
 			assert.Equal(t, userRecord.MaxUSN, tc.expectedMaxUSN, "user max_usn mismatch")
 

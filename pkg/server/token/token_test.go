@@ -51,9 +51,9 @@ func TestCreate(t *testing.T) {
 			}
 
 			// Test
-			var count int
+			var count int64
 			testutils.MustExec(t, testutils.DB.Model(&database.Token{}).Count(&count), "counting token")
-			assert.Equalf(t, count, 1, "error mismatch")
+			assert.Equalf(t, count, int64(1), "error mismatch")
 
 			var tokenRecord database.Token
 			testutils.MustExec(t, testutils.DB.First(&tokenRecord), "finding token")

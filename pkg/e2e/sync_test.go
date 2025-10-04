@@ -227,8 +227,8 @@ type systemState struct {
 	clientBookCount  int
 	clientLastMaxUSN int
 	clientLastSyncAt int64
-	serverNoteCount  int
-	serverBookCount  int
+	serverNoteCount  int64
+	serverBookCount  int64
 	serverUserMaxUSN int
 }
 
@@ -250,7 +250,7 @@ func checkState(t *testing.T, ctx context.DnoteCtx, user database.User, expected
 	assert.Equal(t, clientLastMaxUSN, expected.clientLastMaxUSN, "client last_max_usn mismatch")
 	assert.Equal(t, clientLastSyncAt, expected.clientLastSyncAt, "client last_sync_at mismatch")
 
-	var serverBookCount, serverNoteCount int
+	var serverBookCount, serverNoteCount int64
 	apitest.MustExec(t, serverDB.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
 	apitest.MustExec(t, serverDB.Model(&database.Book{}).Count(&serverBookCount), "counting api notes")
 	assert.Equal(t, serverNoteCount, expected.serverNoteCount, "server note count mismatch")

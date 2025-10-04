@@ -32,7 +32,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/pkg/errors"
 )
@@ -40,7 +41,7 @@ import (
 var port = flag.String("port", "3000", "port to connect to")
 
 func initDB(c config.Config) *gorm.DB {
-	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
+	db, err := gorm.Open(postgres.Open(c.DB.GetConnectionStr()), &gorm.Config{})
 	if err != nil {
 		panic(errors.Wrap(err, "opening database connection"))
 	}
@@ -79,7 +80,12 @@ func startCmd() {
 	cfg.SetAssetBaseURL("/static")
 
 	app := initApp(cfg)
-	defer app.DB.Close()
+	defer func() {
+		sqlDB, err := app.DB.DB()
+		if err == nil {
+			sqlDB.Close()
+		}
+	}()
 
 	if err := database.Migrate(app.DB); err != nil {
 		panic(errors.Wrap(err, "running migrations"))

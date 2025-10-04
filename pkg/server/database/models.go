@@ -24,7 +24,7 @@ import (
 
 // Model is the base model definition
 type Model struct {
-	ID        int       `gorm:"primary_key" json:"-"`
+	ID        int       `gorm:"primaryKey" json:"-"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:now()"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -32,10 +32,10 @@ type Model struct {
 // Book is a model for a book
 type Book struct {
 	Model
-	UUID      string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
+	UUID      string `json:"uuid" gorm:"uniqueIndex;type:uuid;default:uuid_generate_v4()"`
 	UserID    int    `json:"user_id" gorm:"index"`
 	Label     string `json:"label" gorm:"index"`
-	Notes     []Note `json:"notes" gorm:"foreignkey:book_uuid"`
+	Notes     []Note `json:"notes" gorm:"foreignKey:BookUUID;references:UUID"`
 	AddedOn   int64  `json:"added_on"`
 	EditedOn  int64  `json:"edited_on"`
 	USN       int    `json:"-" gorm:"index"`
@@ -47,7 +47,7 @@ type Book struct {
 type Note struct {
 	Model
 	UUID      string `json:"uuid" gorm:"index;type:uuid;default:uuid_generate_v4()"`
-	Book      Book   `json:"book" gorm:"foreignkey:BookUUID"`
+	Book      Book   `json:"book" gorm:"foreignKey:BookUUID;references:UUID"`
 	User      User   `json:"user"`
 	UserID    int    `json:"user_id" gorm:"index"`
 	BookUUID  string `json:"book_uuid" gorm:"index;type:uuid"`
@@ -66,7 +66,7 @@ type Note struct {
 type User struct {
 	Model
 	UUID        string `json:"uuid" gorm:"type:uuid;index;default:uuid_generate_v4()"`
-	Account     Account
+	Account     Account `gorm:"foreignKey:UserID"`
 	LastLoginAt *time.Time `json:"-"`
 	MaxUSN      int        `json:"-" gorm:"default:0"`
 	Cloud       bool       `json:"-" gorm:"default:false"`

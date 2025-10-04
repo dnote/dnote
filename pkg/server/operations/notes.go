@@ -19,11 +19,13 @@
 package operations
 
 import (
+	"errors"
+
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/permissions"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 )
 
 // GetNote retrieves a note for the given user
@@ -33,16 +35,13 @@ func GetNote(db *gorm.DB, uuid string, user *database.User) (database.Note, bool
 		return zeroNote, false, nil
 	}
 
-	conn := db.Where("notes.uuid = ? AND deleted = ?", uuid, false)
-	conn = database.PreloadNote(conn)
-
 	var note database.Note
-	conn = conn.Find(&note)
+	err := database.PreloadNote(db.Where("notes.uuid = ? AND deleted = ?", uuid, false)).Find(&note).Error
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return zeroNote, false, nil
-	} else if err := conn.Error; err != nil {
-		return zeroNote, false, errors.Wrap(err, "finding note")
+	} else if err != nil {
+		return zeroNote, false, pkgErrors.Wrap(err, "finding note")
 	}
 
 	if ok := permissions.ViewNote(user, note); !ok {

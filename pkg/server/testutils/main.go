@@ -35,7 +35,7 @@ import (
 
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -61,29 +61,30 @@ func InitTestDB() {
 
 // ClearData deletes all records from the database
 func ClearData(db *gorm.DB) {
-	if err := db.Delete(&database.Book{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear books"))
-	}
-	if err := db.Delete(&database.Note{}).Error; err != nil {
+	// Delete in order: child tables first, parent tables last
+	if err := db.Where("1 = 1").Delete(&database.Note{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notes"))
 	}
-	if err := db.Delete(&database.Notification{}).Error; err != nil {
+	if err := db.Where("1 = 1").Delete(&database.Book{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear books"))
+	}
+	if err := db.Where("1 = 1").Delete(&database.Notification{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear notifications"))
 	}
-	if err := db.Delete(&database.User{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear users"))
-	}
-	if err := db.Delete(&database.Account{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear accounts"))
-	}
-	if err := db.Delete(&database.Token{}).Error; err != nil {
+	if err := db.Where("1 = 1").Delete(&database.Token{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear tokens"))
 	}
-	if err := db.Delete(&database.EmailPreference{}).Error; err != nil {
+	if err := db.Where("1 = 1").Delete(&database.EmailPreference{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
-	if err := db.Delete(&database.Session{}).Error; err != nil {
+	if err := db.Where("1 = 1").Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
+	}
+	if err := db.Where("1 = 1").Delete(&database.Account{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear accounts"))
+	}
+	if err := db.Where("1 = 1").Delete(&database.User{}).Error; err != nil {
+		panic(errors.Wrap(err, "Failed to clear users"))
 	}
 }
 

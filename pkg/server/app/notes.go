@@ -19,13 +19,14 @@
 package app
 
 import (
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 )
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
@@ -36,7 +37,7 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
 		tx.Rollback()
-		return database.Note{}, errors.Wrap(err, "incrementing user max_usn")
+		return database.Note{}, pkgErrors.Wrap(err, "incrementing user max_usn")
 	}
 
 	var noteAddedOn int64
@@ -72,7 +73,7 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 	}
 	if err := tx.Create(&note).Error; err != nil {
 		tx.Rollback()
-		return note, errors.Wrap(err, "inserting note")
+		return note, pkgErrors.Wrap(err, "inserting note")
 	}
 
 	tx.Commit()
@@ -118,7 +119,7 @@ func (r UpdateNoteParams) GetPublic() bool {
 func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p *UpdateNoteParams) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
-		return note, errors.Wrap(err, "incrementing user max_usn")
+		return note, pkgErrors.Wrap(err, "incrementing user max_usn")
 	}
 
 	if p.BookUUID != nil {
@@ -138,7 +139,7 @@ func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p 
 	note.Encrypted = false
 
 	if err := tx.Save(&note).Error; err != nil {
-		return note, errors.Wrap(err, "editing note")
+		return note, pkgErrors.Wrap(err, "editing note")
 	}
 
 	return note, nil
@@ -148,16 +149,16 @@ func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p 
 func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
 	if err != nil {
-		return note, errors.Wrap(err, "incrementing user max_usn")
+		return note, pkgErrors.Wrap(err, "incrementing user max_usn")
 	}
 
 	if err := tx.Model(&note).
-		Update(map[string]interface{}{
+		Updates(map[string]interface{}{
 			"usn":     nextUSN,
 			"deleted": true,
 			"body":    "",
 		}).Error; err != nil {
-		return note, errors.Wrap(err, "deleting note")
+		return note, pkgErrors.Wrap(err, "deleting note")
 	}
 
 	return note, nil
@@ -166,13 +167,13 @@ func (a *App) DeleteNote(tx *gorm.DB, user database.User, note database.Note) (d
 // GetUserNoteByUUID retrives a digest by the uuid for the given user
 func (a *App) GetUserNoteByUUID(userID int, uuid string) (*database.Note, error) {
 	var ret database.Note
-	conn := a.DB.Where("user_id = ? AND uuid = ?", userID, uuid).First(&ret)
+	err := a.DB.Where("user_id = ? AND uuid = ?", userID, uuid).First(&ret).Error
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
-	if err := conn.Error; err != nil {
-		return nil, errors.Wrap(err, "finding digest")
+	if err != nil {
+		return nil, pkgErrors.Wrap(err, "finding digest")
 	}
 
 	return &ret, nil
@@ -288,16 +289,16 @@ func paginate(conn *gorm.DB, page, perPage int) *gorm.DB {
 // GetNotesResult is the result of getting notes
 type GetNotesResult struct {
 	Notes []database.Note
-	Total int
+	Total int64
 }
 
 // GetNotes returns a list of matching notes
 func (a *App) GetNotes(userID int, params GetNotesParams) (GetNotesResult, error) {
 	conn := getNotesBaseQuery(a.DB, userID, params)
 
-	var total int
+	var total int64
 	if err := conn.Model(database.Note{}).Count(&total).Error; err != nil {
-		return GetNotesResult{}, errors.Wrap(err, "counting total")
+		return GetNotesResult{}, pkgErrors.Wrap(err, "counting total")
 	}
 
 	notes := []database.Note{}
@@ -307,7 +308,7 @@ func (a *App) GetNotes(userID int, params GetNotesParams) (GetNotesResult, error
 		conn = paginate(conn, params.Page, params.PerPage)
 
 		if err := conn.Find(&notes).Error; err != nil {
-			return GetNotesResult{}, errors.Wrap(err, "finding notes")
+			return GetNotesResult{}, pkgErrors.Wrap(err, "finding notes")
 		}
 	}
 

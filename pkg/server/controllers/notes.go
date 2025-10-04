@@ -216,7 +216,7 @@ func getMaxPage(page, total int) int {
 // GetNotesResponse is a reponse by getNotesHandler
 type GetNotesResponse struct {
 	Notes []presenters.Note `json:"notes"`
-	Total int               `json:"total"`
+	Total int64             `json:"total"`
 }
 
 // V3Index is a v3 handler for getting notes

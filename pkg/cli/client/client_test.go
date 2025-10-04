@@ -57,7 +57,7 @@ func TestSignIn(t *testing.T) {
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				t.Fatal(errors.Wrap(err, "decoding payload in the test server").Error())
 				return
 			}
 

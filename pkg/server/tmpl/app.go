@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 )
 

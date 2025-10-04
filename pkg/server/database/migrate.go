@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/dnote/dnote/pkg/server/database/migrations"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 	"github.com/rubenv/sql-migrate"
 )
@@ -36,7 +36,12 @@ func Migrate(db *gorm.DB) error {
 
 	migrate.SetTable(MigrationTableName)
 
-	n, err := migrate.Exec(db.DB(), "postgres", migrations, migrate.Up)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return errors.Wrap(err, "getting underlying sql.DB")
+	}
+
+	n, err := migrate.Exec(sqlDB, "postgres", migrations, migrate.Up)
 	if err != nil {
 		return errors.Wrap(err, "running migrations")
 	}

@@ -20,11 +20,9 @@ package database
 
 import (
 	"github.com/dnote/dnote/pkg/server/config"
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
-
-	// Use postgres
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
@@ -39,22 +37,22 @@ func InitSchema(db *gorm.DB) {
 	}
 
 	if err := db.AutoMigrate(
-		Note{},
-		Book{},
-		User{},
-		Account{},
-		Notification{},
-		Token{},
-		EmailPreference{},
-		Session{},
-	).Error; err != nil {
+		&User{},
+		&Account{},
+		&Book{},
+		&Note{},
+		&Notification{},
+		&Token{},
+		&EmailPreference{},
+		&Session{},
+	); err != nil {
 		panic(err)
 	}
 }
 
 // Open initializes the database connection
 func Open(c config.Config) *gorm.DB {
-	db, err := gorm.Open("postgres", c.DB.GetConnectionStr())
+	db, err := gorm.Open(postgres.Open(c.DB.GetConnectionStr()), &gorm.Config{})
 	if err != nil {
 		panic(errors.Wrap(err, "opening database conection"))
 	}

@@ -19,7 +19,7 @@
 package database
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // PreloadNote preloads the associations for a notes for the given query

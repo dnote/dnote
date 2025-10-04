@@ -23,7 +23,7 @@ import (
 	"encoding/base64"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/pkg/errors"
 )
 

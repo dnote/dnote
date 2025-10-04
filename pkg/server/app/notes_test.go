@@ -96,7 +96,7 @@ func TestCreateNote(t *testing.T) {
 			}
 			tx.Commit()
 
-			var bookCount, noteCount int
+			var bookCount, noteCount int64
 			var noteRecord database.Note
 			var userRecord database.User
 
@@ -105,8 +105,8 @@ func TestCreateNote(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.First(&noteRecord), fmt.Sprintf("finding note for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
-			assert.Equal(t, bookCount, 1, "book count mismatch")
-			assert.Equal(t, noteCount, 1, "note count mismatch")
+			assert.Equal(t, bookCount, int64(1), "book count mismatch")
+			assert.Equal(t, noteCount, int64(1), "note count mismatch")
 			assert.NotEqual(t, noteRecord.UUID, "", "note UUID should have been generated")
 			assert.Equal(t, noteRecord.UserID, user.ID, "note UserID mismatch")
 			assert.Equal(t, noteRecord.Body, "note content", "note Body mismatch")
@@ -169,7 +169,7 @@ func TestUpdateNote(t *testing.T) {
 			}
 			tx.Commit()
 
-			var bookCount, noteCount int
+			var bookCount, noteCount int64
 			var noteRecord database.Note
 			var userRecord database.User
 
@@ -179,8 +179,8 @@ func TestUpdateNote(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user for test case")
 
 			expectedUSN := tc.userUSN + 1
-			assert.Equal(t, bookCount, 1, "book count mismatch")
-			assert.Equal(t, noteCount, 1, "note count mismatch")
+			assert.Equal(t, bookCount, int64(1), "book count mismatch")
+			assert.Equal(t, noteCount, int64(1), "note count mismatch")
 			assert.Equal(t, noteRecord.UserID, user.ID, "note UserID mismatch")
 			assert.Equal(t, noteRecord.Body, content, "note Body mismatch")
 			assert.Equal(t, noteRecord.Public, public, "note Public mismatch")
@@ -236,7 +236,7 @@ func TestDeleteNote(t *testing.T) {
 			}
 			tx.Commit()
 
-			var noteCount int
+			var noteCount int64
 			var noteRecord database.Note
 			var userRecord database.User
 
@@ -244,7 +244,7 @@ func TestDeleteNote(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.First(&noteRecord), fmt.Sprintf("finding note for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
-			assert.Equal(t, noteCount, 1, "note count mismatch")
+			assert.Equal(t, noteCount, int64(1), "note count mismatch")
 
 			assert.Equal(t, noteRecord.UserID, user.ID, "note user_id mismatch")
 			assert.Equal(t, noteRecord.Body, "", "note content mismatch")

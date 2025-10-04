@@ -134,12 +134,12 @@ func TestNoteInsert(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			if err := n.Insert(tx); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 
 			tx.Commit()
@@ -294,7 +294,7 @@ func TestNoteUpdate(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			n1.BookUUID = tc.newBookUUID
@@ -307,7 +307,7 @@ func TestNoteUpdate(t *testing.T) {
 
 			if err := n1.Update(tx); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 
 			tx.Commit()
@@ -387,11 +387,11 @@ func TestNoteUpdateUUID(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+				t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 			}
 			if err := n1.UpdateUUID(tx, tc.newUUID); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, "executing").Error())
+				t.Fatal(errors.Wrap(err, "executing").Error())
 			}
 
 			tx.Commit()
@@ -446,12 +446,12 @@ func TestNoteExpunge(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := n1.Expunge(tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -555,12 +555,12 @@ func TestBookInsert(t *testing.T) {
 
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			if err := b.Insert(tx); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 
 			tx.Commit()
@@ -645,7 +645,7 @@ func TestBookUpdate(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			b1.Label = tc.newLabel
@@ -655,7 +655,7 @@ func TestBookUpdate(t *testing.T) {
 
 			if err := b1.Update(tx); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 
 			tx.Commit()
@@ -724,11 +724,11 @@ func TestBookUpdateUUID(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+				t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 			}
 			if err := b1.UpdateUUID(tx, tc.newUUID); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, "executing").Error())
+				t.Fatal(errors.Wrap(err, "executing").Error())
 			}
 
 			tx.Commit()
@@ -775,12 +775,12 @@ func TestBookExpunge(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := b1.Expunge(tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -824,12 +824,12 @@ func TestNoteFTS(t *testing.T) {
 
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := n.Insert(tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "inserting").Error())
+		t.Fatal(errors.Wrap(err, "inserting").Error())
 	}
 
 	tx.Commit()
@@ -847,13 +847,13 @@ func TestNoteFTS(t *testing.T) {
 	// execute - update
 	tx, err = db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	n.Body = "baz quz"
 	if err := n.Update(tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "updating").Error())
+		t.Fatal(errors.Wrap(err, "updating").Error())
 	}
 
 	tx.Commit()
@@ -872,12 +872,12 @@ func TestNoteFTS(t *testing.T) {
 	// execute - delete
 	tx, err = db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := n.Expunge(tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "expunging").Error())
+		t.Fatal(errors.Wrap(err, "expunging").Error())
 	}
 
 	tx.Commit()

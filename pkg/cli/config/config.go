@@ -42,7 +42,7 @@ func checkLegacyPath(ctx context.DnoteCtx) (string, bool) {
 
 	ok, err := utils.FileExists(legacyPath)
 	if err != nil {
-		log.Errorf(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyPath).Error())
+		log.Error(errors.Wrapf(err, "checking legacy dnote directory at %s", legacyPath).Error())
 	}
 	if ok {
 		return legacyPath, true

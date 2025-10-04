@@ -70,7 +70,7 @@ func TestProcessFragments(t *testing.T) {
 	// exec
 	sl, err := processFragments(fragments)
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	expected := syncList{
@@ -113,12 +113,12 @@ func TestGetLastSyncAt(t *testing.T) {
 	// exec
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	got, err := getLastSyncAt(tx)
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "getting last_sync_at").Error())
+		t.Fatal(errors.Wrap(err, "getting last_sync_at").Error())
 	}
 
 	tx.Commit()
@@ -136,12 +136,12 @@ func TestGetLastMaxUSN(t *testing.T) {
 	// exec
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	got, err := getLastMaxUSN(tx)
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "getting last_max_usn").Error())
+		t.Fatal(errors.Wrap(err, "getting last_max_usn").Error())
 	}
 
 	tx.Commit()
@@ -189,12 +189,12 @@ func TestResolveLabel(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			got, err := resolveLabel(tx, tc.input)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 			tx.Rollback()
 
@@ -212,12 +212,12 @@ func TestSyncDeleteNote(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		if err := syncDeleteNote(tx, "nonexistent-note-uuid"); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -254,12 +254,12 @@ func TestSyncDeleteNote(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
 
 		if err := syncDeleteNote(tx, "n1-uuid"); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -324,12 +324,12 @@ func TestSyncDeleteNote(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
 
 		if err := syncDeleteNote(tx, "n1-uuid"); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -373,12 +373,12 @@ func TestSyncDeleteBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		if err := syncDeleteBook(tx, "nonexistent-book-uuid"); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -424,12 +424,12 @@ func TestSyncDeleteBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
 
 		if err := syncDeleteBook(tx, b1UUID); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -492,12 +492,12 @@ func TestSyncDeleteBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
 
 		if err := syncDeleteBook(tx, b1UUID); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -547,12 +547,12 @@ func TestSyncDeleteBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction for test case").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction for test case").Error())
 		}
 
 		if err := syncDeleteBook(tx, b1UUID); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -599,7 +599,7 @@ func TestFullSyncNote(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		n := client.SyncFragNote{
@@ -614,7 +614,7 @@ func TestFullSyncNote(t *testing.T) {
 
 		if err := fullSyncNote(tx, n); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -834,7 +834,7 @@ n1 body edited
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				// update all fields but uuid and bump usn
@@ -850,7 +850,7 @@ n1 body edited
 
 				if err := fullSyncNote(tx, n); err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -893,7 +893,7 @@ func TestFullSyncBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b2UUID := testutils.MustGenerateUUID(t)
@@ -907,7 +907,7 @@ func TestFullSyncBook(t *testing.T) {
 
 		if err := fullSyncBook(tx, b); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1032,7 +1032,7 @@ func TestFullSyncBook(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				// update all fields but uuid and bump usn
@@ -1045,7 +1045,7 @@ func TestFullSyncBook(t *testing.T) {
 
 				if err := fullSyncBook(tx, b); err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -1085,7 +1085,7 @@ func TestStepSyncNote(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		n := client.SyncFragNote{
@@ -1100,7 +1100,7 @@ func TestStepSyncNote(t *testing.T) {
 
 		if err := stepSyncNote(tx, n); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1246,7 +1246,7 @@ n1 body edited
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				// update all fields but uuid and bump usn
@@ -1262,7 +1262,7 @@ n1 body edited
 
 				if err := stepSyncNote(tx, n); err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -1305,7 +1305,7 @@ func TestStepSyncBook(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b2UUID := testutils.MustGenerateUUID(t)
@@ -1319,7 +1319,7 @@ func TestStepSyncBook(t *testing.T) {
 
 		if err := stepSyncBook(tx, b); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1430,7 +1430,7 @@ func TestStepSyncBook(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				// update all fields but uuid and bump usn
@@ -1443,7 +1443,7 @@ func TestStepSyncBook(t *testing.T) {
 
 				if err := fullSyncBook(tx, b); err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -1489,7 +1489,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b1 := client.SyncFragBook{
@@ -1502,7 +1502,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b1, modeInsert); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1534,7 +1534,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b := client.SyncFragBook{
@@ -1547,7 +1547,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b, modeInsert); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1589,7 +1589,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b := client.SyncFragBook{
@@ -1602,7 +1602,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b, modeInsert); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1654,7 +1654,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b1UUID := testutils.MustGenerateUUID(t)
@@ -1670,7 +1670,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b1, modeUpdate); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1704,7 +1704,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b := client.SyncFragBook{
@@ -1717,7 +1717,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b, modeUpdate); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1760,7 +1760,7 @@ func TestMergeBook(t *testing.T) {
 		// test
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 
 		b := client.SyncFragBook{
@@ -1773,7 +1773,7 @@ func TestMergeBook(t *testing.T) {
 
 		if err := mergeBook(tx, b, modeUpdate); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -1832,7 +1832,7 @@ func TestSaveServerState(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	serverTime := int64(1541108743)
@@ -1841,7 +1841,7 @@ func TestSaveServerState(t *testing.T) {
 	err = saveSyncState(tx, serverTime, serverMaxUSN)
 	if err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -1907,7 +1907,7 @@ func TestSendBooks(t *testing.T) {
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				t.Fatal(errors.Wrap(err, "decoding payload in the test server").Error())
 				return
 			}
 
@@ -1955,12 +1955,12 @@ func TestSendBooks(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if _, err := sendBooks(ctx, tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -2026,7 +2026,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				t.Fatal(errors.Wrap(err, "decoding payload in the test server").Error())
 				return
 			}
 
@@ -2110,13 +2110,13 @@ func TestSendBooks_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2158,13 +2158,13 @@ func TestSendBooks_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2206,13 +2206,13 @@ func TestSendBooks_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendBooks(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2271,7 +2271,7 @@ func TestSendNotes(t *testing.T) {
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				t.Fatal(errors.Wrap(err, "decoding payload in the test server").Error())
 				return
 			}
 
@@ -2319,12 +2319,12 @@ func TestSendNotes(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if _, err := sendNotes(ctx, tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -2419,12 +2419,12 @@ func TestSendNotes_addedOn(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if _, err := sendNotes(ctx, tx); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -2442,7 +2442,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 
 			err := json.NewDecoder(r.Body).Decode(&payload)
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "decoding payload in the test server").Error())
+				t.Fatal(errors.Wrap(err, "decoding payload in the test server").Error())
 				return
 			}
 
@@ -2527,13 +2527,13 @@ func TestSendNotes_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2576,13 +2576,13 @@ func TestSendNotes_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2625,13 +2625,13 @@ func TestSendNotes_isBehind(t *testing.T) {
 				// execute
 				tx, err := db.Begin()
 				if err != nil {
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 				}
 
 				isBehind, err := sendNotes(ctx, tx)
 				if err != nil {
 					tx.Rollback()
-					t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+					t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 				}
 
 				tx.Commit()
@@ -2789,7 +2789,7 @@ n1 body edited
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("beginning a transaction for test case %d", idx)).Error())
 			}
 
 			// update all fields but uuid and bump usn
@@ -2809,7 +2809,7 @@ n1 body edited
 
 			if err := mergeNote(tx, fragNote, localNote); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
+				t.Fatal(errors.Wrap(err, fmt.Sprintf("executing for test case %d", idx)).Error())
 			}
 
 			tx.Commit()
@@ -2874,12 +2874,12 @@ func TestCheckBookPristine(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 		got, err := checkNotesPristine(tx, "b1-uuid")
 		if err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -2892,12 +2892,12 @@ func TestCheckBookPristine(t *testing.T) {
 		// execute
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 		got, err := checkNotesPristine(tx, "b2-uuid")
 		if err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing").Error())
+			t.Fatal(errors.Wrap(err, "executing").Error())
 		}
 
 		tx.Commit()
@@ -3082,12 +3082,12 @@ func TestCleanLocalNotes(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := cleanLocalNotes(tx, &list); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()
@@ -3150,12 +3150,12 @@ func TestCleanLocalBooks(t *testing.T) {
 	// execute
 	tx, err := db.Begin()
 	if err != nil {
-		t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 	}
 
 	if err := cleanLocalBooks(tx, &list); err != nil {
 		tx.Rollback()
-		t.Fatalf(errors.Wrap(err, "executing").Error())
+		t.Fatal(errors.Wrap(err, "executing").Error())
 	}
 
 	tx.Commit()

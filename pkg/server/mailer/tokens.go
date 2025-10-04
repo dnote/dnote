@@ -21,10 +21,11 @@ package mailer
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	pkgErrors "github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 func generateRandomToken(bits int) (string, error) {
@@ -32,7 +33,7 @@ func generateRandomToken(bits int) (string, error) {
 
 	_, err := rand.Read(b)
 	if err != nil {
-		return "", errors.Wrap(err, "generating random bytes")
+		return "", pkgErrors.Wrap(err, "generating random bytes")
 	}
 
 	return base64.URLEncoding.EncodeToString(b), nil
@@ -42,28 +43,28 @@ func generateRandomToken(bits int) (string, error) {
 // by first looking up any unused record and creating one if none exists.
 func GetToken(db *gorm.DB, userID int, kind string) (database.Token, error) {
 	var tok database.Token
-	conn := db.
+	err := db.
 		Where("user_id = ? AND type =? AND used_at IS NULL", userID, kind).
-		First(&tok)
+		First(&tok).Error
 
-	tokenVal, err := generateRandomToken(16)
-	if err != nil {
-		return tok, errors.Wrap(err, "generating token value")
+	tokenVal, genErr := generateRandomToken(16)
+	if genErr != nil {
+		return tok, pkgErrors.Wrap(genErr, "generating token value")
 	}
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		tok = database.Token{
 			UserID: userID,
 			Type:   kind,
 			Value:  tokenVal,
 		}
 		if err := db.Save(&tok).Error; err != nil {
-			return tok, errors.Wrap(err, "saving token")
+			return tok, pkgErrors.Wrap(err, "saving token")
 		}
 
 		return tok, nil
-	} else if err := conn.Error; err != nil {
-		return tok, errors.Wrap(err, "finding token")
+	} else if err != nil {
+		return tok, pkgErrors.Wrap(err, "finding token")
 	}
 
 	return tok, nil

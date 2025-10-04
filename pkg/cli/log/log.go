@@ -20,8 +20,9 @@ package log
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"os"
+
+	"github.com/fatih/color"
 )
 
 var (
@@ -81,7 +82,7 @@ func Error(msg string) {
 
 // Errorf prints an error message with optional format verbs
 func Errorf(msg string, v ...interface{}) {
-	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorRed.Sprintf("⨯"), fmt.Sprintf(msg, v...))
+	fmt.Fprintf(color.Output, "%s%s %s", indent, ColorRed.Sprintf("%s", "⨯"), fmt.Sprintf(msg, v...))
 }
 
 // Printf prints an normal message
@@ -96,9 +97,9 @@ func Askf(msg string, masked bool, v ...interface{}) {
 
 	var symbol string
 	if masked {
-		symbol = ColorGray.Sprintf(symbolChar)
+		symbol = ColorGray.Sprintf("%s", symbolChar)
 	} else {
-		symbol = ColorGreen.Sprintf(symbolChar)
+		symbol = ColorGreen.Sprintf("%s", symbolChar)
 	}
 
 	fmt.Fprintf(color.Output, "%s%s %s: ", indent, symbol, fmt.Sprintf(msg, v...))

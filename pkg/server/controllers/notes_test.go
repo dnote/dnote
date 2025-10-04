@@ -400,15 +400,15 @@ func TestCreateNote(t *testing.T) {
 	var noteRecord database.Note
 	var bookRecord database.Book
 	var userRecord database.User
-	var bookCount, noteCount int
+	var bookCount, noteCount int64
 	testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 	testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 	testutils.MustExec(t, testutils.DB.First(&noteRecord), "finding note")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 	testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-	assert.Equalf(t, bookCount, 1, "book count mismatch")
-	assert.Equalf(t, noteCount, 1, "note count mismatch")
+	assert.Equalf(t, bookCount, int64(1), "book count mismatch")
+	assert.Equalf(t, noteCount, int64(1), "note count mismatch")
 
 	assert.Equal(t, bookRecord.Label, b1.Label, "book name mismatch")
 	assert.Equal(t, bookRecord.UUID, b1.UUID, "book uuid mismatch")
@@ -488,15 +488,15 @@ func TestDeleteNote(t *testing.T) {
 			var bookRecord database.Book
 			var noteRecord database.Note
 			var userRecord database.User
-			var bookCount, noteCount int
+			var bookCount, noteCount int64
 			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("uuid = ?", note.UUID).First(&noteRecord), "finding note")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-			assert.Equalf(t, bookCount, 1, "book count mismatch")
-			assert.Equalf(t, noteCount, 1, "note count mismatch")
+			assert.Equalf(t, bookCount, int64(1), "book count mismatch")
+			assert.Equalf(t, noteCount, int64(1), "note count mismatch")
 
 			assert.Equal(t, noteRecord.UUID, note.UUID, "note uuid mismatch for test case")
 			assert.Equal(t, noteRecord.Body, "", "note content mismatch for test case")
@@ -738,15 +738,15 @@ func TestUpdateNote(t *testing.T) {
 			var bookRecord database.Book
 			var noteRecord database.Note
 			var userRecord database.User
-			var noteCount, bookCount int
+			var noteCount, bookCount int64
 			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), "counting books")
 			testutils.MustExec(t, testutils.DB.Model(&database.Note{}).Count(&noteCount), "counting notes")
 			testutils.MustExec(t, testutils.DB.Where("uuid = ?", note.UUID).First(&noteRecord), "finding note")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", b1.ID).First(&bookRecord), "finding book")
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), "finding user record")
 
-			assert.Equalf(t, bookCount, 2, "book count mismatch")
-			assert.Equalf(t, noteCount, 1, "note count mismatch")
+			assert.Equalf(t, bookCount, int64(2), "book count mismatch")
+			assert.Equalf(t, noteCount, int64(1), "note count mismatch")
 
 			assert.Equal(t, noteRecord.UUID, tc.noteUUID, "note uuid mismatch for test case")
 			assert.Equal(t, noteRecord.Body, tc.expectedNoteBody, "note content mismatch for test case")

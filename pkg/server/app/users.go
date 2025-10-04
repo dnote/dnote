@@ -19,19 +19,21 @@
 package app
 
 import (
+	"errors"
+
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/token"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // TouchLastLoginAt updates the last login timestamp
 func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
 	t := a.Clock.Now()
-	if err := tx.Model(&user).Update(database.User{LastLoginAt: &t}).Error; err != nil {
-		return errors.Wrap(err, "updating last_login_at")
+	if err := tx.Model(&user).Update("last_login_at", &t).Error; err != nil {
+		return pkgErrors.Wrap(err, "updating last_login_at")
 	}
 
 	return nil
@@ -42,7 +44,7 @@ func createEmailPreference(user database.User, tx *gorm.DB) error {
 		UserID: user.ID,
 	}
 	if err := tx.Save(&p).Error; err != nil {
-		return errors.Wrap(err, "inserting email preference")
+		return pkgErrors.Wrap(err, "inserting email preference")
 	}
 
 	return nil
@@ -64,9 +66,9 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 
 	tx := a.DB.Begin()
 
-	var count int
+	var count int64
 	if err := tx.Model(database.Account{}).Where("email = ?", email).Count(&count).Error; err != nil {
-		return database.User{}, errors.Wrap(err, "counting user")
+		return database.User{}, pkgErrors.Wrap(err, "counting user")
 	}
 	if count > 0 {
 		return database.User{}, ErrDuplicateEmail
@@ -75,7 +77,7 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "hashing password")
+		return database.User{}, pkgErrors.Wrap(err, "hashing password")
 	}
 
 	// Grant all privileges if self-hosting
@@ -91,7 +93,7 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	}
 	if err = tx.Save(&user).Error; err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "saving user")
+		return database.User{}, pkgErrors.Wrap(err, "saving user")
 	}
 	account := database.Account{
 		Email:    database.ToNullString(email),
@@ -100,20 +102,20 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	}
 	if err = tx.Save(&account).Error; err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "saving account")
+		return database.User{}, pkgErrors.Wrap(err, "saving account")
 	}
 
 	if _, err := token.Create(tx, user.ID, database.TokenTypeEmailPreference); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "creating email verificaiton token")
+		return database.User{}, pkgErrors.Wrap(err, "creating email verificaiton token")
 	}
 	if err := createEmailPreference(user, tx); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "creating email preference")
+		return database.User{}, pkgErrors.Wrap(err, "creating email preference")
 	}
 	if err := a.TouchLastLoginAt(user, tx); err != nil {
 		tx.Rollback()
-		return database.User{}, errors.Wrap(err, "updating last login")
+		return database.User{}, pkgErrors.Wrap(err, "updating last login")
 	}
 
 	tx.Commit()
@@ -124,14 +126,14 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 // Authenticate authenticates a user
 func (a *App) Authenticate(email, password string) (*database.User, error) {
 	var account database.Account
-	conn := a.DB.Where("email = ?", email).First(&account)
-	if conn.RecordNotFound() {
+	err := a.DB.Where("email = ?", email).First(&account).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
-	} else if conn.Error != nil {
-		return nil, conn.Error
+	} else if err != nil {
+		return nil, err
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(password))
 	if err != nil {
 		return nil, ErrLoginInvalid
 	}
@@ -139,7 +141,7 @@ func (a *App) Authenticate(email, password string) (*database.User, error) {
 	var user database.User
 	err = a.DB.Where("id = ?", account.UserID).First(&user).Error
 	if err != nil {
-		return nil, errors.Wrap(err, "finding user")
+		return nil, pkgErrors.Wrap(err, "finding user")
 	}
 
 	return &user, nil
@@ -154,7 +156,7 @@ func (a *App) SignIn(user *database.User) (*database.Session, error) {
 
 	session, err := a.CreateSession(user.ID)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating session")
+		return nil, pkgErrors.Wrap(err, "creating session")
 	}
 
 	return &session, nil

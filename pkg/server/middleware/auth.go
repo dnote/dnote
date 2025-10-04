@@ -19,6 +19,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,8 +30,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 )
 
 func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams) (database.User, database.Token, bool, error) {
@@ -43,11 +44,11 @@ func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams
 		return user, token, false, nil
 	}
 
-	conn := db.Where("value = ? AND type = ?", tokenValue, tokenType).First(&token)
-	if conn.RecordNotFound() {
+	err := db.Where("value = ? AND type = ?", tokenValue, tokenType).First(&token).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, token, false, nil
-	} else if err := conn.Error; err != nil {
-		return user, token, false, errors.Wrap(err, "finding token")
+	} else if err != nil {
+		return user, token, false, pkgErrors.Wrap(err, "finding token")
 	}
 
 	if token.UsedAt != nil && time.Since(*token.UsedAt).Minutes() > 10 {
@@ -55,7 +56,7 @@ func authWithToken(db *gorm.DB, r *http.Request, tokenType string, p *AuthParams
 	}
 
 	if err := db.Where("id = ?", token.UserID).First(&user).Error; err != nil {
-		return user, token, false, errors.Wrap(err, "finding user")
+		return user, token, false, pkgErrors.Wrap(err, "finding user")
 	}
 
 	return user, token, true, nil
@@ -180,31 +181,31 @@ func AuthWithSession(db *gorm.DB, r *http.Request) (database.User, bool, error) 
 
 	sessionKey, err := GetCredential(r)
 	if err != nil {
-		return user, false, errors.Wrap(err, "getting credential")
+		return user, false, pkgErrors.Wrap(err, "getting credential")
 	}
 	if sessionKey == "" {
 		return user, false, nil
 	}
 
 	var session database.Session
-	conn := db.Where("key = ?", sessionKey).First(&session)
+	err = db.Where("key = ?", sessionKey).First(&session).Error
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, false, nil
-	} else if err := conn.Error; err != nil {
-		return user, false, errors.Wrap(err, "finding session")
+	} else if err != nil {
+		return user, false, pkgErrors.Wrap(err, "finding session")
 	}
 
 	if session.ExpiresAt.Before(time.Now()) {
 		return user, false, nil
 	}
 
-	conn = db.Where("id = ?", session.UserID).First(&user)
+	err = db.Where("id = ?", session.UserID).First(&user).Error
 
-	if conn.RecordNotFound() {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return user, false, nil
-	} else if err := conn.Error; err != nil {
-		return user, false, errors.Wrap(err, "finding user from token")
+	} else if err != nil {
+		return user, false, pkgErrors.Wrap(err, "finding user from token")
 	}
 
 	return user, true, nil

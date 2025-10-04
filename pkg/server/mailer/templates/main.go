@@ -25,7 +25,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -122,7 +122,12 @@ type Context struct {
 func main() {
 	c := config.Load()
 	db := database.Open(c)
-	defer db.Close()
+	defer func() {
+		sqlDB, err := db.DB()
+		if err == nil {
+			sqlDB.Close()
+		}
+	}()
 
 	log.Println("Email template development server running on http://127.0.0.1:2300")
 

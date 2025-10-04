@@ -53,12 +53,12 @@ func TestInsertSystem(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+				t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 			}
 
 			if err := InsertSystem(tx, tc.key, tc.val); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, "executing for test case").Error())
+				t.Fatal(errors.Wrap(err, "executing for test case").Error())
 			}
 
 			tx.Commit()
@@ -106,12 +106,12 @@ func TestUpsertSystem(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+				t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 			}
 
 			if err := UpsertSystem(tx, tc.key, tc.val); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, "executing for test case").Error())
+				t.Fatal(errors.Wrap(err, "executing for test case").Error())
 			}
 
 			tx.Commit()
@@ -142,12 +142,12 @@ func TestGetSystem(t *testing.T) {
 
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 		var dest string
 		if err := GetSystem(tx, "foo", &dest); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing for test case").Error())
+			t.Fatal(errors.Wrap(err, "executing for test case").Error())
 		}
 		tx.Commit()
 
@@ -165,12 +165,12 @@ func TestGetSystem(t *testing.T) {
 
 		tx, err := db.Begin()
 		if err != nil {
-			t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 		}
 		var dest int64
 		if err := GetSystem(tx, "foo", &dest); err != nil {
 			tx.Rollback()
-			t.Fatalf(errors.Wrap(err, "executing for test case").Error())
+			t.Fatal(errors.Wrap(err, "executing for test case").Error())
 		}
 		tx.Commit()
 
@@ -210,12 +210,12 @@ func TestUpdateSystem(t *testing.T) {
 			// execute
 			tx, err := db.Begin()
 			if err != nil {
-				t.Fatalf(errors.Wrap(err, "beginning a transaction").Error())
+				t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
 			}
 
 			if err := UpdateSystem(tx, tc.key, tc.val); err != nil {
 				tx.Rollback()
-				t.Fatalf(errors.Wrap(err, "executing for test case").Error())
+				t.Fatal(errors.Wrap(err, "executing for test case").Error())
 			}
 
 			tx.Commit()

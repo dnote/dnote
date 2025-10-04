@@ -71,7 +71,7 @@ func TestCreateBook(t *testing.T) {
 				t.Fatal(errors.Wrap(err, "creating book"))
 			}
 
-			var bookCount int
+			var bookCount int64
 			var bookRecord database.Book
 			var userRecord database.User
 
@@ -85,7 +85,7 @@ func TestCreateBook(t *testing.T) {
 				t.Fatal(errors.Wrap(err, "finding user"))
 			}
 
-			assert.Equal(t, bookCount, 1, "book count mismatch")
+			assert.Equal(t, bookCount, int64(1), "book count mismatch")
 			assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
 			assert.Equal(t, bookRecord.Label, tc.label, "book label mismatch")
 			assert.Equal(t, bookRecord.USN, tc.expectedUSN, "book label mismatch")
@@ -140,7 +140,7 @@ func TestDeleteBook(t *testing.T) {
 			}
 			tx.Commit()
 
-			var bookCount int
+			var bookCount int64
 			var bookRecord database.Book
 			var userRecord database.User
 
@@ -148,7 +148,7 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
-			assert.Equal(t, bookCount, 1, "book count mismatch")
+			assert.Equal(t, bookCount, int64(1), "book count mismatch")
 			assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
 			assert.Equal(t, bookRecord.Label, "", "book label mismatch")
 			assert.Equal(t, bookRecord.Deleted, true, "book deleted flag mismatch")
@@ -223,14 +223,14 @@ func TestUpdateBook(t *testing.T) {
 
 			tx.Commit()
 
-			var bookCount int
+			var bookCount int64
 			var bookRecord database.Book
 			var userRecord database.User
 			testutils.MustExec(t, testutils.DB.Model(&database.Book{}).Count(&bookCount), fmt.Sprintf("counting books for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.First(&bookRecord), fmt.Sprintf("finding book for test case %d", idx))
 			testutils.MustExec(t, testutils.DB.Where("id = ?", user.ID).First(&userRecord), fmt.Sprintf("finding user for test case %d", idx))
 
-			assert.Equal(t, bookCount, 1, "book count mismatch")
+			assert.Equal(t, bookCount, int64(1), "book count mismatch")
 
 			assert.Equal(t, bookRecord.UserID, user.ID, "book user_id mismatch")
 			assert.Equal(t, bookRecord.Label, tc.expectedLabel, "book label mismatch")

@@ -19,6 +19,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"time"
@@ -33,7 +34,8 @@ import (
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	pkgErrors "github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -247,7 +249,7 @@ func (u *Users) V3Login(w http.ResponseWriter, r *http.Request) {
 func (u *Users) logout(r *http.Request) (bool, error) {
 	key, err := GetCredential(r)
 	if err != nil {
-		return false, errors.Wrap(err, "getting credentials")
+		return false, pkgErrors.Wrap(err, "getting credentials")
 	}
 
 	if key == "" {
@@ -255,7 +257,7 @@ func (u *Users) logout(r *http.Request) (bool, error) {
 	}
 
 	if err = u.app.DeleteSession(key); err != nil {
-		return false, errors.Wrap(err, "deleting session")
+		return false, pkgErrors.Wrap(err, "deleting session")
 	}
 
 	return true, nil
@@ -312,11 +314,11 @@ func (u *Users) CreateResetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var account database.Account
-	conn := u.app.DB.Where("email = ?", form.Email).First(&account)
-	if conn.RecordNotFound() {
+	err := u.app.DB.Where("email = ?", form.Email).First(&account).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return
 	}
-	if err := conn.Error; err != nil {
+	if err != nil {
 		handleHTMLError(w, r, err, "finding account", u.PasswordResetView, vd)
 		return
 	}
@@ -379,12 +381,12 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var token database.Token
-	conn := u.app.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token)
-	if conn.RecordNotFound() {
+	err := u.app.DB.Where("value = ? AND type =? AND used_at IS NULL", params.Token, database.TokenTypeResetPassword).First(&token).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		handleHTMLError(w, r, app.ErrInvalidToken, "invalid token", u.PasswordResetConfirmView, vd)
 		return
 	}
-	if err := conn.Error; err != nil {
+	if err != nil {
 		handleHTMLError(w, r, err, "finding token", u.PasswordResetConfirmView, vd)
 		return
 	}
@@ -719,7 +721,7 @@ func (u *Users) CreateEmailVerificationToken(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err := u.app.SendVerificationEmail(account.Email.String, tok.Value); err != nil {
-		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
+		if pkgErrors.Cause(err) == mailer.ErrSMTPNotConfigured {
 			handleHTMLError(w, r, app.ErrInvalidSMTPConfig, "SMTP config is not configured correctly.", u.SettingView, vd)
 		} else {
 			handleHTMLError(w, r, err, "sending verification email", u.SettingView, vd)
