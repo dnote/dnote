@@ -21,7 +21,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -51,7 +51,7 @@ func initApp(cfg config.Config) app.App {
 	if err != nil {
 		emailBackend = &mailer.DefaultBackend{Enabled: false}
 	} else {
-		log.Printf("Email backend configured")
+		log.Info("Email backend configured")
 	}
 
 	return app.App{
@@ -85,6 +85,7 @@ Flags:
 	webURL := startFlags.String("webUrl", "", "Full URL to server without trailing slash (env: WebURL, example: https://example.com)")
 	dbPath := startFlags.String("dbPath", "", "Path to SQLite database file (env: DBPath, default: $XDG_DATA_HOME/dnote/server.db)")
 	disableRegistration := startFlags.Bool("disableRegistration", false, "Disable user registration (env: DisableRegistration, default: false)")
+	logLevel := startFlags.String("logLevel", "", "Log level: debug, info, warn, or error (env: LOG_LEVEL, default: info)")
 
 	startFlags.Parse(args)
 
@@ -94,12 +95,16 @@ Flags:
 		WebURL:              *webURL,
 		DBPath:              *dbPath,
 		DisableRegistration: *disableRegistration,
+		LogLevel:            *logLevel,
 	})
 	if err != nil {
 		fmt.Printf("Error: %s\n\n", err)
 		startFlags.Usage()
 		os.Exit(1)
 	}
+
+	// Set log level
+	log.SetLevel(cfg.LogLevel)
 
 	app := initApp(cfg)
 	defer func() {
@@ -121,8 +126,15 @@ Flags:
 		panic(errors.Wrap(err, "initializing router"))
 	}
 
-	log.Printf("Dnote version %s is running on port %s", buildinfo.Version, cfg.Port)
-	log.Fatalln(http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r))
+	log.WithFields(log.Fields{
+		"version": buildinfo.Version,
+		"port":    cfg.Port,
+	}).Info("Dnote server starting")
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", cfg.Port), r); err != nil {
+		log.ErrorWrap(err, "server failed")
+		os.Exit(1)
+	}
 }
 
 func versionCmd() {

@@ -32,9 +32,19 @@ const (
 	fieldKeyTimestamp     = "ts"
 	fieldKeyUnixTimestamp = "ts_unix"
 
-	levelInfo  = "info"
-	levelWarn  = "warn"
-	levelError = "error"
+	// LevelDebug represents debug log level
+	LevelDebug = "debug"
+	// LevelInfo represents info log level
+	LevelInfo = "info"
+	// LevelWarn represents warn log level
+	LevelWarn = "warn"
+	// LevelError represents error log level
+	LevelError = "error"
+)
+
+var (
+	// currentLevel is the currently configured log level
+	currentLevel = LevelInfo
 )
 
 // Fields represents a set of information to be included in the log
@@ -58,19 +68,50 @@ func WithFields(fields Fields) Entry {
 	return newEntry(fields)
 }
 
+// SetLevel sets the global log level
+func SetLevel(level string) {
+	currentLevel = level
+}
+
+// levelPriority returns a numeric priority for comparison
+func levelPriority(level string) int {
+	switch level {
+	case LevelDebug:
+		return 0
+	case LevelInfo:
+		return 1
+	case LevelWarn:
+		return 2
+	case LevelError:
+		return 3
+	default:
+		return 1
+	}
+}
+
+// shouldLog returns true if the given level should be logged based on currentLevel
+func shouldLog(level string) bool {
+	return levelPriority(level) >= levelPriority(currentLevel)
+}
+
+// Debug logs the given entry at a debug level
+func (e Entry) Debug(msg string) {
+	e.write(LevelDebug, msg)
+}
+
 // Info logs the given entry at an info level
 func (e Entry) Info(msg string) {
-	e.write(levelInfo, msg)
+	e.write(LevelInfo, msg)
 }
 
 // Warn logs the given entry at a warning level
 func (e Entry) Warn(msg string) {
-	e.write(levelWarn, msg)
+	e.write(LevelWarn, msg)
 }
 
 // Error logs the given entry at an error level
 func (e Entry) Error(msg string) {
-	e.write(levelError, msg)
+	e.write(LevelError, msg)
 }
 
 // ErrorWrap logs the given entry with the error message annotated by the given message
@@ -106,12 +147,21 @@ func (e Entry) formatJSON(level, msg string) []byte {
 }
 
 func (e Entry) write(level, msg string) {
+	if !shouldLog(level) {
+		return
+	}
+
 	serialized := e.formatJSON(level, msg)
 
 	_, err := fmt.Fprintln(os.Stderr, string(serialized))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "writing to stderr: %v\n", err)
 	}
+}
+
+// Debug logs a debug message without additional fields
+func Debug(msg string) {
+	newEntry(Fields{}).Debug(msg)
 }
 
 // Info logs an info message without additional fields

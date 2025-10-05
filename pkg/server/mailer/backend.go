@@ -19,11 +19,10 @@
 package mailer
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"strconv"
 
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 	"gopkg.in/gomail.v2"
 )
@@ -104,9 +103,12 @@ func NewDefaultBackend(enabled bool) (*DefaultBackend, error) {
 func (b *DefaultBackend) Queue(subject, from string, to []string, contentType, body string) error {
 	// If not enabled, just log the email
 	if !b.Enabled {
-		log.Println("Not sending email because backend is disabled.")
-		log.Printf("Subject: %s, to: %s, from: %s", subject, to, from)
-		fmt.Println(body)
+		log.WithFields(log.Fields{
+			"subject": subject,
+			"to":      to,
+			"from":    from,
+			"body":    body,
+		}).Info("Not sending email because email backend is not configured.")
 		return nil
 	}
 

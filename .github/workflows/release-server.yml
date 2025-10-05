@@ -1,0 +1,91 @@
+name: Release Server
+
+on:
+  push:
+    tags:
+      - 'server-v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.25.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/server-v}
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+          echo "Releasing version: $TAG"
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run tests
+        run: make test
+
+      - name: Build server
+        run: make version=${{ steps.version.outputs.version }} build-server
+
+      - name: Prepare Docker build context
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cp build/server/dnote_server_${VERSION}_linux_amd64.tar.gz host/docker/
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./host/docker
+          push: true
+          tags: |
+            dnote/dnote:${{ steps.version.outputs.version }}
+            dnote/dnote:latest
+          build-args: |
+            tarballName=dnote_server_${{ steps.version.outputs.version }}_linux_amd64.tar.gz
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="server-v${VERSION}"
+
+          # Determine if prerelease (version not matching major.minor.patch)
+          FLAGS=""
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            FLAGS="--prerelease"
+          fi
+
+          gh release create "$TAG" \
+            build/server/*.tar.gz \
+            build/server/*_checksums.txt \
+            $FLAGS \
+            --title="$TAG" \
+            --notes="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
+            --draft
+
+      - name: Push to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker push dnote/dnote:${VERSION}
+          docker push dnote/dnote:latest

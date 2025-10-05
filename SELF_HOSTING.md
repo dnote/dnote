@@ -19,17 +19,18 @@ mv ./dnote-server /usr/local/bin
 3. Run Dnote
 
 ```bash
-APP_ENV=PRODUCTION \
-WebURL=$webURL \
-DisableRegistration=false \
-  dnote-server start
+dnote-server start --webUrl=$webURL
 ```
 
 Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
 
-Set `DisableRegistration=true` if you would like to disable user registrations.
+Additional flags:
+- `--port`: Server port (default: `3000`)
+- `--disableRegistration`: Disable user registration (default: `false`)
+- `--logLevel`: Log level: `debug`, `info`, `warn`, or `error` (default: `info`)
+- `--appEnv`: environment (default: `PRODUCTION`)
 
-By default, dnote server will run on the port 3000.
+You can also use environment variables: `PORT`, `WebURL`, `DisableRegistration`, `LOG_LEVEL`, `APP_ENV`.
 
 ## Configuration
 
@@ -111,9 +112,7 @@ User=$user
 Restart=always
 RestartSec=3
 WorkingDirectory=/home/$user
-ExecStart=/usr/local/bin/dnote-server start
-Environment=APP_ENV=PRODUCTION
-Environment=WebURL=$WebURL
+ExecStart=/usr/local/bin/dnote-server start --webUrl=$WebURL
 
 [Install]
 WantedBy=multi-user.target
@@ -121,7 +120,7 @@ WantedBy=multi-user.target
 
 Replace `$user` and `$WebURL` with the actual values.
 
-By default, the database will be stored at `$XDG_DATA_HOME/dnote/server.db` (typically `~/.local/share/dnote/server.db`). To use a custom location, add `Environment=DBPath=/path/to/database.db` to the service file.
+By default, the database will be stored at `$XDG_DATA_HOME/dnote/server.db` (typically `~/.local/share/dnote/server.db`). To use a custom location, add `--dbPath=/path/to/database.db` to the `ExecStart` command.
 
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
@@ -150,7 +149,7 @@ The following is an example configuration:
 
 ```yaml
 editor: nvim
-apiEndpoint: https://api.getdnote.com
+apiEndpoint: https://localhost:3000/api
 ```
 
 Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, followed by '/api', and save the configuration file.

@@ -75,6 +75,7 @@ type Config struct {
 	DBPath              string
 	AssetBaseURL        string
 	HTTP500Page         []byte
+	LogLevel            string
 }
 
 // Params are the configuration parameters for creating a new Config
@@ -84,6 +85,7 @@ type Params struct {
 	WebURL              string
 	DBPath              string
 	DisableRegistration bool
+	LogLevel            string
 }
 
 // New constructs and returns a new validated config.
@@ -95,6 +97,7 @@ func New(p Params) (Config, error) {
 		WebURL:              getOrEnv(p.WebURL, "WebURL", ""),
 		DBPath:              getOrEnv(p.DBPath, "DBPath", DefaultDBPath),
 		DisableRegistration: p.DisableRegistration || readBoolEnv("DisableRegistration"),
+		LogLevel:            getOrEnv(p.LogLevel, "LOG_LEVEL", "info"),
 		AssetBaseURL:        "/static",
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}

@@ -35,8 +35,9 @@ import (
 var testServerBinary string
 
 func init() {
-	// Use absolute path
-	testServerBinary = "/home/device10/development/dnote/pkg/e2e/tmp/.dnote/test-server"
+	// Build server binary in temp directory
+	tmpDir := os.TempDir()
+	testServerBinary = fmt.Sprintf("%s/dnote-test-server", tmpDir)
 	buildCmd := exec.Command("go", "build", "-tags", "fts5", "-o", testServerBinary, "../server")
 	if out, err := buildCmd.CombinedOutput(); err != nil {
 		panic(fmt.Sprintf("failed to build server: %v\n%s", err, out))

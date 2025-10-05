@@ -143,8 +143,11 @@ func migrate(db *gorm.DB, fsys fs.FS) error {
 
 	log.WithFields(log.Fields{
 		"version": version,
-		"files":   filenames,
 	}).Info("Database schema version.")
+
+	log.WithFields(log.Fields{
+		"files": filenames,
+	}).Debug("Database migration files.")
 
 	// Apply pending migrations
 	for _, m := range migrations {
@@ -178,6 +181,5 @@ func migrate(db *gorm.DB, fsys fs.FS) error {
 		}).Info("Migrate success.")
 	}
 
-	log.Info("Migration complete.")
 	return nil
 }

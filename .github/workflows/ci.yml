@@ -11,25 +11,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: dnote_test
-          POSTGRES_PORT: 5432
-        # Wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-        # Expose port to the host
-        ports:
-          - 5432:5432
-
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
