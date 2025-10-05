@@ -30,9 +30,9 @@ import (
 func TestHealth(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	server := MustNewServer(t, &app.App{
-		DB: db,
-	})
+	a := app.NewTest()
+	a.DB = db
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	// Execute

@@ -20,7 +20,6 @@ package app
 
 import (
 	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"gorm.io/gorm"
 	"github.com/pkg/errors"
@@ -43,18 +42,23 @@ var (
 
 // App is an application context
 type App struct {
-	DB             *gorm.DB
-	Clock          clock.Clock
-	EmailTemplates mailer.Templates
-	EmailBackend   mailer.Backend
-	Config         config.Config
-	Files          map[string][]byte
-	HTTP500Page    []byte
+	DB                  *gorm.DB
+	Clock               clock.Clock
+	EmailTemplates      mailer.Templates
+	EmailBackend        mailer.Backend
+	Files               map[string][]byte
+	HTTP500Page         []byte
+	AppEnv              string
+	WebURL              string
+	DisableRegistration bool
+	Port                string
+	DBPath              string
+	AssetBaseURL        string
 }
 
 // Validate validates the app configuration
 func (a *App) Validate() error {
-	if a.Config.WebURL == "" {
+	if a.WebURL == "" {
 		return ErrEmptyWebURL
 	}
 	if a.Clock == nil {

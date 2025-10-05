@@ -48,12 +48,6 @@ test-e2e:
 	@(${currentDir}/scripts/e2e/test.sh)
 .PHONY: test-e2e
 
-test-selfhost:
-	@echo "==> running a smoke test for self-hosting"
-
-	@${currentDir}/host/smoketest/run_test.sh ${tarballPath}
-.PHONY: test-selfhost
-
 # development
 dev-server:
 	@echo "==> running dev environment"

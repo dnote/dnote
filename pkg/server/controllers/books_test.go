@@ -44,10 +44,10 @@ func TestGetBooks(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -137,10 +137,10 @@ func TestGetBooksByName(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -206,10 +206,10 @@ func TestGetBook(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -270,10 +270,10 @@ func TestGetBookNonOwner(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -308,10 +308,10 @@ func TestCreateBook(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			DB:    db,
-			Clock: clock.NewMock(),
-		})
+		a := app.NewTest()
+		a.DB = db
+		a.Clock = clock.NewMock()
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -369,10 +369,10 @@ func TestCreateBook(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			DB:    db,
-			Clock: clock.NewMock(),
-		})
+		a := app.NewTest()
+		a.DB = db
+		a.Clock = clock.NewMock()
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -459,10 +459,10 @@ func TestUpdateBook(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
 			// Setup
-			server := MustNewServer(t, &app.App{
-				DB:    db,
-				Clock: clock.NewMock(),
-			})
+			a := app.NewTest()
+			a.DB = db
+			a.Clock = clock.NewMock()
+			server := MustNewServer(t, &a)
 			defer server.Close()
 
 			user := testutils.SetupUserData(db)
@@ -544,10 +544,10 @@ func TestDeleteBook(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
 			// Setup
-			server := MustNewServer(t, &app.App{
-				DB:    db,
-				Clock: clock.NewMock(),
-			})
+			a := app.NewTest()
+			a.DB = db
+			a.Clock = clock.NewMock()
+			server := MustNewServer(t, &a)
 			defer server.Close()
 
 			user := testutils.SetupUserData(db)

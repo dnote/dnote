@@ -28,10 +28,9 @@ import (
 
 func TestSendVerificationEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
-	a := NewTest(&App{
-		EmailBackend: &emailBackend,
-	})
-	a.Config.WebURL = "http://example.com"
+	a := NewTest()
+	a.EmailBackend = &emailBackend
+	a.WebURL = "http://example.com"
 
 	if err := a.SendVerificationEmail("alice@example.com", "mockTokenValue"); err != nil {
 		t.Fatal(err, "failed to perform")
@@ -45,10 +44,9 @@ func TestSendVerificationEmail(t *testing.T) {
 
 func TestSendWelcomeEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
-	a := NewTest(&App{
-		EmailBackend: &emailBackend,
-	})
-	a.Config.WebURL = "http://example.com"
+	a := NewTest()
+	a.EmailBackend = &emailBackend
+	a.WebURL = "http://example.com"
 
 	if err := a.SendWelcomeEmail("alice@example.com"); err != nil {
 		t.Fatal(err, "failed to perform")
@@ -62,10 +60,9 @@ func TestSendWelcomeEmail(t *testing.T) {
 
 func TestSendPasswordResetEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
-	a := NewTest(&App{
-		EmailBackend: &emailBackend,
-	})
-	a.Config.WebURL = "http://example.com"
+	a := NewTest()
+	a.EmailBackend = &emailBackend
+	a.WebURL = "http://example.com"
 
 	if err := a.SendPasswordResetEmail("alice@example.com", "mockTokenValue"); err != nil {
 		t.Fatal(err, "failed to perform")

@@ -31,9 +31,8 @@ import (
 func TestCreateUser_ProValue(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	a := NewTest(&App{
-		DB: db,
-	})
+	a := NewTest()
+	a.DB = db
 	if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
 		t.Fatal(errors.Wrap(err, "executing"))
 	}
@@ -51,9 +50,8 @@ func TestCreateUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		a := NewTest(&App{
-			DB: db,
-		})
+		a := NewTest()
+		a.DB = db
 		if _, err := a.CreateUser("alice@example.com", "pass1234", "pass1234"); err != nil {
 			t.Fatal(errors.Wrap(err, "executing"))
 		}
@@ -80,9 +78,8 @@ func TestCreateUser(t *testing.T) {
 		aliceUser := testutils.SetupUserData(db)
 		testutils.SetupAccountData(db, aliceUser, "alice@example.com", "somepassword")
 
-		a := NewTest(&App{
-			DB: db,
-		})
+		a := NewTest()
+		a.DB = db
 		_, err := a.CreateUser("alice@example.com", "newpassword", "newpassword")
 
 		assert.Equal(t, err, ErrDuplicateEmail, "error mismatch")

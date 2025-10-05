@@ -56,10 +56,10 @@ func TestNotSupportedVersions(t *testing.T) {
 
 	// setup
 	db := testutils.InitMemoryDB(t)
-	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		DB:    db,
-	})
+	a := app.NewTest()
+	a.Clock = clock.NewMock()
+	a.DB = db
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	for _, tc := range testCases {

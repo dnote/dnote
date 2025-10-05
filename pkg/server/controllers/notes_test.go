@@ -58,10 +58,10 @@ func TestGetNotes(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -182,10 +182,10 @@ func TestGetNote(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -383,10 +383,10 @@ func TestCreateNote(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := app.NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
@@ -465,10 +465,10 @@ func TestDeleteNote(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
 			// Setup
-			server := MustNewServer(t, &app.App{
-				DB:    db,
-				Clock: clock.NewMock(),
-			})
+			a := app.NewTest()
+			a.DB = db
+			a.Clock = clock.NewMock()
+			server := MustNewServer(t, &a)
 			defer server.Close()
 
 			user := testutils.SetupUserData(db)
@@ -704,10 +704,10 @@ func TestUpdateNote(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
 			// Setup
-			server := MustNewServer(t, &app.App{
-				DB:    db,
-				Clock: clock.NewMock(),
-			})
+			a := app.NewTest()
+			a.DB = db
+			a.Clock = clock.NewMock()
+			server := MustNewServer(t, &a)
 			defer server.Close()
 
 			user := testutils.SetupUserData(db)

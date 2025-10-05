@@ -32,7 +32,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/pkg/errors"
@@ -41,11 +40,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// InitTestDB establishes connection pool with the test database specified by
-// the environment variable configuration and initalizes a new schema
-func InitTestDB() *gorm.DB {
-	c := config.Load()
-	return database.Open(c.DBPath)
+// InitDB opens a database at the given path and initializes the schema
+func InitDB(dbPath string) *gorm.DB {
+	db := database.Open(dbPath)
+	database.InitSchema(db)
+	database.Migrate(db)
+	return db
 }
 
 // InitMemoryDB creates an in-memory SQLite database with the schema initialized

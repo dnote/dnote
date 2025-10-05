@@ -39,7 +39,6 @@ import (
 	clitest "github.com/dnote/dnote/pkg/cli/testutils"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/mailer"
@@ -84,22 +83,22 @@ func clearTmp(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	// Set up server database
-	serverDb = apitest.InitTestDB()
+	// Set up server database - use file-based DB for e2e tests
+	dbPath := fmt.Sprintf("%s/server.db", testDir)
+	serverDb = apitest.InitDB(dbPath)
 
 	mockClock := clock.NewMock()
 	mockClock.SetNow(serverTime)
 
+	a := app.NewTest()
+	a.Clock = mockClock
+	a.EmailTemplates = mailer.Templates{}
+	a.EmailBackend = &apitest.MockEmailbackendImplementation{}
+	a.DB = serverDb
+	a.WebURL = os.Getenv("WebURL")
+
 	var err error
-	server, err = controllers.NewServer(&app.App{
-		Clock:          mockClock,
-		EmailTemplates: mailer.Templates{},
-		EmailBackend:   &apitest.MockEmailbackendImplementation{},
-		DB:             serverDb,
-		Config: config.Config{
-			WebURL: os.Getenv("WebURL"),
-		},
-	})
+	server, err = controllers.NewServer(&a)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing router"))
 	}

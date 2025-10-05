@@ -19,55 +19,24 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
 // NewTest returns an app for a testing environment
-func NewTest(appParams *App) App {
-	c := config.Config{
+func NewTest() App {
+	return App{
+		Clock:               clock.NewMock(),
+		EmailTemplates:      mailer.NewTemplates(),
+		EmailBackend:        &testutils.MockEmailbackendImplementation{},
+		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 		AppEnv:              "TEST",
 		WebURL:              "http://127.0.0.0.1",
 		Port:                "3000",
 		DisableRegistration: false,
-		DBPath:              config.LoadDBPath(),
+		DBPath:              ":memory:",
 		AssetBaseURL:        "",
-		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}
-
-	a := App{
-		DB:             appParams.DB,
-		Clock:          clock.NewMock(),
-		EmailTemplates: mailer.NewTemplates(),
-		EmailBackend:   &testutils.MockEmailbackendImplementation{},
-		Config:         c,
-		HTTP500Page:    []byte("<html></html>"),
-	}
-
-	// Allow to override with appParams
-	if appParams != nil && appParams.EmailBackend != nil {
-		a.EmailBackend = appParams.EmailBackend
-	}
-	if appParams != nil && appParams.Clock != nil {
-		a.Clock = appParams.Clock
-	}
-	if appParams != nil && appParams.EmailTemplates != nil {
-		a.EmailTemplates = appParams.EmailTemplates
-	}
-	if appParams != nil && appParams.Config.WebURL != "" {
-		a.Config.WebURL = appParams.Config.WebURL
-	}
-	if appParams != nil && appParams.Config.DisableRegistration {
-		a.Config.DisableRegistration = appParams.Config.DisableRegistration
-	}
-
-	fmt.Printf("%+v\n", appParams)
-	fmt.Printf("%+v\n", a)
-
-	return a
 }

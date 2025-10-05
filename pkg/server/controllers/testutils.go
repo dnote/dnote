@@ -27,9 +27,9 @@ import (
 )
 
 // MustNewServer is a test utility function to initialize a new server
-// with the given app paratmers
-func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
-	server, err := NewServer(appParams)
+// with the given app
+func MustNewServer(t *testing.T, a *app.App) *httptest.Server {
+	server, err := NewServer(a)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "initializing router"))
 	}
@@ -37,16 +37,14 @@ func MustNewServer(t *testing.T, appParams *app.App) *httptest.Server {
 	return server
 }
 
-func NewServer(appParams *app.App) (*httptest.Server, error) {
-	a := app.NewTest(appParams)
-
-	ctl := New(&a)
+func NewServer(a *app.App) (*httptest.Server, error) {
+	ctl := New(a)
 	rc := RouteConfig{
-		WebRoutes:   NewWebRoutes(&a, ctl),
-		APIRoutes:   NewAPIRoutes(&a, ctl),
+		WebRoutes:   NewWebRoutes(a, ctl),
+		APIRoutes:   NewAPIRoutes(a, ctl),
 		Controllers: ctl,
 	}
-	r, err := NewRouter(&a, rc)
+	r, err := NewRouter(a, rc)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing router")
 	}

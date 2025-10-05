@@ -50,7 +50,7 @@ func initHelpers(c Config, a *app.App) template.FuncMap {
 		"defaultValue":     ctx.defaultValue,
 		"add":              ctx.add,
 		"assetBaseURL": func() string {
-			return a.Config.AssetBaseURL
+			return a.AssetBaseURL
 		},
 	}
 

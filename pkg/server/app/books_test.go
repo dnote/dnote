@@ -62,10 +62,9 @@ func TestCreateBook(t *testing.T) {
 			anotherUser := testutils.SetupUserData(db)
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			a := NewTest(&App{
-				DB:    db,
-				Clock: clock.NewMock(),
-			})
+			a := NewTest()
+			a.DB = db
+			a.Clock = clock.NewMock()
 
 			book, err := a.CreateBook(user, tc.label)
 			if err != nil {
@@ -133,9 +132,8 @@ func TestDeleteBook(t *testing.T) {
 			testutils.MustExec(t, db.Save(&book), fmt.Sprintf("preparing book for test case %d", idx))
 
 			tx := db.Begin()
-			a := NewTest(&App{
-				DB: db,
-			})
+			a := NewTest()
+			a.DB = db
 			ret, err := a.DeleteBook(tx, user, book)
 			if err != nil {
 				tx.Rollback()
@@ -213,10 +211,9 @@ func TestUpdateBook(t *testing.T) {
 			testutils.MustExec(t, db.Save(&b), fmt.Sprintf("preparing book for test case %d", idx))
 
 			c := clock.NewMock()
-			a := NewTest(&App{
-				DB:    db,
-				Clock: c,
-			})
+			a := NewTest()
+			a.DB = db
+			a.Clock = c
 
 			tx := db.Begin()
 			book, err := a.UpdateBook(tx, user, b, tc.payloadLabel)

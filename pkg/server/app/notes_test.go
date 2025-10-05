@@ -87,10 +87,9 @@ func TestCreateNote(t *testing.T) {
 			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
 			testutils.MustExec(t, db.Save(&b1), fmt.Sprintf("preparing b1 for test case %d", idx))
 
-			a := NewTest(&App{
-				DB:    db,
-				Clock: mockClock,
-			})
+			a := NewTest()
+			a.DB = db
+			a.Clock = mockClock
 
 			if _, err := a.CreateNote(user, b1.UUID, "note content", tc.addedOn, tc.editedOn, false, ""); err != nil {
 				t.Fatal(errors.Wrapf(err, "creating note for test case %d", idx))
@@ -135,10 +134,9 @@ func TestCreateNote_EmptyBody(t *testing.T) {
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	// Create note with empty body
 	note, err := a.CreateNote(user, b1.UUID, "", nil, nil, false, "")
@@ -192,10 +190,9 @@ func TestUpdateNote(t *testing.T) {
 			content := "updated test content"
 			public := true
 
-			a := NewTest(&App{
-				DB:    db,
-				Clock: c,
-			})
+			a := NewTest()
+			a.DB = db
+			a.Clock = c
 
 			tx := db.Begin()
 			if _, err := a.UpdateNote(tx, user, note, &UpdateNoteParams{
@@ -247,10 +244,9 @@ func TestUpdateNote_SameContent(t *testing.T) {
 	note := database.Note{UserID: user.ID, Deleted: false, Body: "test content", BookUUID: b1.UUID}
 	testutils.MustExec(t, db.Save(&note), "preparing note")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	// Update note with same content
 	sameContent := "test content"
@@ -315,9 +311,8 @@ func TestDeleteNote(t *testing.T) {
 			testutils.MustExec(t, db.Raw("SELECT COUNT(*) FROM notes_fts WHERE rowid = ?", note.ID).Scan(&ftsCountBefore), fmt.Sprintf("counting notes_fts before delete for test case %d", idx))
 			assert.Equal(t, ftsCountBefore, int64(1), "FTS should have entry before delete")
 
-			a := NewTest(&App{
-				DB: db,
-			})
+			a := NewTest()
+			a.DB = db
 
 			tx := db.Begin()
 			ret, err := a.DeleteNote(tx, user, note)
@@ -373,10 +368,9 @@ func TestGetNotes_FTSSearch(t *testing.T) {
 	note3 := database.Note{UserID: user.ID, Deleted: false, Body: "running quz succeeded", BookUUID: b1.UUID}
 	testutils.MustExec(t, db.Save(&note3), "preparing note3")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	// Search "baz"
 	result, err := a.GetNotes(user.ID, GetNotesParams{
@@ -437,10 +431,9 @@ func TestGetNotes_FTSSearch_Snippet(t *testing.T) {
 	longNote := database.Note{UserID: user.ID, Deleted: false, Body: longBody, BookUUID: b1.UUID}
 	testutils.MustExec(t, db.Save(&longNote), "preparing long note")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	// Search for "keyword" in long note - should return snippet with "..."
 	result, err := a.GetNotes(user.ID, GetNotesParams{
@@ -474,10 +467,9 @@ func TestGetNotes_FTSSearch_ShortWord(t *testing.T) {
 	note2 := database.Note{UserID: user.ID, Deleted: false, Body: "d", BookUUID: b1.UUID}
 	testutils.MustExec(t, db.Save(&note2), "preparing note2")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	result, err := a.GetNotes(user.ID, GetNotesParams{
 		Search:    "a",
@@ -507,10 +499,9 @@ func TestGetNotes_All(t *testing.T) {
 	note2 := database.Note{UserID: user.ID, Deleted: false, Body: "d", BookUUID: b1.UUID}
 	testutils.MustExec(t, db.Save(&note2), "preparing note2")
 
-	a := NewTest(&App{
-		DB:    db,
-		Clock: clock.NewMock(),
-	})
+	a := NewTest()
+	a.DB = db
+	a.Clock = clock.NewMock()
 
 	result, err := a.GetNotes(user.ID, GetNotesParams{
 		Search:    "",

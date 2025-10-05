@@ -30,7 +30,6 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
-	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
@@ -80,11 +79,11 @@ func TestJoin(t *testing.T) {
 
 			// Setup
 			emailBackend := testutils.MockEmailbackendImplementation{}
-			server := MustNewServer(t, &app.App{
-				Clock:        clock.NewMock(),
-				EmailBackend: &emailBackend,
-				DB:           db,
-			})
+			a := app.NewTest()
+			a.Clock = clock.NewMock()
+			a.EmailBackend = &emailBackend
+			a.DB = db
+			server := MustNewServer(t, &a)
 			defer server.Close()
 
 			dat := url.Values{}
@@ -125,10 +124,10 @@ func TestJoinError(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		dat := url.Values{}
@@ -153,10 +152,10 @@ func TestJoinError(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		dat := url.Values{}
@@ -181,10 +180,10 @@ func TestJoinError(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		dat := url.Values{}
@@ -212,10 +211,10 @@ func TestJoinDuplicateEmail(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		DB:    db,
-	})
+	a := app.NewTest()
+	a.Clock = clock.NewMock()
+	a.DB = db
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	u := testutils.SetupUserData(db)
@@ -251,13 +250,11 @@ func TestJoinDisabled(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
 	// Setup
-	server := MustNewServer(t, &app.App{
-		Clock: clock.NewMock(),
-		DB:    db,
-		Config: config.Config{
-			DisableRegistration: true,
-		},
-	})
+	a := app.NewTest()
+	a.Clock = clock.NewMock()
+	a.DB = db
+	a.DisableRegistration = true
+	server := MustNewServer(t, &a)
 	defer server.Close()
 
 	dat := url.Values{}
@@ -284,10 +281,10 @@ func TestLogin(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 
 		u := testutils.SetupUserData(db)
 		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
@@ -344,10 +341,10 @@ func TestLogin(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 
 		u := testutils.SetupUserData(db)
 		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
@@ -383,10 +380,10 @@ func TestLogin(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
@@ -422,10 +419,10 @@ func TestLogin(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		var req *http.Request
@@ -454,10 +451,10 @@ func TestLogin(t *testing.T) {
 func TestLogout(t *testing.T) {
 	setupLogoutTest := func(t *testing.T, db *gorm.DB) (*httptest.Server, *database.Session, *database.Session) {
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 
 		aliceUser := testutils.SetupUserData(db)
 		testutils.SetupAccountData(db, aliceUser, "alice@example.com", "pass1234")
@@ -567,14 +564,14 @@ func TestResetPassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -625,7 +622,7 @@ func TestResetPassword(t *testing.T) {
 		var account database.Account
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
 		testutils.MustExec(t, db.Where("value = ?", "somerandomvalue").First(&verificationToken), "finding reset token")
-		testutils.MustExec(t, db.Where("id = ?", a.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "finding account")
 
 		assert.NotEqual(t, resetToken.UsedAt, nil, "reset_token UsedAt mismatch")
 		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
@@ -651,14 +648,14 @@ func TestResetPassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -681,10 +678,10 @@ func TestResetPassword(t *testing.T) {
 		var resetToken database.Token
 		var account database.Account
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
-		testutils.MustExec(t, db.Where("id = ?", a.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "finding account")
 
-		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
-		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 
@@ -692,14 +689,14 @@ func TestResetPassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -723,8 +720,8 @@ func TestResetPassword(t *testing.T) {
 		var resetToken database.Token
 		var account database.Account
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
-		testutils.MustExec(t, db.Where("id = ?", a.ID).First(&account), "failed to find account")
-		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "failed to find account")
+		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 
@@ -732,14 +729,14 @@ func TestResetPassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := database.Token{
@@ -766,8 +763,8 @@ func TestResetPassword(t *testing.T) {
 		var resetToken database.Token
 		var account database.Account
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
-		testutils.MustExec(t, db.Where("id = ?", a.ID).First(&account), "failed to find account")
-		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "failed to find account")
+		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
 
 		resetTokenUsedAtUTC := resetToken.UsedAt.UTC()
 		if resetTokenUsedAtUTC.Year() != usedAt.Year() ||
@@ -784,14 +781,14 @@ func TestResetPassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -815,9 +812,9 @@ func TestResetPassword(t *testing.T) {
 		var resetToken database.Token
 		var account database.Account
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
-		testutils.MustExec(t, db.Where("id = ?", a.ID).First(&account), "failed to find account")
+		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "failed to find account")
 
-		assert.Equal(t, a.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 }
@@ -827,10 +824,10 @@ func TestCreateResetToken(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
@@ -861,10 +858,10 @@ func TestCreateResetToken(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
@@ -891,10 +888,10 @@ func TestUpdatePassword(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -922,14 +919,14 @@ func TestUpdatePassword(t *testing.T) {
 	t.Run("old password mismatch", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -945,21 +942,21 @@ func TestUpdatePassword(t *testing.T) {
 
 		var account database.Account
 		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
+		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
 	})
 
 	t.Run("password too short", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -975,21 +972,21 @@ func TestUpdatePassword(t *testing.T) {
 
 		var account database.Account
 		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
+		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
 	})
 
 	t.Run("password confirmation mismatch", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -1005,7 +1002,7 @@ func TestUpdatePassword(t *testing.T) {
 
 		var account database.Account
 		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, a.Password.String, account.Password.String, "password should not have been updated")
+		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
 	})
 }
 
@@ -1014,16 +1011,16 @@ func TestUpdateEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
-		a.EmailVerified = true
-		testutils.MustExec(t, db.Save(&a), "updating email_verified")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		acc.EmailVerified = true
+		testutils.MustExec(t, db.Save(&acc), "updating email_verified")
 
 		// Execute
 		dat := url.Values{}
@@ -1049,16 +1046,16 @@ func TestUpdateEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		u := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
-		a.EmailVerified = true
-		testutils.MustExec(t, db.Save(&a), "updating email_verified")
+		acc := testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		acc.EmailVerified = true
+		testutils.MustExec(t, db.Save(&acc), "updating email_verified")
 
 		// Execute
 		dat := url.Values{}
@@ -1086,10 +1083,10 @@ func TestVerifyEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -1125,10 +1122,10 @@ func TestVerifyEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -1167,10 +1164,10 @@ func TestVerifyEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -1207,16 +1204,16 @@ func TestVerifyEmail(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, user, "alice@example.com", "oldpass1234")
-		a.EmailVerified = true
-		testutils.MustExec(t, db.Save(&a), "preparing account")
+		acc := testutils.SetupAccountData(db, user, "alice@example.com", "oldpass1234")
+		acc.EmailVerified = true
+		testutils.MustExec(t, db.Save(&acc), "preparing account")
 
 		tok := database.Token{
 			UserID: user.ID,
@@ -1251,11 +1248,11 @@ func TestCreateVerificationToken(t *testing.T) {
 
 		// Setup
 		emailBackend := testutils.MockEmailbackendImplementation{}
-		server := MustNewServer(t, &app.App{
-			Clock:        clock.NewMock(),
-			DB:           db,
-			EmailBackend: &emailBackend,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		a.EmailBackend = &emailBackend
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
@@ -1285,16 +1282,16 @@ func TestCreateVerificationToken(t *testing.T) {
 	t.Run("already verified", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 		// Setup
-		server := MustNewServer(t, &app.App{
-			Clock: clock.NewMock(),
-			DB:    db,
-		})
+		a := app.NewTest()
+		a.Clock = clock.NewMock()
+		a.DB = db
+		server := MustNewServer(t, &a)
 		defer server.Close()
 
 		user := testutils.SetupUserData(db)
-		a := testutils.SetupAccountData(db, user, "alice@example.com", "pass1234")
-		a.EmailVerified = true
-		testutils.MustExec(t, db.Save(&a), "preparing account")
+		acc := testutils.SetupAccountData(db, user, "alice@example.com", "pass1234")
+		acc.EmailVerified = true
+		testutils.MustExec(t, db.Save(&acc), "preparing account")
 
 		// Execute
 		req := testutils.MakeReq(server.URL, "POST", "/verification-token", "")

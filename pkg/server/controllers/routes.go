@@ -66,7 +66,7 @@ func NewWebRoutes(a *app.App, c *Controllers) []Route {
 		{"GET", "/health", c.Health.Index, true},
 	}
 
-	if !a.Config.DisableRegistration {
+	if !a.DisableRegistration {
 		ret = append(ret, Route{"GET", "/join", c.Users.New, true})
 		ret = append(ret, Route{"POST", "/join", c.Users.Create, true})
 	}

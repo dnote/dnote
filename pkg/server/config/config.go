@@ -19,14 +19,12 @@
 package config
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/dnote/dnote/pkg/dirs"
 	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
 
@@ -40,6 +38,11 @@ const (
 )
 
 var (
+	// DefaultDBPath is the default path to the database file
+	DefaultDBPath = filepath.Join(dirs.DataHome, DefaultDBDir, DefaultDBFilename)
+)
+
+var (
 	// ErrDBMissingPath is an error for an incomplete configuration missing the database path
 	ErrDBMissingPath = errors.New("DB Path is empty")
 	// ErrWebURLInvalid is an error for an incomplete configuration with invalid web url
@@ -49,20 +52,18 @@ var (
 )
 
 func readBoolEnv(name string) bool {
-	if os.Getenv(name) == "true" {
-		return true
-	}
-
-	return false
+	return os.Getenv(name) == "true"
 }
 
-func LoadDBPath() string {
-	path := os.Getenv("DBPath")
-	if path == "" {
-		path = filepath.Join(dirs.DataHome, DefaultDBDir, DefaultDBFilename)
+// getOrEnv returns value if non-empty, otherwise env var, otherwise default
+func getOrEnv(value, envKey, defaultVal string) string {
+	if value != "" {
+		return value
 	}
-
-	return path
+	if env := os.Getenv(envKey); env != "" {
+		return env
+	}
+	return defaultVal
 }
 
 // Config is an application configuration
@@ -76,54 +77,33 @@ type Config struct {
 	HTTP500Page         []byte
 }
 
-func getDeprecatedEnvVar(deprecated, current string) string {
-	val := os.Getenv(deprecated)
-	if val != "" {
-		log.WithFields(log.Fields{
-			"deprecated": deprecated,
-			"current":    current,
-		}).Warn(fmt.Sprintf("%s is deprecated. Please use %s instead.", deprecated, current))
-		return val
-	}
-	return ""
+// Params are the configuration parameters for creating a new Config
+type Params struct {
+	AppEnv              string
+	Port                string
+	WebURL              string
+	DBPath              string
+	DisableRegistration bool
 }
 
-func getAppEnv() string {
-	goEnv := getDeprecatedEnvVar("GO_ENV", "APP_ENV")
-	if goEnv != "" {
-		return goEnv
-	}
-
-	return os.Getenv("APP_ENV")
-}
-
-// Load constructs and returns a new config based on the environment variables.
-func Load() Config {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
+// New constructs and returns a new validated config.
+// Empty string params will fall back to environment variables and defaults.
+func New(p Params) (Config, error) {
 	c := Config{
-		AppEnv:              getAppEnv(),
-		WebURL:              os.Getenv("WebURL"),
-		Port:                port,
-		DisableRegistration: readBoolEnv("DisableRegistration"),
-		DBPath:              LoadDBPath(),
-		AssetBaseURL:        "",
+		AppEnv:              getOrEnv(p.AppEnv, "APP_ENV", AppEnvProduction),
+		Port:                getOrEnv(p.Port, "PORT", "3000"),
+		WebURL:              getOrEnv(p.WebURL, "WebURL", ""),
+		DBPath:              getOrEnv(p.DBPath, "DBPath", DefaultDBPath),
+		DisableRegistration: p.DisableRegistration || readBoolEnv("DisableRegistration"),
+		AssetBaseURL:        "/static",
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}
 
 	if err := validate(c); err != nil {
-		panic(err)
+		return Config{}, err
 	}
 
-	return c
-}
-
-// SetAssetBaseURL sets static dir for the confi
-func (c *Config) SetAssetBaseURL(d string) {
-	c.AssetBaseURL = d
+	return c, nil
 }
 
 // IsProd checks if the app environment is configured to be production.
@@ -133,7 +113,7 @@ func (c Config) IsProd() bool {
 
 func validate(c Config) error {
 	if _, err := url.ParseRequestURI(c.WebURL); err != nil {
-		return errors.Wrapf(ErrWebURLInvalid, "provided: '%s'", c.WebURL)
+		return errors.Wrapf(ErrWebURLInvalid, "'%s'", c.WebURL)
 	}
 	if c.Port == "" {
 		return ErrPortInvalid
