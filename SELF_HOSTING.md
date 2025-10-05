@@ -4,45 +4,30 @@ This guide documents the steps for installing the Dnote server on your own machi
 
 ## Overview
 
-Dnote server comes as a single binary file that you can simply download and run. It uses Postgres as the database.
+Dnote server comes as a single binary file that you can simply download and run. It uses SQLite as the database.
 
 ## Installation
 
-1. Install Postgres 11+.
-2. Create a `dnote` database by running `createdb dnote`
-3. Download the official Dnote server release from the [release page](https://github.com/dnote/dnote/releases).
-4. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
+1. Download the official Dnote server release from the [release page](https://github.com/dnote/dnote/releases).
+2. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
 
 ```bash
 tar -xzf dnote-server-$version-$os.tar.gz
 mv ./dnote-server /usr/local/bin
 ```
 
-4. Run Dnote
+3. Run Dnote
 
 ```bash
-GO_ENV=PRODUCTION \
-DBHost=localhost \
-DBPort=5432 \
-DBName=dnote \
-DBUser=$user \
-DBPassword=$password \
+APP_ENV=PRODUCTION \
 WebURL=$webURL \
-SmtpHost=$SmtpHost \
-SmtpPort=$SmtpPort \
-SmtpUsername=$SmtpUsername \
-SmtpPassword=$SmtpPassword \
 DisableRegistration=false \
   dnote-server start
 ```
 
-Replace `$user`, `$password` with the credentials of the Postgres user that owns the `dnote` database.
-
 Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
 
-Replace `$SmtpHost`, `SmtpPort`, `$SmtpUsername`, `$SmtpPassword` with actual values, if you would like to receive spaced repetition through email.
-
-Replace `DisableRegistration` to `true` if you would like to disable user registrations.
+Set `DisableRegistration=true` if you would like to disable user registrations.
 
 By default, dnote server will run on the port 3000.
 
@@ -127,24 +112,31 @@ Restart=always
 RestartSec=3
 WorkingDirectory=/home/$user
 ExecStart=/usr/local/bin/dnote-server start
-Environment=GO_ENV=PRODUCTION
+Environment=APP_ENV=PRODUCTION
 Environment=WebURL=$WebURL
-Environment=SmtpHost=
-Environment=SmtpPort=
-Environment=SmtpUsername=
-Environment=SmtpPassword=
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Replace `$user`, `$WebURL`, `$DBUser`, and `$DBPassword` with the actual values.
+Replace `$user` and `$WebURL` with the actual values.
 
-Optionally, if you would like to send spaced repetitions throught email, populate `SmtpHost`, `SmtpPort`, `SmtpUsername`, and `SmtpPassword`.
+By default, the database will be stored at `$XDG_DATA_HOME/dnote/server.db` (typically `~/.local/share/dnote/server.db`). To use a custom location, add `Environment=DBPath=/path/to/database.db` to the service file.
 
 2. Reload the change by running `sudo systemctl daemon-reload`.
 3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
 4. Start the Daemon by running `sudo systemctl start dnote`
+
+### Optional: Email Support
+
+To enable sending emails, add the following environment variables to your configuration. But they are not required.
+
+- `SmtpHost` - SMTP server hostname
+- `SmtpPort` - SMTP server port
+- `SmtpUsername` - SMTP username
+- `SmtpPassword` - SMTP password
+
+For systemd, add these as additional `Environment=` lines in `/etc/systemd/system/dnote.service`.
 
 ### Configure clients
 
@@ -169,7 +161,3 @@ e.g.
 editor: nvim
 apiEndpoint: my-dnote-server.com/api
 ```
-
-#### Browser extension
-
-Navigate into the 'Settings' tab and set the values for 'API URL', and 'Web URL'.

@@ -178,7 +178,7 @@ func TestTokenAuth(t *testing.T) {
 	user := testutils.SetupUserData(db)
 	tok := database.Token{
 		UserID: user.ID,
-		Type:   database.TokenTypeEmailPreference,
+		Type:   database.TokenTypeEmailVerification,
 		Value:  "xpwFnc0MdllFUePDq9DLeQ==",
 	}
 	testutils.MustExec(t, db.Save(&tok), "preparing token")
@@ -193,7 +193,7 @@ func TestTokenAuth(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	server := httptest.NewServer(TokenAuth(db, handler, database.TokenTypeEmailPreference, nil))
+	server := httptest.NewServer(TokenAuth(db, handler, database.TokenTypeEmailVerification, nil))
 	defer server.Close()
 
 	t.Run("with token", func(t *testing.T) {

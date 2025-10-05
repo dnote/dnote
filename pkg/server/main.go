@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
@@ -31,7 +30,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/job"
 	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -40,7 +38,7 @@ import (
 var port = flag.String("port", "3000", "port to connect to")
 
 func initDB(c config.Config) *gorm.DB {
-	db := database.Open(c.DB.Path)
+	db := database.Open(c.DBPath)
 	database.InitSchema(db)
 	database.Migrate(db)
 
@@ -50,11 +48,11 @@ func initDB(c config.Config) *gorm.DB {
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg)
 
-	isProduction := os.Getenv("GO_ENV") == "PRODUCTION"
-	emailBackend, err := mailer.NewDefaultBackend(isProduction)
+	emailBackend, err := mailer.NewDefaultBackend(cfg.IsProd())
 	if err != nil {
-		log.Printf("Email backend not fully configured: %v. Emails will only be logged.", err)
 		emailBackend = &mailer.DefaultBackend{Enabled: false}
+	} else {
+		log.Printf("Email backend configured")
 	}
 
 	return app.App{
@@ -65,18 +63,6 @@ func initApp(cfg config.Config) app.App {
 		Config:         cfg,
 		HTTP500Page:    cfg.HTTP500Page,
 	}
-}
-
-func runJob(a app.App) error {
-	runner, err := job.NewRunner(a.DB, a.Clock, a.EmailTemplates, a.EmailBackend, a.Config)
-	if err != nil {
-		return errors.Wrap(err, "getting a job runner")
-	}
-	if err := runner.Do(); err != nil {
-		return errors.Wrap(err, "running job")
-	}
-
-	return nil
 }
 
 func startCmd() {
@@ -90,13 +76,6 @@ func startCmd() {
 			sqlDB.Close()
 		}
 	}()
-
-	if err := database.Migrate(app.DB); err != nil {
-		panic(errors.Wrap(err, "running migrations"))
-	}
-	if err := runJob(app); err != nil {
-		panic(errors.Wrap(err, "running job"))
-	}
 
 	ctl := controllers.New(&app)
 	rc := controllers.RouteConfig{
@@ -119,7 +98,7 @@ func versionCmd() {
 }
 
 func rootCmd() {
-	fmt.Printf(`Dnote server - a simple personal knowledge base
+	fmt.Printf(`Dnote server - a simple command line notebook
 
 Usage:
   dnote-server [command]

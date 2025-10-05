@@ -14,7 +14,7 @@ cd /vagrant
 
 tar -xvf dnote_server_integration_test_linux_amd64.tar.gz
 
-GO_ENV=PRODUCTION \
+APP_ENV=PRODUCTION \
   DBHost=localhost \
   DBPort=5432 \
   DBName=dnote \

@@ -128,7 +128,7 @@ func Limit(next http.Handler) http.HandlerFunc {
 func ApplyLimit(h http.HandlerFunc, rateLimit bool) http.Handler {
 	ret := h
 
-	if rateLimit && os.Getenv("GO_ENV") != "TEST" {
+	if rateLimit && os.Getenv("APP_ENV") != "TEST" {
 		ret = Limit(ret)
 	}
 

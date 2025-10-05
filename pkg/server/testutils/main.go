@@ -45,7 +45,7 @@ import (
 // the environment variable configuration and initalizes a new schema
 func InitTestDB() *gorm.DB {
 	c := config.Load()
-	return database.Open(c.DB.Path)
+	return database.Open(c.DBPath)
 }
 
 // InitMemoryDB creates an in-memory SQLite database with the schema initialized
@@ -76,14 +76,8 @@ func ClearData(db *gorm.DB) {
 	if err := db.Where("1 = 1").Delete(&database.Book{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear books"))
 	}
-	if err := db.Where("1 = 1").Delete(&database.Notification{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notifications"))
-	}
 	if err := db.Where("1 = 1").Delete(&database.Token{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear tokens"))
-	}
-	if err := db.Where("1 = 1").Delete(&database.EmailPreference{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear email preferences"))
 	}
 	if err := db.Where("1 = 1").Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))

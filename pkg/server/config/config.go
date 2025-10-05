@@ -19,18 +19,24 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 
 	"github.com/dnote/dnote/pkg/dirs"
 	"github.com/dnote/dnote/pkg/server/assets"
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
 
 const (
 	// AppEnvProduction represents an app environment for production.
 	AppEnvProduction string = "PRODUCTION"
+	// DefaultDBDir is the default directory name for Dnote data
+	DefaultDBDir = "dnote"
+	// DefaultDBFilename is the default database filename
+	DefaultDBFilename = "server.db"
 )
 
 var (
@@ -42,11 +48,6 @@ var (
 	ErrPortInvalid = errors.New("Invalid Port")
 )
 
-// DBConfig holds the database connection configuration.
-type DBConfig struct {
-	Path string
-}
-
 func readBoolEnv(name string) bool {
 	if os.Getenv(name) == "true" {
 		return true
@@ -55,15 +56,13 @@ func readBoolEnv(name string) bool {
 	return false
 }
 
-func LoadDBConfig() DBConfig {
+func LoadDBPath() string {
 	path := os.Getenv("DBPath")
 	if path == "" {
-		path = filepath.Join(dirs.DataHome, "dnote", "server.db")
+		path = filepath.Join(dirs.DataHome, DefaultDBDir, DefaultDBFilename)
 	}
 
-	return DBConfig{
-		Path: path,
-	}
+	return path
 }
 
 // Config is an application configuration
@@ -72,22 +71,30 @@ type Config struct {
 	WebURL              string
 	DisableRegistration bool
 	Port                string
-	DB                  DBConfig
+	DBPath              string
 	AssetBaseURL        string
 	HTTP500Page         []byte
 }
 
+func getDeprecatedEnvVar(deprecated, current string) string {
+	val := os.Getenv(deprecated)
+	if val != "" {
+		log.WithFields(log.Fields{
+			"deprecated": deprecated,
+			"current":    current,
+		}).Warn(fmt.Sprintf("%s is deprecated. Please use %s instead.", deprecated, current))
+		return val
+	}
+	return ""
+}
+
 func getAppEnv() string {
-	// DEPRECATED
-	goEnv := os.Getenv("GO_ENV")
+	goEnv := getDeprecatedEnvVar("GO_ENV", "APP_ENV")
 	if goEnv != "" {
 		return goEnv
 	}
 
 	return os.Getenv("APP_ENV")
-}
-
-func checkDeprecatedEnvVars() {
 }
 
 // Load constructs and returns a new config based on the environment variables.
@@ -97,14 +104,12 @@ func Load() Config {
 		port = "3000"
 	}
 
-	checkDeprecatedEnvVars()
-
 	c := Config{
 		AppEnv:              getAppEnv(),
 		WebURL:              os.Getenv("WebURL"),
 		Port:                port,
 		DisableRegistration: readBoolEnv("DisableRegistration"),
-		DB:                  LoadDBConfig(),
+		DBPath:              LoadDBPath(),
 		AssetBaseURL:        "",
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}
@@ -134,7 +139,7 @@ func validate(c Config) error {
 		return ErrPortInvalid
 	}
 
-	if c.DB.Path == "" {
+	if c.DBPath == "" {
 		return ErrDBMissingPath
 	}
 

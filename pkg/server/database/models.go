@@ -88,21 +88,6 @@ type Token struct {
 	UsedAt *time.Time
 }
 
-// Notification is the learning notification sent to the user
-type Notification struct {
-	Model
-	Type   string
-	UserID int `gorm:"index"`
-}
-
-// EmailPreference is a preference per user for receiving email communication
-type EmailPreference struct {
-	Model
-	UserID           int  `gorm:"index" json:"-"`
-	InactiveReminder bool `json:"inactive_reminder" gorm:"default:false"`
-	ProductUpdate    bool `json:"product_update" gorm:"default:true"`
-}
-
 // Session represents a user session
 type Session struct {
 	Model

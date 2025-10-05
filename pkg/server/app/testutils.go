@@ -35,7 +35,7 @@ func NewTest(appParams *App) App {
 		WebURL:              "http://127.0.0.0.1",
 		Port:                "3000",
 		DisableRegistration: false,
-		DB:                  config.LoadDBConfig(),
+		DBPath:              config.LoadDBPath(),
 		AssetBaseURL:        "",
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 	}

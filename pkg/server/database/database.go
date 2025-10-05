@@ -39,9 +39,7 @@ func InitSchema(db *gorm.DB) {
 		&Account{},
 		&Book{},
 		&Note{},
-		&Notification{},
 		&Token{},
-		&EmailPreference{},
 		&Session{},
 	); err != nil {
 		panic(err)
@@ -56,9 +54,7 @@ func Open(dbPath string) *gorm.DB {
 		panic(errors.Wrapf(err, "creating database directory at %s", dir))
 	}
 
-	// Enable FTS5 extension for full-text search
-	dsn := dbPath + "?_fts5=1"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		panic(errors.Wrap(err, "opening database conection"))
 	}
