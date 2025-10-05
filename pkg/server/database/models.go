@@ -68,7 +68,6 @@ type User struct {
 	Account     Account `gorm:"foreignKey:UserID"`
 	LastLoginAt *time.Time `json:"-"`
 	MaxUSN      int        `json:"-" gorm:"default:0"`
-	Cloud       bool       `json:"-" gorm:"default:false"`
 }
 
 // Account is a model for an account

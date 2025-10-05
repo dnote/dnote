@@ -81,9 +81,6 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 		return database.User{}, pkgErrors.Wrap(err, "hashing password")
 	}
 
-	// Grant all privileges if self-hosting
-	var pro = true
-
 	uuid, err := helpers.GenUUID()
 	if err != nil {
 		tx.Rollback()
@@ -91,8 +88,7 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	}
 
 	user := database.User{
-		UUID:  uuid,
-		Cloud: pro,
+		UUID: uuid,
 	}
 	if err = tx.Save(&user).Error; err != nil {
 		tx.Rollback()

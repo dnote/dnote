@@ -27,36 +27,32 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	u1 := database.User{UUID: "0f5f0054-d23f-4be1-b5fb-57673109e9cb", Cloud: true}
+	u1 := database.User{UUID: "0f5f0054-d23f-4be1-b5fb-57673109e9cb"}
 	a1 := database.Account{Email: database.ToNullString("alice@example.com"), EmailVerified: false}
 
-	u2 := database.User{UUID: "718a1041-bbe6-496e-bbe4-ea7e572c295e", Cloud: false}
+	u2 := database.User{UUID: "718a1041-bbe6-496e-bbe4-ea7e572c295e"}
 	a2 := database.Account{Email: database.ToNullString("bob@example.com"), EmailVerified: false}
 
 	testCases := []struct {
-		user        database.User
-		account     database.Account
-		expectedPro bool
+		user    database.User
+		account database.Account
 	}{
 		{
-			user:        u1,
-			account:     a1,
-			expectedPro: true,
+			user:    u1,
+			account: a1,
 		},
 		{
-			user:        u2,
-			account:     a2,
-			expectedPro: false,
+			user:    u2,
+			account: a2,
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("user pro %t", tc.expectedPro), func(t *testing.T) {
+	for idx, tc := range testCases {
+		t.Run(fmt.Sprintf("user %d", idx), func(t *testing.T) {
 			// Execute
 			got := New(tc.user, tc.account)
 			expected := Session{
 				UUID:          tc.user.UUID,
-				Pro:           tc.expectedPro,
 				Email:         tc.account.Email.String,
 				EmailVerified: tc.account.EmailVerified,
 			}

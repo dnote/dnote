@@ -108,7 +108,6 @@ func TestJoin(t *testing.T) {
 
 			var user database.User
 			testutils.MustExec(t, db.Where("id = ?", account.UserID).First(&user), "finding user")
-			assert.Equal(t, user.Cloud, true, "Cloud mismatch")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
 			// welcome email

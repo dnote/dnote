@@ -113,8 +113,7 @@ func SetupUserData(db *gorm.DB) database.User {
 	}
 
 	user := database.User{
-		UUID:  uuid,
-		Cloud: true,
+		UUID: uuid,
 	}
 
 	if err := db.Save(&user).Error; err != nil {

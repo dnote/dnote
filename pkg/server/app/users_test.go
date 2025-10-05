@@ -44,7 +44,6 @@ func TestCreateUser_ProValue(t *testing.T) {
 	testutils.MustExec(t, db.First(&userRecord), "finding user")
 
 	assert.Equal(t, userCount, int64(1), "book count mismatch")
-	assert.Equal(t, userRecord.Cloud, true, "user pro mismatch")
 
 }
 

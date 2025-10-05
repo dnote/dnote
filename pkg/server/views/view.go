@@ -119,9 +119,6 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
 		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
 	}
-	if vd.User != nil {
-		vd.Yield["Cloud"] = vd.User.Cloud
-	}
 	vd.Yield["CurrentPath"] = r.URL.Path
 	vd.Yield["Standalone"] = buildinfo.Standalone
 
