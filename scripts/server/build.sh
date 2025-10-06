@@ -29,22 +29,29 @@ build() {
   platform=$1
   arch=$2
 
-  pushd "$basedir"
-
   destDir="$outputDir/$platform-$arch"
   mkdir -p "$destDir"
 
   # build binary
   moduleName="github.com/dnote/dnote"
   ldflags="-X '$moduleName/pkg/server/buildinfo.CSSFiles=main.css' -X '$moduleName/pkg/server/buildinfo.JSFiles=main.js' -X '$moduleName/pkg/server/buildinfo.Version=$version' -X '$moduleName/pkg/server/buildinfo.Standalone=true'"
+  tags="fts5"
 
-  GOOS="$platform" \
-  GOARCH="$arch" go build \
-    -o "$destDir/dnote-server" \
+  pushd "$projectDir"
+
+  xgo \
+    -go go-1.25.x \
+    -targets="$platform/$arch" \
     -ldflags "$ldflags" \
-    "$basedir"/*.go
+    -dest="$destDir" \
+    -out="server" \
+    -tags "$tags" \
+    -pkg pkg/server \
+    .
 
   popd
+
+  mv "$destDir/server-${platform}-"* "$destDir/dnote-server"
 
   # build tarball
   tarballName="dnote_server_${version}_${platform}_${arch}.tar.gz"
@@ -61,6 +68,9 @@ build() {
   popd
 
 }
+
+# install the tool
+go install src.techknowlogick.com/xgo@latest
 
 build linux amd64
 build linux arm64
