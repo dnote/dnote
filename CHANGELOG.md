@@ -11,7 +11,9 @@ The following log documents the history of the server project.
 
 ### Unreleased
 
-None
+### 3.0.0-rc1 2025-10-05
+
+- Use SQLite instead of Postgres. Please use https://github.com/dnote/pg2sqlite to migrate.
 
 ### 2.1.1 2023-03-04
 
