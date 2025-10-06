@@ -3,30 +3,42 @@
 
 ![Build Status](https://github.com/dnote/dnote/actions/workflows/ci.yml/badge.svg)
 
-Dnote is a simple command line notebook for programmers.
+Dnote is a simple command line notebook. Single binary, no dependencies. Since 2017.
 
-It **keeps you focused** by providing a way of effortlessly capturing and retrieving information **without leaving your terminal**. It also offers a seamless **multi-device sync**.
+Your notes are stored in **one SQLite file** - portable, searchable, and completely under your control. Optional sync between devices via a self-hosted server with REST API access.
 
-![A demo of Dnote command line interface](assets/cli.gif "Dnote command line interface")
+```sh
+# Add a note (or omit -c to launch your editor)
+dnote add linux -c "Check disk usage with df -h"
+
+# View notes in a book
+dnote view linux
+
+# Full-text search
+dnote find "disk usage"
+
+# Sync notes
+dnote sync
+```
 
 ## Installation
 
-On macOS, you can install using Homebrew:
+On Unix-like systems (Linux, FreeBSD, macOS), you can use the installation script:
+
+    curl -s https://www.getdnote.com/install | sh
+
+Or on macOS with Homebrew:
 
 ```sh
 brew tap dnote/dnote
 brew install dnote
 ```
 
-On Linux or macOS, you can use the installation script:
-
-    curl -s https://www.getdnote.com/install | sh
-
-Otherwise, you can download the binary for your platform manually from the [releases page](https://github.com/dnote/dnote/releases).
+You can also download the binary for your platform from the [releases page](https://github.com/dnote/dnote/releases).
 
 ## Server
 
-You can install it [using Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md), or [using a binary](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md).
+Self-host your own Dnote server - just run a binary, no database required. [Download](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) or run [with Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md).
 
 ## Documentation
 

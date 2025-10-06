@@ -1,47 +1,26 @@
-# Installing Dnote Server
+# Self-Hosting Dnote Server
 
-This guide documents the steps for installing the Dnote server on your own machine. If you prefer Docker, please see [the Docker guide](https://github.com/dnote/dnote/blob/master/host/docker/README.md).
+For Docker installation, see [the Docker guide](https://github.com/dnote/dnote/blob/master/host/docker/README.md).
 
-## Overview
+## Quick Start
 
-Dnote server comes as a single binary file that you can simply download and run. It uses SQLite as the database.
-
-## Installation
-
-1. Download the official Dnote server release from the [release page](https://github.com/dnote/dnote/releases).
-2. Extract the archive and move the `dnote-server` executable to `/usr/local/bin`.
+Download from [releases](https://github.com/dnote/dnote/releases), extract, and run:
 
 ```bash
 tar -xzf dnote-server-$version-$os.tar.gz
 mv ./dnote-server /usr/local/bin
+dnote-server start --webUrl=https://your.server
 ```
 
-3. Run Dnote
+You're up and running. Database: `~/.local/share/dnote/server.db` (customize with `--dbPath`). Run `dnote-server start --help` for options.
 
-```bash
-dnote-server start --webUrl=$webURL
-```
+Set `apiEndpoint: https://your.server/api` in `~/.config/dnote/dnoterc` to connect your CLI to the server.
 
-Replace `$webURL` with the full URL to your server, without a trailing slash (e.g. `https://your.server`).
+## Optional guide
 
-Additional flags:
-- `--port`: Server port (default: `3000`)
-- `--disableRegistration`: Disable user registration (default: `false`)
-- `--logLevel`: Log level: `debug`, `info`, `warn`, or `error` (default: `info`)
-- `--appEnv`: environment (default: `PRODUCTION`)
+### Nginx
 
-You can also use environment variables: `PORT`, `WebURL`, `DisableRegistration`, `LOG_LEVEL`, `APP_ENV`.
-
-## Configuration
-
-By now, Dnote is fully functional in your machine. The API, frontend app, and the background tasks are all in the single binary. Let's take a few more steps to configure Dnote.
-
-### Configure Nginx
-
-To make it accessible from the Internet, you need to configure Nginx.
-
-1. Install nginx.
-2. Create a new file in `/etc/nginx/sites-enabled/dnote` with the following contents:
+Create `/etc/nginx/sites-enabled/dnote`:
 
 ```
 server {
@@ -55,17 +34,16 @@ server {
 	}
 }
 ```
-3. Replace `my-dnote-server.com` with the URL for your server.
-4. Reload the nginx configuration by running the following:
 
-```
+Replace `my-dnote-server.com` with your domain, then reload:
+
+```bash
 sudo service nginx reload
 ```
 
-### Configure Apache2
+### Apache2
 
-1. Install Apache2 and install/enable mod_proxy.
-2. Create a new file in `/etc/apache2/sites-available/dnote.conf` with the following contents:
+Enable `mod_proxy`, then create `/etc/apache2/sites-available/dnote.conf`:
 
 ```
 <VirtualHost *:80>
@@ -79,26 +57,20 @@ sudo service nginx reload
 </VirtualHost>
 ```
 
-3. Enable the dnote site and restart the Apache2 service by running the following:
+Enable and restart:
 
-```
+```bash
 a2ensite dnote
 sudo service apache2 restart
 ```
 
-Now you can access the Dnote frontend application on `/`, and the API on `/api`.
+### TLS
 
-### Configure TLS by using LetsEncrypt
+Use LetsEncrypt to obtain a certificate and configure HTTPS in your reverse proxy.
 
-It is recommended to use HTTPS. Obtain a certificate using LetsEncrypt and configure TLS in Nginx.
+### systemd Daemon
 
-In the future versions of the Dnote Server, HTTPS will be required at all times.
-
-### Run Dnote As a Daemon
-
-We can use `systemd` to run Dnote in the background as a Daemon, and automatically start it on system reboot.
-
-1. Create a new file at `/etc/systemd/system/dnote.service` with the following content:
+Create `/etc/systemd/system/dnote.service`:
 
 ```
 [Unit]
@@ -118,45 +90,23 @@ ExecStart=/usr/local/bin/dnote-server start --webUrl=$WebURL
 WantedBy=multi-user.target
 ```
 
-Replace `$user` and `$WebURL` with the actual values.
+Replace `$user` and `$WebURL`. Add `--dbPath` to `ExecStart` if you want a custom database location.
 
-By default, the database will be stored at `$XDG_DATA_HOME/dnote/server.db` (typically `~/.local/share/dnote/server.db`). To use a custom location, add `--dbPath=/path/to/database.db` to the `ExecStart` command.
+Enable and start:
 
-2. Reload the change by running `sudo systemctl daemon-reload`.
-3. Enable the Daemon  by running `sudo systemctl enable dnote`.`
-4. Start the Daemon by running `sudo systemctl start dnote`
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable dnote
+sudo systemctl start dnote
+```
 
-### Optional: Email Support
+### Email Support
 
-To enable sending emails, add the following environment variables to your configuration. But they are not required.
+If you want emails, add these environment variables:
 
-- `SmtpHost` - SMTP server hostname
-- `SmtpPort` - SMTP server port
+- `SmtpHost` - SMTP hostname
+- `SmtpPort` - SMTP port
 - `SmtpUsername` - SMTP username
 - `SmtpPassword` - SMTP password
 
-For systemd, add these as additional `Environment=` lines in `/etc/systemd/system/dnote.service`.
-
-### Configure clients
-
-Let's configure Dnote clients to connect to the self-hosted web API endpoint.
-
-#### CLI
-
-We need to modify the configuration file for the CLI. It should have been generated at `~/.config/dnote/dnoterc` upon running the CLI for the first time.
-
-The following is an example configuration:
-
-```yaml
-editor: nvim
-apiEndpoint: https://localhost:3000/api
-```
-
-Simply change the value for `apiEndpoint` to a full URL to the self-hosted instance, followed by '/api', and save the configuration file.
-
-e.g.
-
-```yaml
-editor: nvim
-apiEndpoint: my-dnote-server.com/api
-```
+For systemd, add as `Environment=` lines in the service file.
