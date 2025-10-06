@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-//go:build linux || darwin
+//go:build linux || darwin || freebsd
 
 
 package dirs

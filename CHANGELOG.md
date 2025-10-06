@@ -213,6 +213,11 @@ The following log documentes the history of the CLI project
 
 None
 
+### 0.15.2 - 2025-10-05
+
+* Support for 32bit linux, freebsd amd64, mac arm64.
+* Remove Pro.
+
 ### 0.15.1 - 2024-02-03
 
 * Upgrade `color` dependency (#660).

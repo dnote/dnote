@@ -68,9 +68,14 @@ uname_os() {
 
 uname_arch() {
   arch=$(uname -m)
-  case $arch in 
+  case $arch in
     x86_64) arch="amd64" ;;
     aarch64) arch="arm64" ;;
+    arm64) arch="arm64" ;;
+    armv7l) arch="arm" ;;
+    armv6l) arch="arm" ;;
+    armv5l) arch="arm" ;;
+    arm) arch="arm" ;;
     x86) arch="386" ;;
     i686) arch="386" ;;
     i386) arch="386" ;;
@@ -86,9 +91,17 @@ check_platform() {
 
   found=1
   case "$platform" in
-    darwin/amd64) found=0;;
+    # Linux
     linux/amd64) found=0 ;;
     linux/arm64) found=0 ;;
+    linux/arm) found=0 ;;
+    # macOS
+    darwin/amd64) found=0 ;;
+    darwin/arm64) found=0 ;;
+    # Windows
+    windows/amd64) found=0 ;;
+    # FreeBSD
+    freebsd/amd64) found=0 ;;
   esac
 
   return $found

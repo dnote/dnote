@@ -36,7 +36,7 @@ if [[ $1 == v* ]]; then
   exit 1
 fi
 
-goVersion=go-1.21.x
+goVersion=go-1.25.x
 
 get_binary_name() {
   platform=$1
@@ -57,7 +57,7 @@ build() {
 
   # build binary
   destDir="$outputDir/$platform-$arch"
-  ldflags="-X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=$version"
+  ldflags="-X main.apiEndpoint=https://localhost:3000/api -X main.versionTag=$version"
   tags="fts5"
 
   pushd "$projectDir"
@@ -92,7 +92,7 @@ build() {
   popd
 
   binaryName=$(get_binary_name "$platform")
-  mv "$destDir/cli-${platform}-"* "$destDir/$binaryName"
+  mv "$destDir/cli-"* "$destDir/$binaryName"
 
   # build tarball
   tarballName="dnote_${version}_${platform}_${arch}.tar.gz"
@@ -113,10 +113,20 @@ if [ -z "$GOOS" ] && [ -z "$GOARCH" ]; then
   # install the tool
   go install src.techknowlogick.com/xgo@latest
 
+  # Linux
   build linux amd64
   build linux arm64
+  build linux arm
+
+  # macOS
   build darwin amd64
+  build darwin arm64
+
+  # Windows
   build windows amd64
+
+  # FreeBSD
+  build freebsd amd64
 else
   build "$GOOS" "$GOARCH" true
 fi

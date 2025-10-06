@@ -10,12 +10,13 @@ if [ ! -d "$cliHomebrewDir" ]; then
 fi
 
 version=$1
-tarball=$2
 
 echo "version: $version"
-echo "tarball: $tarball"
 
-sha=$(shasum -a 256 "$tarball" | cut -d ' ' -f 1)
+# Download source tarball and calculate SHA256
+source_url="https://github.com/dnote/dnote/archive/refs/tags/cli-v${version}.tar.gz"
+echo "Calculating SHA256 for: $source_url"
+sha=$(curl -L "$source_url" | shasum -a 256 | cut -d ' ' -f 1)
 
 pushd "$cliHomebrewDir"
 
@@ -25,14 +26,18 @@ git pull origin master
 
 cat > ./Formula/dnote.rb << EOF
 class Dnote < Formula
-  desc "A simple command line notebook for programmers"
+  desc "Simple command line notebook for programmers"
   homepage "https://www.getdnote.com"
-  url "https://github.com/dnote/dnote/releases/download/cli-v${version}/dnote_${version}_darwin_amd64.tar.gz"
-  version "${version}"
+  url "https://github.com/dnote/dnote/archive/refs/tags/cli-v${version}.tar.gz"
   sha256 "${sha}"
+  license "GPL-3.0"
+  head "https://github.com/dnote/dnote.git", branch: "master"
+
+  depends_on "go" => :build
 
   def install
-    bin.install "dnote"
+    ldflags = "-s -w -X main.apiEndpoint=https://api.getdnote.com -X main.versionTag=#{version}"
+    system "go", "build", *std_go_args(ldflags: ldflags), "-tags", "fts5", "./pkg/cli"
   end
 
   test do

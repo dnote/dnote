@@ -1,0 +1,58 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - 'cli-v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '>=1.25.0'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/cli-v}
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+          echo "Releasing version: $TAG"
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run CLI tests
+        run: make test-cli
+
+      - name: Run E2E tests
+        run: make test-e2e
+
+      - name: Build CLI
+        run: make version=${{ steps.version.outputs.version }} build-cli
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="cli-v${VERSION}"
+
+          # Determine if prerelease (version not matching major.minor.patch)
+          FLAGS=""
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            FLAGS="--prerelease"
+          fi
+
+          gh release create "$TAG" \
+            build/cli/*.tar.gz \
+            build/cli/*_checksums.txt \
+            $FLAGS \
+            --title="$TAG" \
+            --notes="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
+            --draft

@@ -126,10 +126,6 @@ func getBaseURL(rawURL string) (string, error) {
 }
 
 func getServerDisplayURL(ctx context.DnoteCtx) string {
-	if ctx.APIEndpoint == "https://api.getdnote.com" {
-		return "https://www.getdnote.com"
-	}
-
 	baseURL, err := getBaseURL(ctx.APIEndpoint)
 	if err != nil {
 		return ""

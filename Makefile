@@ -95,13 +95,13 @@ endif
 	@${currentDir}/scripts/release.sh cli $(version) ${cliOutputDir}
 .PHONY: release-cli
 
-release-cli-homebrew: clean build-cli
+release-cli-homebrew:
 ifndef version
-	$(error version is required. Usage: make version=0.1.0 release-cli)
+	$(error version is required. Usage: make version=0.1.0 release-cli-homebrew)
 endif
 
 	@echo "==> releasing cli on Homebrew"
-	@${currentDir}/scripts/cli/release-homebrew.sh $(version) ${cliOutputDir}
+	@${currentDir}/scripts/cli/release-homebrew.sh $(version)
 .PHONY: release-cli
 
 release-server:

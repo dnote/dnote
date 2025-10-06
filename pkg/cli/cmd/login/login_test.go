@@ -32,10 +32,6 @@ func TestGetServerDisplayURL(t *testing.T) {
 		expected    string
 	}{
 		{
-			apiEndpoint: "https://api.getdnote.com",
-			expected:    "https://www.getdnote.com",
-		},
-		{
 			apiEndpoint: "https://dnote.mydomain.com/api",
 			expected:    "https://dnote.mydomain.com",
 		},
