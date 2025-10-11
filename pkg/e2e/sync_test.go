@@ -95,7 +95,6 @@ func TestMain(m *testing.M) {
 	a.EmailTemplates = mailer.Templates{}
 	a.EmailBackend = &apitest.MockEmailbackendImplementation{}
 	a.DB = serverDb
-	a.WebURL = os.Getenv("WebURL")
 
 	var err error
 	server, err = controllers.NewServer(&a)

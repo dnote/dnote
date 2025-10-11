@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dnote/dnote/pkg/cli/client"
 	"github.com/dnote/dnote/pkg/cli/config"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -159,6 +160,7 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		Editor:             cf.Editor,
 		Clock:              clock.New(),
 		EnableUpgradeCheck: cf.EnableUpgradeCheck,
+		HTTPClient:         client.NewRateLimitedHTTPClient(),
 	}
 
 	return ret, nil

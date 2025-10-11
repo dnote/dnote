@@ -20,6 +20,8 @@
 package context
 
 import (
+	"net/http"
+
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/clock"
 )
@@ -44,6 +46,7 @@ type DnoteCtx struct {
 	Editor             string
 	Clock              clock.Clock
 	EnableUpgradeCheck bool
+	HTTPClient         *http.Client
 }
 
 // Redact replaces private information from the context with a set of

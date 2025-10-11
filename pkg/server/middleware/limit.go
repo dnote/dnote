@@ -29,63 +29,81 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const (
+	// serverRateLimitPerSecond is the max requests per second the server will accept per IP
+	serverRateLimitPerSecond = 50
+	// serverRateLimitBurst is the burst capacity for rate limiting
+	serverRateLimitBurst = 100
+)
+
 type visitor struct {
 	limiter  *rate.Limiter
 	lastSeen time.Time
 }
 
-var visitors = make(map[string]*visitor)
-var mtx sync.RWMutex
-
-func init() {
-	go cleanupVisitors()
+// RateLimiter holds the rate limiting state for visitors
+type RateLimiter struct {
+	visitors map[string]*visitor
+	mtx      sync.RWMutex
 }
 
-// addVisitor adds a new visitor to the map and returns a limiter for the visitor
-func addVisitor(identifier string) *rate.Limiter {
-	// initialize a token bucket
-	limiter := rate.NewLimiter(rate.Every(1*time.Second), 60)
+// NewRateLimiter creates a new rate limiter instance
+func NewRateLimiter() *RateLimiter {
+	rl := &RateLimiter{
+		visitors: make(map[string]*visitor),
+	}
+	go rl.cleanupVisitors()
+	return rl
+}
 
-	mtx.Lock()
-	visitors[identifier] = &visitor{
+var defaultLimiter = NewRateLimiter()
+
+// addVisitor adds a new visitor to the map and returns a limiter for the visitor
+func (rl *RateLimiter) addVisitor(identifier string) *rate.Limiter {
+	// Calculate interval from rate: 1 second / requests per second
+	interval := time.Second / time.Duration(serverRateLimitPerSecond)
+	limiter := rate.NewLimiter(rate.Every(interval), serverRateLimitBurst)
+
+	rl.mtx.Lock()
+	rl.visitors[identifier] = &visitor{
 		limiter:  limiter,
 		lastSeen: time.Now()}
-	mtx.Unlock()
+	rl.mtx.Unlock()
 
 	return limiter
 }
 
 // getVisitor returns a limiter for a visitor with the given identifier. It
 // adds the visitor to the map if not seen before.
-func getVisitor(identifier string) *rate.Limiter {
-	mtx.RLock()
-	v, exists := visitors[identifier]
+func (rl *RateLimiter) getVisitor(identifier string) *rate.Limiter {
+	rl.mtx.RLock()
+	v, exists := rl.visitors[identifier]
 
 	if !exists {
-		mtx.RUnlock()
-		return addVisitor(identifier)
+		rl.mtx.RUnlock()
+		return rl.addVisitor(identifier)
 	}
 
 	v.lastSeen = time.Now()
-	mtx.RUnlock()
+	rl.mtx.RUnlock()
 
 	return v.limiter
 }
 
 // cleanupVisitors deletes visitors that has not been seen in a while from the
 // map of visitors
-func cleanupVisitors() {
+func (rl *RateLimiter) cleanupVisitors() {
 	for {
 		time.Sleep(time.Minute)
-		mtx.Lock()
+		rl.mtx.Lock()
 
-		for identifier, v := range visitors {
+		for identifier, v := range rl.visitors {
 			if time.Since(v.lastSeen) > 3*time.Minute {
-				delete(visitors, identifier)
+				delete(rl.visitors, identifier)
 			}
 		}
 
-		mtx.Unlock()
+		rl.mtx.Unlock()
 	}
 }
 
@@ -107,10 +125,10 @@ func lookupIP(r *http.Request) string {
 }
 
 // Limit is a middleware to rate limit the handler
-func Limit(next http.Handler) http.HandlerFunc {
+func (rl *RateLimiter) Limit(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		identifier := lookupIP(r)
-		limiter := getVisitor(identifier)
+		limiter := rl.getVisitor(identifier)
 
 		if !limiter.Allow() {
 			http.Error(w, "Too many requests", http.StatusTooManyRequests)
@@ -124,12 +142,12 @@ func Limit(next http.Handler) http.HandlerFunc {
 	})
 }
 
-// ApplyLimit applies rate limit conditionally
+// ApplyLimit applies rate limit conditionally using the global limiter
 func ApplyLimit(h http.HandlerFunc, rateLimit bool) http.Handler {
 	ret := h
 
 	if rateLimit && os.Getenv("APP_ENV") != "TEST" {
-		ret = Limit(ret)
+		ret = defaultLimiter.Limit(ret)
 	}
 
 	return ret

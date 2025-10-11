@@ -33,6 +33,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 )
 
 // ErrInvalidLogin is an error for invalid credentials for login
@@ -44,15 +45,66 @@ var ErrContentTypeMismatch = errors.New("content type mismatch")
 var contentTypeApplicationJSON = "application/json"
 var contentTypeNone = ""
 
-// requestOptions contians options for requests
+// requestOptions contains options for requests
 type requestOptions struct {
 	HTTPClient *http.Client
 	// ExpectedContentType is the Content-Type that the client is expecting from the server
 	ExpectedContentType *string
 }
 
-var defaultRequestOptions = requestOptions{
-	ExpectedContentType: &contentTypeApplicationJSON,
+const (
+	// clientRateLimitPerSecond is the max requests per second the client will make
+	clientRateLimitPerSecond = 50
+	// clientRateLimitBurst is the burst capacity for rate limiting
+	clientRateLimitBurst = 100
+)
+
+// rateLimitedTransport wraps an http.RoundTripper with rate limiting
+type rateLimitedTransport struct {
+	transport http.RoundTripper
+	limiter   *rate.Limiter
+}
+
+func (t *rateLimitedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Wait for rate limiter to allow the request
+	if err := t.limiter.Wait(req.Context()); err != nil {
+		return nil, err
+	}
+	return t.transport.RoundTrip(req)
+}
+
+// NewRateLimitedHTTPClient creates an HTTP client with rate limiting
+func NewRateLimitedHTTPClient() *http.Client {
+	// Calculate interval from rate: 1 second / requests per second
+	interval := time.Second / time.Duration(clientRateLimitPerSecond)
+
+	transport := &rateLimitedTransport{
+		transport: http.DefaultTransport,
+		limiter:   rate.NewLimiter(rate.Every(interval), clientRateLimitBurst),
+	}
+	return &http.Client{
+		Transport: transport,
+	}
+}
+
+func getHTTPClient(ctx context.DnoteCtx, options *requestOptions) *http.Client {
+	if options != nil && options.HTTPClient != nil {
+		return options.HTTPClient
+	}
+
+	if ctx.HTTPClient != nil {
+		return ctx.HTTPClient
+	}
+
+	return &http.Client{}
+}
+
+func getExpectedContentType(options *requestOptions) string {
+	if options != nil && options.ExpectedContentType != nil {
+		return *options.ExpectedContentType
+	}
+
+	return contentTypeApplicationJSON
 }
 
 func getReq(ctx context.DnoteCtx, path, method, body string) (*http.Request, error) {
@@ -70,22 +122,6 @@ func getReq(ctx context.DnoteCtx, path, method, body string) (*http.Request, err
 	}
 
 	return req, nil
-}
-
-func getHTTPClient(options *requestOptions) http.Client {
-	if options != nil && options.HTTPClient != nil {
-		return *options.HTTPClient
-	}
-
-	return http.Client{}
-}
-
-func getExpectedContentType(options *requestOptions) string {
-	if options != nil && options.ExpectedContentType != nil {
-		return *options.ExpectedContentType
-	}
-
-	return contentTypeApplicationJSON
 }
 
 // checkRespErr checks if the given http response indicates an error. It returns a boolean indicating
@@ -124,7 +160,7 @@ func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOpti
 
 	log.Debug("HTTP request: %+v\n", req)
 
-	hc := getHTTPClient(options)
+	hc := getHTTPClient(ctx, options)
 	res, err := hc.Do(req)
 	if err != nil {
 		return res, errors.Wrap(err, "making http request")
@@ -542,15 +578,27 @@ func Signin(ctx context.DnoteCtx, email, password string) (SigninResponse, error
 
 // Signout deletes a user session on the server side
 func Signout(ctx context.DnoteCtx, sessionKey string) error {
-	hc := http.Client{
-		// No need to follow redirect
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+	// Create a client that shares the transport (and thus rate limiter) from ctx.HTTPClient
+	// but doesn't follow redirects
+	var hc *http.Client
+	if ctx.HTTPClient != nil {
+		hc = &http.Client{
+			Transport: ctx.HTTPClient.Transport,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+	} else {
+		log.Warnf("No HTTP client configured for signout - falling back\n")
+		hc = &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
 	}
 
 	opts := requestOptions{
-		HTTPClient:          &hc,
+		HTTPClient:          hc,
 		ExpectedContentType: &contentTypeNone,
 	}
 	_, err := doAuthorizedReq(ctx, "POST", "/v3/signout", "", &opts)

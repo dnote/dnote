@@ -23,12 +23,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/testutils"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 )
 
 // startCommonTestServer starts a test HTTP server that simulates a common set of senarios
@@ -82,9 +85,10 @@ func TestSignIn(t *testing.T) {
 	defer commonTs.Close()
 
 	correctEndpoint := fmt.Sprintf("%s/api", ts.URL)
+	testClient := NewRateLimitedHTTPClient()
 
 	t.Run("success", func(t *testing.T) {
-		result, err := Signin(context.DnoteCtx{APIEndpoint: correctEndpoint}, "alice@example.com", "pass1234")
+		result, err := Signin(context.DnoteCtx{APIEndpoint: correctEndpoint, HTTPClient: testClient}, "alice@example.com", "pass1234")
 		if err != nil {
 			t.Errorf("got signin request error: %+v", err.Error())
 		}
@@ -94,7 +98,7 @@ func TestSignIn(t *testing.T) {
 	})
 
 	t.Run("failure", func(t *testing.T) {
-		result, err := Signin(context.DnoteCtx{APIEndpoint: correctEndpoint}, "alice@example.com", "incorrectpassword")
+		result, err := Signin(context.DnoteCtx{APIEndpoint: correctEndpoint, HTTPClient: testClient}, "alice@example.com", "incorrectpassword")
 
 		assert.Equal(t, err, ErrInvalidLogin, "err mismatch")
 		assert.Equal(t, result.Key, "", "Key mismatch")
@@ -103,7 +107,7 @@ func TestSignIn(t *testing.T) {
 
 	t.Run("server error", func(t *testing.T) {
 		endpoint := fmt.Sprintf("%s/bad-api", ts.URL)
-		result, err := Signin(context.DnoteCtx{APIEndpoint: endpoint}, "alice@example.com", "pass1234")
+		result, err := Signin(context.DnoteCtx{APIEndpoint: endpoint, HTTPClient: testClient}, "alice@example.com", "pass1234")
 		if err == nil {
 			t.Error("error should have been returned")
 		}
@@ -114,7 +118,7 @@ func TestSignIn(t *testing.T) {
 
 	t.Run("accidentally pointing to a catch-all handler", func(t *testing.T) {
 		endpoint := fmt.Sprintf("%s", ts.URL)
-		result, err := Signin(context.DnoteCtx{APIEndpoint: endpoint}, "alice@example.com", "pass1234")
+		result, err := Signin(context.DnoteCtx{APIEndpoint: endpoint, HTTPClient: testClient}, "alice@example.com", "pass1234")
 
 		assert.Equal(t, errors.Cause(err), ErrContentTypeMismatch, "error cause mismatch")
 		assert.Equal(t, result.Key, "", "Key mismatch")
@@ -134,17 +138,18 @@ func TestSignOut(t *testing.T) {
 	defer commonTs.Close()
 
 	correctEndpoint := fmt.Sprintf("%s/api", ts.URL)
+	testClient := NewRateLimitedHTTPClient()
 
 	t.Run("success", func(t *testing.T) {
-		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: correctEndpoint}, "alice@example.com")
+		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: correctEndpoint, HTTPClient: testClient}, "alice@example.com")
 		if err != nil {
-			t.Errorf("got signin request error: %+v", err.Error())
+			t.Errorf("got signout request error: %+v", err.Error())
 		}
 	})
 
 	t.Run("server error", func(t *testing.T) {
 		endpoint := fmt.Sprintf("%s/bad-api", commonTs.URL)
-		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: endpoint}, "alice@example.com")
+		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: endpoint, HTTPClient: testClient}, "alice@example.com")
 		if err == nil {
 			t.Error("error should have been returned")
 		}
@@ -152,8 +157,51 @@ func TestSignOut(t *testing.T) {
 
 	t.Run("accidentally pointing to a catch-all handler", func(t *testing.T) {
 		endpoint := fmt.Sprintf("%s", commonTs.URL)
-		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: endpoint}, "alice@example.com")
+		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: endpoint, HTTPClient: testClient}, "alice@example.com")
 
 		assert.Equal(t, errors.Cause(err), ErrContentTypeMismatch, "error cause mismatch")
 	})
+
+	// Gracefully handle a case where http client was not initialized in the context.
+	t.Run("nil HTTPClient", func(t *testing.T) {
+		err := Signout(context.DnoteCtx{SessionKey: "somekey", APIEndpoint: correctEndpoint}, "alice@example.com")
+		if err != nil {
+			t.Errorf("got signout request error: %+v", err.Error())
+		}
+	})
+}
+
+func TestRateLimitedTransport(t *testing.T) {
+	var requestCount atomic.Int32
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	transport := &rateLimitedTransport{
+		transport: http.DefaultTransport,
+		limiter:   rate.NewLimiter(10, 5),
+	}
+	client := &http.Client{Transport: transport}
+
+	// Make 10 requests
+	start := time.Now()
+	numRequests := 10
+	for i := range numRequests {
+		req, _ := http.NewRequest("GET", ts.URL, nil)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Request %d failed: %v", i, err)
+		}
+		resp.Body.Close()
+	}
+	elapsed := time.Since(start)
+
+	// Burst of 5, then 5 more at 10 req/s = 500ms minimum
+	if elapsed < 500*time.Millisecond {
+		t.Errorf("Rate limit not enforced: 10 requests took %v, expected >= 500ms", elapsed)
+	}
+
+	assert.Equal(t, int(requestCount.Load()), 10, "request count mismatch")
 }
