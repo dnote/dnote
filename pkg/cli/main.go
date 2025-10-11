@@ -46,7 +46,16 @@ var apiEndpoint string
 var versionTag = "master"
 
 func main() {
-	ctx, err := infra.Init(apiEndpoint, versionTag)
+	// Parse flags early to check if --api-endpoint was provided
+	root.GetRoot().ParseFlags(os.Args[1:])
+
+	// Use flag value if provided, otherwise use ldflags value
+	endpoint := apiEndpoint
+	if flagValue := root.GetAPIEndpointFlag(); flagValue != "" {
+		endpoint = flagValue
+	}
+
+	ctx, err := infra.Init(versionTag, endpoint)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing context"))
 	}

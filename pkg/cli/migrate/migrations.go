@@ -539,7 +539,10 @@ var lm12 = migration{
 			return errors.Wrap(err, "reading config")
 		}
 
-		cf.APIEndpoint = "https://api.getdnote.com"
+		// Only set if not already configured
+		if cf.APIEndpoint == "" {
+			cf.APIEndpoint = "https://api.getdnote.com"
+		}
 
 		err = config.Write(ctx, cf)
 		if err != nil {

@@ -22,6 +22,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var apiEndpointFlag string
+
 var root = &cobra.Command{
 	Use:           "dnote",
 	Short:         "Dnote - a simple command line notebook",
@@ -30,6 +32,20 @@ var root = &cobra.Command{
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
+}
+
+func init() {
+	root.PersistentFlags().StringVar(&apiEndpointFlag, "api-endpoint", "", "override API endpoint")
+}
+
+// GetRoot returns the root command
+func GetRoot() *cobra.Command {
+	return root
+}
+
+// GetAPIEndpointFlag returns the value of the --api-endpoint flag
+func GetAPIEndpointFlag() string {
+	return apiEndpointFlag
 }
 
 // Register adds a new command

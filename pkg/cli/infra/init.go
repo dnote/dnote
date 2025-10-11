@@ -68,7 +68,10 @@ func getDBPath(paths context.Paths) string {
 	return fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
 }
 
-func newCtx(versionTag string) (context.DnoteCtx, error) {
+// newBaseCtx creates a minimal context with paths and database connection.
+// This base context is used for file and database initialization before
+// being enriched with config values by setupCtx.
+func newBaseCtx(versionTag string) (context.DnoteCtx, error) {
 	dnoteDir := getLegacyDnotePath(dirs.Home)
 	paths := context.Paths{
 		Home:        dirs.Home,
@@ -95,8 +98,8 @@ func newCtx(versionTag string) (context.DnoteCtx, error) {
 }
 
 // Init initializes the Dnote environment and returns a new dnote context
-func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
-	ctx, err := newCtx(versionTag)
+func Init(versionTag, apiEndpoint string) (*context.DnoteCtx, error) {
+	ctx, err := newBaseCtx(versionTag)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing a context")
 	}
@@ -119,7 +122,7 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 		return nil, errors.Wrap(err, "running migration")
 	}
 
-	ctx, err = SetupCtx(ctx)
+	ctx, err = setupCtx(ctx, apiEndpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "setting up the context")
 	}
@@ -129,8 +132,10 @@ func Init(apiEndpoint, versionTag string) (*context.DnoteCtx, error) {
 	return &ctx, nil
 }
 
-// SetupCtx populates the context and returns a new context
-func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
+// setupCtx enriches the base context with values from config file and database.
+// This is called after files and database have been initialized.
+// If apiEndpoint is provided, it overrides the value from config.
+func setupCtx(ctx context.DnoteCtx, apiEndpoint string) (context.DnoteCtx, error) {
 	db := ctx.DB
 
 	var sessionKey string
@@ -150,13 +155,19 @@ func SetupCtx(ctx context.DnoteCtx) (context.DnoteCtx, error) {
 		return ctx, errors.Wrap(err, "reading config")
 	}
 
+	// Use override if provided, otherwise use config value
+	endpoint := cf.APIEndpoint
+	if apiEndpoint != "" {
+		endpoint = apiEndpoint
+	}
+
 	ret := context.DnoteCtx{
 		Paths:              ctx.Paths,
 		Version:            ctx.Version,
 		DB:                 ctx.DB,
 		SessionKey:         sessionKey,
 		SessionKeyExpiry:   sessionKeyExpiry,
-		APIEndpoint:        cf.APIEndpoint,
+		APIEndpoint:        endpoint,
 		Editor:             cf.Editor,
 		Clock:              clock.New(),
 		EnableUpgradeCheck: cf.EnableUpgradeCheck,

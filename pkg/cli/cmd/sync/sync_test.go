@@ -3170,3 +3170,70 @@ func TestCleanLocalBooks(t *testing.T) {
 	database.MustScan(t, "getting b3", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "b3-uuid"), &b3.Label)
 	database.MustScan(t, "getting b5", db.QueryRow("SELECT label FROM books WHERE uuid = ?", "b5-uuid"), &b5.Label)
 }
+
+func TestPrepareEmptyServerSync(t *testing.T) {
+	// set up
+	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
+	defer database.TeardownTestDB(t, db)
+
+	// Setup: local has synced data (usn > 0, dirty = false) and some deleted items
+	database.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 5, false, false)
+	database.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b2-uuid", "b2-label", 8, false, false)
+	database.MustExec(t, "inserting b3 deleted", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b3-uuid", "b3-label", 6, true, false)
+	database.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, usn, deleted, dirty, added_on) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", "b1-uuid", "note 1", 6, false, false, 1541108743)
+	database.MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, body, usn, deleted, dirty, added_on) VALUES (?, ?, ?, ?, ?, ?, ?)", "n2-uuid", "b2-uuid", "note 2", 9, false, false, 1541108743)
+	database.MustExec(t, "inserting n3 deleted", db, "INSERT INTO notes (uuid, book_uuid, body, usn, deleted, dirty, added_on) VALUES (?, ?, ?, ?, ?, ?, ?)", "n3-uuid", "b1-uuid", "note 3", 7, true, false, 1541108743)
+	database.MustExec(t, "setting last_max_usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 9)
+
+	// execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning transaction"))
+	}
+
+	if err := prepareEmptyServerSync(tx); err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "executing prepareEmptyServerSync"))
+	}
+
+	tx.Commit()
+
+	// test - verify non-deleted items are marked dirty with usn=0, deleted items unchanged
+	var b1, b2, b3 database.Book
+	database.MustScan(t, "getting b1", db.QueryRow("SELECT usn, dirty, deleted FROM books WHERE uuid = ?", "b1-uuid"), &b1.USN, &b1.Dirty, &b1.Deleted)
+	database.MustScan(t, "getting b2", db.QueryRow("SELECT usn, dirty, deleted FROM books WHERE uuid = ?", "b2-uuid"), &b2.USN, &b2.Dirty, &b2.Deleted)
+	database.MustScan(t, "getting b3", db.QueryRow("SELECT usn, dirty, deleted FROM books WHERE uuid = ?", "b3-uuid"), &b3.USN, &b3.Dirty, &b3.Deleted)
+
+	assert.Equal(t, b1.USN, 0, "b1 USN should be reset to 0")
+	assert.Equal(t, b1.Dirty, true, "b1 should be marked dirty")
+	assert.Equal(t, b1.Deleted, false, "b1 should not be deleted")
+
+	assert.Equal(t, b2.USN, 0, "b2 USN should be reset to 0")
+	assert.Equal(t, b2.Dirty, true, "b2 should be marked dirty")
+	assert.Equal(t, b2.Deleted, false, "b2 should not be deleted")
+
+	assert.Equal(t, b3.USN, 6, "b3 USN should remain unchanged (deleted item)")
+	assert.Equal(t, b3.Dirty, false, "b3 should not be marked dirty (deleted item)")
+	assert.Equal(t, b3.Deleted, true, "b3 should remain deleted")
+
+	var n1, n2, n3 database.Note
+	database.MustScan(t, "getting n1", db.QueryRow("SELECT usn, dirty, deleted FROM notes WHERE uuid = ?", "n1-uuid"), &n1.USN, &n1.Dirty, &n1.Deleted)
+	database.MustScan(t, "getting n2", db.QueryRow("SELECT usn, dirty, deleted FROM notes WHERE uuid = ?", "n2-uuid"), &n2.USN, &n2.Dirty, &n2.Deleted)
+	database.MustScan(t, "getting n3", db.QueryRow("SELECT usn, dirty, deleted FROM notes WHERE uuid = ?", "n3-uuid"), &n3.USN, &n3.Dirty, &n3.Deleted)
+
+	assert.Equal(t, n1.USN, 0, "n1 USN should be reset to 0")
+	assert.Equal(t, n1.Dirty, true, "n1 should be marked dirty")
+	assert.Equal(t, n1.Deleted, false, "n1 should not be deleted")
+
+	assert.Equal(t, n2.USN, 0, "n2 USN should be reset to 0")
+	assert.Equal(t, n2.Dirty, true, "n2 should be marked dirty")
+	assert.Equal(t, n2.Deleted, false, "n2 should not be deleted")
+
+	assert.Equal(t, n3.USN, 7, "n3 USN should remain unchanged (deleted item)")
+	assert.Equal(t, n3.Dirty, false, "n3 should not be marked dirty (deleted item)")
+	assert.Equal(t, n3.Deleted, true, "n3 should remain deleted")
+
+	var lastMaxUSN int
+	database.MustScan(t, "getting last_max_usn", db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+	assert.Equal(t, lastMaxUSN, 0, "last_max_usn should be reset to 0")
+}

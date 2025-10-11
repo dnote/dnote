@@ -20,6 +20,7 @@
 package testutils
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -153,44 +154,107 @@ func RunDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, binaryName string, arg .
 	t.Logf("\n%s", stdout)
 }
 
-// WaitDnoteCmd runs a dnote command and waits until the command is exited
-func WaitDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.WriteCloser) error, binaryName string, arg ...string) {
+// WaitDnoteCmdOutput runs a dnote command and passes stdout to the callback.
+func WaitDnoteCmdOutput(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.WriteCloser, io.Reader) error, binaryName string, arg ...string) (string, error) {
 	t.Logf("running: %s %s", binaryName, strings.Join(arg, " "))
 
-	cmd, stderr, stdout, err := NewDnoteCmd(opts, binaryName, arg...)
+	binaryPath, err := filepath.Abs(binaryName)
 	if err != nil {
-		t.Logf("\n%s", stdout)
-		t.Fatal(errors.Wrap(err, "getting command").Error())
+		return "", errors.Wrap(err, "getting absolute path to test binary")
+	}
+
+	cmd := exec.Command(binaryPath, arg...)
+	cmd.Env = opts.Env
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return "", errors.Wrap(err, "getting stdout pipe")
 	}
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		t.Logf("\n%s", stdout)
-		t.Fatal(errors.Wrap(err, "getting stdin %s"))
+		return "", errors.Wrap(err, "getting stdin")
 	}
 	defer stdin.Close()
 
-	// Start the program
-	err = cmd.Start()
-	if err != nil {
-		t.Logf("\n%s", stdout)
-		t.Fatal(errors.Wrap(err, "starting command"))
+	if err = cmd.Start(); err != nil {
+		return "", errors.Wrap(err, "starting command")
 	}
 
-	err = runFunc(stdin)
+	var output bytes.Buffer
+	tee := io.TeeReader(stdout, &output)
+
+	err = runFunc(stdin, tee)
 	if err != nil {
-		t.Logf("\n%s", stdout)
-		t.Fatal(errors.Wrap(err, "running with stdin"))
+		t.Logf("\n%s", output.String())
+		return output.String(), errors.Wrap(err, "running callback")
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		t.Logf("\n%s", stdout)
-		t.Fatal(errors.Wrapf(err, "running command %s", stderr.String()))
+	io.Copy(&output, stdout)
+
+	if err := cmd.Wait(); err != nil {
+		t.Logf("\n%s", output.String())
+		return output.String(), errors.Wrapf(err, "command failed: %s", stderr.String())
 	}
 
-	// Print stdout if and only if test fails later
-	t.Logf("\n%s", stdout)
+	t.Logf("\n%s", output.String())
+	return output.String(), nil
+}
+
+func MustWaitDnoteCmdOutput(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.WriteCloser, io.Reader) error, binaryName string, arg ...string) string {
+	output, err := WaitDnoteCmdOutput(t, opts, runFunc, binaryName, arg...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return output
+}
+
+// WaitDnoteCmd runs a dnote command and waits until the command is exited.
+// Returns the stdout output as a string and any error that occurred.
+func WaitDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.WriteCloser) error, binaryName string, arg ...string) (string, error) {
+	return WaitDnoteCmdOutput(t, opts, func(stdin io.WriteCloser, stdout io.Reader) error {
+		return runFunc(stdin)
+	}, binaryName, arg...)
+}
+
+// MustWaitDnoteCmd runs a dnote command and waits until the command is exited.
+// If there is an error, it fails the test. Returns the stdout output.
+func MustWaitDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.WriteCloser) error, binaryName string, arg ...string) string {
+	output, err := WaitDnoteCmd(t, opts, runFunc, binaryName, arg...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return output
+}
+
+// UserConfirm simulates confirmation from the user by writing to stdin
+func UserConfirmOutput(stdin io.WriteCloser, stdout io.Reader, expectedPrompt string) error {
+	scanner := bufio.NewScanner(stdout)
+	found := false
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, expectedPrompt) {
+			found = true
+			break
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return errors.Wrap(err, "reading stdout")
+	}
+	if !found {
+		return errors.New("expected prompt not found in stdout")
+	}
+
+	// confirm
+	if _, err := io.WriteString(stdin, "y\n"); err != nil {
+		return errors.Wrap(err, "indicating confirmation in stdin")
+	}
+
+	return nil
 }
 
 // UserConfirm simulates confirmation from the user by writing to stdin
@@ -198,6 +262,16 @@ func UserConfirm(stdin io.WriteCloser) error {
 	// confirm
 	if _, err := io.WriteString(stdin, "y\n"); err != nil {
 		return errors.Wrap(err, "indicating confirmation in stdin")
+	}
+
+	return nil
+}
+
+// UserCancel simulates cancellation from the user by writing to stdin
+func UserCancel(stdin io.WriteCloser) error {
+	// cancel
+	if _, err := io.WriteString(stdin, "n\n"); err != nil {
+		return errors.Wrap(err, "indicating cancellation in stdin")
 	}
 
 	return nil

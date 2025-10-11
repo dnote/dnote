@@ -29,6 +29,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/dnote/dnote/pkg/cli/migrate"
+	"github.com/dnote/dnote/pkg/cli/ui"
 	"github.com/dnote/dnote/pkg/cli/upgrade"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -885,6 +886,26 @@ func saveSyncState(tx *database.DB, serverTime int64, serverMaxUSN int) error {
 	return nil
 }
 
+// prepareEmptyServerSync marks all local books and notes as dirty when syncing to an empty server.
+// This is typically used when switching to a new empty server but wanting to upload existing local data.
+// Returns true if preparation was done, false otherwise.
+func prepareEmptyServerSync(tx *database.DB) error {
+	// Mark all books and notes as dirty and reset USN to 0
+	if _, err := tx.Exec("UPDATE books SET usn = 0, dirty = 1 WHERE deleted = 0"); err != nil {
+		return errors.Wrap(err, "marking books as dirty")
+	}
+	if _, err := tx.Exec("UPDATE notes SET usn = 0, dirty = 1 WHERE deleted = 0"); err != nil {
+		return errors.Wrap(err, "marking notes as dirty")
+	}
+
+	// Reset lastMaxUSN to 0 to match the server
+	if err := updateLastMaxUSN(tx, 0); err != nil {
+		return errors.Wrap(err, "resetting last max usn")
+	}
+
+	return nil
+}
+
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if ctx.SessionKey == "" {
@@ -914,6 +935,49 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		log.Debug("lastSyncAt: %d, lastMaxUSN: %d, syncState: %+v\n", lastSyncAt, lastMaxUSN, syncState)
+
+		// Handle a case where server has MaxUSN=0 but local has data (server switch)
+		var bookCount, noteCount int
+		if err := tx.QueryRow("SELECT count(*) FROM books WHERE deleted = 0").Scan(&bookCount); err != nil {
+			return errors.Wrap(err, "counting local books")
+		}
+		if err := tx.QueryRow("SELECT count(*) FROM notes WHERE deleted = 0").Scan(&noteCount); err != nil {
+			return errors.Wrap(err, "counting local notes")
+		}
+
+		// Only trigger empty server prompt if client has previously synced (lastMaxUSN > 0)
+		// This distinguishes between first sync (lastMaxUSN=0) and server switch (lastMaxUSN>0)
+		if syncState.MaxUSN == 0 && lastMaxUSN > 0 && (bookCount > 0 || noteCount > 0) {
+			log.Debug("empty server detected: server.MaxUSN=%d, local.MaxUSN=%d, books=%d, notes=%d\n",
+				syncState.MaxUSN, lastMaxUSN, bookCount, noteCount)
+
+			log.Warnf("The server is empty but you have local data.\n")
+			log.Debug("server state: MaxUSN = 0 (empty)\n")
+			log.Debug("local state: %d books, %d notes (MaxUSN = %d)\n", bookCount, noteCount, lastMaxUSN)
+
+			confirmed, err := ui.Confirm(fmt.Sprintf("Upload %d books and %d notes to the server?", bookCount, noteCount), false)
+			if err != nil {
+				tx.Rollback()
+				return errors.Wrap(err, "getting user confirmation")
+			}
+
+			if !confirmed {
+				tx.Rollback()
+				return errors.New("sync cancelled by user")
+			}
+
+			if err := prepareEmptyServerSync(tx); err != nil {
+				return errors.Wrap(err, "preparing for empty server sync")
+			}
+
+			// Re-fetch lastMaxUSN after prepareEmptyServerSync
+			lastMaxUSN, err = getLastMaxUSN(tx)
+			if err != nil {
+				return errors.Wrap(err, "getting the last max_usn after prepare")
+			}
+
+			log.Debug("prepared empty server sync: marked %d books and %d notes as dirty\n", bookCount, noteCount)
+		}
 
 		var syncErr error
 		if isFullSync || lastSyncAt < syncState.FullSyncBefore {
