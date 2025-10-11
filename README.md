@@ -30,7 +30,6 @@ On Unix-like systems (Linux, FreeBSD, macOS), you can use the installation scrip
 Or on macOS with Homebrew:
 
 ```sh
-brew tap dnote/dnote
 brew install dnote
 ```
 
