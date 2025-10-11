@@ -116,8 +116,6 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	}
 	if vd.Account != nil {
 		vd.Yield["Email"] = vd.Account.Email.String
-		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
-		vd.Yield["EmailVerified"] = vd.Account.EmailVerified
 	}
 	vd.Yield["CurrentPath"] = r.URL.Path
 	vd.Yield["Standalone"] = buildinfo.Standalone

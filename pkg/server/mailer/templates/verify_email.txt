@@ -1,5 +1,0 @@
-Hi,
-
-Welcome to Dnote! To verify your email, visit the following link:
-
-    {{ .WebURL }}/verify-email/{{ .Token }}

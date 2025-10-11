@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 		kind string
 	}{
 		{
-			kind: database.TokenTypeEmailVerification,
+			kind: database.TokenTypeResetPassword,
 		},
 	}
 

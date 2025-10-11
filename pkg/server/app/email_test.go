@@ -26,22 +26,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
-func TestSendVerificationEmail(t *testing.T) {
-	emailBackend := testutils.MockEmailbackendImplementation{}
-	a := NewTest()
-	a.EmailBackend = &emailBackend
-	a.WebURL = "http://example.com"
-
-	if err := a.SendVerificationEmail("alice@example.com", "mockTokenValue"); err != nil {
-		t.Fatal(err, "failed to perform")
-	}
-
-	assert.Equalf(t, len(emailBackend.Emails), 1, "email queue count mismatch")
-	assert.Equal(t, emailBackend.Emails[0].From, "noreply@example.com", "email sender mismatch")
-	assert.DeepEqual(t, emailBackend.Emails[0].To, []string{"alice@example.com"}, "email sender mismatch")
-
-}
-
 func TestSendWelcomeEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
 	a := NewTest()

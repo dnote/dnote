@@ -24,16 +24,14 @@ import (
 
 // Session represents user session
 type Session struct {
-	UUID          string `json:"uuid"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
+	UUID  string `json:"uuid"`
+	Email string `json:"email"`
 }
 
 // New returns a new session for the given user
 func New(user database.User, account database.Account) Session {
 	return Session{
-		UUID:          user.UUID,
-		Email:         account.Email.String,
-		EmailVerified: account.EmailVerified,
+		UUID:  user.UUID,
+		Email: account.Email.String,
 	}
 }

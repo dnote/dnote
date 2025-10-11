@@ -30,7 +30,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/helpers"
 	"github.com/dnote/dnote/pkg/server/log"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/token"
 	"github.com/dnote/dnote/pkg/server/views"
 	"github.com/gorilla/mux"
@@ -80,10 +79,6 @@ func NewUsers(app *app.App, viewEngine *views.Engine) *Users {
 			views.Config{Title: "About", Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
 			"users/settings_about",
 		),
-		EmailVerificationView: viewEngine.NewView(app,
-			views.Config{Layout: "base", HelperFuncs: commonHelpers, HeaderTemplate: "navbar"},
-			"users/email_verification",
-		),
 		app: app,
 	}
 }
@@ -96,7 +91,6 @@ type Users struct {
 	AboutView                *views.View
 	PasswordResetView        *views.View
 	PasswordResetConfirmView *views.View
-	EmailVerificationView    *views.View
 	app                      *app.App
 }
 
@@ -599,10 +593,6 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if email was changed
-	if form.Email != account.Email.String {
-		account.EmailVerified = false
-	}
 	account.Email.String = form.Email
 
 	if err := tx.Save(&account).Error; err != nil {
@@ -620,119 +610,3 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
 }
 
-func (u *Users) VerifyEmail(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	vars := mux.Vars(r)
-	tokenValue := vars["token"]
-
-	if tokenValue == "" {
-		handleHTMLError(w, r, app.ErrMissingToken, "Missing email verification token", u.EmailVerificationView, vd)
-		return
-	}
-
-	var token database.Token
-	if err := u.app.DB.
-		Where("value = ? AND type = ?", tokenValue, database.TokenTypeEmailVerification).
-		First(&token).Error; err != nil {
-		handleHTMLError(w, r, app.ErrInvalidToken, "Finding token", u.EmailVerificationView, vd)
-		return
-	}
-
-	if token.UsedAt != nil {
-		handleHTMLError(w, r, app.ErrInvalidToken, "Token has already been used.", u.EmailVerificationView, vd)
-		return
-	}
-
-	// Expire after ttl
-	if time.Since(token.CreatedAt).Minutes() > 30 {
-		handleHTMLError(w, r, app.ErrExpiredToken, "Token has expired.", u.EmailVerificationView, vd)
-		return
-	}
-
-	var account database.Account
-	if err := u.app.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
-		handleHTMLError(w, r, err, "finding account", u.EmailVerificationView, vd)
-		return
-	}
-	if account.EmailVerified {
-		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "Already verified", u.EmailVerificationView, vd)
-		return
-	}
-
-	tx := u.app.DB.Begin()
-	account.EmailVerified = true
-	if err := tx.Save(&account).Error; err != nil {
-		tx.Rollback()
-		handleHTMLError(w, r, err, "updating email_verified", u.EmailVerificationView, vd)
-		return
-	}
-	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
-		tx.Rollback()
-		handleHTMLError(w, r, err, "updating reset token", u.EmailVerificationView, vd)
-		return
-	}
-	tx.Commit()
-
-	var user database.User
-	if err := u.app.DB.Where("id = ?", token.UserID).First(&user).Error; err != nil {
-		handleHTMLError(w, r, err, "finding user", u.EmailVerificationView, vd)
-		return
-	}
-
-	session, err := u.app.SignIn(&user)
-	if err != nil {
-		handleHTMLError(w, r, err, "Creating session", u.EmailVerificationView, vd)
-	}
-
-	setSessionCookie(w, session.Key, session.ExpiresAt)
-	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func (u *Users) CreateEmailVerificationToken(w http.ResponseWriter, r *http.Request) {
-	vd := views.Data{}
-
-	user := context.User(r.Context())
-	if user == nil {
-		handleHTMLError(w, r, app.ErrLoginRequired, "No authenticated user found", u.SettingView, vd)
-		return
-	}
-
-	var account database.Account
-	err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error
-	if err != nil {
-		handleHTMLError(w, r, err, "finding account", u.SettingView, vd)
-		return
-	}
-
-	if account.EmailVerified {
-		handleHTMLError(w, r, app.ErrEmailAlreadyVerified, "email is already verified.", u.SettingView, vd)
-		return
-	}
-	if account.Email.String == "" {
-		handleHTMLError(w, r, app.ErrEmailRequired, "email is empty.", u.SettingView, vd)
-		return
-	}
-
-	tok, err := token.Create(u.app.DB, account.UserID, database.TokenTypeEmailVerification)
-	if err != nil {
-		handleHTMLError(w, r, err, "saving token", u.SettingView, vd)
-		return
-	}
-
-	if err := u.app.SendVerificationEmail(account.Email.String, tok.Value); err != nil {
-		if pkgErrors.Cause(err) == mailer.ErrSMTPNotConfigured {
-			handleHTMLError(w, r, app.ErrInvalidSMTPConfig, "SMTP config is not configured correctly.", u.SettingView, vd)
-		} else {
-			handleHTMLError(w, r, err, "sending verification email", u.SettingView, vd)
-		}
-
-		return
-	}
-
-	alert := views.Alert{
-		Level:   views.AlertLvlSuccess,
-		Message: "Please check your email for the verification",
-	}
-	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
-}

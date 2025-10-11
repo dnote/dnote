@@ -34,8 +34,6 @@ var (
 	EmailTypeResetPassword = "reset_password"
 	// EmailTypeResetPasswordAlert represents a password change notification email
 	EmailTypeResetPasswordAlert = "reset_password_alert"
-	// EmailTypeEmailVerification represents an email verification email
-	EmailTypeEmailVerification = "verify_email"
 	// EmailTypeWelcome represents an welcome email
 	EmailTypeWelcome = "welcome"
 )
@@ -79,10 +77,6 @@ func NewTemplates() Templates {
 	if err != nil {
 		panic(errors.Wrap(err, "initializing welcome template"))
 	}
-	verifyEmailText, err := initTextTmpl(EmailTypeEmailVerification)
-	if err != nil {
-		panic(errors.Wrap(err, "initializing email verification template"))
-	}
 	passwordResetText, err := initTextTmpl(EmailTypeResetPassword)
 	if err != nil {
 		panic(errors.Wrap(err, "initializing password reset template"))
@@ -95,7 +89,6 @@ func NewTemplates() Templates {
 	T := Templates{}
 	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
 	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
-	T.set(EmailTypeEmailVerification, EmailKindText, verifyEmailText)
 	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
 
 	return T

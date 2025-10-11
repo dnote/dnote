@@ -65,28 +65,6 @@ func getNoreplySender(webURL string) (string, error) {
 	return addr, nil
 }
 
-// SendVerificationEmail sends verification email
-func (a *App) SendVerificationEmail(email, tokenValue string) error {
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeEmailVerification, mailer.EmailKindText, mailer.EmailVerificationTmplData{
-		Token:  tokenValue,
-		WebURL: a.WebURL,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "executing reset verification template for %s", email)
-	}
-
-	from, err := GetSenderEmail(a.WebURL, defaultSender)
-	if err != nil {
-		return errors.Wrap(err, "getting the sender email")
-	}
-
-	if err := a.EmailBackend.Queue("Verify your Dnote email address", from, []string{email}, mailer.EmailKindText, body); err != nil {
-		return errors.Wrapf(err, "queueing email for %s", email)
-	}
-
-	return nil
-}
-
 // SendWelcomeEmail sends welcome email
 func (a *App) SendWelcomeEmail(email string) error {
 	body, err := a.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{

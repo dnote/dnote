@@ -32,7 +32,6 @@ func TestAllTemplatesInitialized(t *testing.T) {
 	emailTypes := []string{
 		EmailTypeResetPassword,
 		EmailTypeResetPasswordAlert,
-		EmailTypeEmailVerification,
 		EmailTypeWelcome,
 	}
 
@@ -41,44 +40,6 @@ func TestAllTemplatesInitialized(t *testing.T) {
 			_, err := tmpl.get(emailType, EmailKindText)
 			if err != nil {
 				t.Errorf("template %s not initialized: %v", emailType, err)
-			}
-		})
-	}
-}
-
-func TestEmailVerificationEmail(t *testing.T) {
-	testCases := []struct {
-		token  string
-		webURL string
-	}{
-		{
-			token:  "someRandomToken1",
-			webURL: "http://localhost:3000",
-		},
-		{
-			token:  "someRandomToken2",
-			webURL: "http://localhost:3001",
-		},
-	}
-
-	tmpl := NewTemplates()
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
-			dat := EmailVerificationTmplData{
-				Token:  tc.token,
-				WebURL: tc.webURL,
-			}
-			body, err := tmpl.Execute(EmailTypeEmailVerification, EmailKindText, dat)
-			if err != nil {
-				t.Fatal(errors.Wrap(err, "executing"))
-			}
-
-			if ok := strings.Contains(body, tc.webURL); !ok {
-				t.Errorf("email body did not contain %s", tc.webURL)
-			}
-			if ok := strings.Contains(body, tc.token); !ok {
-				t.Errorf("email body did not contain %s", tc.token)
 			}
 		})
 	}

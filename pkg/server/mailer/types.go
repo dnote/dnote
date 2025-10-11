@@ -18,12 +18,6 @@
 
 package mailer
 
-// EmailVerificationTmplData is a template data for email verification emails
-type EmailVerificationTmplData struct {
-	Token  string
-	WebURL string
-}
-
 // EmailResetPasswordTmplData is a template data for reset password emails
 type EmailResetPasswordTmplData struct {
 	AccountEmail string

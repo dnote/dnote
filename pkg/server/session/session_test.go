@@ -28,10 +28,10 @@ import (
 
 func TestNew(t *testing.T) {
 	u1 := database.User{UUID: "0f5f0054-d23f-4be1-b5fb-57673109e9cb"}
-	a1 := database.Account{Email: database.ToNullString("alice@example.com"), EmailVerified: false}
+	a1 := database.Account{Email: database.ToNullString("alice@example.com")}
 
 	u2 := database.User{UUID: "718a1041-bbe6-496e-bbe4-ea7e572c295e"}
-	a2 := database.Account{Email: database.ToNullString("bob@example.com"), EmailVerified: false}
+	a2 := database.Account{Email: database.ToNullString("bob@example.com")}
 
 	testCases := []struct {
 		user    database.User
@@ -52,9 +52,8 @@ func TestNew(t *testing.T) {
 			// Execute
 			got := New(tc.user, tc.account)
 			expected := Session{
-				UUID:          tc.user.UUID,
-				Email:         tc.account.Email.String,
-				EmailVerified: tc.account.EmailVerified,
+				UUID:  tc.user.UUID,
+				Email: tc.account.Email.String,
 			}
 
 			assert.DeepEqual(t, got, expected, "result mismatch")

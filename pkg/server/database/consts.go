@@ -21,8 +21,6 @@ package database
 const (
 	// TokenTypeResetPassword is a type of a token for reseting password
 	TokenTypeResetPassword = "reset_password"
-	// TokenTypeEmailVerification is a type of a token for verifying email
-	TokenTypeEmailVerification = "email_verification"
 )
 
 const (

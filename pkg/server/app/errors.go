@@ -79,7 +79,4 @@ var (
 	ErrInvalidPassword appError = "Invalid currnet password."
 	// ErrEmailTooLong is an error for email length exceeding the limit
 	ErrEmailTooLong appError = "Email is too long."
-
-	// ErrEmailAlreadyVerified is an error for trying to verify email that is already verified
-	ErrEmailAlreadyVerified appError = "Email is already verified."
 )

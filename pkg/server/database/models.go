@@ -73,10 +73,9 @@ type User struct {
 // Account is a model for an account
 type Account struct {
 	Model
-	UserID        int `gorm:"index"`
-	Email         NullString
-	EmailVerified bool `gorm:"default:false"`
-	Password      NullString
+	UserID   int `gorm:"index"`
+	Email    NullString
+	Password NullString
 }
 
 // Token is a model for a token
