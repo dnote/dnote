@@ -23,22 +23,36 @@ dnote sync
 
 ## Installation
 
-On Unix-like systems (Linux, FreeBSD, macOS), you can use the installation script:
+```bash
+# Linux, macOS, FreeBSD, Windows
+curl -s https://www.getdnote.com/install | sh
 
-    curl -s https://www.getdnote.com/install | sh
-
-Or on macOS with Homebrew:
-
-```sh
+# macOS with Homebrew
 brew install dnote
 ```
 
-You can also download the binary for your platform from the [releases page](https://github.com/dnote/dnote/releases).
+Or [download binary](https://github.com/dnote/dnote/releases).
 
-## Server
+## Server (Optional)
 
-Self-host your own Dnote server - just run a binary, no database required. [Download](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) or run [with Docker](https://github.com/dnote/dnote/blob/master/host/docker/README.md).
+Just run a binary. No database setup required.
+
+Run with Docker Compose using [compose.yml](./host/docker/compose.yml):
+
+```yaml
+services:
+  dnote:
+    image: dnote/dnote:latest
+    container_name: dnote
+    ports:
+      - 3001:3001
+    volumes:
+      - ./dnote_data:/data
+    restart: unless-stopped
+```
+
+Or see the [guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) for binary installation and configuration options.
 
 ## Documentation
 
-Please see [Dnote wiki](https://github.com/dnote/dnote/wiki) for the documentation.
+See the [Dnote wiki](https://github.com/dnote/dnote/wiki) for full documentation.

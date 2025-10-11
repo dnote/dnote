@@ -93,8 +93,8 @@ type Params struct {
 func New(p Params) (Config, error) {
 	c := Config{
 		AppEnv:              getOrEnv(p.AppEnv, "APP_ENV", AppEnvProduction),
-		Port:                getOrEnv(p.Port, "PORT", "3000"),
-		WebURL:              getOrEnv(p.WebURL, "WebURL", ""),
+		Port:                getOrEnv(p.Port, "PORT", "3001"),
+		WebURL:              getOrEnv(p.WebURL, "WebURL", "http://localhost:3001"),
 		DBPath:              getOrEnv(p.DBPath, "DBPath", DefaultDBPath),
 		DisableRegistration: p.DisableRegistration || readBoolEnv("DisableRegistration"),
 		LogLevel:            getOrEnv(p.LogLevel, "LOG_LEVEL", "info"),

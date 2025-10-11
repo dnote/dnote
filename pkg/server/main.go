@@ -81,8 +81,8 @@ Flags:
 	}
 
 	appEnv := startFlags.String("appEnv", "", "Application environment (env: APP_ENV, default: PRODUCTION)")
-	port := startFlags.String("port", "", "Server port (env: PORT, default: 3000)")
-	webURL := startFlags.String("webUrl", "", "Full URL to server without trailing slash (env: WebURL, example: https://example.com)")
+	port := startFlags.String("port", "", "Server port (env: PORT, default: 3001)")
+	webURL := startFlags.String("webUrl", "", "Full URL to server without trailing slash (env: WebURL, default: http://localhost:3001)")
 	dbPath := startFlags.String("dbPath", "", "Path to SQLite database file (env: DBPath, default: $XDG_DATA_HOME/dnote/server.db)")
 	disableRegistration := startFlags.Bool("disableRegistration", false, "Disable user registration (env: DisableRegistration, default: false)")
 	logLevel := startFlags.String("logLevel", "", "Log level: debug, info, warn, or error (env: LOG_LEVEL, default: info)")

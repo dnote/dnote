@@ -13,4 +13,4 @@ ENTRYPOINT ["./entrypoint.sh"]
 
 CMD ./dnote-server start
 
-EXPOSE 3000
+EXPOSE 3001

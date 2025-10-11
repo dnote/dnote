@@ -30,7 +30,7 @@ server {
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $remote_addr;
 		proxy_set_header Host $host;
-		proxy_pass http://127.0.0.1:3000;
+		proxy_pass http://127.0.0.1:3001;
 	}
 }
 ```
@@ -51,8 +51,8 @@ Enable `mod_proxy`, then create `/etc/apache2/sites-available/dnote.conf`:
 
     ProxyRequests Off
     ProxyPreserveHost On
-    ProxyPass / http://127.0.0.1:3000/ keepalive=On
-    ProxyPassReverse / http://127.0.0.1:3000/
+    ProxyPass / http://127.0.0.1:3001/ keepalive=On
+    ProxyPassReverse / http://127.0.0.1:3001/
     RequestHeader set X-Forwarded-HTTPS "0"
 </VirtualHost>
 ```

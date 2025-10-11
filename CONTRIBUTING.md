@@ -36,7 +36,7 @@ That's it. You're ready to contribute.
 ## Server
 
 ```bash
-# Start dev server (runs on localhost:3000)
+# Start dev server (runs on localhost:3001)
 make dev-server
 
 # Run tests

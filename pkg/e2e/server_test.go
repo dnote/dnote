@@ -151,8 +151,8 @@ func TestServerStartHelp(t *testing.T) {
 
 func TestServerStartInvalidConfig(t *testing.T) {
 	cmd := exec.Command(testServerBinary, "start")
-	// Clear WebURL env var so validation fails
-	cmd.Env = []string{}
+	// Set invalid WebURL to trigger validation failure
+	cmd.Env = []string{"WebURL=not-a-valid-url"}
 
 	output, err := cmd.CombinedOutput()
 

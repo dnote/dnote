@@ -57,7 +57,7 @@ build() {
 
   # build binary
   destDir="$outputDir/$platform-$arch"
-  ldflags="-X main.apiEndpoint=https://localhost:3000/api -X main.versionTag=$version"
+  ldflags="-X main.apiEndpoint=https://localhost:3001/api -X main.versionTag=$version"
   tags="fts5"
 
   pushd "$projectDir"

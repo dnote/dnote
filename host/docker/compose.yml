@@ -2,11 +2,8 @@ services:
   dnote:
     image: dnote/dnote:latest
     container_name: dnote
-    environment:
-      WebURL: localhost:3000
-      DisableRegistration: "false"
     ports:
-      - 3000:3000
+      - 3001:3001
     volumes:
       - ./dnote_data:/data
-    restart: always
+    restart: unless-stopped

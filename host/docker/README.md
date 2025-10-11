@@ -19,7 +19,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Visit http://localhost:3000 in your browser to see Dnote running.
+Visit http://localhost:3001 in your browser to see Dnote running.
 
 Please see [the installation guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) for further configuration.
 
