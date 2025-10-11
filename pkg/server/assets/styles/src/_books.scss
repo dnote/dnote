@@ -1,3 +1,6 @@
+@use "rem";
+@use "theme";
+
 /* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
@@ -18,12 +21,12 @@
 
 .books-page {
   .books-content {
-    padding: rem(16px) rem(24px);
-    margin-top: rem(16px);
+    padding: rem.rem(16px) rem.rem(24px);
+    margin-top: rem.rem(16px);
 
     h1 {
-      border-bottom: 1px solid $lighter-gray;
-      margin-bottom: rem(12px);
+      border-bottom: 1px solid theme.$lighter-gray;
+      margin-bottom: rem.rem(12px);
     }
   }
 }

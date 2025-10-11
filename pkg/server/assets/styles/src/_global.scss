@@ -1,3 +1,9 @@
+@use "font";
+@use "rem";
+@use "responsive";
+@use "theme";
+@use "variables";
+
 /* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
@@ -20,8 +26,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: $lighter-gray;
-  min-height: calc(100vh - #{$header-height});
+  background: theme.$lighter-gray;
+  min-height: calc(100vh - #{variables.$header-height});
   // margin-bottom: $footer-height;
 
   &.nofooter {
@@ -29,49 +35,49 @@
   }
 
   &.noheader:not(.nofooter) {
-    min-height: calc(100vh - #{$footer-height});
+    min-height: calc(100vh - #{variables.$footer-height});
   }
   &.nofooter:not(.noheader) {
-    min-height: calc(100vh - #{$header-height});
+    min-height: calc(100vh - #{variables.$header-height});
   }
   &.nofooter.noheader {
     min-height: 100vh;
   }
 
-  @include breakpoint(lg) {
+  @include responsive.breakpoint(lg) {
     margin-bottom: 0;
-    min-height: calc(100vh - #{$header-height});
+    min-height: calc(100vh - #{variables.$header-height});
   }
 }
 
 /* partials */
 .partial--time {
-  color: $gray;
-  @include font-size('small');
+  color: theme.$gray;
+  @include font.font-size('small');
 
   .mobile-text {
-    @include breakpoint(md) {
+    @include responsive.breakpoint(md) {
       display: none;
     }
   }
   .text {
     display: none;
 
-    @include breakpoint(md) {
+    @include responsive.breakpoint(md) {
       display: inherit;
     }
   }
 }
 
 .partial--page-toolbar {
-  @include breakpoint(lg) {
-    height: rem(48px);
-    border-radius: rem(4px);
-    background: $light;
+  @include responsive.breakpoint(lg) {
+    height: rem.rem(48px);
+    border-radius: rem.rem(4px);
+    background: theme.$light;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
 
     &.bottom {
-      margin-top: rem(12px);
+      margin-top: rem.rem(12px);
     }
   }
 }

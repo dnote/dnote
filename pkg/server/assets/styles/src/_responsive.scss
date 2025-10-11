@@ -16,39 +16,39 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './variables';
+@use 'variables';
 
 @mixin breakpoint($point) {
   @if $point == xl {
-    @media (min-width: $xl-breakpoint) {
+    @media (min-width: variables.$xl-breakpoint) {
       @content;
     }
   } @else if $point == lg {
-    @media (min-width: $lg-breakpoint) {
+    @media (min-width: variables.$lg-breakpoint) {
       @content;
     }
   } @else if $point == md {
-    @media (min-width: $md-breakpoint) {
+    @media (min-width: variables.$md-breakpoint) {
       @content;
     }
   } @else if $point == sm {
-    @media (min-width: $sm-breakpoint) {
+    @media (min-width: variables.$sm-breakpoint) {
       @content;
     }
   } @else if $point == smonly {
-    @media (min-width: $sm-breakpoint) and (max-width: $md-breakpoint - 1px) {
+    @media (min-width: variables.$sm-breakpoint) and (max-width: variables.$md-breakpoint - 1px) {
       @content;
     }
   } @else if $point == smdown {
-    @media (max-width: $md-breakpoint - 1px) {
+    @media (max-width: variables.$md-breakpoint - 1px) {
       @content;
     }
   } @else if $point == mdonly {
-    @media (min-width: $md-breakpoint) and (max-width: $lg-breakpoint - 1px) {
+    @media (min-width: variables.$md-breakpoint) and (max-width: variables.$lg-breakpoint - 1px) {
       @content;
     }
   } @else if $point == mddown {
-    @media (max-width: $lg-breakpoint - 1px) {
+    @media (max-width: variables.$lg-breakpoint - 1px) {
       @content;
     }
   }

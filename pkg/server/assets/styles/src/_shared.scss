@@ -16,8 +16,10 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './font';
-@import './responsive';
+@use 'font';
+@use 'responsive';
+@use "rem";
+@use "theme";
 
 @keyframes holderPulse {
   0% {
@@ -46,7 +48,7 @@ input[type='email']:disabled,
 input[type='number']:disabled,
 input[type='password']:disabled,
 textarea:disabled {
-  background-color: $lighter-gray;
+  background-color: theme.$lighter-gray;
   cursor: not-allowed;
 }
 
@@ -76,17 +78,17 @@ button {
 }
 
 .text-input {
-  border: 1px solid $border-color;
-  padding: rem(8px) rem(12px);
+  border: 1px solid theme.$border-color;
+  padding: rem.rem(8px) rem.rem(12px);
   position: relative;
-  border-radius: rem(4px);
+  border-radius: rem.rem(4px);
   display: block;
 
   &::placeholder {
-    color: $gray;
+    color: theme.$gray;
   }
   &:focus {
-    border-color: $light-blue;
+    border-color: theme.$light-blue;
     box-shadow: inset 0 1px 2px rgba(24, 31, 35, 0.075),
       0 0 0 0.2em rgba(4, 100, 210, 0.3);
     outline: none;
@@ -94,11 +96,11 @@ button {
 }
 
 .text-input-small {
-  padding: rem(4px) rem(12px);
+  padding: rem.rem(4px) rem.rem(12px);
 }
 
 .text-input-medium {
-  padding: rem(8px) rem(12px);
+  padding: rem.rem(8px) rem.rem(12px);
 }
 
 .text-input-stretch {
@@ -110,10 +112,10 @@ button {
 }
 
 a {
-  color: $link;
+  color: theme.$link;
 
   &:hover {
-    color: $link-hover;
+    color: theme.$link-hover;
   }
 }
 
@@ -129,12 +131,12 @@ h6 {
 
 // grid
 .container.mobile-fw {
-  @include breakpoint(mddown) {
+  @include responsive.breakpoint(mddown) {
     max-width: 100%;
   }
 }
 .container.mobile-nopadding {
-  @include breakpoint(mddown) {
+  @include responsive.breakpoint(mddown) {
     padding-left: 0;
     padding-right: 0;
 
@@ -154,30 +156,30 @@ html body {
 }
 
 .page {
-  padding-top: rem(20px);
-  padding-bottom: rem(20px);
+  padding-top: rem.rem(20px);
+  padding-bottom: rem.rem(20px);
 
   &.page-mobile-full {
     padding-top: 0;
     padding-bottom: 0;
 
-    @include breakpoint(lg) {
-      padding-top: rem(32px);
-      padding-bottom: rem(32px);
+    @include responsive.breakpoint(lg) {
+      padding-top: rem.rem(32px);
+      padding-bottom: rem.rem(32px);
     }
   }
 }
 
 .page-header {
-  margin-top: rem(20px);
+  margin-top: rem.rem(20px);
 
   &.page-header-full {
-    margin-bottom: rem(20px);
+    margin-bottom: rem.rem(20px);
   }
 
-  @include breakpoint(lg) {
+  @include responsive.breakpoint(lg) {
     // padding: 0;
-    margin-bottom: rem(20px);
+    margin-bottom: rem.rem(20px);
     margin-top: 0;
   }
 }
@@ -189,7 +191,7 @@ html body {
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 8px 10px;
-  border: 1px solid $border-color;
+  border: 1px solid theme.$border-color;
   min-height: 34px;
   padding: 6px 8px;
   padding-right: 24px;
@@ -207,7 +209,7 @@ html body {
   &:disabled,
   &.form-select-disabled {
     background-image: url('data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAABAAAAAUCAYAAACEYr13AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAEKSURBVHgBzVTNDYIwFC4NB46OwAi4gY7gETgoE6gTGCcwTgAJ4efGCLCBjMAIXrmA3yOhQazQhJj4JQ0v7fte3/e1hbFfIk3TYxzHp6kc7dtCFEUW5/xBcdM0a9d1S1kel00mSWKCnIkkxDSnXADIMYYEU9O0zPf91WwB6L6NyB3atrUMw7hNFkCbFyROmXYYmypMDMNwo+t6ztSwtW27oEAXrXBuwu2rCht+WPgU7C8gPCBzYOBKhQS5FTwIKBYeQFeJoWyiKNYH5Co6OCuQr/0JdBuPVyElQCd7GRMb3B3HebsHHzexrmvyQvZwqjFZWsDzvCc62BFhSGYD3UMsfs6ToKOd+6EsxgtrtWLW4gUN3AAAAABJRU5ErkJggg==');
-    background-color: $lighter-gray;
+    background-color: theme.$lighter-gray;
   }
 }
 
@@ -215,12 +217,12 @@ html body {
   // width: 100%;
   width: auto;
   font-weight: 600;
-  margin-bottom: rem(4px);
-  @include font-size('small');
+  margin-bottom: rem.rem(4px);
+  @include font.font-size('small');
 }
 
 .page-heading {
-  @include font-size('x-large');
+  @include font.font-size('x-large');
 }
 
 .dropdown-caret {
@@ -231,7 +233,7 @@ html body {
   border-right: 4px solid transparent;
   border-bottom: 0 solid transparent;
   border-left: 4px solid transparent;
-  margin-left: rem(8px);
+  margin-left: rem.rem(8px);
 }
 
 .divider {

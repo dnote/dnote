@@ -16,21 +16,23 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './theme';
-@import './font';
+@use 'theme';
+@use 'font';
+@use "rem";
+@use "responsive";
 
 .home-page {
   .note-group-list {
     flex-grow: 1;
 
-    @include breakpoint(lg) {
-      margin-top: rem(16px);
+    @include responsive.breakpoint(lg) {
+      margin-top: rem.rem(16px);
     }
 
     .note-group-list-empty {
-      padding: rem(40px) rem(16px);
+      padding: rem.rem(40px) rem.rem(16px);
       text-align: center;
-      color: $gray;
+      color: theme.$gray;
     }
   }
 
@@ -40,29 +42,29 @@
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
 
     &:not(:first-of-type) {
-      margin-top: rem(20px);
+      margin-top: rem.rem(20px);
 
-      @include breakpoint(md) {
-        margin-top: rem(24px);
+      @include responsive.breakpoint(md) {
+        margin-top: rem.rem(24px);
       }
     }
 
     .note-group-header {
-      @include font-size('small');
+      @include font.font-size('small');
       display: flex;
       justify-content: space-between;
       color: white;
-      padding: rem(12px) rem(16px);
-      background: $light;
-      color: $black;
-      border-bottom: 1px solid $border-color;
+      padding: rem.rem(12px) rem.rem(16px);
+      background: theme.$light;
+      color: theme.$black;
+      border-bottom: 1px solid theme.$border-color;
       border-top-left-radius: 4px;
       border-top-right-radius: 4px;
     }
 
     .date {
       font-weight: 600;
-      @include font-size('small');
+      @include font.font-size('small');
     }
 
     .mask {
@@ -78,7 +80,7 @@
 
     .header-date {
       font-weight: 600;
-      @include font-size('regular');
+      @include font.font-size('regular');
     }
     .header-count {
       font-weight: 300;
@@ -101,23 +103,23 @@
     background: white;
     position: relative;
 
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid theme.$border-color;
 
     .link {
-      color: $black;
+      color: theme.$black;
       display: block;
-      padding: rem(12px) rem(16px);
+      padding: rem.rem(12px) rem.rem(16px);
       border: 2px solid transparent;
 
       &:hover {
         text-decoration: none;
-        background: $light-blue;
+        background: theme.$light-blue;
         color: inherit;
       }
     }
 
     .meta {
-      line-height: rem(16px);
+      line-height: rem.rem(16px);
     }
 
     .body {
@@ -131,11 +133,11 @@
     }
 
     .note-content {
-      margin-top: rem(12px);
+      margin-top: rem.rem(12px);
       line-height: 1.6rem;
       overflow: hidden;
       text-overflow: ellipsis;
-      color: $gray;
+      color: theme.$gray;
     }
 
     .book-label {
@@ -143,11 +145,11 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 700;
-      @include font-size('small');
+      @include font.font-size('small');
 
       width: 212px;
 
-      @include breakpoint('md') {
+      @include responsive.breakpoint('md') {
         width: 320px;
       }
     }
@@ -155,7 +157,7 @@
     .match {
       display: inline-block;
       background: #f7f77d;
-      padding: rem(4px) rem(4px);
+      padding: rem.rem(4px) rem.rem(4px);
     }
   }
 
@@ -168,12 +170,12 @@
     align-items: center;
 
     .paginator-info {
-      @include font-size('small');
-      color: $gray;
+      @include font.font-size('small');
+      color: theme.$gray;
     }
 
     .paginator-link {
-      padding: rem(12px) rem(12px);
+      padding: rem.rem(12px) rem.rem(12px);
 
       &.disabled {
         cursor: not-allowed;
@@ -181,10 +183,10 @@
     }
 
     .paginator-link-prev {
-      margin-left: rem(8px);
+      margin-left: rem.rem(8px);
 
-      @include breakpoint(md) {
-        margin-left: rem(20px);
+      @include responsive.breakpoint(md) {
+        margin-left: rem.rem(20px);
       }
     }
 

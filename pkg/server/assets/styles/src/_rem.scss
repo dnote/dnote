@@ -1,3 +1,6 @@
+@use "sass:list";
+@use "sass:map";
+@use "sass:meta";
 /* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
@@ -24,6 +27,8 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+@use "sass:math";
+
 // assume 1 rem = 10 px
 // achieved by body { font-size: 62.5%; )
 $rem-baseline: 10px !default;
@@ -32,24 +37,24 @@ $rem-px-only: false !default;
 
 @function rem-separator($list, $separator: false) {
   @if $separator == "comma" or $separator == "space" {
-    @return append($list, null, $separator);
+    @return list.append($list, null, $separator);
   }
 
-  @if function-exists("list-separator") == true {
-    @return list-separator($list);
+  @if meta.function-exists("list-separator") == true {
+    @return list.separator($list);
   }
 
   // list-separator polyfill by Hugo Giraudel (https://sass-compatibility.github.io/#list_separator_function)
   $test-list: ();
   @each $item in $list {
-    $test-list: append($test-list, $item, space);
+    $test-list: list.append($test-list, $item, space);
   }
 
   @return if($test-list == $list, space, comma);
 }
 
 @mixin rem-baseline($zoom: 100%) {
-  font-size: $zoom / 16px * $rem-baseline;
+  font-size: math.div($zoom, 16px) * $rem-baseline;
 }
 
 @function rem-convert($to, $values...) {
@@ -57,28 +62,28 @@ $rem-px-only: false !default;
   $separator: rem-separator($values);
 
   @each $value in $values {
-    @if type-of($value) == "number" and unit($value) == "rem" and $to == "px" {
-      $result: append($result, $value / 1rem * $rem-baseline, $separator);
+    @if meta.type-of($value) == "number" and math.unit($value) == "rem" and $to == "px" {
+      $result: list.append($result, math.div($value, 1rem) * $rem-baseline, $separator);
     } @else if
-      type-of($value) ==
+      meta.type-of($value) ==
       "number" and
-      unit($value) ==
+      math.unit($value) ==
       "px" and
       $to ==
       "rem"
     {
-      $result: append($result, $value / $rem-baseline * 1rem, $separator);
-    } @else if type-of($value) == "list" {
+      $result: list.append($result, math.div($value, $rem-baseline) * 1rem, $separator);
+    } @else if meta.type-of($value) == "list" {
       $value-separator: rem-separator($value);
       $value: rem-convert($to, $value...);
       $value: rem-separator($value, $value-separator);
-      $result: append($result, $value, $separator);
+      $result: list.append($result, $value, $separator);
     } @else {
-      $result: append($result, $value, $separator);
+      $result: list.append($result, $value, $separator);
     }
   }
 
-  @return if(length($result) == 1, nth($result, 1), $result);
+  @return if(list.length($result) == 1, list.nth($result, 1), $result);
 }
 
 @function rem($values...) {
@@ -90,9 +95,9 @@ $rem-px-only: false !default;
 }
 
 @mixin rem($properties, $values...) {
-  @if type-of($properties) == "map" {
-    @each $property in map-keys($properties) {
-      @include rem($property, map-get($properties, $property));
+  @if meta.type-of($properties) == "map" {
+    @each $property in map.keys($properties) {
+      @include rem($property, map.get($properties, $property));
     }
   } @else {
     @each $property in $properties {

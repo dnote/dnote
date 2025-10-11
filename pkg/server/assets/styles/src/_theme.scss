@@ -1,3 +1,4 @@
+@use "sass:color";
 /* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
@@ -26,7 +27,7 @@ $lighter-gray: #f3f3f3;
 $dark-gray: #637283;
 
 // primary colors
-$first: #072a40;
+$first: #333745;
 $second: #e7e7e7;
 $third: #0a4b73;
 
@@ -35,7 +36,7 @@ $border-color: #d8d8d8;
 $border-color-light: $lighter-gray;
 
 $link: #6f53c0;
-$link-hover: darken($link, 5%);
+$link-hover: color.adjust($link, $lightness: -5%);
 
 $danger-text: #cb2431;
 $danger-background: #f8d7da;

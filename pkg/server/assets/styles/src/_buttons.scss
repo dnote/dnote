@@ -16,9 +16,11 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './theme';
-@import './rem';
-@import './font';
+@use "sass:color";
+@use 'theme';
+@use 'rem';
+@use 'font';
+@use "responsive";
 
 @mixin button($text-color, $background-color) {
   color: $text-color;
@@ -26,7 +28,7 @@
 
   &:not(:disabled):hover {
     color: $text-color;
-    background-color: darken($background-color, 5%);
+    background-color: color.adjust($background-color, $lightness: -5%);
     box-shadow: 0px 0px 4px 2px #cacaca;
   }
 }
@@ -87,40 +89,40 @@ button:disabled {
 }
 
 .button-small {
-  @include font-size('small');
-  padding: rem(4px) rem(12px);
+  @include font.font-size('small');
+  padding: rem.rem(4px) rem.rem(12px);
 }
 
 .button-normal {
   // @include font-size('small');
-  padding: rem(8px) rem(16px);
+  padding: rem.rem(8px) rem.rem(16px);
 }
 
 .button-large {
-  @include font-size('medium');
+  @include font.font-size('medium');
 
-  padding: rem(8px) rem(24px);
+  padding: rem.rem(8px) rem.rem(24px);
 
-  @include breakpoint(md) {
-    padding: rem(12px) rem(36px);
+  @include responsive.breakpoint(md) {
+    padding: rem.rem(12px) rem.rem(36px);
   }
 
-  @include breakpoint(lg) {
-    padding: rem(12px) rem(48px);
+  @include responsive.breakpoint(lg) {
+    padding: rem.rem(12px) rem.rem(48px);
   }
 }
 
 .button-xlarge {
-  @include font-size('x-large');
+  @include font.font-size('x-large');
 
-  padding: rem(16px) rem(24px);
+  padding: rem.rem(16px) rem.rem(24px);
 
-  @include breakpoint(md) {
-    padding: rem(12px) rem(36px);
+  @include responsive.breakpoint(md) {
+    padding: rem.rem(12px) rem.rem(36px);
   }
 
-  @include breakpoint(lg) {
-    padding: rem(16px) rem(48px);
+  @include responsive.breakpoint(lg) {
+    padding: rem.rem(16px) rem.rem(48px);
   }
 }
 
@@ -133,23 +135,23 @@ button:disabled {
 }
 
 .button-second {
-  @include button($black, $second);
+  @include button(theme.$black, theme.$second);
 }
 
 .button-second-outline {
-  @include button-outline($black, $second);
+  @include button-outline(theme.$black, theme.$second);
 }
 
 .button-third {
-  @include button(#ffffff, $third);
+  @include button(#ffffff, theme.$third);
 }
 
 .button-third-outline {
-  @include button-outline($third, $third);
+  @include button-outline(theme.$third, theme.$third);
 }
 
 .button-danger {
-  @include button-outline($danger-text, $danger-text);
+  @include button-outline(theme.$danger-text, theme.$danger-text);
   font-weight: 600;
 }
 
@@ -158,7 +160,7 @@ button:disabled {
 }
 
 .button ~ .button {
-  margin-left: rem(12px);
+  margin-left: rem.rem(12px);
 }
 
 .button-no-ui {
@@ -173,10 +175,10 @@ button:disabled {
 }
 
 .button-link {
-  color: $link;
+  color: theme.$link;
 
   &:hover {
-    color: $link-hover;
+    color: theme.$link-hover;
     text-decoration: underline;
   }
 }

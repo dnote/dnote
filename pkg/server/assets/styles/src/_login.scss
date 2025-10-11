@@ -16,11 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './theme';
-@import './font';
+@use 'theme';
+@use 'font';
+@use "rem";
 
 .auth-page {
-  background: $lighter-gray;
+  background: theme.$lighter-gray;
   text-align: center;
   min-height: 100vh;
   padding: 50px 0;
@@ -30,8 +31,8 @@
   }
 
   .heading {
-    color: $black;
-    @include font-size('2x-large');
+    color: theme.$black;
+    @include font.font-size('2x-large');
     font-weight: 300;
     margin-top: 12px;
     margin-bottom: 0;
@@ -58,15 +59,15 @@
 
   .callout {
     color: #7c7c7c;
-    @include font-size('small');
+    @include font.font-size('small');
   }
   .cta {
-    @include font-size('small');
+    @include font.font-size('small');
   }
 
   .panel {
-    border: 1px solid $border-color;
-    background: $white;
+    border: 1px solid theme.$border-color;
+    background: theme.$white;
     border-radius: 2px;
     padding: 20px;
     text-align: left;
@@ -82,21 +83,21 @@
     }
   }
   .label {
-    @include font-size('small');
+    @include font.font-size('small');
     font-weight: 600;
     width: 100%;
     margin-bottom: 0;
   }
 
   .forgot {
-    @include font-size('small');
+    @include font.font-size('small');
     float: right;
     font-weight: 400;
   }
 
   &.password-reset-page {
     .email-input {
-      margin-top: rem(16px);
+      margin-top: rem.rem(16px);
     }
   }
 

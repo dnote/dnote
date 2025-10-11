@@ -16,8 +16,12 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './theme';
-@import './variables';
+@use "sass:color";
+@use 'theme';
+@use 'variables';
+@use "font";
+@use "rem";
+@use "responsive";
 
 .header-wrapper {
   padding: 0;
@@ -25,7 +29,7 @@
   position: relative;
   display: flex;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-  background: $first;
+  background: theme.$first;
   align-items: stretch;
   justify-content: space-between;
   flex: 1;
@@ -33,13 +37,13 @@
   position: sticky;
   top: 0;
   z-index: 4;
-  height: $header-height;
+  height: variables.$header-height;
 
   .container {
     height: 100%;
   }
 
-  @include breakpoint(md) {
+  @include responsive.breakpoint(md) {
     flex-direction: row;
   }
 
@@ -60,15 +64,15 @@
   .search-wrapper {
     align-items: center;
     display: flex;
-    margin-left: rem(32px);
+    margin-left: rem.rem(32px);
   }
 
   .search-input {
-    width: rem(356px);
+    width: rem.rem(356px);
     border: 0;
     padding: 4px 12px;
-    border-radius: rem(4px);
-    @include font-size('small');
+    border-radius: rem.rem(4px);
+    @include font.font-size('small');
   }
 
   .brand {
@@ -81,7 +85,7 @@
   }
 
   .main-nav {
-    margin-left: rem(32px);
+    margin-left: rem.rem(32px);
     display: flex;
 
     .list {
@@ -94,22 +98,22 @@
     }
 
     .nav-link {
-      @include font-size('small');
+      @include font.font-size('small');
       display: flex;
       font-weight: 600;
       align-items: center;
-      padding: 0 rem(16px);
-      color: $white;
+      padding: 0 rem.rem(16px);
+      color: theme.$white;
 
       &:hover {
-        color: $white;
+        color: theme.$white;
         text-decoration: none;
-        background: lighten($first, 10%);
+        background: color.adjust(theme.$first, $lightness: 10%);
       }
     }
 
     .nav-item {
-      @include font-size('small');
+      @include font.font-size('small');
       font-weight: 600;
     }
   }
@@ -131,7 +135,7 @@
     display: none;
     position: absolute;
     background-color: #f1f1f1;
-    width: rem(240px);
+    width: rem.rem(240px);
     background: #fff;
     border: 1px solid #d8d8d8;
     border-radius: 4px;
@@ -154,15 +158,15 @@
     }
 
     .account-dropdown-header {
-      @include font-size('small');
-      color: $light-gray;
-      padding: rem(8px) rem(12px);
+      @include font.font-size('small');
+      color: theme.$light-gray;
+      padding: rem.rem(8px) rem.rem(12px);
       display: block;
       margin-bottom: 0;
       white-space: nowrap;
 
       svg {
-        fill: $light-gray;
+        fill: theme.$light-gray;
       }
 
       .email {
@@ -173,15 +177,15 @@
     }
 
     .dropdown-link {
-      @include font-size('small');
+      @include font.font-size('small');
       white-space: pre;
-      padding: rem(8px) rem(14px);
+      padding: rem.rem(8px) rem.rem(14px);
       width: 100%;
       display: block;
       color: black;
 
       &:hover {
-        background: $lighter-gray;
+        background: theme.$lighter-gray;
         text-decoration: none;
         color: #0056b3;
       }
@@ -192,7 +196,7 @@
       }
 
       &:not(.disabled):focus {
-        background: $lighter-gray;
+        background: theme.$lighter-gray;
         color: #0056b3;
         outline: 1px dotted gray;
       }
@@ -204,7 +208,7 @@
     }
 
     .session-notice {
-      margin-left: rem(4px);
+      margin-left: rem.rem(4px);
     }
   }
 }

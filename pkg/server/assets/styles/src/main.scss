@@ -16,25 +16,25 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './reboot';
-@import './grid';
-@import './bootstrap';
-@import './buttons';
-@import './responsive';
-@import './select';
-@import './shared';
-@import './marker';
-@import './rem';
-@import './markdown';
-@import './hljs';
+@use 'reboot';
+@use 'grid';
+@use 'bootstrap';
+@use 'buttons';
+@use 'responsive';
+@use 'select';
+@use 'shared';
+@use 'marker';
+@use 'rem';
+@use 'markdown';
+@use 'hljs';
 
-@import './login';
-@import './home';
-@import './note';
-@import './books';
-@import './settings';
-@import './header';
-@import './global';
+@use 'login';
+@use 'home';
+@use 'note';
+@use 'books';
+@use 'settings';
+@use 'header';
+@use 'global';
 
 html {
   font-size: 62.5%; /* 1.0 rem = 10px */
@@ -74,11 +74,11 @@ img {
 }
 
 .container.mobile-nopadding {
-  @include breakpoint(mdonly) {
+  @include responsive.breakpoint(mdonly) {
     max-width: 100%;
   }
 
-  @include breakpoint(mddown) {
+  @include responsive.breakpoint(mddown) {
     padding-left: 0;
     padding-right: 0;
 
@@ -137,7 +137,7 @@ img {
 }
 
 .input {
-  border-radius: rem(4px);
+  border-radius: rem.rem(4px);
   background-clip: padding-box;
   border: 1px solid #ced4da;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;

@@ -16,17 +16,19 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-@import './theme';
-@import './font';
+@use 'theme';
+@use 'font';
+@use "rem";
+@use "responsive";
 
 .settings-page {
   .sidebar {
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
     background: white;
-    margin-bottom: rem(20px);
-    margin-top: rem(20px);
+    margin-bottom: rem.rem(20px);
+    margin-top: rem.rem(20px);
 
-    @include breakpoint(lg) {
+    @include responsive.breakpoint(lg) {
       margin-bottom: 0;
       margin-top: 0;
     }
@@ -34,30 +36,30 @@
 
   .sidebar-item {
     display: block;
-    padding: rem(12px) rem(16px);
+    padding: rem.rem(12px) rem.rem(16px);
     border-left: 4px solid transparent;
-    @include font-size('regular');
+    @include font.font-size('regular');
 
     &:hover {
       text-decoration: none;
-      background: $light;
+      background: theme.$light;
     }
 
     &.active {
       font-weight: 600;
-      border-left-color: $first;
+      border-left-color: theme.$first;
     }
   }
 
   .setting-section-wrapper {
     .header {
-      @include breakpoint(lg) {
+      @include responsive.breakpoint(lg) {
         display: none;
       }
     }
 
     .setting-section {
-      margin-top: rem(24px);
+      margin-top: rem.rem(24px);
       background: white;
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.14);
 
@@ -67,27 +69,27 @@
     }
 
     .section-heading {
-      @include font-size('regular');
+      @include font.font-size('regular');
       font-weight: 600;
-      padding-bottom: rem(4px);
-      background: $light;
-      padding: rem(16px) rem(20px);
+      padding-bottom: rem.rem(4px);
+      background: theme.$light;
+      padding: rem.rem(16px) rem.rem(20px);
     }
     .section-content {
-      margin-top: rem(20px);
+      margin-top: rem.rem(20px);
     }
 
     .actions {
-      margin-top: rem(18px);
+      margin-top: rem.rem(18px);
       text-align: right;
     }
   }
 
   .setting-row {
-    padding: rem(16px) rem(20px);
+    padding: rem.rem(16px) rem.rem(20px);
 
     &:not(:last-child) {
-      border-bottom: 1px solid $border-color;
+      border-bottom: 1px solid theme.$border-color;
     }
 
     .setting-row-summary {
@@ -95,7 +97,7 @@
       flex-direction: column;
       // align-items: flex-start;
 
-      @include breakpoint(md) {
+      @include responsive.breakpoint(md) {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
@@ -103,24 +105,24 @@
     }
 
     .setting-row-main {
-      padding-top: rem(24px);
+      padding-top: rem.rem(24px);
     }
 
     .setting-name {
       font-weight: 400;
-      @include font-size('regular');
+      @include font.font-size('regular');
       margin-bottom: 0;
     }
     .setting-desc {
       margin-bottom: 0;
-      @include font-size('small');
-      color: $gray;
+      @include font.font-size('small');
+      color: theme.$gray;
     }
     .setting-action {
       display: flex;
       flex-direction: column;
 
-      @include breakpoint(md) {
+      @include responsive.breakpoint(md) {
         flex-direction: row;
       }
     }
@@ -130,9 +132,9 @@
       word-break: break-all;
       justify-content: space-between;
       align-items: center;
-      margin-top: rem(4px);
+      margin-top: rem.rem(4px);
 
-      @include breakpoint(md) {
+      @include responsive.breakpoint(md) {
         flex-direction: row;
         align-items: center;
         margin-top: 0;
@@ -140,26 +142,26 @@
     }
 
     .setting-edit {
-      color: $link;
+      color: theme.$link;
       padding: 0;
 
       &:hover {
-        color: $link-hover;
+        color: theme.$link-hover;
       }
-      @include breakpoint(md) {
-        margin-left: rem(16px);
+      @include responsive.breakpoint(md) {
+        margin-left: rem.rem(16px);
       }
     }
 
     .input-row {
       & ~ .input-row,
       .input-row {
-        margin-top: rem(12px);
+        margin-top: rem.rem(12px);
       }
     }
   }
 
   .email-verification-form {
-    margin-left: rem(12px);
+    margin-left: rem.rem(12px);
   }
 }

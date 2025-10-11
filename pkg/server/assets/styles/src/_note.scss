@@ -1,3 +1,8 @@
+@use "font";
+@use "rem";
+@use "responsive";
+@use "theme";
+
 /* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
  *
  * This file is part of Dnote.
@@ -18,7 +23,7 @@
 
 .note-page {
   // min-height: calc(100vh - 57px);
-  background: $lighter-gray;
+  background: theme.$lighter-gray;
   flex-grow: 1;
   flex-basis: 0;
 
@@ -38,8 +43,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: rem(12px) rem(16px);
-    border-bottom: 1px solid $border-color;
+    padding: rem.rem(12px) rem.rem(16px);
+    border-bottom: 1px solid theme.$border-color;
   }
   .header-left,
   .header-right {
@@ -52,27 +57,27 @@
   }
 
   .content-wrapper {
-    padding: rem(12px) rem(16px);
+    padding: rem.rem(12px) rem.rem(16px);
   }
 
   .collapsed-content {
-    color: $light-gray;
+    color: theme.$light-gray;
   }
 
   .footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    @include font-size('small');
-    padding: rem(12px) rem(16px);
+    @include font.font-size('small');
+    padding: rem.rem(12px) rem.rem(16px);
   }
 
   .ts {
-    color: $light-gray;
+    color: theme.$light-gray;
   }
   .ts-lead {
     display: none;
-    @include breakpoint(md) {
+    @include responsive.breakpoint(md) {
       display: inline;
     }
   }
@@ -83,13 +88,13 @@
   }
 
   .book-label {
-    @include font-size('medium');
+    @include font.font-size('medium');
     font-weight: 600;
     display: inline-block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: $black;
+    color: theme.$black;
 
     a {
       color: inherit;
@@ -103,17 +108,17 @@
   // header
   .header {
     .book-label {
-      max-width: rem(200px);
-      margin-left: rem(12px);
+      max-width: rem.rem(200px);
+      margin-left: rem.rem(12px);
 
-      @include breakpoint(sm) {
-        max-width: rem(200px);
+      @include responsive.breakpoint(sm) {
+        max-width: rem.rem(200px);
       }
-      @include breakpoint(md) {
-        max-width: rem(420px);
+      @include responsive.breakpoint(md) {
+        max-width: rem.rem(420px);
       }
-      @include breakpoint(lg) {
-        max-width: rem(600px);
+      @include responsive.breakpoint(lg) {
+        max-width: rem.rem(600px);
       }
     }
   }
