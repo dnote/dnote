@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.25.0'
@@ -36,6 +38,23 @@ jobs:
       - name: Build CLI
         run: make version=${{ steps.version.outputs.version }} build-cli
 
+      - name: Generate changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="cli-v${VERSION}"
+
+          # Find previous CLI tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep "^cli-" | grep -v "^${TAG}$" | head -n 1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "Error: No previous CLI tag found"
+            echo "This appears to be the first release."
+            exit 1
+          fi
+
+          ./scripts/generate-changelog.sh cli "$TAG" "$PREV_TAG" > /tmp/changelog.txt
+          cat /tmp/changelog.txt
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -54,5 +73,24 @@ jobs:
             build/cli/*_checksums.txt \
             $FLAGS \
             --title="$TAG" \
-            --notes="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
+            --notes-file=/tmp/changelog.txt \
             --draft
+
+      - name: Bump Homebrew formula
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_RELEASE_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="cli-v${VERSION}"
+
+          # Only bump Homebrew for stable releases (not prereleases)
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            brew update-reset
+            brew bump-formula-pr \
+              --no-browse \
+              --tag="$TAG" \
+              --revision="${{ github.sha }}" \
+              dnote
+          else
+            echo "Skipping Homebrew update for prerelease version: $VERSION"
+          fi

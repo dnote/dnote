@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
           go-version: '>=1.25.0'
@@ -35,6 +37,23 @@ jobs:
 
       - name: Build server
         run: make version=${{ steps.version.outputs.version }} build-server
+
+      - name: Generate changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="server-v${VERSION}"
+
+          # Find previous server tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep "^server-" | grep -v "^${TAG}$" | head -n 1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "Error: No previous server tag found"
+            echo "This appears to be the first release."
+            exit 1
+          fi
+
+          ./scripts/generate-changelog.sh server "$TAG" "$PREV_TAG" > /tmp/changelog.txt
+          cat /tmp/changelog.txt
 
       - name: Prepare Docker build context
         run: |
@@ -76,5 +95,5 @@ jobs:
             build/server/*_checksums.txt \
             $FLAGS \
             --title="$TAG" \
-            --notes="Please see the [CHANGELOG](https://github.com/dnote/dnote/blob/master/CHANGELOG.md)" \
+            --notes-file=/tmp/changelog.txt \
             --draft
