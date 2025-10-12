@@ -59,7 +59,12 @@ func checkLegacyDBPath() (string, bool) {
 	return "", false
 }
 
-func getDBPath(paths context.Paths) string {
+func getDBPath(paths context.Paths, customPath string) string {
+	// If custom path is provided, use it
+	if customPath != "" {
+		return customPath
+	}
+
 	legacyDnoteDir, ok := checkLegacyDBPath()
 	if ok {
 		return fmt.Sprintf("%s/%s", legacyDnoteDir, consts.DnoteDBFileName)
@@ -71,7 +76,7 @@ func getDBPath(paths context.Paths) string {
 // newBaseCtx creates a minimal context with paths and database connection.
 // This base context is used for file and database initialization before
 // being enriched with config values by setupCtx.
-func newBaseCtx(versionTag string) (context.DnoteCtx, error) {
+func newBaseCtx(versionTag, customDBPath string) (context.DnoteCtx, error) {
 	dnoteDir := getLegacyDnotePath(dirs.Home)
 	paths := context.Paths{
 		Home:        dirs.Home,
@@ -81,7 +86,7 @@ func newBaseCtx(versionTag string) (context.DnoteCtx, error) {
 		LegacyDnote: dnoteDir,
 	}
 
-	dbPath := getDBPath(paths)
+	dbPath := getDBPath(paths, customDBPath)
 
 	db, err := database.Open(dbPath)
 	if err != nil {
@@ -98,8 +103,8 @@ func newBaseCtx(versionTag string) (context.DnoteCtx, error) {
 }
 
 // Init initializes the Dnote environment and returns a new dnote context
-func Init(versionTag, apiEndpoint string) (*context.DnoteCtx, error) {
-	ctx, err := newBaseCtx(versionTag)
+func Init(versionTag, apiEndpoint, customDBPath string) (*context.DnoteCtx, error) {
+	ctx, err := newBaseCtx(versionTag, customDBPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "initializing a context")
 	}

@@ -501,3 +501,71 @@ func TestRemoveBook(t *testing.T) {
 		})
 	}
 }
+
+func TestDBPathFlag(t *testing.T) {
+	// Helper function to verify database contents
+	verifyDatabase := func(t *testing.T, dbPath, expectedBook, expectedNote string) *database.DB {
+		ok, err := utils.FileExists(dbPath)
+		if err != nil {
+			t.Fatal(errors.Wrapf(err, "checking if custom db exists at %s", dbPath))
+		}
+		if !ok {
+			t.Errorf("custom database was not created at %s", dbPath)
+		}
+
+		db, err := database.Open(dbPath)
+		if err != nil {
+			t.Fatal(errors.Wrapf(err, "opening db at %s", dbPath))
+		}
+
+		var noteCount, bookCount int
+		database.MustScan(t, "counting books", db.QueryRow("SELECT count(*) FROM books"), &bookCount)
+		database.MustScan(t, "counting notes", db.QueryRow("SELECT count(*) FROM notes"), &noteCount)
+
+		assert.Equalf(t, bookCount, 1, fmt.Sprintf("%s book count mismatch", dbPath))
+		assert.Equalf(t, noteCount, 1, fmt.Sprintf("%s note count mismatch", dbPath))
+
+		var book database.Book
+		database.MustScan(t, "getting book", db.QueryRow("SELECT label FROM books"), &book.Label)
+		assert.Equalf(t, book.Label, expectedBook, fmt.Sprintf("%s book label mismatch", dbPath))
+
+		var note database.Note
+		database.MustScan(t, "getting note", db.QueryRow("SELECT body FROM notes"), &note.Body)
+		assert.Equalf(t, note.Body, expectedNote, fmt.Sprintf("%s note body mismatch", dbPath))
+
+		return db
+	}
+
+	// Setup - use two different custom database paths
+	customDBPath1 := "./tmp/custom-test1.db"
+	customDBPath2 := "./tmp/custom-test2.db"
+	defer testutils.RemoveDir(t, "./tmp")
+
+	customOpts := testutils.RunDnoteCmdOptions{
+		Env: []string{
+			fmt.Sprintf("XDG_CONFIG_HOME=%s", testDir),
+			fmt.Sprintf("XDG_DATA_HOME=%s", testDir),
+			fmt.Sprintf("XDG_CACHE_HOME=%s", testDir),
+		},
+	}
+
+	// Execute - add different notes to each database
+	testutils.RunDnoteCmd(t, customOpts, binaryName, "--dbPath", customDBPath1, "add", "db1-book", "-c", "content in db1")
+	testutils.RunDnoteCmd(t, customOpts, binaryName, "--dbPath", customDBPath2, "add", "db2-book", "-c", "content in db2")
+
+	// Test both databases
+	db1 := verifyDatabase(t, customDBPath1, "db1-book", "content in db1")
+	defer db1.Close()
+
+	db2 := verifyDatabase(t, customDBPath2, "db2-book", "content in db2")
+	defer db2.Close()
+
+	// Verify that the databases are independent
+	var db1HasDB2Book int
+	db1.QueryRow("SELECT count(*) FROM books WHERE label = ?", "db2-book").Scan(&db1HasDB2Book)
+	assert.Equal(t, db1HasDB2Book, 0, "db1 should not have db2's book")
+
+	var db2HasDB1Book int
+	db2.QueryRow("SELECT count(*) FROM books WHERE label = ?", "db1-book").Scan(&db2HasDB1Book)
+	assert.Equal(t, db2HasDB1Book, 0, "db2 should not have db1's book")
+}
