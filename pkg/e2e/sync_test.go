@@ -4173,86 +4173,55 @@ func TestSync_EmptyServer(t *testing.T) {
 		}
 
 		// Step 4: Client A runs sync with race condition
-		// Expected: This will FAIL with 409 error because Client B uploaded during the prompt
-		output, err := clitest.WaitDnoteCmdOutput(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
-		if err == nil {
-			t.Fatal("Expected sync to fail with 409 conflict, but it succeeded")
-		}
-		// Verify output contains 409 or duplicate error
-		if !strings.Contains(output, "409") && !strings.Contains(output, "duplicate") {
-			t.Fatalf("Expected 409 conflict error in output, got: %s", output)
-		}
+		// The 409 conflict is automatically handled:
+		// - When 409 is detected, isBehind flag is set
+		// - stepSync pulls Client B's data
+		// - mergeBook renames Client A's books to js_2, css_2
+		// - Renamed books are uploaded
+		// Both clients' data is preserved!
+		clitest.MustWaitDnoteCmdOutput(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
 
-		// Step 5: Check local state after the failed sync (transaction rolled back)
-		var localBookCount, localNoteCount int
-		cliDatabase.MustScan(t, "counting local books after rollback", ctx.DB.QueryRow("SELECT count(*) FROM books"), &localBookCount)
-		cliDatabase.MustScan(t, "counting local notes after rollback", ctx.DB.QueryRow("SELECT count(*) FROM notes"), &localNoteCount)
-		t.Logf("After failed sync: local has %d books, %d notes", localBookCount, localNoteCount)
-
-		// List all local books
-		rows, err := ctx.DB.Query("SELECT uuid, label, usn, dirty FROM books")
-		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var uuid, label string
-				var usn int
-				var dirty bool
-				rows.Scan(&uuid, &label, &usn, &dirty)
-				t.Logf("Local book: label=%s, usn=%d, dirty=%v, uuid=%s", label, usn, dirty, uuid)
-			}
-		}
-
-		// Step 6: Client A retries sync with --full flag to force pulling all server data
-		// Note: cleanLocalBooks will delete Client A's original books because they have different UUIDs
-		// than Client B's books on the server, and they're not dirty (USN != 0)
-		// This means Client A's original data is lost - acceptable for this race condition edge case
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--full")
-
-		// Verify final state - only Client B's data remains
+		// Verify final state - both clients' data preserved
 		checkStateWithDB(t, ctx, user, serverDb, systemState{
-			clientNoteCount:  2, // Only Client B's data (Client A's was cleaned up)
-			clientBookCount:  2,
-			clientLastMaxUSN: 4,
+			clientNoteCount:  4, // Both clients' notes
+			clientBookCount:  4, // js, css, js_2, css_2
+			clientLastMaxUSN: 8, // 4 from Client B + 4 from Client A's renamed books/notes
 			clientLastSyncAt: serverTime.Unix(),
-			serverNoteCount:  2,
-			serverBookCount:  2,
-			serverUserMaxUSN: 4,
+			serverNoteCount:  4,
+			serverBookCount:  4,
+			serverUserMaxUSN: 8,
 		})
 
-		// Step 7: Verify specific books and notes - only Client B's data
-		// Client A's original data was lost due to cleanLocalBooks during fullSync
-
-		// Verify server books - only Client B's data
-		var svrBookJS, svrBookCSS database.Book
+		// Verify server has both clients' books
+		var svrBookJS, svrBookCSS, svrBookJS2, svrBookCSS2 database.Book
 		apitest.MustExec(t, serverDb.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
 		apitest.MustExec(t, serverDb.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
+		apitest.MustExec(t, serverDb.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
+		apitest.MustExec(t, serverDb.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
 
-		assert.Equal(t, svrBookJS.Label, "js", "server should have book 'js'")
-		assert.Equal(t, svrBookCSS.Label, "css", "server should have book 'css'")
+		assert.Equal(t, svrBookJS.Label, "js", "server should have book 'js' (Client B)")
+		assert.Equal(t, svrBookCSS.Label, "css", "server should have book 'css' (Client B)")
+		assert.Equal(t, svrBookJS2.Label, "js_2", "server should have book 'js_2' (Client A renamed)")
+		assert.Equal(t, svrBookCSS2.Label, "css_2", "server should have book 'css_2' (Client A renamed)")
 
-		// Verify server notes - only Client B's data
-		var svrNoteJS, svrNoteCSS database.Note
-		apitest.MustExec(t, serverDb.Where("book_uuid = ? AND body = ?", svrBookJS.UUID, "js1").First(&svrNoteJS), "finding server note in 'js'")
-		apitest.MustExec(t, serverDb.Where("book_uuid = ? AND body = ?", svrBookCSS.UUID, "css1").First(&svrNoteCSS), "finding server note in 'css'")
-
-		assert.Equal(t, svrNoteJS.Body, "js1", "note in 'js' should have body 'js1'")
-		assert.Equal(t, svrNoteCSS.Body, "css1", "note in 'css' should have body 'css1'")
-
-		// Verify client books - should match server (Client B's data)
-		var cliBookJS, cliBookCSS cliDatabase.Book
+		// Verify client has all books
+		var cliBookJS, cliBookCSS, cliBookJS2, cliBookCSS2 cliDatabase.Book
 		cliDatabase.MustScan(t, "finding client book 'js'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
 		cliDatabase.MustScan(t, "finding client book 'css'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
+		cliDatabase.MustScan(t, "finding client book 'js_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
+		cliDatabase.MustScan(t, "finding client book 'css_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
 
-		assert.Equal(t, cliBookJS.Label, "js", "client should have book 'js'")
-		assert.Equal(t, cliBookCSS.Label, "css", "client should have book 'css'")
-
-		// Verify client UUIDs match server UUIDs (pulled from server during stepSync)
+		// Verify client UUIDs match server
 		assert.Equal(t, cliBookJS.UUID, svrBookJS.UUID, "client 'js' UUID should match server")
 		assert.Equal(t, cliBookCSS.UUID, svrBookCSS.UUID, "client 'css' UUID should match server")
+		assert.Equal(t, cliBookJS2.UUID, svrBookJS2.UUID, "client 'js_2' UUID should match server")
+		assert.Equal(t, cliBookCSS2.UUID, svrBookCSS2.UUID, "client 'css_2' UUID should match server")
 
 		// Verify all items have non-zero USN (synced successfully)
 		assert.NotEqual(t, cliBookJS.USN, 0, "client 'js' should have non-zero USN")
 		assert.NotEqual(t, cliBookCSS.USN, 0, "client 'css' should have non-zero USN")
+		assert.NotEqual(t, cliBookJS2.USN, 0, "client 'js_2' should have non-zero USN")
+		assert.NotEqual(t, cliBookCSS2.USN, 0, "client 'css_2' should have non-zero USN")
 	})
 
 	t.Run("sync to server A, then B, then back to A, then back to B", func(t *testing.T) {
