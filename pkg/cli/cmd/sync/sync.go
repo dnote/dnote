@@ -44,6 +44,7 @@ var example = `
   dnote sync`
 
 var isFullSync bool
+var apiEndpointFlag string
 
 // NewCmd returns a new sync command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
@@ -57,6 +58,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 	f := cmd.Flags()
 	f.BoolVarP(&isFullSync, "full", "f", false, "perform a full sync instead of incrementally syncing only the changed data.")
+	f.StringVar(&apiEndpointFlag, "apiEndpoint", "", "API endpoint to connect to (defaults to value in config)")
 
 	return cmd
 }
@@ -931,6 +933,11 @@ func prepareEmptyServerSync(tx *database.DB) error {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		// Override APIEndpoint if flag was provided
+		if apiEndpointFlag != "" {
+			ctx.APIEndpoint = apiEndpointFlag
+		}
+
 		if ctx.SessionKey == "" {
 			return errors.New("not logged in")
 		}

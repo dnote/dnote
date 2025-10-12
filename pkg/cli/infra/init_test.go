@@ -95,7 +95,7 @@ func TestInitSystemKV_existing(t *testing.T) {
 	assert.Equal(t, val, "testVal", "system value should not have been updated")
 }
 
-func TestInit_APIEndpointChange(t *testing.T) {
+func TestInit_APIEndpoint(t *testing.T) {
 	// Create a temporary directory for test
 	tmpDir, err := os.MkdirTemp("", "dnote-init-test-*")
 	if err != nil {
@@ -108,35 +108,20 @@ func TestInit_APIEndpointChange(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", fmt.Sprintf("%s/data", tmpDir))
 	t.Setenv("XDG_CACHE_HOME", fmt.Sprintf("%s/cache", tmpDir))
 
-	// First init.
-	endpoint1 := "http://127.0.0.1:3001"
-	ctx, err := Init("test-version", endpoint1)
+	// Initialize - should create config with default apiEndpoint
+	ctx, err := Init("test-version", "", "")
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "initializing"))
 	}
 	defer ctx.DB.Close()
-	assert.Equal(t, ctx.APIEndpoint, endpoint1, "should use endpoint1 API endpoint")
 
-	// Test that config was written with endpoint1.
+	// Read the config that was created
 	cf, err := config.Read(*ctx)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "reading config"))
 	}
 
-	// Second init with different endpoint.
-	endpoint2 := "http://127.0.0.1:3002"
-	ctx2, err := Init("test-version", endpoint2)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "initializing with override"))
-	}
-	defer ctx2.DB.Close()
-	// Context must be using that endpoint.
-	assert.Equal(t, ctx2.APIEndpoint, endpoint2, "should use endpoint2 API endpoint")
-
-	// The config file shouldn't have been modified.
-	cf2, err := config.Read(*ctx2)
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "reading config after override"))
-	}
-	assert.Equal(t, cf2.APIEndpoint, cf.APIEndpoint, "config should still have original endpoint, not endpoint2")
+	// Context should use the apiEndpoint from config
+	assert.Equal(t, ctx.APIEndpoint, DefaultAPIEndpoint, "context should use apiEndpoint from config")
+	assert.Equal(t, cf.APIEndpoint, DefaultAPIEndpoint, "context should use apiEndpoint from config")
 }

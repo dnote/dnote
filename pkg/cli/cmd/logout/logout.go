@@ -37,6 +37,8 @@ var ErrNotLoggedIn = errors.New("not logged in")
 var example = `
   dnote logout`
 
+var apiEndpointFlag string
+
 // NewCmd returns a new logout command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	cmd := &cobra.Command{
@@ -45,6 +47,9 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 		Example: example,
 		RunE:    newRun(ctx),
 	}
+
+	f := cmd.Flags()
+	f.StringVar(&apiEndpointFlag, "apiEndpoint", "", "API endpoint to connect to (defaults to value in config)")
 
 	return cmd
 }
@@ -84,6 +89,11 @@ func Do(ctx context.DnoteCtx) error {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		// Override APIEndpoint if flag was provided
+		if apiEndpointFlag != "" {
+			ctx.APIEndpoint = apiEndpointFlag
+		}
+
 		err := Do(ctx)
 		if err == ErrNotLoggedIn {
 			log.Error("not logged in\n")

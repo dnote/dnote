@@ -37,7 +37,7 @@ import (
 var example = `
   dnote login`
 
-var usernameFlag, passwordFlag string
+var usernameFlag, passwordFlag, apiEndpointFlag string
 
 // NewCmd returns a new login command
 func NewCmd(ctx context.DnoteCtx) *cobra.Command {
@@ -51,6 +51,7 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 	f := cmd.Flags()
 	f.StringVarP(&usernameFlag, "username", "u", "", "email address for authentication")
 	f.StringVarP(&passwordFlag, "password", "p", "", "password for authentication")
+	f.StringVar(&apiEndpointFlag, "apiEndpoint", "", "API endpoint to connect to (defaults to value in config)")
 
 	return cmd
 }
@@ -147,6 +148,11 @@ func getGreeting(ctx context.DnoteCtx) string {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		// Override APIEndpoint if flag was provided
+		if apiEndpointFlag != "" {
+			ctx.APIEndpoint = apiEndpointFlag
+		}
+
 		greeting := getGreeting(ctx)
 		log.Plain(greeting)
 

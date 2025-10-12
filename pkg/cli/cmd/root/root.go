@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var apiEndpointFlag string
 var dbPathFlag string
 
 var root = &cobra.Command{
@@ -36,7 +35,6 @@ var root = &cobra.Command{
 }
 
 func init() {
-	root.PersistentFlags().StringVar(&apiEndpointFlag, "api-endpoint", "", "the API endpoint to connect to (defaults to value in config)")
 	root.PersistentFlags().StringVar(&dbPathFlag, "dbPath", "", "the path to the database file (defaults to standard location)")
 }
 
@@ -45,12 +43,7 @@ func GetRoot() *cobra.Command {
 	return root
 }
 
-// GetAPIEndpointFlag returns the value of the --api-endpoint flag
-func GetAPIEndpointFlag() string {
-	return apiEndpointFlag
-}
-
-// GetDBPathFlag returns the value of the --dbpath flag
+// GetDBPathFlag returns the value of the --dbPath flag
 func GetDBPathFlag() string {
 	return dbPathFlag
 }

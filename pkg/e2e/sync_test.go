@@ -4254,7 +4254,7 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--api-endpoint", apiEndpointA, "sync")
+		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify sync to Server A succeeded
 		checkStateWithDB(t, ctx, userA, serverDbA, systemState{
@@ -4278,7 +4278,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		cliDatabase.MustExec(t, "updating session_key_expiry for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should detect empty server and prompt
-		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "--api-endpoint", apiEndpointB, "sync")
+		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify Server B now has data
 		checkStateWithDB(t, ctx, userB, serverDbB, systemState{
@@ -4296,7 +4296,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		cliDatabase.MustExec(t, "updating session_key_expiry back to A", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionA.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should NOT trigger empty server detection (Server A has MaxUSN > 0)
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--api-endpoint", apiEndpointA, "sync")
+		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify Server A still has its data
 		checkStateWithDB(t, ctx, userA, serverDbA, systemState{
@@ -4314,7 +4314,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		cliDatabase.MustExec(t, "updating session_key_expiry back to B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should NOT trigger empty server detection (Server B now has MaxUSN > 0 from Step 2)
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--api-endpoint", apiEndpointB, "sync")
+		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify both servers maintain independent state
 		checkStateWithDB(t, ctx, userB, serverDbB, systemState{
