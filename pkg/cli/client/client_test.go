@@ -205,3 +205,21 @@ func TestRateLimitedTransport(t *testing.T) {
 
 	assert.Equal(t, int(requestCount.Load()), 10, "request count mismatch")
 }
+
+func TestHTTPError(t *testing.T) {
+	t.Run("IsConflict returns true for 409", func(t *testing.T) {
+		conflictErr := &HTTPError{
+			StatusCode: 409,
+			Message:    "Conflict",
+		}
+
+		assert.Equal(t, conflictErr.IsConflict(), true, "IsConflict() should return true for 409")
+
+		notFoundErr := &HTTPError{
+			StatusCode: 404,
+			Message:    "Not Found",
+		}
+
+		assert.Equal(t, notFoundErr.IsConflict(), false, "IsConflict() should return false for 404")
+	})
+}

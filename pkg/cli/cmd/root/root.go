@@ -35,7 +35,7 @@ var root = &cobra.Command{
 }
 
 func init() {
-	root.PersistentFlags().StringVar(&apiEndpointFlag, "api-endpoint", "", "override API endpoint")
+	root.PersistentFlags().StringVar(&apiEndpointFlag, "api-endpoint", "", "the API endpoint to connect to (defaults to value in config)")
 }
 
 // GetRoot returns the root command

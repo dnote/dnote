@@ -19,7 +19,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -428,7 +427,7 @@ func TestSync_oneway(t *testing.T) {
 			cliDatabase.MustScan(t, "getting id of note to delete", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "css2"), &nid2)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js3-edited")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "css", nid2)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "css", nid2)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css3")
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css4")
@@ -793,9 +792,9 @@ func TestSync_twoway(t *testing.T) {
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js3"), &nid)
 
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "algorithms")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "algorithms")
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css4")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":      jsBookUUID,
@@ -1005,7 +1004,7 @@ func TestSync_twoway(t *testing.T) {
 
 			// 2. on cli
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "math", "-c", "math1")
 
 			var nid string
@@ -1353,7 +1352,7 @@ func TestSync(t *testing.T) {
 
 			// 2. on cli
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1407,7 +1406,7 @@ func TestSync(t *testing.T) {
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2025,7 +2024,7 @@ func TestSync(t *testing.T) {
 			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
 
 			// 4. on cli
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2085,7 +2084,7 @@ func TestSync(t *testing.T) {
 			// 4. on cli
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2630,7 +2629,7 @@ func TestSync(t *testing.T) {
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			// 3. on server
 			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js note 1")
@@ -2704,7 +2703,7 @@ func TestSync(t *testing.T) {
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			// 3. on server
 			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
@@ -3005,7 +3004,7 @@ func TestSync(t *testing.T) {
 
 			// 2. on cli
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			// 3. on server
 			apiPatchBook(t, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited"), "editing js book")
@@ -3076,7 +3075,7 @@ func TestSync(t *testing.T) {
 			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js1 note")
 
 			// 4. on cli
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirm, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3880,11 +3879,6 @@ func TestFullSync(t *testing.T) {
 }
 
 func TestSync_EmptyServer(t *testing.T) {
-	emptyServerPrompt := "The server is empty but you have local data"
-	emptyServerCallback := func(stdin io.WriteCloser, stdout io.Reader) error {
-		return clitest.UserConfirmOutput(stdin, stdout, emptyServerPrompt)
-	}
-
 	t.Run("sync to empty server after syncing to non-empty server", func(t *testing.T) {
 		// Test server data loss/wipe scenario (disaster recovery):
 		// Verify empty server detection works when the server loses all its data
@@ -3923,7 +3917,7 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Step 3: Sync again - should detect empty server and prompt user
 		// User confirms with "y"
-		clitest.MustWaitDnoteCmdOutput(t, dnoteCmdOpts, emptyServerCallback, cliBinaryName, "sync")
+		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync")
 
 		// Step 4: Verify data was uploaded to the empty server
 		checkState(t, ctx, user, systemState{
@@ -3996,13 +3990,13 @@ func TestSync_EmptyServer(t *testing.T) {
 		user = setupUser(t, &ctx)
 
 		// Step 3: Sync again but user cancels with "n"
-		output, err := clitest.WaitDnoteCmd(t, dnoteCmdOpts, clitest.UserCancel, cliBinaryName, "sync")
+		output, err := clitest.WaitDnoteCmd(t, dnoteCmdOpts, clitest.UserCancelEmptyServerSync, cliBinaryName, "sync")
 		if err == nil {
 			t.Fatal("Expected sync to fail when user cancels, but it succeeded")
 		}
 
 		// Verify the prompt appeared
-		if !strings.Contains(output, "The server is empty but you have local data") {
+		if !strings.Contains(output, clitest.PromptEmptyServer) {
 			t.Fatalf("Expected empty server warning in output, got: %s", output)
 		}
 
@@ -4094,15 +4088,22 @@ func TestSync_EmptyServer(t *testing.T) {
 	})
 
 	t.Run("race condition - other client uploads first", func(t *testing.T) {
-		// Test race condition: Client A detects empty server and prompts user,
-		// but while waiting for confirmation, Client B uploads the same data via API.
+		// This test exercises a race condition that can occur during sync:
+		// While Client A is waiting for user input, Client B uploads data to the server.
 		//
-		// Expected behavior: Client A's sync should handle the 409 conflict gracefully by:
-		// 1. Detecting the 409 error when trying to CREATE books that already exist
-		// 2. Running stepSync to pull the server's books (js, css)
-		// 3. mergeBook renames local conflicts (js→js_2, css→css_2)
-		// 4. Retrying sendChanges to upload the renamed books
-		// Result: Both clients' data is preserved (4 books total)
+		// The empty server scenario is the natural place to test this because
+		// an empty server detection triggers a prompt, at which point the test
+		// can make client B upload data. We trigger the race condition deterministically.
+		//
+		// Test flow:
+		// - Client A detects empty server and prompts user
+		// - While waiting for confirmation, Client B uploads the same data via API
+		// - Client A continues and handles the 409 conflict gracefully by:
+		//   1. Detecting the 409 error when trying to CREATE books that already exist
+		//   2. Running stepSync to pull the server's books (js, css)
+		//   3. mergeBook renames local conflicts (js→js_2, css→css_2)
+		//   4. Retrying sendChanges to upload the renamed books
+		// - Result: Both clients' data is preserved (4 books total)
 
 		// Clean up
 		apitest.ClearData(serverDb)
@@ -4135,29 +4136,15 @@ func TestSync_EmptyServer(t *testing.T) {
 		user = setupUser(t, &ctx)
 
 		// Step 3: Trigger sync which will detect empty server and prompt user
-		// Inside the callback (before confirming), we simulate Client B uploading via API
+		// Inside the callback (before confirming), we simulate Client B uploading via API.
 		// We wait for the empty server prompt to ensure Client B uploads AFTER
 		// GetSyncState but BEFORE the sync decision, creating the race condition deterministically
-		raceCallback := func(stdin io.WriteCloser, stdout io.Reader) error {
-			// First, wait for the prompt to ensure Client A has called GetSyncState
-			// Block until stdout contains the string "The server is empty but you have local data"
-			scanner := bufio.NewScanner(stdout)
-			found := false
-			for scanner.Scan() {
-				line := scanner.Text()
-				if strings.Contains(line, emptyServerPrompt) {
-					found = true
-					break
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				return errors.Wrap(err, "reading stdout")
-			}
-			if !found {
-				return errors.New("expected prompt not found in stdout")
-			}
+		raceCallback := func(stdout io.Reader, stdin io.WriteCloser) error {
+			// First, wait for the prompt to ensure Client A has obtained the sync state from the server.
+			clitest.MustWaitForPrompt(t, stdout, clitest.PromptEmptyServer)
 
-			// Now Client B uploads the same data via API (after GetSyncState, before sync decision)
+			// Now Client B uploads the same data via API (after Client A got the sync state from the server
+			// but before its sync decision)
 			// This creates the race condition: Client A thinks server is empty, but Client B uploads data
 			jsBookUUID := apiCreateBook(t, user, "js", "client B creating js book")
 			cssBookUUID := apiCreateBook(t, user, "css", "client B creating css book")
@@ -4178,8 +4165,8 @@ func TestSync_EmptyServer(t *testing.T) {
 		// - stepSync pulls Client B's data
 		// - mergeBook renames Client A's books to js_2, css_2
 		// - Renamed books are uploaded
-		// Both clients' data is preserved!
-		clitest.MustWaitDnoteCmdOutput(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
+		// - Both clients' data is preserved.
+		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
 
 		// Verify final state - both clients' data preserved
 		checkStateWithDB(t, ctx, user, serverDb, systemState{
@@ -4291,7 +4278,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		cliDatabase.MustExec(t, "updating session_key_expiry for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should detect empty server and prompt
-		clitest.MustWaitDnoteCmdOutput(t, dnoteCmdOpts, emptyServerCallback, cliBinaryName, "--api-endpoint", apiEndpointB, "sync")
+		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "--api-endpoint", apiEndpointB, "sync")
 
 		// Verify Server B now has data
 		checkStateWithDB(t, ctx, userB, serverDbB, systemState{
@@ -4353,10 +4340,6 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 	//
 	// Expected: Client A should pull server data first, detect duplicate book names,
 	// rename local books to avoid conflicts (js→js_2), then upload successfully.
-	//
-	// Bug: When lastMaxUSN=0 and syncState.MaxUSN=0 (if GetSyncState is called before
-	// Client B uploads), the sync logic skips stepSync and goes straight to sendChanges,
-	// causing 409 "duplicate book exists" errors.
 
 	// Clean up
 	apitest.ClearData(serverDb)
@@ -4382,20 +4365,77 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 	// Expected: pulls server data, renames local books to js_2/css_2, uploads successfully
 	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
 
-	// Verify: Should have 4 books on server (js, css from B, js_2, css_2 from A)
-	var serverBookCount int64
-	apitest.MustExec(t, serverDb.Model(&database.Book{}).Count(&serverBookCount), "counting server books")
-	assert.Equal(t, int(serverBookCount), 4, "server should have 4 books")
+	// Verify: Should have 4 books and 4 notes on both client and server
+	// USN breakdown: 2 books + 2 notes from Client B (USN 1-4), then 2 books + 2 notes from Client A (USN 5-8)
+	checkStateWithDB(t, ctx, user, serverDb, systemState{
+		clientNoteCount:  4,
+		clientBookCount:  4,
+		clientLastMaxUSN: 8,
+		clientLastSyncAt: serverTime.Unix(),
+		serverNoteCount:  4,
+		serverBookCount:  4,
+		serverUserMaxUSN: 8,
+	})
 
-	// Verify books exist with correct names
+	// Verify server has all 4 books with correct names
 	var svrBookJS, svrBookCSS, svrBookJS2, svrBookCSS2 database.Book
 	apitest.MustExec(t, serverDb.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
 	apitest.MustExec(t, serverDb.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
 	apitest.MustExec(t, serverDb.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
 	apitest.MustExec(t, serverDb.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
 
-	// Verify all 4 notes exist
-	var serverNoteCount int64
-	apitest.MustExec(t, serverDb.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
-	assert.Equal(t, int(serverNoteCount), 4, "server should have 4 notes")
+	assert.Equal(t, svrBookJS.Label, "js", "server should have book 'js' (Client B)")
+	assert.Equal(t, svrBookCSS.Label, "css", "server should have book 'css' (Client B)")
+	assert.Equal(t, svrBookJS2.Label, "js_2", "server should have book 'js_2' (Client A renamed)")
+	assert.Equal(t, svrBookCSS2.Label, "css_2", "server should have book 'css_2' (Client A renamed)")
+
+	// Verify server has all 4 notes with correct content
+	var svrNoteJS1, svrNoteJS2, svrNoteCSS1, svrNoteCSS2 database.Note
+	apitest.MustExec(t, serverDb.Where("body = ?", "js1").First(&svrNoteJS1), "finding server note 'js1'")
+	apitest.MustExec(t, serverDb.Where("body = ?", "js2").First(&svrNoteJS2), "finding server note 'js2'")
+	apitest.MustExec(t, serverDb.Where("body = ?", "css1").First(&svrNoteCSS1), "finding server note 'css1'")
+	apitest.MustExec(t, serverDb.Where("body = ?", "css2").First(&svrNoteCSS2), "finding server note 'css2'")
+
+	assert.Equal(t, svrNoteJS1.BookUUID, svrBookJS2.UUID, "note 'js1' should belong to book 'js_2' (Client A)")
+	assert.Equal(t, svrNoteJS2.BookUUID, svrBookJS.UUID, "note 'js2' should belong to book 'js' (Client B)")
+	assert.Equal(t, svrNoteCSS1.BookUUID, svrBookCSS2.UUID, "note 'css1' should belong to book 'css_2' (Client A)")
+	assert.Equal(t, svrNoteCSS2.BookUUID, svrBookCSS.UUID, "note 'css2' should belong to book 'css' (Client B)")
+
+	// Verify client has all 4 books
+	var cliBookJS, cliBookCSS, cliBookJS2, cliBookCSS2 cliDatabase.Book
+	cliDatabase.MustScan(t, "finding client book 'js'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
+	cliDatabase.MustScan(t, "finding client book 'css'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
+	cliDatabase.MustScan(t, "finding client book 'js_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
+	cliDatabase.MustScan(t, "finding client book 'css_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
+
+	// Verify client UUIDs match server
+	assert.Equal(t, cliBookJS.UUID, svrBookJS.UUID, "client 'js' UUID should match server")
+	assert.Equal(t, cliBookCSS.UUID, svrBookCSS.UUID, "client 'css' UUID should match server")
+	assert.Equal(t, cliBookJS2.UUID, svrBookJS2.UUID, "client 'js_2' UUID should match server")
+	assert.Equal(t, cliBookCSS2.UUID, svrBookCSS2.UUID, "client 'css_2' UUID should match server")
+
+	// Verify all books have non-zero USN (synced successfully)
+	assert.NotEqual(t, cliBookJS.USN, 0, "client 'js' should have non-zero USN")
+	assert.NotEqual(t, cliBookCSS.USN, 0, "client 'css' should have non-zero USN")
+	assert.NotEqual(t, cliBookJS2.USN, 0, "client 'js_2' should have non-zero USN")
+	assert.NotEqual(t, cliBookCSS2.USN, 0, "client 'css_2' should have non-zero USN")
+
+	// Verify client has all 4 notes
+	var cliNoteJS1, cliNoteJS2, cliNoteCSS1, cliNoteCSS2 cliDatabase.Note
+	cliDatabase.MustScan(t, "finding client note 'js1'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js1"), &cliNoteJS1.UUID, &cliNoteJS1.Body, &cliNoteJS1.USN)
+	cliDatabase.MustScan(t, "finding client note 'js2'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js2"), &cliNoteJS2.UUID, &cliNoteJS2.Body, &cliNoteJS2.USN)
+	cliDatabase.MustScan(t, "finding client note 'css1'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css1"), &cliNoteCSS1.UUID, &cliNoteCSS1.Body, &cliNoteCSS1.USN)
+	cliDatabase.MustScan(t, "finding client note 'css2'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css2"), &cliNoteCSS2.UUID, &cliNoteCSS2.Body, &cliNoteCSS2.USN)
+
+	// Verify client note UUIDs match server
+	assert.Equal(t, cliNoteJS1.UUID, svrNoteJS1.UUID, "client note 'js1' UUID should match server")
+	assert.Equal(t, cliNoteJS2.UUID, svrNoteJS2.UUID, "client note 'js2' UUID should match server")
+	assert.Equal(t, cliNoteCSS1.UUID, svrNoteCSS1.UUID, "client note 'css1' UUID should match server")
+	assert.Equal(t, cliNoteCSS2.UUID, svrNoteCSS2.UUID, "client note 'css2' UUID should match server")
+
+	// Verify all notes have non-zero USN (synced successfully)
+	assert.NotEqual(t, cliNoteJS1.USN, 0, "client note 'js1' should have non-zero USN")
+	assert.NotEqual(t, cliNoteJS2.USN, 0, "client note 'js2' should have non-zero USN")
+	assert.NotEqual(t, cliNoteCSS1.USN, 0, "client note 'css1' should have non-zero USN")
+	assert.NotEqual(t, cliNoteCSS2.USN, 0, "client note 'css2' should have non-zero USN")
 }

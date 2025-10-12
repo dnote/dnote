@@ -42,6 +42,21 @@ var ErrInvalidLogin = errors.New("wrong credentials")
 // ErrContentTypeMismatch is an error for invalid credentials for login
 var ErrContentTypeMismatch = errors.New("content type mismatch")
 
+// HTTPError represents an HTTP error response from the server
+type HTTPError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf(`response %d "%s"`, e.StatusCode, e.Message)
+}
+
+// IsConflict returns true if the error is a 409 Conflict error
+func (e *HTTPError) IsConflict() bool {
+	return e.StatusCode == 409
+}
+
 var contentTypeApplicationJSON = "application/json"
 var contentTypeNone = ""
 
@@ -137,7 +152,10 @@ func checkRespErr(res *http.Response) error {
 	}
 
 	bodyStr := string(body)
-	return errors.Errorf(`response %d "%s"`, res.StatusCode, strings.TrimRight(bodyStr, "\n"))
+	return &HTTPError{
+		StatusCode: res.StatusCode,
+		Message:    strings.TrimRight(bodyStr, "\n"),
+	}
 }
 
 func checkContentType(res *http.Response, options *requestOptions) error {

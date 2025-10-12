@@ -21,7 +21,6 @@ package sync
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/dnote/dnote/pkg/cli/client"
 	"github.com/dnote/dnote/pkg/cli/consts"
@@ -636,16 +635,21 @@ func isConflictError(err error) bool {
 	if err == nil {
 		return false
 	}
-	return strings.Contains(err.Error(), "response 409")
+
+	var httpErr *client.HTTPError
+	if errors.As(err, &httpErr) {
+		return httpErr.IsConflict()
+	}
+
+	return false
 }
 
-func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, error) {
+func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	isBehind := false
-	skippedBooks := make(map[string]bool) // Track books that failed to upload due to 409
 
 	rows, err := tx.Query("SELECT uuid, label, usn, deleted FROM books WHERE dirty")
 	if err != nil {
-		return isBehind, skippedBooks, errors.Wrap(err, "getting syncable books")
+		return isBehind, errors.Wrap(err, "getting syncable books")
 	}
 	defer rows.Close()
 
@@ -653,7 +657,7 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, er
 		var book database.Book
 
 		if err = rows.Scan(&book.UUID, &book.Label, &book.USN, &book.Deleted); err != nil {
-			return isBehind, skippedBooks, errors.Wrap(err, "scanning a syncable book")
+			return isBehind, errors.Wrap(err, "scanning a syncable book")
 		}
 
 		log.Debug("sending book %s\n", book.UUID)
@@ -665,39 +669,37 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, er
 			if book.Deleted {
 				err = book.Expunge(tx)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "expunging a book locally")
+					return isBehind, errors.Wrap(err, "expunging a book locally")
 				}
 
 				continue
 			} else {
 				resp, err := client.CreateBook(ctx, book.Label)
 				if err != nil {
-					// If we get a 409 conflict, it means another client uploaded data
-					// while we were at the prompt. Set isBehind to trigger conflict resolution.
+					// If we get a 409 conflict, it means another client uploaded data.
 					if isConflictError(err) {
 						log.Debug("409 conflict creating book %s, will retry after sync\n", book.Label)
 						isBehind = true
-						skippedBooks[book.UUID] = true
 						continue
 					}
-					return isBehind, skippedBooks, errors.Wrap(err, "creating a book")
+					return isBehind, errors.Wrap(err, "creating a book")
 				}
 
 				_, err = tx.Exec("UPDATE notes SET book_uuid = ? WHERE book_uuid = ?", resp.Book.UUID, book.UUID)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "updating book_uuids of notes")
+					return isBehind, errors.Wrap(err, "updating book_uuids of notes")
 				}
 
 				book.Dirty = false
 				book.USN = resp.Book.USN
 				err = book.Update(tx)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "marking book dirty")
+					return isBehind, errors.Wrap(err, "marking book dirty")
 				}
 
 				err = book.UpdateUUID(tx, resp.Book.UUID)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "updating book uuid")
+					return isBehind, errors.Wrap(err, "updating book uuid")
 				}
 
 				respUSN = resp.Book.USN
@@ -706,26 +708,26 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, er
 			if book.Deleted {
 				resp, err := client.DeleteBook(ctx, book.UUID)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "deleting a book")
+					return isBehind, errors.Wrap(err, "deleting a book")
 				}
 
 				err = book.Expunge(tx)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "expunging a book locally")
+					return isBehind, errors.Wrap(err, "expunging a book locally")
 				}
 
 				respUSN = resp.Book.USN
 			} else {
 				resp, err := client.UpdateBook(ctx, book.Label, book.UUID)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "updating a book")
+					return isBehind, errors.Wrap(err, "updating a book")
 				}
 
 				book.Dirty = false
 				book.USN = resp.Book.USN
 				err = book.Update(tx)
 				if err != nil {
-					return isBehind, skippedBooks, errors.Wrap(err, "marking book dirty")
+					return isBehind, errors.Wrap(err, "marking book dirty")
 				}
 
 				respUSN = resp.Book.USN
@@ -734,7 +736,7 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, er
 
 		lastMaxUSN, err := getLastMaxUSN(tx)
 		if err != nil {
-			return isBehind, skippedBooks, errors.Wrap(err, "getting last max usn")
+			return isBehind, errors.Wrap(err, "getting last max usn")
 		}
 
 		log.Debug("sent book %s. response USN %d. last max usn: %d\n", book.UUID, respUSN, lastMaxUSN)
@@ -742,17 +744,17 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, map[string]bool, er
 		if respUSN == lastMaxUSN+1 {
 			err = updateLastMaxUSN(tx, lastMaxUSN+1)
 			if err != nil {
-				return isBehind, skippedBooks, errors.Wrap(err, "updating last max usn")
+				return isBehind, errors.Wrap(err, "updating last max usn")
 			}
 		} else {
 			isBehind = true
 		}
 	}
 
-	return isBehind, skippedBooks, nil
+	return isBehind, nil
 }
 
-func sendNotes(ctx context.DnoteCtx, tx *database.DB, skippedBooks map[string]bool) (bool, error) {
+func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	isBehind := false
 
 	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn, added_on FROM notes WHERE dirty")
@@ -766,12 +768,6 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB, skippedBooks map[string]bo
 
 		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Body, &note.Public, &note.Deleted, &note.USN, &note.AddedOn); err != nil {
 			return isBehind, errors.Wrap(err, "scanning a syncable note")
-		}
-
-		// Skip notes whose book failed to upload due to 409 conflict
-		if skippedBooks[note.BookUUID] {
-			log.Debug("skipping note %s because its book %s was skipped\n", note.UUID, note.BookUUID)
-			continue
 		}
 
 		log.Debug("sending note %s\n", note.UUID)
@@ -791,14 +787,10 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB, skippedBooks map[string]bo
 			} else {
 				resp, err := client.CreateNote(ctx, note.BookUUID, note.Body)
 				if err != nil {
-					// If we get a 409 conflict, it means another client uploaded data
-					// while we were at the prompt. Set isBehind to trigger conflict resolution.
-					if isConflictError(err) {
-						log.Debug("409 conflict creating note, will retry after sync\n")
-						isBehind = true
-						continue
-					}
-					return isBehind, errors.Wrap(err, "creating a note")
+					// If we get a 409 conflict, it means another client uploaded data.
+					log.Debug("error creating note (will retry after sync): %v\n", err)
+					isBehind = true
+					continue
 				}
 
 				note.Dirty = false
@@ -873,12 +865,12 @@ func sendChanges(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 
 	fmt.Printf(" (total %d).", delta)
 
-	behind1, skippedBooks, err := sendBooks(ctx, tx)
+	behind1, err := sendBooks(ctx, tx)
 	if err != nil {
 		return behind1, errors.Wrap(err, "sending books")
 	}
 
-	behind2, err := sendNotes(ctx, tx, skippedBooks)
+	behind2, err := sendNotes(ctx, tx)
 	if err != nil {
 		return behind2, errors.Wrap(err, "sending notes")
 	}
@@ -976,13 +968,14 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return errors.Wrap(err, "counting local notes")
 		}
 
-		// Only trigger empty server prompt if client has previously synced (lastMaxUSN > 0)
-		// This distinguishes between first sync (lastMaxUSN=0) and server switch (lastMaxUSN>0)
+		// If a client has previously synced (lastMaxUSN > 0) but the server was never synced to (MaxUSN = 0),
+		// and the client has undeleted books or notes, allow to upload all data to the server.
+		// The client might have switched servers or the server might need to be restored for any reasons.
 		if syncState.MaxUSN == 0 && lastMaxUSN > 0 && (bookCount > 0 || noteCount > 0) {
 			log.Debug("empty server detected: server.MaxUSN=%d, local.MaxUSN=%d, books=%d, notes=%d\n",
 				syncState.MaxUSN, lastMaxUSN, bookCount, noteCount)
 
-			log.Warnf("The server is empty but you have local data.\n")
+			log.Warnf("The server is empty but you have local data. Maybe you switched servers?\n")
 			log.Debug("server state: MaxUSN = 0 (empty)\n")
 			log.Debug("local state: %d books, %d notes (MaxUSN = %d)\n", bookCount, noteCount, lastMaxUSN)
 
@@ -996,6 +989,8 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 				tx.Rollback()
 				return errors.New("sync cancelled by user")
 			}
+
+			fmt.Println() // Add newline after confirmation.
 
 			if err := prepareEmptyServerSync(tx); err != nil {
 				return errors.Wrap(err, "preparing for empty server sync")

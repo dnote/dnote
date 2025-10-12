@@ -349,7 +349,7 @@ func TestRemoveNote(t *testing.T) {
 			if tc.yesFlag {
 				testutils.RunDnoteCmd(t, opts, binaryName, "remove", "-y", "1")
 			} else {
-				testutils.MustWaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "1")
+				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveNote, binaryName, "remove", "1")
 			}
 			defer testutils.RemoveDir(t, testDir)
 
@@ -436,7 +436,7 @@ func TestRemoveBook(t *testing.T) {
 			if tc.yesFlag {
 				testutils.RunDnoteCmd(t, opts, binaryName, "remove", "-y", "js")
 			} else {
-				testutils.MustWaitDnoteCmd(t, opts, testutils.UserConfirm, binaryName, "remove", "js")
+				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveBook, binaryName, "remove", "js")
 			}
 
 			defer testutils.RemoveDir(t, testDir)
