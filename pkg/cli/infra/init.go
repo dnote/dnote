@@ -291,7 +291,9 @@ func InitSystem(ctx context.DnoteCtx) error {
 		return errors.Wrapf(err, "initializing system config for %s", consts.SystemLastSyncAt)
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "committing transaction")
+	}
 
 	return nil
 }

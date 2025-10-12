@@ -1060,7 +1060,9 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			}
 		}
 
-		tx.Commit()
+		if err := tx.Commit(); err != nil {
+			return errors.Wrap(err, "committing transaction")
+		}
 
 		log.Success("success\n")
 
