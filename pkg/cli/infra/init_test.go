@@ -26,6 +26,7 @@ import (
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/cli/config"
 	"github.com/dnote/dnote/pkg/cli/database"
+	"github.com/dnote/dnote/pkg/dirs"
 	"github.com/pkg/errors"
 )
 
@@ -107,6 +108,9 @@ func TestInit_APIEndpoint(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", fmt.Sprintf("%s/config", tmpDir))
 	t.Setenv("XDG_DATA_HOME", fmt.Sprintf("%s/data", tmpDir))
 	t.Setenv("XDG_CACHE_HOME", fmt.Sprintf("%s/cache", tmpDir))
+
+	// Force dirs package to reload with new environment
+	dirs.Reload()
 
 	// Initialize - should create config with default apiEndpoint
 	ctx, err := Init("test-version", "", "")

@@ -368,3 +368,12 @@ func MustGenerateUUID(t *testing.T) string {
 
 	return ret
 }
+
+func MustOpenDatabase(t *testing.T, dbPath string) *database.DB {
+	db, err := database.Open(dbPath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "opening database"))
+	}
+
+	return db
+}

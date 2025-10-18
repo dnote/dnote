@@ -36,6 +36,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	cliDatabase "github.com/dnote/dnote/pkg/cli/database"
+	"github.com/dnote/dnote/pkg/cli/testutils"
 	clitest "github.com/dnote/dnote/pkg/cli/testutils"
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/app"
@@ -134,16 +135,26 @@ func TestMain(m *testing.M) {
 }
 
 // helpers
-func setupUser(t *testing.T, ctx *context.DnoteCtx) database.User {
+func setupUser(t *testing.T, db *cliDatabase.DB) database.User {
 	user := apitest.SetupUserData(serverDb)
 	apitest.SetupAccountData(serverDb, user, "alice@example.com", "pass1234")
 
-	// log in the user in CLI
-	session := apitest.SetupSession(serverDb, user)
-	cliDatabase.MustExec(t, "inserting session_key", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, session.Key)
-	cliDatabase.MustExec(t, "inserting session_key_expiry", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, session.ExpiresAt.Unix())
+	return user
+}
+
+func setupUserAndLogin(t *testing.T, db *cliDatabase.DB) database.User {
+	user := setupUser(t, db)
+	login(t, db, user)
 
 	return user
+}
+
+// log in the user in CLI
+func login(t *testing.T, db *cliDatabase.DB, user database.User) {
+	session := apitest.SetupSession(serverDb, user)
+
+	cliDatabase.MustExec(t, "inserting session_key", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, session.Key)
+	cliDatabase.MustExec(t, "inserting session_key_expiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, session.ExpiresAt.Unix())
 }
 
 func apiCreateBook(t *testing.T, user database.User, name, message string) string {
@@ -221,7 +232,7 @@ func testSyncCmd(t *testing.T, fullSync bool, setup setupFunc, assert assertFunc
 	ctx := context.InitTestCtx(t, paths, nil)
 	defer context.TeardownTestCtx(t, ctx)
 
-	user := setupUser(t, &ctx)
+	user := setupUserAndLogin(t, ctx.DB)
 	ids := setup(t, ctx, user)
 
 	if fullSync {
@@ -245,12 +256,10 @@ type systemState struct {
 
 // checkState compares the state of the client and the server with the given system state
 func checkState(t *testing.T, ctx context.DnoteCtx, user database.User, expected systemState) {
-	checkStateWithDB(t, ctx, user, serverDb, expected)
+	checkStateWithDB(t, ctx.DB, user, serverDb, expected)
 }
 
-func checkStateWithDB(t *testing.T, ctx context.DnoteCtx, user database.User, db *gorm.DB, expected systemState) {
-	clientDB := ctx.DB
-
+func checkStateWithDB(t *testing.T, clientDB *cliDatabase.DB, user database.User, serverDB *gorm.DB, expected systemState) {
 	var clientBookCount, clientNoteCount int
 	cliDatabase.MustScan(t, "counting client notes", clientDB.QueryRow("SELECT count(*) FROM notes"), &clientNoteCount)
 	cliDatabase.MustScan(t, "counting client books", clientDB.QueryRow("SELECT count(*) FROM books"), &clientBookCount)
@@ -265,12 +274,12 @@ func checkStateWithDB(t *testing.T, ctx context.DnoteCtx, user database.User, db
 	assert.Equal(t, clientLastSyncAt, expected.clientLastSyncAt, "client last_sync_at mismatch")
 
 	var serverBookCount, serverNoteCount int64
-	apitest.MustExec(t, db.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
-	apitest.MustExec(t, db.Model(&database.Book{}).Count(&serverBookCount), "counting api notes")
+	apitest.MustExec(t, serverDB.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
+	apitest.MustExec(t, serverDB.Model(&database.Book{}).Count(&serverBookCount), "counting api notes")
 	assert.Equal(t, serverNoteCount, expected.serverNoteCount, "server note count mismatch")
 	assert.Equal(t, serverBookCount, expected.serverBookCount, "server book count mismatch")
 	var serverUser database.User
-	apitest.MustExec(t, db.Where("id = ?", user.ID).First(&serverUser), "finding user")
+	apitest.MustExec(t, serverDB.Where("id = ?", user.ID).First(&serverUser), "finding user")
 	assert.Equal(t, serverUser.MaxUSN, expected.serverUserMaxUSN, "user max_usn mismatch")
 }
 
@@ -387,7 +396,7 @@ func TestSync_oneway(t *testing.T) {
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
@@ -401,7 +410,7 @@ func TestSync_oneway(t *testing.T) {
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
@@ -543,7 +552,7 @@ func TestSync_oneway(t *testing.T) {
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
@@ -557,7 +566,7 @@ func TestSync_oneway(t *testing.T) {
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
@@ -3849,7 +3858,7 @@ func TestFullSync(t *testing.T) {
 
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			ids := setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
@@ -3867,7 +3876,7 @@ func TestFullSync(t *testing.T) {
 			ctx := context.InitTestCtx(t, paths, nil)
 			defer context.TeardownTestCtx(t, ctx)
 
-			user := setupUser(t, &ctx)
+			user := setupUserAndLogin(t, ctx.DB)
 			ids := setup(t, ctx, user)
 
 			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
@@ -3892,7 +3901,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		ctx := context.InitTestCtx(t, paths, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		user := setupUser(t, &ctx)
+		user := setupUserAndLogin(t, ctx.DB)
 
 		// Step 1: Create local data and sync to server
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -3913,7 +3922,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Step 2: Clear all server data to simulate switching to a completely new empty server
 		apitest.ClearData(serverDb)
 		// Recreate user and session (simulating a new server)
-		user = setupUser(t, &ctx)
+		user = setupUserAndLogin(t, ctx.DB)
 
 		// Step 3: Sync again - should detect empty server and prompt user
 		// User confirms with "y"
@@ -3967,7 +3976,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		ctx := context.InitTestCtx(t, paths, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		user := setupUser(t, &ctx)
+		user := setupUserAndLogin(t, ctx.DB)
 
 		// Step 1: Create local data and sync to server
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -3987,7 +3996,7 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Step 2: Clear all server data
 		apitest.ClearData(serverDb)
-		user = setupUser(t, &ctx)
+		user = setupUserAndLogin(t, ctx.DB)
 
 		// Step 3: Sync again but user cancels with "n"
 		output, err := clitest.WaitDnoteCmd(t, dnoteCmdOpts, clitest.UserCancelEmptyServerSync, cliBinaryName, "sync")
@@ -4036,7 +4045,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		ctx := context.InitTestCtx(t, paths, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		user := setupUser(t, &ctx)
+		user := setupUserAndLogin(t, ctx.DB)
 
 		// Step 1: Create local data and sync to server
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -4060,7 +4069,7 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Step 3: Clear server data to simulate switching to empty server
 		apitest.ClearData(serverDb)
-		user = setupUser(t, &ctx)
+		user = setupUserAndLogin(t, ctx.DB)
 
 		// Step 4: Sync - should NOT prompt because bookCount=0 and noteCount=0 (counting only deleted=0)
 		// This should complete without user interaction
@@ -4113,7 +4122,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		ctx := context.InitTestCtx(t, paths, nil)
 		defer context.TeardownTestCtx(t, ctx)
 
-		user := setupUser(t, &ctx)
+		user := setupUserAndLogin(t, ctx.DB)
 
 		// Step 1: Create local data and sync to establish lastMaxUSN > 0
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -4133,7 +4142,7 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Step 2: Clear server to simulate switching to empty server
 		apitest.ClearData(serverDb)
-		user = setupUser(t, &ctx)
+		user = setupUserAndLogin(t, ctx.DB)
 
 		// Step 3: Trigger sync which will detect empty server and prompt user
 		// Inside the callback (before confirming), we simulate Client B uploading via API.
@@ -4169,7 +4178,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
 
 		// Verify final state - both clients' data preserved
-		checkStateWithDB(t, ctx, user, serverDb, systemState{
+		checkStateWithDB(t, ctx.DB, user, serverDb, systemState{
 			clientNoteCount:  4, // Both clients' notes
 			clientBookCount:  4, // js, css, js_2, css_2
 			clientLastMaxUSN: 8, // 4 from Client B + 4 from Client A's renamed books/notes
@@ -4257,7 +4266,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify sync to Server A succeeded
-		checkStateWithDB(t, ctx, userA, serverDbA, systemState{
+		checkStateWithDB(t, ctx.DB, userA, serverDbA, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4281,7 +4290,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify Server B now has data
-		checkStateWithDB(t, ctx, userB, serverDbB, systemState{
+		checkStateWithDB(t, ctx.DB, userB, serverDbB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4299,7 +4308,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify Server A still has its data
-		checkStateWithDB(t, ctx, userA, serverDbA, systemState{
+		checkStateWithDB(t, ctx.DB, userA, serverDbA, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4317,7 +4326,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify both servers maintain independent state
-		checkStateWithDB(t, ctx, userB, serverDbB, systemState{
+		checkStateWithDB(t, ctx.DB, userB, serverDbB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4349,7 +4358,7 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 	ctx := context.InitTestCtx(t, paths, nil)
 	defer context.TeardownTestCtx(t, ctx)
 
-	user := setupUser(t, &ctx)
+	user := setupUserAndLogin(t, ctx.DB)
 
 	// Client A: Create local data (never sync)
 	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
@@ -4367,7 +4376,7 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 
 	// Verify: Should have 4 books and 4 notes on both client and server
 	// USN breakdown: 2 books + 2 notes from Client B (USN 1-4), then 2 books + 2 notes from Client A (USN 5-8)
-	checkStateWithDB(t, ctx, user, serverDb, systemState{
+	checkStateWithDB(t, ctx.DB, user, serverDb, systemState{
 		clientNoteCount:  4,
 		clientBookCount:  4,
 		clientLastMaxUSN: 8,
@@ -4438,4 +4447,108 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 	assert.NotEqual(t, cliNoteJS2.USN, 0, "client note 'js2' should have non-zero USN")
 	assert.NotEqual(t, cliNoteCSS1.USN, 0, "client note 'css1' should have non-zero USN")
 	assert.NotEqual(t, cliNoteCSS2.USN, 0, "client note 'css2' should have non-zero USN")
+}
+
+// TestSync_ConvergeSameBookNames tests that two clients don't enter an infinite sync loop if they
+// try to sync books with the same names. Books shouldn't get marked dirty when re-downloaded from server.
+func TestSync_ConvergeSameBookNames(t *testing.T) {
+	// Clean up and prepare server
+	apitest.ClearData(serverDb)
+	defer apitest.ClearData(serverDb)
+
+	clearTmp(t)
+
+	ctx := context.InitTestCtx(t, paths, nil)
+	defer context.TeardownTestCtx(t, ctx)
+
+	// Setup two separate client databases
+	client1DB := fmt.Sprintf("%s/client1.db", tmpDirPath)
+	client2DB := fmt.Sprintf("%s/client2.db", tmpDirPath)
+	defer os.Remove(client1DB)
+	defer os.Remove(client2DB)
+
+	// Set up sessions
+	user := setupUser(t, ctx.DB)
+	db1 := testutils.MustOpenDatabase(t, client1DB)
+	db2 := testutils.MustOpenDatabase(t, client2DB)
+	defer db1.Close()
+	defer db2.Close()
+
+	// Client 1: First sync to empty server
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "testbook", "-c", "client1 note1")
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "anotherbook", "-c", "client1 note2")
+	login(t, db1, user)
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+	checkStateWithDB(t, db1, user, serverDb, systemState{
+		clientNoteCount:  2,
+		clientBookCount:  2,
+		clientLastMaxUSN: 4,
+		clientLastSyncAt: serverTime.Unix(),
+		serverNoteCount:  2,
+		serverBookCount:  2,
+		serverUserMaxUSN: 4,
+	})
+
+	// Client 2: Sync (downloads client 1's data, adds own notes) =====
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "testbook", "-c", "client2 note1")
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "anotherbook", "-c", "client2 note2")
+	login(t, db2, user)
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
+	// Verify state after client2 sync
+	checkStateWithDB(t, db2, user, serverDb, systemState{
+		clientNoteCount:  4,
+		clientBookCount:  2,
+		clientLastMaxUSN: 8,
+		clientLastSyncAt: serverTime.Unix(),
+		serverNoteCount:  4,
+		serverBookCount:  2,
+		serverUserMaxUSN: 8,
+	})
+
+	// Client 1: Sync again. It downloads client2's changes (2 extra notes).
+	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+
+	// Verify MaxUSN did not increase (client1 should only download, not upload)
+	// Client1 still has: 2 original books + 4 notes (2 own + 2 from client2)
+	checkStateWithDB(t, db1, user, serverDb, systemState{
+		clientNoteCount:  4,
+		clientBookCount:  2,
+		clientLastMaxUSN: 8,
+		clientLastSyncAt: serverTime.Unix(),
+		serverNoteCount:  4,
+		serverBookCount:  2,
+		serverUserMaxUSN: 8,
+	})
+
+	// Verify no infinite loop: alternate syncing
+	// Both clients should be able to sync without any changes (MaxUSN stays at 8)
+	for range 3 {
+		// Client 2 syncs
+		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
+
+		// Verify client2 state unchanged
+		checkStateWithDB(t, db2, user, serverDb, systemState{
+			clientNoteCount:  4,
+			clientBookCount:  2,
+			clientLastMaxUSN: 8,
+			clientLastSyncAt: serverTime.Unix(),
+			serverNoteCount:  4,
+			serverBookCount:  2,
+			serverUserMaxUSN: 8,
+		})
+
+		// Client 1 syncs
+		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+
+		// Verify client1 state unchanged
+		checkStateWithDB(t, db1, user, serverDb, systemState{
+			clientNoteCount:  4,
+			clientBookCount:  2,
+			clientLastMaxUSN: 8,
+			clientLastSyncAt: serverTime.Unix(),
+			serverNoteCount:  4,
+			serverBookCount:  2,
+			serverUserMaxUSN: 8,
+		})
+	}
 }

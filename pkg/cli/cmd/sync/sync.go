@@ -222,7 +222,7 @@ func mergeBook(tx *database.DB, b client.SyncFragBook, mode int) error {
 			return errors.Wrap(err, "getting a new book label for conflict resolution")
 		}
 
-		if _, err := tx.Exec("UPDATE books SET label = ?, dirty = ? WHERE label = ?", newLabel, true, b.Label); err != nil {
+		if _, err := tx.Exec("UPDATE books SET label = ?, dirty = ? WHERE label = ? AND uuid != ?", newLabel, true, b.Label, b.UUID); err != nil {
 			return errors.Wrap(err, "resolving duplicate book label")
 		}
 	}
