@@ -579,10 +579,12 @@ func Signin(ctx context.DnoteCtx, email, password string) (SigninResponse, error
 		return SigninResponse{}, errors.Wrap(err, "marshaling payload")
 	}
 	res, err := doReq(ctx, "POST", "/v3/signin", string(b), nil)
-
-	if res.StatusCode == http.StatusUnauthorized {
-		return SigninResponse{}, ErrInvalidLogin
-	} else if err != nil {
+	if err != nil {
+		// Check if this is a 401 Unauthorized error
+		var httpErr *HTTPError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusUnauthorized {
+			return SigninResponse{}, ErrInvalidLogin
+		}
 		return SigninResponse{}, errors.Wrap(err, "making http request")
 	}
 

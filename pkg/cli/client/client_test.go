@@ -124,6 +124,18 @@ func TestSignIn(t *testing.T) {
 		assert.Equal(t, result.Key, "", "Key mismatch")
 		assert.Equal(t, result.ExpiresAt, int64(0), "ExpiresAt mismatch")
 	})
+
+	t.Run("network error", func(t *testing.T) {
+		// Use an invalid endpoint that will fail to connect
+		endpoint := "http://localhost:99999/api"
+		result, err := Signin(context.DnoteCtx{APIEndpoint: endpoint, HTTPClient: testClient}, "alice@example.com", "pass1234")
+
+		if err == nil {
+			t.Error("error should have been returned for network failure")
+		}
+		assert.Equal(t, result.Key, "", "Key mismatch")
+		assert.Equal(t, result.ExpiresAt, int64(0), "ExpiresAt mismatch")
+	})
 }
 
 func TestSignOut(t *testing.T) {
