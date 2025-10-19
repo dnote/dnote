@@ -22,9 +22,6 @@ import (
 	"io/fs"
 	"testing"
 	"testing/fstest"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 // unsortedFS wraps fstest.MapFS to return entries in reverse order
@@ -56,10 +53,12 @@ func (e errorFS) ReadDir(name string) ([]fs.DirEntry, error) {
 }
 
 func TestMigrate_createsSchemaTable(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	migrationsFs := fstest.MapFS{}
 	migrate(db, migrationsFs)
@@ -72,10 +71,12 @@ func TestMigrate_createsSchemaTable(t *testing.T) {
 }
 
 func TestMigrate_idempotency(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	// Set up table before migration
 	if err := db.Exec("CREATE TABLE counter (value INTEGER)").Error; err != nil {
@@ -114,10 +115,12 @@ func TestMigrate_idempotency(t *testing.T) {
 }
 
 func TestMigrate_ordering(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	// Create table before migrations
 	if err := db.Exec("CREATE TABLE log (value INTEGER)").Error; err != nil {
@@ -163,10 +166,12 @@ func TestMigrate_ordering(t *testing.T) {
 }
 
 func TestMigrate_duplicateVersion(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	// Create migrations with duplicate version numbers
 	migrationsFs := fstest.MapFS{
@@ -179,17 +184,15 @@ func TestMigrate_duplicateVersion(t *testing.T) {
 	}
 
 	// Should return error for duplicate version
-	err = migrate(db, migrationsFs)
+	err := migrate(db, migrationsFs)
 	if err == nil {
 		t.Fatal("expected error for duplicate version numbers, got nil")
 	}
 }
 
 func TestMigrate_initTableError(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
 
 	// Close the database connection to cause exec to fail
 	sqlDB, _ := db.DB()
@@ -202,30 +205,34 @@ func TestMigrate_initTableError(t *testing.T) {
 	}
 
 	// Should return error for table initialization failure
-	err = migrate(db, migrationsFs)
+	err := migrate(db, migrationsFs)
 	if err == nil {
 		t.Fatal("expected error for table initialization failure, got nil")
 	}
 }
 
 func TestMigrate_readDirError(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	// Use filesystem that fails on ReadDir
-	err = migrate(db, errorFS{})
+	err := migrate(db, errorFS{})
 	if err == nil {
 		t.Fatal("expected error for ReadDir failure, got nil")
 	}
 }
 
 func TestMigrate_sqlError(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	// Create migration with invalid SQL
 	migrationsFs := fstest.MapFS{
@@ -235,19 +242,21 @@ func TestMigrate_sqlError(t *testing.T) {
 	}
 
 	// Should return error for SQL execution failure
-	err = migrate(db, migrationsFs)
+	err := migrate(db, migrationsFs)
 	if err == nil {
 		t.Fatal("expected error for invalid SQL, got nil")
 	}
 }
 
 func TestMigrate_emptyFile(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
-	tests := []struct {
+	tests := []struct{
 		name    string
 		data    string
 		wantErr bool
@@ -265,7 +274,7 @@ func TestMigrate_emptyFile(t *testing.T) {
 				},
 			}
 
-			err = migrate(db, migrationsFs)
+			err := migrate(db, migrationsFs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -274,10 +283,12 @@ func TestMigrate_emptyFile(t *testing.T) {
 }
 
 func TestMigrate_invalidFilename(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	tmpDB := t.TempDir() + "/test.db"
+	db := Open(tmpDB)
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
 
 	tests := []struct {
 		name     string

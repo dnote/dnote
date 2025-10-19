@@ -16,27 +16,45 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package app
+package cmd
 
 import (
-	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"fmt"
+	"os"
 )
 
-// NewTest returns an app for a testing environment
-func NewTest() App {
-	return App{
-		Clock:               clock.NewMock(),
-		EmailTemplates:      mailer.NewTemplates(),
-		EmailBackend:        &testutils.MockEmailbackendImplementation{},
-		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
-		AppEnv:              "TEST",
-		WebURL:              "http://127.0.0.0.1",
-		Port:                "3000",
-		DisableRegistration: false,
-		DBPath:              "",
-		AssetBaseURL:        "",
+func rootCmd() {
+	fmt.Printf(`Dnote server - a simple command line notebook
+
+Usage:
+  dnote-server [command] [flags]
+
+Available commands:
+  start: Start the server (use 'dnote-server start --help' for flags)
+  user: Manage users (use 'dnote-server user' for subcommands)
+  version: Print the version
+`)
+}
+
+// Execute is the main entry point for the CLI
+func Execute() {
+	if len(os.Args) < 2 {
+		rootCmd()
+		return
+	}
+
+	cmd := os.Args[1]
+
+	switch cmd {
+	case "start":
+		startCmd(os.Args[2:])
+	case "user":
+		userCmd(os.Args[2:])
+	case "version":
+		versionCmd()
+	default:
+		fmt.Printf("Unknown command %s\n", cmd)
+		rootCmd()
+		os.Exit(1)
 	}
 }

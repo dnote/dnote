@@ -16,27 +16,14 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package app
+package cmd
 
 import (
-	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"fmt"
+
+	"github.com/dnote/dnote/pkg/server/buildinfo"
 )
 
-// NewTest returns an app for a testing environment
-func NewTest() App {
-	return App{
-		Clock:               clock.NewMock(),
-		EmailTemplates:      mailer.NewTemplates(),
-		EmailBackend:        &testutils.MockEmailbackendImplementation{},
-		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
-		AppEnv:              "TEST",
-		WebURL:              "http://127.0.0.0.1",
-		Port:                "3000",
-		DisableRegistration: false,
-		DBPath:              "",
-		AssetBaseURL:        "",
-	}
+func versionCmd() {
+	fmt.Printf("dnote-server-%s\n", buildinfo.Version)
 }

@@ -6,4 +6,4 @@ node_modules
 /test
 tmp
 *.db
-server
+/server

@@ -28,6 +28,42 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func TestValidatePassword(t *testing.T) {
+	testCases := []struct {
+		name     string
+		password string
+		wantErr  error
+	}{
+		{
+			name:     "valid password",
+			password: "password123",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 8 chars",
+			password: "12345678",
+			wantErr:  nil,
+		},
+		{
+			name:     "password too short",
+			password: "1234567",
+			wantErr:  ErrPasswordTooShort,
+		},
+		{
+			name:     "empty password",
+			password: "",
+			wantErr:  ErrPasswordTooShort,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidatePassword(tc.password)
+			assert.Equal(t, err, tc.wantErr, "error mismatch")
+		})
+	}
+}
+
 func TestCreateUser_ProValue(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 

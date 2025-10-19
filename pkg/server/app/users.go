@@ -29,6 +29,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// ValidatePassword validates a password
+func ValidatePassword(password string) error {
+	if len(password) < 8 {
+		return ErrPasswordTooShort
+	}
+
+	return nil
+}
+
 // TouchLastLoginAt updates the last login timestamp
 func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
 	t := a.Clock.Now()
@@ -45,8 +54,8 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 		return database.User{}, ErrEmailRequired
 	}
 
-	if len(password) < 8 {
-		return database.User{}, ErrPasswordTooShort
+	if err := ValidatePassword(password); err != nil {
+		return database.User{}, err
 	}
 
 	if password != passwordConfirmation {
@@ -102,13 +111,23 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	return user, nil
 }
 
-// Authenticate authenticates a user
-func (a *App) Authenticate(email, password string) (*database.User, error) {
+// GetAccountByEmail finds an account by email
+func (a *App) GetAccountByEmail(email string) (*database.Account, error) {
 	var account database.Account
 	err := a.DB.Where("email = ?", email).First(&account).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	} else if err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
+// Authenticate authenticates a user
+func (a *App) Authenticate(email, password string) (*database.User, error) {
+	account, err := a.GetAccountByEmail(email)
+	if err != nil {
 		return nil, err
 	}
 

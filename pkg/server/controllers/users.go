@@ -514,7 +514,7 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePassword(form.NewPassword); err != nil {
+	if err := app.ValidatePassword(form.NewPassword); err != nil {
 		handleHTMLError(w, r, err, "invalid password", u.SettingView, vd)
 		return
 	}
@@ -535,14 +535,6 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		Message: "Password change successful",
 	}
 	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
-}
-
-func validatePassword(password string) error {
-	if len(password) < 8 {
-		return app.ErrPasswordTooShort
-	}
-
-	return nil
 }
 
 type updateProfileForm struct {

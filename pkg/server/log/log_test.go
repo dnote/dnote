@@ -16,27 +16,23 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package app
+package log
 
 import (
-	"github.com/dnote/dnote/pkg/clock"
-	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/mailer"
-	"github.com/dnote/dnote/pkg/server/testutils"
+	"testing"
 )
 
-// NewTest returns an app for a testing environment
-func NewTest() App {
-	return App{
-		Clock:               clock.NewMock(),
-		EmailTemplates:      mailer.NewTemplates(),
-		EmailBackend:        &testutils.MockEmailbackendImplementation{},
-		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
-		AppEnv:              "TEST",
-		WebURL:              "http://127.0.0.0.1",
-		Port:                "3000",
-		DisableRegistration: false,
-		DBPath:              "",
-		AssetBaseURL:        "",
+func TestSetLevel(t *testing.T) {
+	// Reset to default after test
+	defer SetLevel(LevelInfo)
+
+	SetLevel(LevelDebug)
+	if currentLevel != LevelDebug {
+		t.Errorf("Expected level %s, got %s", LevelDebug, currentLevel)
+	}
+
+	SetLevel(LevelError)
+	if currentLevel != LevelError {
+		t.Errorf("Expected level %s, got %s", LevelError, currentLevel)
 	}
 }
