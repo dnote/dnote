@@ -1,12 +1,30 @@
 FROM busybox:glibc
 
-ARG tarballName
-RUN test -n "$tarballName"
+ARG TARGETPLATFORM
+ARG version
 
-WORKDIR dnote
+RUN test -n "$TARGETPLATFORM" || (echo "TARGETPLATFORM is required" && exit 1)
+RUN test -n "$version" || (echo "version is required" && exit 1)
 
-COPY "$tarballName" .
-RUN tar -xvzf "$tarballName"
+WORKDIR /tmp/tarballs
+
+# Copy all architecture tarballs
+COPY dnote_server_*.tar.gz ./
+
+# Select and extract the correct tarball based on target platform
+RUN case "$TARGETPLATFORM" in \
+      "linux/amd64") ARCH="amd64" ;; \
+      "linux/arm64") ARCH="arm64" ;; \
+      "linux/arm/v7") ARCH="arm" ;; \
+      "linux/386") ARCH="386" ;; \
+      *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac && \
+    TARBALL="dnote_server_${version}_linux_${ARCH}.tar.gz" && \
+    echo "Extracting $TARBALL for $TARGETPLATFORM" && \
+    mkdir -p /dnote && \
+    tar -xvzf "$TARBALL" -C /dnote
+
+WORKDIR /dnote
 
 COPY entrypoint.sh .
 ENTRYPOINT ["./entrypoint.sh"]
