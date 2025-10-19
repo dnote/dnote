@@ -51,7 +51,7 @@ build() {
 
   popd
 
-  mv "$destDir/server-${platform}-"* "$destDir/dnote-server"
+  mv "$destDir/server-${platform}"* "$destDir/dnote-server"
 
   # build tarball
   tarballName="dnote_server_${version}_${platform}_${arch}.tar.gz"
