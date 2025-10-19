@@ -79,4 +79,7 @@ var (
 	ErrInvalidPassword appError = "Invalid currnet password."
 	// ErrEmailTooLong is an error for email length exceeding the limit
 	ErrEmailTooLong appError = "Email is too long."
+
+	// ErrUserHasExistingResources is an error for attempting to remove a user with existing notes or books
+	ErrUserHasExistingResources appError = "cannot remove user with existing notes or books"
 )

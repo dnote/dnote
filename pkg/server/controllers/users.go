@@ -396,27 +396,21 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := u.app.DB.Begin()
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
-	if err != nil {
-		tx.Rollback()
-		handleHTMLError(w, r, err, "hashing password", u.PasswordResetConfirmView, vd)
-		return
-	}
-
 	var account database.Account
 	if err := u.app.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
-		tx.Rollback()
 		handleHTMLError(w, r, err, "finding user", u.PasswordResetConfirmView, vd)
 		return
 	}
 
-	if err := tx.Model(&account).Update("password", string(hashedPassword)).Error; err != nil {
+	tx := u.app.DB.Begin()
+
+	// Update the password
+	if err := app.UpdateAccountPassword(tx, &account, params.Password); err != nil {
 		tx.Rollback()
 		handleHTMLError(w, r, err, "updating password", u.PasswordResetConfirmView, vd)
 		return
 	}
+
 	if err := tx.Model(&token).Update("used_at", time.Now()).Error; err != nil {
 		tx.Rollback()
 		handleHTMLError(w, r, err, "updating password reset token", u.PasswordResetConfirmView, vd)
@@ -514,18 +508,7 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validatePassword(form.NewPassword); err != nil {
-		handleHTMLError(w, r, err, "invalid password", u.SettingView, vd)
-		return
-	}
-
-	hashedNewPassword, err := bcrypt.GenerateFromPassword([]byte(form.NewPassword), bcrypt.DefaultCost)
-	if err != nil {
-		handleHTMLError(w, r, err, "hashing password", u.SettingView, vd)
-		return
-	}
-
-	if err := u.app.DB.Model(&account).Update("password", string(hashedNewPassword)).Error; err != nil {
+	if err := app.UpdateAccountPassword(u.app.DB, &account, form.NewPassword); err != nil {
 		handleHTMLError(w, r, err, "updating password", u.SettingView, vd)
 		return
 	}
@@ -535,14 +518,6 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		Message: "Password change successful",
 	}
 	views.RedirectAlert(w, r, "/", http.StatusFound, alert)
-}
-
-func validatePassword(password string) error {
-	if len(password) < 8 {
-		return app.ErrPasswordTooShort
-	}
-
-	return nil
 }
 
 type updateProfileForm struct {

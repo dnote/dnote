@@ -26,6 +26,7 @@ import (
 	"syscall"
 
 	"github.com/dnote/dnote/pkg/cli/log"
+	"github.com/dnote/dnote/pkg/prompt"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -73,24 +74,14 @@ func PromptPassword(message string, dest *string) error {
 
 // Confirm prompts for user input to confirm a choice
 func Confirm(question string, optimistic bool) (bool, error) {
-	var choices string
-	if optimistic {
-		choices = "(Y/n)"
-	} else {
-		choices = "(y/N)"
-	}
+	message := prompt.FormatQuestion(question, optimistic)
 
-	message := fmt.Sprintf("%s %s", question, choices)
+	// Use log.Askf for colored prompt in CLI
+	log.Askf(message, false)
 
-	var input string
-	if err := PromptInput(message, &input); err != nil {
+	confirmed, err := prompt.ReadYesNo(os.Stdin, optimistic)
+	if err != nil {
 		return false, errors.Wrap(err, "Failed to get user input")
-	}
-
-	confirmed := input == "y"
-
-	if optimistic {
-		confirmed = confirmed || input == ""
 	}
 
 	return confirmed, nil

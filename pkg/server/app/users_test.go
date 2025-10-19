@@ -28,6 +28,42 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func TestValidatePassword(t *testing.T) {
+	testCases := []struct {
+		name     string
+		password string
+		wantErr  error
+	}{
+		{
+			name:     "valid password",
+			password: "password123",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 8 chars",
+			password: "12345678",
+			wantErr:  nil,
+		},
+		{
+			name:     "password too short",
+			password: "1234567",
+			wantErr:  ErrPasswordTooShort,
+		},
+		{
+			name:     "empty password",
+			password: "",
+			wantErr:  ErrPasswordTooShort,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validatePassword(tc.password)
+			assert.Equal(t, err, tc.wantErr, "error mismatch")
+		})
+	}
+}
+
 func TestCreateUser_ProValue(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
@@ -44,6 +80,36 @@ func TestCreateUser_ProValue(t *testing.T) {
 
 	assert.Equal(t, userCount, int64(1), "book count mismatch")
 
+}
+
+func TestGetAccountByEmail(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+
+		a := NewTest()
+		a.DB = db
+
+		account, err := a.GetAccountByEmail("alice@example.com")
+
+		assert.Equal(t, err, nil, "should not error")
+		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, account.UserID, user.ID, "user ID mismatch")
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		a := NewTest()
+		a.DB = db
+
+		account, err := a.GetAccountByEmail("nonexistent@example.com")
+
+		assert.Equal(t, err, ErrNotFound, "should return ErrNotFound")
+		assert.Equal(t, account, (*database.Account)(nil), "account should be nil")
+	})
 }
 
 func TestCreateUser(t *testing.T) {
@@ -90,5 +156,238 @@ func TestCreateUser(t *testing.T) {
 
 		assert.Equal(t, userCount, int64(1), "user count mismatch")
 		assert.Equal(t, accountCount, int64(1), "account count mismatch")
+	})
+}
+
+func TestUpdateAccountPassword(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+
+		err := UpdateAccountPassword(db, &account, "newpassword123")
+
+		assert.Equal(t, err, nil, "should not error")
+
+		// Verify password was updated in database
+		var updatedAccount database.Account
+		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&updatedAccount), "finding updated account")
+
+		// Verify new password works
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("newpassword123"))
+		assert.Equal(t, passwordErr, nil, "New password should match")
+
+		// Verify old password no longer works
+		oldPasswordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("oldpassword123"))
+		assert.NotEqual(t, oldPasswordErr, nil, "Old password should not match")
+	})
+
+	t.Run("password too short", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+
+		err := UpdateAccountPassword(db, &account, "short")
+
+		assert.Equal(t, err, ErrPasswordTooShort, "should return ErrPasswordTooShort")
+
+		// Verify password was NOT updated in database
+		var unchangedAccount database.Account
+		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+
+		// Verify old password still works
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		assert.Equal(t, passwordErr, nil, "Old password should still match")
+	})
+
+	t.Run("empty password", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+
+		err := UpdateAccountPassword(db, &account, "")
+
+		assert.Equal(t, err, ErrPasswordTooShort, "should return ErrPasswordTooShort")
+
+		// Verify password was NOT updated in database
+		var unchangedAccount database.Account
+		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+
+		// Verify old password still works
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		assert.Equal(t, passwordErr, nil, "Old password should still match")
+	})
+
+	t.Run("transaction rollback", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+
+		// Start a transaction and rollback to verify UpdateAccountPassword respects transactions
+		tx := db.Begin()
+		err := UpdateAccountPassword(tx, &account, "newpassword123")
+		assert.Equal(t, err, nil, "should not error")
+		tx.Rollback()
+
+		// Verify password was NOT updated after rollback
+		var unchangedAccount database.Account
+		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+
+		// Verify old password still works
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		assert.Equal(t, passwordErr, nil, "Old password should still match after rollback")
+	})
+
+	t.Run("transaction commit", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+
+		// Start a transaction and commit to verify UpdateAccountPassword respects transactions
+		tx := db.Begin()
+		err := UpdateAccountPassword(tx, &account, "newpassword123")
+		assert.Equal(t, err, nil, "should not error")
+		tx.Commit()
+
+		// Verify password was updated after commit
+		var updatedAccount database.Account
+		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&updatedAccount), "finding updated account")
+
+		// Verify new password works
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("newpassword123"))
+		assert.Equal(t, passwordErr, nil, "New password should match after commit")
+	})
+}
+
+func TestRemoveUser(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+
+		a := NewTest()
+		a.DB = db
+
+		err := a.RemoveUser("alice@example.com")
+
+		assert.Equal(t, err, nil, "should not error")
+
+		// Verify user was deleted
+		var userCount int64
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
+		assert.Equal(t, userCount, int64(0), "user should be deleted")
+
+		// Verify account was deleted
+		var accountCount int64
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
+		assert.Equal(t, accountCount, int64(0), "account should be deleted")
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		a := NewTest()
+		a.DB = db
+
+		err := a.RemoveUser("nonexistent@example.com")
+
+		assert.Equal(t, err, ErrNotFound, "should return ErrNotFound")
+	})
+
+	t.Run("user has notes", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+
+		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
+		testutils.MustExec(t, db.Save(&book), "creating book")
+
+		note := database.Note{UserID: user.ID, BookUUID: book.UUID, Body: "test note", Deleted: false}
+		testutils.MustExec(t, db.Save(&note), "creating note")
+
+		a := NewTest()
+		a.DB = db
+
+		err := a.RemoveUser("alice@example.com")
+
+		assert.Equal(t, err, ErrUserHasExistingResources, "should return ErrUserHasExistingResources")
+
+		// Verify user was NOT deleted
+		var userCount int64
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
+		assert.Equal(t, userCount, int64(1), "user should not be deleted")
+
+		// Verify account was NOT deleted
+		var accountCount int64
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
+		assert.Equal(t, accountCount, int64(1), "account should not be deleted")
+	})
+
+	t.Run("user has books", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+
+		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
+		testutils.MustExec(t, db.Save(&book), "creating book")
+
+		a := NewTest()
+		a.DB = db
+
+		err := a.RemoveUser("alice@example.com")
+
+		assert.Equal(t, err, ErrUserHasExistingResources, "should return ErrUserHasExistingResources")
+
+		// Verify user was NOT deleted
+		var userCount int64
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
+		assert.Equal(t, userCount, int64(1), "user should not be deleted")
+
+		// Verify account was NOT deleted
+		var accountCount int64
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
+		assert.Equal(t, accountCount, int64(1), "account should not be deleted")
+	})
+
+	t.Run("user has deleted notes and books", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+
+		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
+		testutils.MustExec(t, db.Save(&book), "creating book")
+
+		note := database.Note{UserID: user.ID, BookUUID: book.UUID, Body: "test note", Deleted: false}
+		testutils.MustExec(t, db.Save(&note), "creating note")
+
+		// Soft delete the note and book
+		testutils.MustExec(t, db.Model(&note).Update("deleted", true), "soft deleting note")
+		testutils.MustExec(t, db.Model(&book).Update("deleted", true), "soft deleting book")
+
+		a := NewTest()
+		a.DB = db
+
+		err := a.RemoveUser("alice@example.com")
+
+		assert.Equal(t, err, nil, "should not error when user only has deleted notes and books")
+
+		// Verify user was deleted
+		var userCount int64
+		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
+		assert.Equal(t, userCount, int64(0), "user should be deleted")
+
+		// Verify account was deleted
+		var accountCount int64
+		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
+		assert.Equal(t, accountCount, int64(0), "account should be deleted")
 	})
 }

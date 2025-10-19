@@ -20,7 +20,6 @@
 package testutils
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -31,6 +30,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
@@ -223,103 +223,32 @@ func MustWaitDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, runFunc func(io.Rea
 	return output
 }
 
-// waitForPrompt waits for an expected prompt to appear in stdout with a timeout.
-// Returns an error if the prompt is not found within the timeout period.
-// Handles prompts with or without newlines by reading character by character.
-func waitForPrompt(stdout io.Reader, expectedPrompt string, timeout time.Duration) error {
-	type result struct {
-		found bool
-		err   error
-	}
-	resultCh := make(chan result, 1)
-
-	go func() {
-		reader := bufio.NewReader(stdout)
-		var buffer strings.Builder
-		found := false
-
-		for {
-			b, err := reader.ReadByte()
-			if err != nil {
-				resultCh <- result{found: found, err: err}
-				return
-			}
-
-			buffer.WriteByte(b)
-			if strings.Contains(buffer.String(), expectedPrompt) {
-				found = true
-				break
-			}
-		}
-
-		resultCh <- result{found: found, err: nil}
-	}()
-
-	select {
-	case res := <-resultCh:
-		if res.err != nil && res.err != io.EOF {
-			return errors.Wrap(res.err, "reading stdout")
-		}
-		if !res.found {
-			return errors.Errorf("expected prompt '%s' not found in stdout", expectedPrompt)
-		}
-		return nil
-	case <-time.After(timeout):
-		return errors.Errorf("timeout waiting for prompt '%s'", expectedPrompt)
-	}
-}
-
 // MustWaitForPrompt waits for an expected prompt with a default timeout.
 // Fails the test if the prompt is not found or an error occurs.
 func MustWaitForPrompt(t *testing.T, stdout io.Reader, expectedPrompt string) {
-	if err := waitForPrompt(stdout, expectedPrompt, promptTimeout); err != nil {
+	if err := assert.WaitForPrompt(stdout, expectedPrompt, promptTimeout); err != nil {
 		t.Fatal(err)
 	}
 }
 
-// userRespondToPrompt is a helper that waits for a prompt and sends a response.
-func userRespondToPrompt(stdout io.Reader, stdin io.WriteCloser, expectedPrompt, response, action string) error {
-	if err := waitForPrompt(stdout, expectedPrompt, promptTimeout); err != nil {
-		return err
-	}
-
-	if _, err := io.WriteString(stdin, response); err != nil {
-		return errors.Wrapf(err, "indicating %s in stdin", action)
-	}
-
-	return nil
-}
-
-// userConfirmOutput simulates confirmation from the user by writing to stdin.
-// It waits for the expected prompt with a timeout to prevent deadlocks.
-func userConfirmOutput(stdout io.Reader, stdin io.WriteCloser, expectedPrompt string) error {
-	return userRespondToPrompt(stdout, stdin, expectedPrompt, "y\n", "confirmation")
-}
-
-// userCancelOutput simulates cancellation from the user by writing to stdin.
-// It waits for the expected prompt with a timeout to prevent deadlocks.
-func userCancelOutput(stdout io.Reader, stdin io.WriteCloser, expectedPrompt string) error {
-	return userRespondToPrompt(stdout, stdin, expectedPrompt, "n\n", "cancellation")
-}
-
 // ConfirmRemoveNote waits for prompt for removing a note and confirms.
 func ConfirmRemoveNote(stdout io.Reader, stdin io.WriteCloser) error {
-	return userConfirmOutput(stdout, stdin, PromptRemoveNote)
+	return assert.RespondToPrompt(stdout, stdin, PromptRemoveNote, "y\n", promptTimeout)
 }
 
 // ConfirmRemoveBook waits for prompt for deleting a book confirms.
 func ConfirmRemoveBook(stdout io.Reader, stdin io.WriteCloser) error {
-	return userConfirmOutput(stdout, stdin, PromptDeleteBook)
+	return assert.RespondToPrompt(stdout, stdin, PromptDeleteBook, "y\n", promptTimeout)
 }
 
 // UserConfirmEmptyServerSync waits for an empty server prompt and confirms.
 func UserConfirmEmptyServerSync(stdout io.Reader, stdin io.WriteCloser) error {
-	return userConfirmOutput(stdout, stdin, PromptEmptyServer)
+	return assert.RespondToPrompt(stdout, stdin, PromptEmptyServer, "y\n", promptTimeout)
 }
 
-// UserCancelEmptyServerSync waits for an empty server prompt and confirms.
+// UserCancelEmptyServerSync waits for an empty server prompt and cancels.
 func UserCancelEmptyServerSync(stdout io.Reader, stdin io.WriteCloser) error {
-	return userCancelOutput(stdout, stdin, PromptEmptyServer)
+	return assert.RespondToPrompt(stdout, stdin, PromptEmptyServer, "n\n", promptTimeout)
 }
 
 // UserContent simulates content from the user by writing to stdin.

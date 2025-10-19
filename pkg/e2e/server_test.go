@@ -19,6 +19,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"os"
@@ -180,4 +181,143 @@ func TestServerUnknownCommand(t *testing.T) {
 	outputStr := string(output)
 	assert.Equal(t, strings.Contains(outputStr, "Unknown command"), true, "output should contain unknown command message")
 	assert.Equal(t, strings.Contains(outputStr, "Dnote server - a simple command line notebook"), true, "output should show help")
+}
+
+func TestServerUserCreate(t *testing.T) {
+	tmpDB := t.TempDir() + "/test.db"
+
+	cmd := exec.Command(testServerBinary, "user", "create",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com",
+		"--password", "password123")
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("user create failed: %v\nOutput: %s", err, output)
+	}
+
+	outputStr := string(output)
+	assert.Equal(t, strings.Contains(outputStr, "User created successfully"), true, "output should show success message")
+	assert.Equal(t, strings.Contains(outputStr, "test@example.com"), true, "output should show email")
+
+	// Verify user exists in database
+	db, err := gorm.Open(sqlite.Open(tmpDB), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
+
+	var count int64
+	db.Table("users").Count(&count)
+	assert.Equal(t, count, int64(1), "should have created 1 user")
+}
+
+func TestServerUserCreateShortPassword(t *testing.T) {
+	tmpDB := t.TempDir() + "/test.db"
+
+	cmd := exec.Command(testServerBinary, "user", "create",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com",
+		"--password", "short")
+	output, err := cmd.CombinedOutput()
+
+	// Should fail with short password
+	if err == nil {
+		t.Fatal("expected command to fail with short password")
+	}
+
+	outputStr := string(output)
+	assert.Equal(t, strings.Contains(outputStr, "password should be longer than 8 characters"), true, "output should show password error")
+}
+
+func TestServerUserResetPassword(t *testing.T) {
+	tmpDB := t.TempDir() + "/test.db"
+
+	// Create user first
+	createCmd := exec.Command(testServerBinary, "user", "create",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com",
+		"--password", "oldpassword123")
+	if output, err := createCmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to create user: %v\nOutput: %s", err, output)
+	}
+
+	// Reset password
+	resetCmd := exec.Command(testServerBinary, "user", "reset-password",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com",
+		"--password", "newpassword123")
+	output, err := resetCmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("reset-password failed: %v\nOutput: %s", err, output)
+	}
+
+	outputStr := string(output)
+	assert.Equal(t, strings.Contains(outputStr, "Password reset successfully"), true, "output should show success message")
+}
+
+func TestServerUserRemove(t *testing.T) {
+	tmpDB := t.TempDir() + "/test.db"
+
+	// Create user first
+	createCmd := exec.Command(testServerBinary, "user", "create",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com",
+		"--password", "password123")
+	if output, err := createCmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to create user: %v\nOutput: %s", err, output)
+	}
+
+	// Remove user with confirmation
+	removeCmd := exec.Command(testServerBinary, "user", "remove",
+		"--dbPath", tmpDB,
+		"--email", "test@example.com")
+
+	// Pipe "y" to stdin to confirm removal
+	stdin, err := removeCmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("failed to create stdin pipe: %v", err)
+	}
+
+	// Capture output
+	stdout, err := removeCmd.StdoutPipe()
+	if err != nil {
+		t.Fatalf("failed to create stdout pipe: %v", err)
+	}
+
+	var stderr bytes.Buffer
+	removeCmd.Stderr = &stderr
+
+	// Start command
+	if err := removeCmd.Start(); err != nil {
+		t.Fatalf("failed to start remove command: %v", err)
+	}
+
+	// Wait for prompt and send "y" to confirm
+	if err := assert.RespondToPrompt(stdout, stdin, "Remove user test@example.com?", "y\n", 10*time.Second); err != nil {
+		t.Fatalf("failed to confirm removal: %v", err)
+	}
+
+	// Wait for command to finish
+	if err := removeCmd.Wait(); err != nil {
+		t.Fatalf("user remove failed: %v\nStderr: %s", err, stderr.String())
+	}
+
+	// Verify user was removed
+	db, err := gorm.Open(sqlite.Open(tmpDB), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	defer func() {
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+	}()
+
+	var count int64
+	db.Table("users").Count(&count)
+	assert.Equal(t, count, int64(0), "should have 0 users after removal")
 }

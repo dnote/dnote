@@ -29,6 +29,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// validatePassword validates a password
+func validatePassword(password string) error {
+	if len(password) < 8 {
+		return ErrPasswordTooShort
+	}
+
+	return nil
+}
+
 // TouchLastLoginAt updates the last login timestamp
 func (a *App) TouchLastLoginAt(user database.User, tx *gorm.DB) error {
 	t := a.Clock.Now()
@@ -45,8 +54,8 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 		return database.User{}, ErrEmailRequired
 	}
 
-	if len(password) < 8 {
-		return database.User{}, ErrPasswordTooShort
+	if err := validatePassword(password); err != nil {
+		return database.User{}, err
 	}
 
 	if password != passwordConfirmation {
@@ -102,13 +111,23 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 	return user, nil
 }
 
-// Authenticate authenticates a user
-func (a *App) Authenticate(email, password string) (*database.User, error) {
+// GetAccountByEmail finds an account by email
+func (a *App) GetAccountByEmail(email string) (*database.Account, error) {
 	var account database.Account
 	err := a.DB.Where("email = ?", email).First(&account).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, ErrNotFound
 	} else if err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}
+
+// Authenticate authenticates a user
+func (a *App) Authenticate(email, password string) (*database.User, error) {
+	account, err := a.GetAccountByEmail(email)
+	if err != nil {
 		return nil, err
 	}
 
@@ -124,6 +143,78 @@ func (a *App) Authenticate(email, password string) (*database.User, error) {
 	}
 
 	return &user, nil
+}
+
+// UpdateAccountPassword updates an account's password with validation
+func UpdateAccountPassword(db *gorm.DB, account *database.Account, newPassword string) error {
+	// Validate password
+	if err := validatePassword(newPassword); err != nil {
+		return err
+	}
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return pkgErrors.Wrap(err, "hashing password")
+	}
+
+	// Update the password
+	if err := db.Model(&account).Update("password", string(hashedPassword)).Error; err != nil {
+		return pkgErrors.Wrap(err, "updating password")
+	}
+
+	return nil
+}
+
+// RemoveUser removes a user and their account from the system
+// Returns an error if the user has any notes or books
+func (a *App) RemoveUser(email string) error {
+	// Find the account and user
+	account, err := a.GetAccountByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	// Check if user has any notes
+	var noteCount int64
+	if err := a.DB.Model(&database.Note{}).Where("user_id = ? AND deleted = ?", account.UserID, false).Count(&noteCount).Error; err != nil {
+		return pkgErrors.Wrap(err, "counting notes")
+	}
+	if noteCount > 0 {
+		return ErrUserHasExistingResources
+	}
+
+	// Check if user has any books
+	var bookCount int64
+	if err := a.DB.Model(&database.Book{}).Where("user_id = ? AND deleted = ?", account.UserID, false).Count(&bookCount).Error; err != nil {
+		return pkgErrors.Wrap(err, "counting books")
+	}
+	if bookCount > 0 {
+		return ErrUserHasExistingResources
+	}
+
+	// Delete account and user in a transaction
+	tx := a.DB.Begin()
+
+	if err := tx.Delete(&account).Error; err != nil {
+		tx.Rollback()
+		return pkgErrors.Wrap(err, "deleting account")
+	}
+
+	var user database.User
+	if err := tx.Where("id = ?", account.UserID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return pkgErrors.Wrap(err, "finding user")
+	}
+
+	if err := tx.Delete(&user).Error; err != nil {
+		tx.Rollback()
+		return pkgErrors.Wrap(err, "deleting user")
+	}
+
+	tx.Commit()
+
+	return nil
 }
 
 // SignIn signs in a user
