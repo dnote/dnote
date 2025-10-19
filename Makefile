@@ -67,6 +67,15 @@ endif
 	@${currentDir}/scripts/server/build.sh $(version)
 .PHONY: build-server
 
+build-server-docker: build-server
+ifndef version
+	$(error version is required. Usage: make version=0.1.0 [platform=linux/amd64] build-server-docker)
+endif
+
+	@echo "==> building Docker image"
+	@(cd ${currentDir}/host/docker && ./build.sh $(version) $(platform))
+.PHONY: build-server-docker
+
 build-cli:
 ifeq ($(debug), true)
 	@echo "==> building cli in dev mode"
@@ -81,53 +90,6 @@ endif
 	@${currentDir}/scripts/cli/build.sh $(version)
 endif
 .PHONY: build-cli
-
-## release
-release-cli: clean build-cli
-ifndef version
-	$(error version is required. Usage: make version=0.1.0 release-cli)
-endif
-ifndef GH
-	$(error please install github-cli)
-endif
-
-	@echo "==> releasing cli"
-	@${currentDir}/scripts/release.sh cli $(version) ${cliOutputDir}
-.PHONY: release-cli
-
-release-cli-homebrew:
-ifndef version
-	$(error version is required. Usage: make version=0.1.0 release-cli-homebrew)
-endif
-
-	@echo "==> releasing cli on Homebrew"
-	@${currentDir}/scripts/cli/release-homebrew.sh $(version)
-.PHONY: release-cli
-
-release-server:
-ifndef version
-	$(error version is required. Usage: make version=0.1.0 release-server)
-endif
-ifndef GH
-	$(error please install github-cli)
-endif
-
-	@echo "==> releasing server"
-	@${currentDir}/scripts/release.sh server $(version) ${serverOutputDir}
-
-	@echo "==> building and releasing docker image"
-	@(cd ${currentDir}/host/docker && ./build.sh $(version))
-	@(cd ${currentDir}/host/docker && ./release.sh $(version))
-.PHONY: release-server
-
-# migrations
-create-migration:
-ifndef filename
-	$(error filename is required. Usage: make filename=your-filename create-migration)
-endif
-
-	@(cd ${currentDir}/pkg/server/database && ./scripts/create-migration.sh $(filename))
-.PHONY: create-migration
 
 clean:
 	@git clean -f
