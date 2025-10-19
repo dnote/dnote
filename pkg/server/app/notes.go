@@ -30,7 +30,7 @@ import (
 
 // CreateNote creates a note with the next usn and updates the user's max_usn.
 // It returns the created note.
-func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, public bool, client string) (database.Note, error) {
+func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *int64, editedOn *int64, client string) (database.Note, error) {
 	tx := a.DB.Begin()
 
 	nextUSN, err := incrementUserUSN(tx, user.ID)
@@ -66,7 +66,6 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 		EditedOn: noteEditedOn,
 		USN:      nextUSN,
 		Body:     content,
-		Public:   public,
 		Client:   client,
 	}
 	if err := tx.Create(&note).Error; err != nil {
@@ -83,7 +82,6 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 type UpdateNoteParams struct {
 	BookUUID *string
 	Content  *string
-	Public   *bool
 }
 
 // GetBookUUID gets the bookUUID from the UpdateNoteParams
@@ -104,15 +102,6 @@ func (r UpdateNoteParams) GetContent() string {
 	return *r.Content
 }
 
-// GetPublic gets the public field from the UpdateNoteParams
-func (r UpdateNoteParams) GetPublic() bool {
-	if r.Public == nil {
-		return false
-	}
-
-	return *r.Public
-}
-
 // UpdateNote creates a note with the next usn and updates the user's max_usn
 func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p *UpdateNoteParams) (database.Note, error) {
 	nextUSN, err := incrementUserUSN(tx, user.ID)
@@ -125,9 +114,6 @@ func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p 
 	}
 	if p.Content != nil {
 		note.Body = p.GetContent()
-	}
-	if p.Public != nil {
-		note.Public = p.GetPublic()
 	}
 
 	note.USN = nextUSN

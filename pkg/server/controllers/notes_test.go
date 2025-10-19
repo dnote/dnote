@@ -42,7 +42,6 @@ func getExpectedNotePayload(n database.Note, b database.Book, u database.User) p
 		UpdatedAt: truncateMicro(n.UpdatedAt),
 		Body:      n.Body,
 		AddedOn:   n.AddedOn,
-		Public:    n.Public,
 		USN:       n.USN,
 		Book: presenters.NoteBook{
 			UUID:  b.UUID,
@@ -189,7 +188,9 @@ func TestGetNote(t *testing.T) {
 	defer server.Close()
 
 	user := testutils.SetupUserData(db)
+	testutils.SetupAccountData(db, user, "user@test.com", "pass1234")
 	anotherUser := testutils.SetupUserData(db)
+	testutils.SetupAccountData(db, anotherUser, "another@test.com", "pass1234")
 
 	b1 := database.Book{
 		UUID:   testutils.MustUUID(t),
@@ -198,22 +199,13 @@ func TestGetNote(t *testing.T) {
 	}
 	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	note := database.Note{
 		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
-		Body:     "privateNote content",
-		Public:   false,
+		Body:     "note content",
 	}
-	testutils.MustExec(t, db.Save(&privateNote), "preparing privateNote")
-	publicNote := database.Note{
-		UUID:     testutils.MustUUID(t),
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "publicNote content",
-		Public:   true,
-	}
-	testutils.MustExec(t, db.Save(&publicNote), "preparing publicNote")
+	testutils.MustExec(t, db.Save(&note), "preparing note")
 	deletedNote := database.Note{
 		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
@@ -226,9 +218,9 @@ func TestGetNote(t *testing.T) {
 		return fmt.Sprintf("/api/v3/notes/%s", noteUUID)
 	}
 
-	t.Run("owner accessing private note", func(t *testing.T) {
+	t.Run("owner accessing note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID)
+		url := getURL(note.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, db, req, user)
 
@@ -240,58 +232,16 @@ func TestGetNote(t *testing.T) {
 			t.Fatal(errors.Wrap(err, "decoding payload"))
 		}
 
-		var n2Record database.Note
-		testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
+		var noteRecord database.Note
+		testutils.MustExec(t, db.Where("uuid = ?", note.UUID).First(&noteRecord), "finding noteRecord")
 
-		expected := getExpectedNotePayload(n2Record, b1, user)
+		expected := getExpectedNotePayload(noteRecord, b1, user)
 		assert.DeepEqual(t, payload, expected, "payload mismatch")
 	})
 
-	t.Run("owner accessing public note", func(t *testing.T) {
+	t.Run("non-owner accessing note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID)
-		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, db, req, user)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var payload presenters.Note
-		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-			t.Fatal(errors.Wrap(err, "decoding payload"))
-		}
-
-		var n2Record database.Note
-		testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-		expected := getExpectedNotePayload(n2Record, b1, user)
-		assert.DeepEqual(t, payload, expected, "payload mismatch")
-	})
-
-	t.Run("non-owner accessing public note", func(t *testing.T) {
-		// Execute
-		url := getURL(publicNote.UUID)
-		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPAuthDo(t, db, req, anotherUser)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var payload presenters.Note
-		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-			t.Fatal(errors.Wrap(err, "decoding payload"))
-		}
-
-		var n2Record database.Note
-		testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-		expected := getExpectedNotePayload(n2Record, b1, user)
-		assert.DeepEqual(t, payload, expected, "payload mismatch")
-	})
-
-	t.Run("non-owner accessing private note", func(t *testing.T) {
-		// Execute
-		url := getURL(privateNote.UUID)
+		url := getURL(note.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPAuthDo(t, db, req, anotherUser)
 
@@ -306,42 +256,21 @@ func TestGetNote(t *testing.T) {
 		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
 	})
 
-	t.Run("guest accessing public note", func(t *testing.T) {
+	t.Run("guest accessing note", func(t *testing.T) {
 		// Execute
-		url := getURL(publicNote.UUID)
+		url := getURL(note.UUID)
 		req := testutils.MakeReq(server.URL, "GET", url, "")
 		res := testutils.HTTPDo(t, req)
 
 		// Test
-		assert.StatusCodeEquals(t, res, http.StatusOK, "")
-
-		var payload presenters.Note
-		if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
-			t.Fatal(errors.Wrap(err, "decoding payload"))
-		}
-
-		var n2Record database.Note
-		testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).First(&n2Record), "finding n2Record")
-
-		expected := getExpectedNotePayload(n2Record, b1, user)
-		assert.DeepEqual(t, payload, expected, "payload mismatch")
-	})
-
-	t.Run("guest accessing private note", func(t *testing.T) {
-		// Execute
-		url := getURL(privateNote.UUID)
-		req := testutils.MakeReq(server.URL, "GET", url, "")
-		res := testutils.HTTPDo(t, req)
-
-		// Test
-		assert.StatusCodeEquals(t, res, http.StatusNotFound, "")
+		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "")
 
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "reading body"))
 		}
 
-		assert.DeepEqual(t, string(body), "not found\n", "payload mismatch")
+		assert.DeepEqual(t, string(body), "unauthorized\n", "payload mismatch")
 	})
 
 	t.Run("nonexistent", func(t *testing.T) {
@@ -533,7 +462,6 @@ func TestUpdateNote(t *testing.T) {
 	type payloadData struct {
 		Content  *string `schema:"content" json:"content,omitempty"`
 		BookUUID *string `schema:"book_uuid" json:"book_uuid,omitempty"`
-		Public   *bool   `schema:"public" json:"public,omitempty"`
 	}
 
 	testCases := []struct {
@@ -541,12 +469,10 @@ func TestUpdateNote(t *testing.T) {
 		noteUUID             string
 		noteBookUUID         string
 		noteBody             string
-		notePublic           bool
 		noteDeleted          bool
 		expectedNoteBody     string
 		expectedNoteBookName string
 		expectedNoteBookUUID string
-		expectedNotePublic   bool
 	}{
 		{
 			payload: testutils.PayloadWrapper{
@@ -556,13 +482,11 @@ func TestUpdateNote(t *testing.T) {
 			},
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
-			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     "some updated content",
 			expectedNoteBookName: "css",
-			expectedNotePublic:   false,
 		},
 		{
 			payload: testutils.PayloadWrapper{
@@ -572,13 +496,11 @@ func TestUpdateNote(t *testing.T) {
 			},
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
-			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     "original content",
 			expectedNoteBookName: "css",
-			expectedNotePublic:   false,
 		},
 		{
 			payload: testutils.PayloadWrapper{
@@ -588,13 +510,11 @@ func TestUpdateNote(t *testing.T) {
 			},
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
-			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b2UUID,
 			expectedNoteBody:     "original content",
 			expectedNoteBookName: "js",
-			expectedNotePublic:   false,
 		},
 		{
 			payload: testutils.PayloadWrapper{
@@ -605,13 +525,11 @@ func TestUpdateNote(t *testing.T) {
 			},
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
-			notePublic:           false,
 			noteBody:             "original content",
 			noteDeleted:          false,
 			expectedNoteBookUUID: b2UUID,
 			expectedNoteBody:     "some updated content",
 			expectedNoteBookName: "js",
-			expectedNotePublic:   false,
 		},
 		{
 			payload: testutils.PayloadWrapper{
@@ -622,80 +540,11 @@ func TestUpdateNote(t *testing.T) {
 			},
 			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
 			noteBookUUID:         b1UUID,
-			notePublic:           false,
 			noteBody:             "",
 			noteDeleted:          true,
 			expectedNoteBookUUID: b1UUID,
 			expectedNoteBody:     updatedBody,
 			expectedNoteBookName: "js",
-			expectedNotePublic:   false,
-		},
-		{
-			payload: testutils.PayloadWrapper{
-				Data: payloadData{
-					Public: &testutils.TrueVal,
-				},
-			},
-			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
-			noteBookUUID:         b1UUID,
-			notePublic:           false,
-			noteBody:             "original content",
-			noteDeleted:          false,
-			expectedNoteBookUUID: b1UUID,
-			expectedNoteBody:     "original content",
-			expectedNoteBookName: "css",
-			expectedNotePublic:   true,
-		},
-		{
-			payload: testutils.PayloadWrapper{
-				Data: payloadData{
-					Public: &testutils.FalseVal,
-				},
-			},
-			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
-			noteBookUUID:         b1UUID,
-			notePublic:           true,
-			noteBody:             "original content",
-			noteDeleted:          false,
-			expectedNoteBookUUID: b1UUID,
-			expectedNoteBody:     "original content",
-			expectedNoteBookName: "css",
-			expectedNotePublic:   false,
-		},
-		{
-			payload: testutils.PayloadWrapper{
-				Data: payloadData{
-					Content: &updatedBody,
-					Public:  &testutils.FalseVal,
-				},
-			},
-			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
-			noteBookUUID:         b1UUID,
-			notePublic:           true,
-			noteBody:             "original content",
-			noteDeleted:          false,
-			expectedNoteBookUUID: b1UUID,
-			expectedNoteBody:     updatedBody,
-			expectedNoteBookName: "css",
-			expectedNotePublic:   false,
-		},
-		{
-			payload: testutils.PayloadWrapper{
-				Data: payloadData{
-					BookUUID: &b2UUID,
-					Content:  &updatedBody,
-					Public:   &testutils.TrueVal,
-				},
-			},
-			noteUUID:             "ab50aa32-b232-40d8-b10f-10a7f9134053",
-			noteBookUUID:         b1UUID,
-			notePublic:           false,
-			noteBody:             "original content",
-			noteDeleted:          false,
-			expectedNoteBookUUID: b2UUID,
-			expectedNoteBody:     updatedBody,
-			expectedNoteBookName: "js",
-			expectedNotePublic:   true,
 		},
 	}
 
@@ -734,7 +583,6 @@ func TestUpdateNote(t *testing.T) {
 				BookUUID: tc.noteBookUUID,
 				Body:     tc.noteBody,
 				Deleted:  tc.noteDeleted,
-				Public:   tc.notePublic,
 			}
 			testutils.MustExec(t, db.Save(&note), "preparing note")
 
@@ -765,7 +613,6 @@ func TestUpdateNote(t *testing.T) {
 			assert.Equal(t, noteRecord.UUID, tc.noteUUID, "note uuid mismatch for test case")
 			assert.Equal(t, noteRecord.Body, tc.expectedNoteBody, "note content mismatch for test case")
 			assert.Equal(t, noteRecord.BookUUID, tc.expectedNoteBookUUID, "note book_uuid mismatch for test case")
-			assert.Equal(t, noteRecord.Public, tc.expectedNotePublic, "note public mismatch for test case")
 			assert.Equal(t, noteRecord.USN, 102, "note usn mismatch for test case")
 
 			assert.Equal(t, userRecord.MaxUSN, 102, "user max_usn mismatch for test case")

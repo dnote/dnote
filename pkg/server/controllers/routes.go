@@ -82,7 +82,7 @@ func NewAPIRoutes(a *app.App, c *Controllers) []Route {
 		{"POST", "/v3/signout", c.Users.V3Logout, true},
 		{"OPTIONS", "/v3/signout", c.Users.logoutOptions, true},
 		{"GET", "/v3/notes", mw.Auth(a.DB, c.Notes.V3Index, nil), true},
-		{"GET", "/v3/notes/{noteUUID}", c.Notes.V3Show, true},
+		{"GET", "/v3/notes/{noteUUID}", mw.Auth(a.DB, c.Notes.V3Show, nil), true},
 		{"POST", "/v3/notes", mw.Auth(a.DB, c.Notes.V3Create, nil), true},
 		{"DELETE", "/v3/notes/{noteUUID}", mw.Auth(a.DB, c.Notes.V3Delete, nil), true},
 		{"PATCH", "/v3/notes/{noteUUID}", mw.Auth(a.DB, c.Notes.V3Update, nil), true},

@@ -222,7 +222,7 @@ func (n *Notes) create(r *http.Request) (database.Note, error) {
 	}
 
 	client := getClientType(r)
-	note, err := n.app.CreateNote(*user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, false, client)
+	note, err := n.app.CreateNote(*user, params.BookUUID, params.Content, params.AddedOn, params.EditedOn, client)
 	if err != nil {
 		return database.Note{}, errors.Wrap(err, "creating note")
 	}
@@ -301,11 +301,10 @@ func (n *Notes) V3Delete(w http.ResponseWriter, r *http.Request) {
 type updateNotePayload struct {
 	BookUUID *string `schema:"book_uuid" json:"book_uuid"`
 	Content  *string `schema:"content" json:"content"`
-	Public   *bool   `schema:"public" json:"public"`
 }
 
 func validateUpdateNotePayload(p updateNotePayload) error {
-	if p.BookUUID == nil && p.Content == nil && p.Public == nil {
+	if p.BookUUID == nil && p.Content == nil {
 		return app.ErrEmptyUpdate
 	}
 
@@ -341,7 +340,6 @@ func (n *Notes) update(r *http.Request) (database.Note, error) {
 	note, err = n.app.UpdateNote(tx, *user, note, &app.UpdateNoteParams{
 		BookUUID: params.BookUUID,
 		Content:  params.Content,
-		Public:   params.Public,
 	})
 	if err != nil {
 		tx.Rollback()

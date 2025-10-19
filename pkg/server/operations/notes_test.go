@@ -40,29 +40,17 @@ func TestGetNote(t *testing.T) {
 	}
 	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	note := database.Note{
 		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
-		Body:     "privateNote content",
+		Body:     "note content",
 		Deleted:  false,
-		Public:   false,
 	}
-	testutils.MustExec(t, db.Save(&privateNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&note), "preparing note")
 
-	publicNote := database.Note{
-		UUID:     testutils.MustUUID(t),
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "privateNote content",
-		Deleted:  false,
-		Public:   true,
-	}
-	testutils.MustExec(t, db.Save(&publicNote), "preparing privateNote")
-
-	var privateNoteRecord, publicNoteRecord database.Note
-	testutils.MustExec(t, db.Where("uuid = ?", privateNote.UUID).Preload("Book").Preload("User").First(&privateNoteRecord), "finding privateNote")
-	testutils.MustExec(t, db.Where("uuid = ?", publicNote.UUID).Preload("Book").Preload("User").First(&publicNoteRecord), "finding publicNote")
+	var noteRecord database.Note
+	testutils.MustExec(t, db.Where("uuid = ?", note.UUID).Preload("Book").Preload("User").First(&noteRecord), "finding note")
 
 	testCases := []struct {
 		name         string
@@ -72,39 +60,25 @@ func TestGetNote(t *testing.T) {
 		expectedNote database.Note
 	}{
 		{
-			name:         "owner accessing private note",
+			name:         "owner accessing note",
 			user:         user,
-			note:         privateNote,
+			note:         note,
 			expectedOK:   true,
-			expectedNote: privateNoteRecord,
+			expectedNote: noteRecord,
 		},
 		{
-			name:         "non-owner accessing private note",
+			name:         "non-owner accessing note",
 			user:         anotherUser,
-			note:         privateNote,
+			note:         note,
 			expectedOK:   false,
 			expectedNote: database.Note{},
 		},
 		{
-			name:         "non-owner accessing public note",
-			user:         anotherUser,
-			note:         publicNote,
-			expectedOK:   true,
-			expectedNote: publicNoteRecord,
-		},
-		{
-			name:         "guest accessing private note",
+			name:         "guest accessing note",
 			user:         database.User{},
-			note:         privateNote,
+			note:         note,
 			expectedOK:   false,
 			expectedNote: database.Note{},
-		},
-		{
-			name:         "guest accessing public note",
-			user:         database.User{},
-			note:         publicNote,
-			expectedOK:   true,
-			expectedNote: publicNoteRecord,
 		},
 	}
 
@@ -139,7 +113,6 @@ func TestGetNote_nonexistent(t *testing.T) {
 		BookUUID: b1.UUID,
 		Body:     "n1 content",
 		Deleted:  false,
-		Public:   false,
 	}
 	testutils.MustExec(t, db.Save(&n1), "preparing n1")
 

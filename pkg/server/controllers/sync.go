@@ -75,7 +75,6 @@ type SyncFragNote struct {
 	AddedOn   int64     `json:"added_on"`
 	EditedOn  int64     `json:"edited_on"`
 	Body      string    `json:"content"`
-	Public    bool      `json:"public"`
 	Deleted   bool      `json:"deleted"`
 }
 
@@ -89,7 +88,6 @@ func NewFragNote(note database.Note) SyncFragNote {
 		AddedOn:   note.AddedOn,
 		EditedOn:  note.EditedOn,
 		Body:      note.Body,
-		Public:    note.Public,
 		Deleted:   note.Deleted,
 		BookUUID:  note.BookUUID,
 	}

@@ -41,7 +41,6 @@ func TestPresentNote(t *testing.T) {
 		BookUUID: "f1e2d3c4-b5a6-4987-b654-321fedcba098",
 		Body:     "Test note content",
 		AddedOn:  1234567890,
-		Public:   true,
 		USN:      100,
 		Book: database.Book{
 			UUID:  "f1e2d3c4-b5a6-4987-b654-321fedcba098",
@@ -57,7 +56,6 @@ func TestPresentNote(t *testing.T) {
 	assert.Equal(t, got.UUID, "a1b2c3d4-e5f6-4789-a012-3456789abcde", "UUID mismatch")
 	assert.Equal(t, got.Body, "Test note content", "Body mismatch")
 	assert.Equal(t, got.AddedOn, int64(1234567890), "AddedOn mismatch")
-	assert.Equal(t, got.Public, true, "Public mismatch")
 	assert.Equal(t, got.USN, 100, "USN mismatch")
 	assert.Equal(t, got.CreatedAt, FormatTS(createdAt), "CreatedAt mismatch")
 	assert.Equal(t, got.UpdatedAt, FormatTS(updatedAt), "UpdatedAt mismatch")
@@ -84,7 +82,6 @@ func TestPresentNotes(t *testing.T) {
 			BookUUID: "f1e2d3c4-b5a6-4987-b654-321fedcba098",
 			Body:     "First note",
 			AddedOn:  1000000000,
-			Public:   false,
 			USN:      10,
 			Book: database.Book{
 				UUID:  "f1e2d3c4-b5a6-4987-b654-321fedcba098",
@@ -105,7 +102,6 @@ func TestPresentNotes(t *testing.T) {
 			BookUUID: "abcdef01-2345-4678-9abc-def012345678",
 			Body:     "Second note",
 			AddedOn:  2000000000,
-			Public:   true,
 			USN:      20,
 			Book: database.Book{
 				UUID:  "abcdef01-2345-4678-9abc-def012345678",

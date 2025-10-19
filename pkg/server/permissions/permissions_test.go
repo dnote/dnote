@@ -39,53 +39,27 @@ func TestViewNote(t *testing.T) {
 	}
 	testutils.MustExec(t, db.Save(&b1), "preparing b1")
 
-	privateNote := database.Note{
+	note := database.Note{
 		UUID:     testutils.MustUUID(t),
 		UserID:   user.ID,
 		BookUUID: b1.UUID,
-		Body:     "privateNote content",
+		Body:     "note content",
 		Deleted:  false,
-		Public:   false,
 	}
-	testutils.MustExec(t, db.Save(&privateNote), "preparing privateNote")
+	testutils.MustExec(t, db.Save(&note), "preparing note")
 
-	publicNote := database.Note{
-		UUID:     testutils.MustUUID(t),
-		UserID:   user.ID,
-		BookUUID: b1.UUID,
-		Body:     "privateNote content",
-		Deleted:  false,
-		Public:   true,
-	}
-	testutils.MustExec(t, db.Save(&publicNote), "preparing privateNote")
-
-	t.Run("owner accessing private note", func(t *testing.T) {
-		result := ViewNote(&user, privateNote)
+	t.Run("owner accessing note", func(t *testing.T) {
+		result := ViewNote(&user, note)
 		assert.Equal(t, result, true, "result mismatch")
 	})
 
-	t.Run("owner accessing public note", func(t *testing.T) {
-		result := ViewNote(&user, publicNote)
-		assert.Equal(t, result, true, "result mismatch")
-	})
-
-	t.Run("non-owner accessing private note", func(t *testing.T) {
-		result := ViewNote(&anotherUser, privateNote)
+	t.Run("non-owner accessing note", func(t *testing.T) {
+		result := ViewNote(&anotherUser, note)
 		assert.Equal(t, result, false, "result mismatch")
 	})
 
-	t.Run("non-owner accessing public note", func(t *testing.T) {
-		result := ViewNote(&anotherUser, publicNote)
-		assert.Equal(t, result, true, "result mismatch")
-	})
-
-	t.Run("guest accessing private note", func(t *testing.T) {
-		result := ViewNote(nil, privateNote)
+	t.Run("guest accessing note", func(t *testing.T) {
+		result := ViewNote(nil, note)
 		assert.Equal(t, result, false, "result mismatch")
-	})
-
-	t.Run("guest accessing public note", func(t *testing.T) {
-		result := ViewNote(nil, publicNote)
-		assert.Equal(t, result, true, "result mismatch")
 	})
 }
