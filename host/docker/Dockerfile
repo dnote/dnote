@@ -26,6 +26,9 @@ RUN case "$TARGETPLATFORM" in \
 
 WORKDIR /dnote
 
+# Set default database path for all processes (main server, docker exec, shells)
+ENV DBPath=/data/dnote.db
+
 COPY entrypoint.sh .
 ENTRYPOINT ["./entrypoint.sh"]
 
