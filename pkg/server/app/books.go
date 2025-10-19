@@ -41,12 +41,11 @@ func (a *App) CreateBook(user database.User, name string) (database.Book, error)
 	}
 
 	book := database.Book{
-		UUID:      uuid,
-		UserID:    user.ID,
-		Label:     name,
-		AddedOn:   a.Clock.Now().UnixNano(),
-		USN:       nextUSN,
-		Encrypted: false,
+		UUID:    uuid,
+		UserID:  user.ID,
+		Label:   name,
+		AddedOn: a.Clock.Now().UnixNano(),
+		USN:     nextUSN,
 	}
 	if err := tx.Create(&book).Error; err != nil {
 		tx.Rollback()
@@ -99,8 +98,6 @@ func (a *App) UpdateBook(tx *gorm.DB, user database.User, book database.Book, la
 	book.USN = nextUSN
 	book.EditedOn = a.Clock.Now().UnixNano()
 	book.Deleted = false
-	// TODO: remove after all users have been migrated
-	book.Encrypted = false
 
 	if err := tx.Save(&book).Error; err != nil {
 		return book, errors.Wrap(err, "updating the book")

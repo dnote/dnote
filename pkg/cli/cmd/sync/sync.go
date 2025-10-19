@@ -97,8 +97,7 @@ func (l syncList) getLength() int {
 	return len(l.Notes) + len(l.Books) + len(l.ExpungedNotes) + len(l.ExpungedBooks)
 }
 
-// processFragments categorizes items in sync fragments into a sync list. It also decrypts any
-// encrypted data in sync fragments.
+// processFragments categorizes items in sync fragments into a sync list.
 func processFragments(fragments []client.SyncFragment) (syncList, error) {
 	notes := map[string]client.SyncFragNote{}
 	books := map[string]client.SyncFragBook{}

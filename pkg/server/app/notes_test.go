@@ -374,10 +374,9 @@ func TestGetNotes_FTSSearch(t *testing.T) {
 
 	// Search "baz"
 	result, err := a.GetNotes(user.ID, GetNotesParams{
-		Search:    "baz",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "baz",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search"))
@@ -390,10 +389,9 @@ func TestGetNotes_FTSSearch(t *testing.T) {
 
 	// Search for "running" - should return 1 note
 	result, err = a.GetNotes(user.ID, GetNotesParams{
-		Search:    "running",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "running",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search for review"))
@@ -405,10 +403,9 @@ func TestGetNotes_FTSSearch(t *testing.T) {
 
 	// Search for non-existent term - should return 0 notes
 	result, err = a.GetNotes(user.ID, GetNotesParams{
-		Search:    "nonexistent",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "nonexistent",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search for nonexistent"))
@@ -437,10 +434,9 @@ func TestGetNotes_FTSSearch_Snippet(t *testing.T) {
 
 	// Search for "keyword" in long note - should return snippet with "..."
 	result, err := a.GetNotes(user.ID, GetNotesParams{
-		Search:    "keyword",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "keyword",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search for keyword"))
@@ -472,10 +468,9 @@ func TestGetNotes_FTSSearch_ShortWord(t *testing.T) {
 	a.Clock = clock.NewMock()
 
 	result, err := a.GetNotes(user.ID, GetNotesParams{
-		Search:    "a",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "a",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search for 'a'"))
@@ -504,10 +499,9 @@ func TestGetNotes_All(t *testing.T) {
 	a.Clock = clock.NewMock()
 
 	result, err := a.GetNotes(user.ID, GetNotesParams{
-		Search:    "",
-		Encrypted: false,
-		Page:      1,
-		PerPage:   30,
+		Search:  "",
+		Page:    1,
+		PerPage: 30,
 	})
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "getting notes with FTS search for 'a'"))

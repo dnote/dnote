@@ -59,16 +59,15 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 	}
 
 	note := database.Note{
-		UUID:      uuid,
-		BookUUID:  bookUUID,
-		UserID:    user.ID,
-		AddedOn:   noteAddedOn,
-		EditedOn:  noteEditedOn,
-		USN:       nextUSN,
-		Body:      content,
-		Public:    public,
-		Encrypted: false,
-		Client:    client,
+		UUID:     uuid,
+		BookUUID: bookUUID,
+		UserID:   user.ID,
+		AddedOn:  noteAddedOn,
+		EditedOn: noteEditedOn,
+		USN:      nextUSN,
+		Body:     content,
+		Public:   public,
+		Client:   client,
 	}
 	if err := tx.Create(&note).Error; err != nil {
 		tx.Rollback()
@@ -134,8 +133,6 @@ func (a *App) UpdateNote(tx *gorm.DB, user database.User, note database.Note, p 
 	note.USN = nextUSN
 	note.EditedOn = a.Clock.Now().UnixNano()
 	note.Deleted = false
-	// TODO: remove after all users are migrated
-	note.Encrypted = false
 
 	if err := tx.Save(&note).Error; err != nil {
 		return note, pkgErrors.Wrap(err, "editing note")
@@ -180,13 +177,12 @@ func (a *App) GetUserNoteByUUID(userID int, uuid string) (*database.Note, error)
 
 // GetNotesParams is params for finding notes
 type GetNotesParams struct {
-	Year      int
-	Month     int
-	Page      int
-	Books     []string
-	Search    string
-	Encrypted bool
-	PerPage   int
+	Year    int
+	Month   int
+	Page    int
+	Books   []string
+	Search  string
+	PerPage int
 }
 
 type ftsParams struct {
@@ -215,14 +211,13 @@ notes.added_on,
 notes.edited_on,
 notes.usn,
 notes.deleted,
-notes.encrypted,
 ` + bodyExpr)
 }
 
 func getNotesBaseQuery(db *gorm.DB, userID int, q GetNotesParams) *gorm.DB {
 	conn := db.Where(
-		"notes.user_id = ? AND notes.deleted = ? AND notes.encrypted = ?",
-		userID, false, q.Encrypted,
+		"notes.user_id = ? AND notes.deleted = ?",
+		userID, false,
 	)
 
 	if q.Search != "" {

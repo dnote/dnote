@@ -73,7 +73,6 @@ func parseGetNotesQuery(q url.Values) (app.GetNotesParams, error) {
 	yearStr := q.Get("year")
 	monthStr := q.Get("month")
 	books := q["book"]
-	encryptedStr := q.Get("encrypted")
 	pageStr := q.Get("page")
 
 	page, err := parsePageQuery(q)
@@ -107,21 +106,13 @@ func parseGetNotesQuery(q url.Values) (app.GetNotesParams, error) {
 		month = m
 	}
 
-	var encrypted bool
-	if strings.ToLower(encryptedStr) == "true" {
-		encrypted = true
-	} else {
-		encrypted = false
-	}
-
 	ret := app.GetNotesParams{
-		Year:      year,
-		Month:     month,
-		Page:      page,
-		Search:    parseSearchQuery(q),
-		Books:     books,
-		Encrypted: encrypted,
-		PerPage:   notesPerPage,
+		Year:    year,
+		Month:   month,
+		Page:    page,
+		Search:  parseSearchQuery(q),
+		Books:   books,
+		PerPage: notesPerPage,
 	}
 
 	return ret, nil

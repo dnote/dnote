@@ -56,21 +56,10 @@ func (b *Books) getBooks(r *http.Request) ([]database.Book, error) {
 
 	query := r.URL.Query()
 	name := query.Get("name")
-	encryptedStr := query.Get("encrypted")
 
 	if name != "" {
 		part := fmt.Sprintf("%%%s%%", name)
 		conn = conn.Where("LOWER(label) LIKE ?", part)
-	}
-	if encryptedStr != "" {
-		var encrypted bool
-		if encryptedStr == "true" {
-			encrypted = true
-		} else {
-			encrypted = false
-		}
-
-		conn = conn.Where("encrypted = ?", encrypted)
 	}
 
 	var books []database.Book
