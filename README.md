@@ -51,8 +51,8 @@ services:
     restart: unless-stopped
 ```
 
-Or see the [guide](https://github.com/dnote/dnote/blob/master/SELF_HOSTING.md) for binary installation and configuration options.
+Or see the [guide](https://www.getdnote.com/docs/server/manual) for binary installation.
 
 ## Documentation
 
-See the [Dnote wiki](https://github.com/dnote/dnote/wiki) for full documentation.
+See the [Dnote doc](https://www.getdnote.com/docs).
