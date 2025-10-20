@@ -242,7 +242,7 @@ func TestGetActiveNote(t *testing.T) {
 		defer TeardownTestDB(t, db)
 
 		n1UUID := "n1-uuid"
-		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, false, true)
+		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1,  false, true)
 
 		var n1RowID int
 		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
@@ -261,7 +261,6 @@ func TestGetActiveNote(t *testing.T) {
 		assert.Equal(t, got.AddedOn, int64(1542058875), "AddedOn mismatch")
 		assert.Equal(t, got.EditedOn, int64(1542058876), "EditedOn mismatch")
 		assert.Equal(t, got.USN, 1, "USN mismatch")
-		assert.Equal(t, got.Public, true, "Public mismatch")
 		assert.Equal(t, got.Deleted, false, "Deleted mismatch")
 		assert.Equal(t, got.Dirty, true, "Dirty mismatch")
 	})
@@ -272,7 +271,7 @@ func TestGetActiveNote(t *testing.T) {
 		defer TeardownTestDB(t, db)
 
 		n1UUID := "n1-uuid"
-		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1, true, true, true)
+		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1,  true, true)
 
 		var n1RowID int
 		MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", n1UUID), &n1RowID)
@@ -296,7 +295,7 @@ func TestUpdateNoteContent(t *testing.T) {
 	defer TeardownTestDB(t, db)
 
 	uuid := "n1-uuid"
-	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, "b1-uuid", "n1 content", 1542058875, 0, 1, false, false, false)
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", uuid, "b1-uuid", "n1 content", 1542058875, 0, 1,  false, false)
 
 	var rowid int
 	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)
@@ -333,7 +332,7 @@ func TestUpdateNoteBook(t *testing.T) {
 	MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b2UUID, "b2-label", 9, false, false)
 
 	uuid := "n1-uuid"
-	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", uuid, b1UUID, "n1 content", 1542058875, 0, 1, false, false, false)
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", uuid, b1UUID, "n1 content", 1542058875, 0, 1,  false, false)
 
 	var rowid int
 	MustScan(t, "getting rowid", db.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", uuid), &rowid)

@@ -34,7 +34,6 @@ func TestNewNote(t *testing.T) {
 		addedOn  int64
 		editedOn int64
 		usn      int
-		public   bool
 		deleted  bool
 		dirty    bool
 	}{
@@ -45,7 +44,6 @@ func TestNewNote(t *testing.T) {
 			addedOn:  1542058875,
 			editedOn: 0,
 			usn:      0,
-			public:   false,
 			deleted:  false,
 			dirty:    false,
 		},
@@ -56,14 +54,13 @@ func TestNewNote(t *testing.T) {
 			addedOn:  1542058875,
 			editedOn: 1542058876,
 			usn:      1008,
-			public:   true,
 			deleted:  true,
 			dirty:    true,
 		},
 	}
 
 	for idx, tc := range testCases {
-		got := NewNote(tc.uuid, tc.bookUUID, tc.body, tc.addedOn, tc.editedOn, tc.usn, tc.public, tc.deleted, tc.dirty)
+		got := NewNote(tc.uuid, tc.bookUUID, tc.body, tc.addedOn, tc.editedOn, tc.usn, tc.deleted, tc.dirty)
 
 		assert.Equal(t, got.UUID, tc.uuid, fmt.Sprintf("UUID mismatch for test case %d", idx))
 		assert.Equal(t, got.BookUUID, tc.bookUUID, fmt.Sprintf("BookUUID mismatch for test case %d", idx))
@@ -71,7 +68,6 @@ func TestNewNote(t *testing.T) {
 		assert.Equal(t, got.AddedOn, tc.addedOn, fmt.Sprintf("AddedOn mismatch for test case %d", idx))
 		assert.Equal(t, got.EditedOn, tc.editedOn, fmt.Sprintf("EditedOn mismatch for test case %d", idx))
 		assert.Equal(t, got.USN, tc.usn, fmt.Sprintf("USN mismatch for test case %d", idx))
-		assert.Equal(t, got.Public, tc.public, fmt.Sprintf("Public mismatch for test case %d", idx))
 		assert.Equal(t, got.Deleted, tc.deleted, fmt.Sprintf("Deleted mismatch for test case %d", idx))
 		assert.Equal(t, got.Dirty, tc.dirty, fmt.Sprintf("Dirty mismatch for test case %d", idx))
 	}
@@ -85,7 +81,6 @@ func TestNoteInsert(t *testing.T) {
 		addedOn  int64
 		editedOn int64
 		usn      int
-		public   bool
 		deleted  bool
 		dirty    bool
 	}{
@@ -96,7 +91,6 @@ func TestNoteInsert(t *testing.T) {
 			addedOn:  1542058875,
 			editedOn: 0,
 			usn:      0,
-			public:   false,
 			deleted:  false,
 			dirty:    false,
 		},
@@ -107,7 +101,6 @@ func TestNoteInsert(t *testing.T) {
 			addedOn:  1542058875,
 			editedOn: 1542058876,
 			usn:      1008,
-			public:   true,
 			deleted:  true,
 			dirty:    true,
 		},
@@ -126,7 +119,6 @@ func TestNoteInsert(t *testing.T) {
 				AddedOn:  tc.addedOn,
 				EditedOn: tc.editedOn,
 				USN:      tc.usn,
-				Public:   tc.public,
 				Deleted:  tc.deleted,
 				Dirty:    tc.dirty,
 			}
@@ -148,10 +140,10 @@ func TestNoteInsert(t *testing.T) {
 			var uuid, bookUUID, body string
 			var addedOn, editedOn int64
 			var usn int
-			var public, deleted, dirty bool
+			var deleted, dirty bool
 			MustScan(t, "getting n1",
-				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
-				&uuid, &bookUUID, &body, &addedOn, &editedOn, &usn, &public, &deleted, &dirty)
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
+				&uuid, &bookUUID, &body, &addedOn, &editedOn, &usn, &deleted, &dirty)
 
 			assert.Equal(t, uuid, tc.uuid, fmt.Sprintf("uuid mismatch for test case %d", idx))
 			assert.Equal(t, bookUUID, tc.bookUUID, fmt.Sprintf("bookUUID mismatch for test case %d", idx))
@@ -159,7 +151,6 @@ func TestNoteInsert(t *testing.T) {
 			assert.Equal(t, addedOn, tc.addedOn, fmt.Sprintf("addedOn mismatch for test case %d", idx))
 			assert.Equal(t, editedOn, tc.editedOn, fmt.Sprintf("editedOn mismatch for test case %d", idx))
 			assert.Equal(t, usn, tc.usn, fmt.Sprintf("usn mismatch for test case %d", idx))
-			assert.Equal(t, public, tc.public, fmt.Sprintf("public mismatch for test case %d", idx))
 			assert.Equal(t, deleted, tc.deleted, fmt.Sprintf("deleted mismatch for test case %d", idx))
 			assert.Equal(t, dirty, tc.dirty, fmt.Sprintf("dirty mismatch for test case %d", idx))
 		}()
@@ -174,14 +165,12 @@ func TestNoteUpdate(t *testing.T) {
 		addedOn     int64
 		editedOn    int64
 		usn         int
-		public      bool
 		deleted     bool
 		dirty       bool
 		newBookUUID string
 		newBody     string
 		newEditedOn int64
 		newUSN      int
-		newPublic   bool
 		newDeleted  bool
 		newDirty    bool
 	}{
@@ -192,14 +181,12 @@ func TestNoteUpdate(t *testing.T) {
 			addedOn:     1542058875,
 			editedOn:    0,
 			usn:         0,
-			public:      false,
 			deleted:     false,
 			dirty:       false,
 			newBookUUID: "b1-uuid",
 			newBody:     "n1-body edited",
 			newEditedOn: 1542058879,
 			newUSN:      0,
-			newPublic:   false,
 			newDeleted:  false,
 			newDirty:    false,
 		},
@@ -210,14 +197,12 @@ func TestNoteUpdate(t *testing.T) {
 			addedOn:     1542058875,
 			editedOn:    0,
 			usn:         0,
-			public:      false,
 			deleted:     false,
 			dirty:       true,
 			newBookUUID: "b2-uuid",
 			newBody:     "n1-body",
 			newEditedOn: 1542058879,
 			newUSN:      0,
-			newPublic:   true,
 			newDeleted:  false,
 			newDirty:    false,
 		},
@@ -228,14 +213,12 @@ func TestNoteUpdate(t *testing.T) {
 			addedOn:     1542058875,
 			editedOn:    0,
 			usn:         10,
-			public:      false,
 			deleted:     false,
 			dirty:       false,
 			newBookUUID: "",
 			newBody:     "",
 			newEditedOn: 1542058879,
 			newUSN:      151,
-			newPublic:   false,
 			newDeleted:  true,
 			newDirty:    false,
 		},
@@ -246,14 +229,12 @@ func TestNoteUpdate(t *testing.T) {
 			addedOn:     1542058875,
 			editedOn:    0,
 			usn:         0,
-			public:      false,
 			deleted:     false,
 			dirty:       false,
 			newBookUUID: "",
 			newBody:     "",
 			newEditedOn: 1542058879,
 			newUSN:      15,
-			newPublic:   false,
 			newDeleted:  true,
 			newDirty:    false,
 		},
@@ -272,7 +253,6 @@ func TestNoteUpdate(t *testing.T) {
 				AddedOn:  tc.addedOn,
 				EditedOn: tc.editedOn,
 				USN:      tc.usn,
-				Public:   tc.public,
 				Deleted:  tc.deleted,
 				Dirty:    tc.dirty,
 			}
@@ -283,13 +263,12 @@ func TestNoteUpdate(t *testing.T) {
 				AddedOn:  1542058875,
 				EditedOn: 0,
 				USN:      39,
-				Public:   false,
 				Deleted:  false,
 				Dirty:    false,
 			}
 
-			MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body, n1.Public, n1.Deleted, n1.Dirty)
-			MustExec(t, fmt.Sprintf("inserting n2 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Public, n2.Deleted, n2.Dirty)
+			MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body,  n1.Deleted, n1.Dirty)
+			MustExec(t, fmt.Sprintf("inserting n2 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body,  n2.Deleted, n2.Dirty)
 
 			// execute
 			tx, err := db.Begin()
@@ -301,7 +280,6 @@ func TestNoteUpdate(t *testing.T) {
 			n1.Body = tc.newBody
 			n1.EditedOn = tc.newEditedOn
 			n1.USN = tc.newUSN
-			n1.Public = tc.newPublic
 			n1.Deleted = tc.newDeleted
 			n1.Dirty = tc.newDirty
 
@@ -315,11 +293,11 @@ func TestNoteUpdate(t *testing.T) {
 			// test
 			var n1Record, n2Record Note
 			MustScan(t, "getting n1",
-				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
-				&n1Record.UUID, &n1Record.BookUUID, &n1Record.Body, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.USN, &n1Record.Public, &n1Record.Deleted, &n1Record.Dirty)
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty FROM notes WHERE uuid = ?", tc.uuid),
+				&n1Record.UUID, &n1Record.BookUUID, &n1Record.Body, &n1Record.AddedOn, &n1Record.EditedOn, &n1Record.USN, &n1Record.Deleted, &n1Record.Dirty)
 			MustScan(t, "getting n2",
-				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-				&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+				db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+				&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Deleted, &n2Record.Dirty)
 
 			assert.Equal(t, n1Record.UUID, n1.UUID, fmt.Sprintf("n1 uuid mismatch for test case %d", idx))
 			assert.Equal(t, n1Record.BookUUID, tc.newBookUUID, fmt.Sprintf("n1 bookUUID mismatch for test case %d", idx))
@@ -327,7 +305,6 @@ func TestNoteUpdate(t *testing.T) {
 			assert.Equal(t, n1Record.AddedOn, n1.AddedOn, fmt.Sprintf("n1 addedOn mismatch for test case %d", idx))
 			assert.Equal(t, n1Record.EditedOn, tc.newEditedOn, fmt.Sprintf("n1 editedOn mismatch for test case %d", idx))
 			assert.Equal(t, n1Record.USN, tc.newUSN, fmt.Sprintf("n1 usn mismatch for test case %d", idx))
-			assert.Equal(t, n1Record.Public, tc.newPublic, fmt.Sprintf("n1 public mismatch for test case %d", idx))
 			assert.Equal(t, n1Record.Deleted, tc.newDeleted, fmt.Sprintf("n1 deleted mismatch for test case %d", idx))
 			assert.Equal(t, n1Record.Dirty, tc.newDirty, fmt.Sprintf("n1 dirty mismatch for test case %d", idx))
 
@@ -337,7 +314,6 @@ func TestNoteUpdate(t *testing.T) {
 			assert.Equal(t, n2Record.AddedOn, n2.AddedOn, fmt.Sprintf("n2 addedOn mismatch for test case %d", idx))
 			assert.Equal(t, n2Record.EditedOn, n2.EditedOn, fmt.Sprintf("n2 editedOn mismatch for test case %d", idx))
 			assert.Equal(t, n2Record.USN, n2.USN, fmt.Sprintf("n2 usn mismatch for test case %d", idx))
-			assert.Equal(t, n2Record.Public, n2.Public, fmt.Sprintf("n2 public mismatch for test case %d", idx))
 			assert.Equal(t, n2Record.Deleted, n2.Deleted, fmt.Sprintf("n2 deleted mismatch for test case %d", idx))
 			assert.Equal(t, n2Record.Dirty, n2.Dirty, fmt.Sprintf("n2 dirty mismatch for test case %d", idx))
 		}()
@@ -424,7 +400,6 @@ func TestNoteExpunge(t *testing.T) {
 		AddedOn:  1542058874,
 		EditedOn: 0,
 		USN:      22,
-		Public:   false,
 		Deleted:  false,
 		Dirty:    false,
 	}
@@ -435,13 +410,12 @@ func TestNoteExpunge(t *testing.T) {
 		AddedOn:  1542058875,
 		EditedOn: 0,
 		USN:      39,
-		Public:   false,
 		Deleted:  false,
 		Dirty:    false,
 	}
 
-	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body, n1.Public, n1.Deleted, n1.Dirty)
-	MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, public, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Public, n2.Deleted, n2.Dirty)
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body,  n1.Deleted, n1.Dirty)
+	MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body,  n2.Deleted, n2.Dirty)
 
 	// execute
 	tx, err := db.Begin()
@@ -464,8 +438,8 @@ func TestNoteExpunge(t *testing.T) {
 
 	var n2Record Note
 	MustScan(t, "getting n2",
-		db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, public, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
-		&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Public, &n2Record.Deleted, &n2Record.Dirty)
+		db.QueryRow("SELECT uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty FROM notes WHERE uuid = ?", n2.UUID),
+		&n2Record.UUID, &n2Record.BookUUID, &n2Record.Body, &n2Record.AddedOn, &n2Record.EditedOn, &n2Record.USN, &n2Record.Deleted, &n2Record.Dirty)
 
 	assert.Equal(t, n2Record.UUID, n2.UUID, "n2 uuid mismatch")
 	assert.Equal(t, n2Record.BookUUID, n2.BookUUID, "n2 bookUUID mismatch")
@@ -473,7 +447,6 @@ func TestNoteExpunge(t *testing.T) {
 	assert.Equal(t, n2Record.AddedOn, n2.AddedOn, "n2 addedOn mismatch")
 	assert.Equal(t, n2Record.EditedOn, n2.EditedOn, "n2 editedOn mismatch")
 	assert.Equal(t, n2Record.USN, n2.USN, "n2 usn mismatch")
-	assert.Equal(t, n2Record.Public, n2.Public, "n2 public mismatch")
 	assert.Equal(t, n2Record.Deleted, n2.Deleted, "n2 deleted mismatch")
 	assert.Equal(t, n2Record.Dirty, n2.Dirty, "n2 dirty mismatch")
 }
@@ -817,7 +790,6 @@ func TestNoteFTS(t *testing.T) {
 		AddedOn:  1542058875,
 		EditedOn: 0,
 		USN:      0,
-		Public:   false,
 		Deleted:  false,
 		Dirty:    false,
 	}

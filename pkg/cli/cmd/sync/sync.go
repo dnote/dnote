@@ -280,8 +280,8 @@ func mergeNote(tx *database.DB, serverNote client.SyncFragNote, localNote databa
 
 	// if the local copy is deleted, and it was edited on the server, override with server values and mark it not dirty.
 	if localNote.Deleted {
-		if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?, public = ?, dirty = ? WHERE uuid = ?",
-			serverNote.USN, serverNote.BookUUID, serverNote.Body, serverNote.EditedOn, serverNote.Deleted, serverNote.Public, false, serverNote.UUID); err != nil {
+		if _, err := tx.Exec("UPDATE notes SET usn = ?, book_uuid = ?, body = ?, edited_on = ?, deleted = ?, dirty = ? WHERE uuid = ?",
+			serverNote.USN, serverNote.BookUUID, serverNote.Body, serverNote.EditedOn, serverNote.Deleted, false, serverNote.UUID); err != nil {
 			return errors.Wrapf(err, "updating local note %s", serverNote.UUID)
 		}
 
@@ -311,7 +311,7 @@ func stepSyncNote(tx *database.DB, n client.SyncFragNote) error {
 
 	// if note exists in the server and does not exist in the client, insert the note.
 	if err == sql.ErrNoRows {
-		note := database.NewNote(n.UUID, n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, false)
+		note := database.NewNote(n.UUID, n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Deleted, false)
 
 		if err := note.Insert(tx); err != nil {
 			return errors.Wrapf(err, "inserting note with uuid %s", n.UUID)
@@ -335,7 +335,7 @@ func fullSyncNote(tx *database.DB, n client.SyncFragNote) error {
 
 	// if note exists in the server and does not exist in the client, insert the note.
 	if err == sql.ErrNoRows {
-		note := database.NewNote(n.UUID, n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Public, n.Deleted, false)
+		note := database.NewNote(n.UUID, n.BookUUID, n.Body, n.AddedOn, n.EditedOn, n.USN, n.Deleted, false)
 
 		if err := note.Insert(tx); err != nil {
 			return errors.Wrapf(err, "inserting note with uuid %s", n.UUID)
@@ -758,7 +758,7 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	isBehind := false
 
-	rows, err := tx.Query("SELECT uuid, book_uuid, body, public, deleted, usn, added_on FROM notes WHERE dirty")
+	rows, err := tx.Query("SELECT uuid, book_uuid, body, deleted, usn, added_on FROM notes WHERE dirty")
 	if err != nil {
 		return isBehind, errors.Wrap(err, "getting syncable notes")
 	}
@@ -767,7 +767,7 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	for rows.Next() {
 		var note database.Note
 
-		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Body, &note.Public, &note.Deleted, &note.USN, &note.AddedOn); err != nil {
+		if err = rows.Scan(&note.UUID, &note.BookUUID, &note.Body, &note.Deleted, &note.USN, &note.AddedOn); err != nil {
 			return isBehind, errors.Wrap(err, "scanning a syncable note")
 		}
 
@@ -822,7 +822,7 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 
 				respUSN = resp.Result.USN
 			} else {
-				resp, err := client.UpdateNote(ctx, note.UUID, note.BookUUID, note.Body, note.Public)
+				resp, err := client.UpdateNote(ctx, note.UUID, note.BookUUID, note.Body)
 				if err != nil {
 					return isBehind, errors.Wrap(err, "updating a note")
 				}

@@ -170,7 +170,6 @@ func GetActiveNote(db *DB, rowid int) (Note, error) {
 		added_on,
 		edited_on,
 		usn,
-		public,
 		deleted,
 		dirty
 	FROM notes WHERE rowid = ? AND deleted = false;`, rowid).Scan(
@@ -181,7 +180,6 @@ func GetActiveNote(db *DB, rowid int) (Note, error) {
 		&ret.AddedOn,
 		&ret.EditedOn,
 		&ret.USN,
-		&ret.Public,
 		&ret.Deleted,
 		&ret.Dirty,
 	)

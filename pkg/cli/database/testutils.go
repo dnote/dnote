@@ -49,7 +49,6 @@ CREATE TABLE IF NOT EXISTS "notes"
 			body text NOT NULL,
 			added_on integer NOT NULL,
 			edited_on integer DEFAULT 0,
-			public bool DEFAULT false,
 			dirty bool DEFAULT false,
 			usn int DEFAULT 0 NOT NULL,
 			deleted bool DEFAULT false

@@ -572,6 +572,18 @@ var lm13 = migration{
 	},
 }
 
+var lm14 = migration{
+	name: "drop-public-from-notes",
+	run: func(ctx context.DnoteCtx, tx *database.DB) error {
+		_, err := tx.Exec(`ALTER TABLE notes DROP COLUMN public;`)
+		if err != nil {
+			return errors.Wrap(err, "dropping public column from notes")
+		}
+
+		return nil
+	},
+}
+
 var rm1 = migration{
 	name: "sync-book-uuids-from-server",
 	run: func(ctx context.DnoteCtx, tx *database.DB) error {

@@ -22,8 +22,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -846,13 +846,13 @@ func TestLocalMigration8(t *testing.T) {
 	var n1AddedOn, n1EditedOn int64
 	var n1USN int
 	var n1Public, n1Dirty, n1Deleted bool
-	database.MustScan(t, "scanning n1", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n1UUID), &n1BookUUID, &n1Body, &n1AddedOn, &n1EditedOn, &n1USN, &n1Public, &n1Dirty, &n1Deleted)
+	database.MustScan(t, "scanning n1", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn, public, dirty, deleted FROM notes WHERE uuid = ?", n1UUID), &n1BookUUID, &n1Body, &n1AddedOn, &n1EditedOn, &n1USN, &n1Public, &n1Dirty, &n1Deleted)
 
 	var n2BookUUID, n2Body string
 	var n2AddedOn, n2EditedOn int64
 	var n2USN int
 	var n2Public, n2Dirty, n2Deleted bool
-	database.MustScan(t, "scanning n2", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn,  public, dirty, deleted FROM notes WHERE uuid = ?", n2UUID), &n2BookUUID, &n2Body, &n2AddedOn, &n2EditedOn, &n2USN, &n2Public, &n2Dirty, &n2Deleted)
+	database.MustScan(t, "scanning n2", db.QueryRow("SELECT book_uuid, body, added_on, edited_on, usn, public, dirty, deleted FROM notes WHERE uuid = ?", n2UUID), &n2BookUUID, &n2Body, &n2AddedOn, &n2EditedOn, &n2USN, &n2Public, &n2Dirty, &n2Deleted)
 
 	assert.Equal(t, n1BookUUID, b1UUID, "n1 BookUUID mismatch")
 	assert.Equal(t, n1Body, "n1 Body", "n1 Body mismatch")
@@ -1148,6 +1148,56 @@ func TestLocalMigration13(t *testing.T) {
 	assert.Equal(t, cf.Editor, "vim", "editor mismatch")
 	assert.Equal(t, cf.ApiEndpoint, "https://test.com/api", "apiEndpoint mismatch")
 	assert.Equal(t, cf.EnableUpgradeCheck, true, "enableUpgradeCheck mismatch")
+}
+
+func TestLocalMigration14(t *testing.T) {
+	// set up
+	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-14-pre-schema.sql", SkipMigration: true}
+	ctx := context.InitTestCtx(t, paths, &opts)
+	defer context.TeardownTestCtx(t, ctx)
+
+	db := ctx.DB
+
+	b1UUID := testutils.MustGenerateUUID(t)
+	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
+
+	n1UUID := testutils.MustGenerateUUID(t)
+	database.MustExec(t, "inserting note", db, `INSERT INTO notes
+		(uuid, book_uuid, body, added_on, edited_on, public, dirty, usn, deleted) VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?)`, n1UUID, b1UUID, "test note", 1, 2, true, false, 0, false)
+
+	// Execute
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "beginning a transaction"))
+	}
+
+	err = lm14.run(ctx, tx)
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(errors.Wrap(err, "failed to run"))
+	}
+
+	tx.Commit()
+
+	// Test - verify public column was dropped by checking column names
+	rows, err := db.Query("SELECT name FROM pragma_table_info('notes')")
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "getting table info"))
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		err := rows.Scan(&name)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "scanning column name"))
+		}
+
+		if name == "public" {
+			t.Fatal("public column still exists after migration")
+		}
+	}
 }
 
 func TestRemoteMigration1(t *testing.T) {

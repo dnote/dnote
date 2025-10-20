@@ -173,7 +173,7 @@ func writeNote(ctx context.DnoteCtx, bookLabel string, content string, ts int64)
 		return 0, errors.Wrap(err, "generating uuid")
 	}
 
-	n := database.NewNote(noteUUID, bookUUID, content, ts, 0, 0, false, false, true)
+	n := database.NewNote(noteUUID, bookUUID, content, ts, 0, 0, false, true)
 
 	err = n.Insert(tx)
 	if err != nil {

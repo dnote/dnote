@@ -96,7 +96,7 @@ dnote find "merge sort" -b algorithm
 
 _alias: s_
 
-Sync notes with Dnote server. All your data is encrypted before being sent to the server.
+Sync notes with Dnote server.
 
 ## dnote login
 

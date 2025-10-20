@@ -246,7 +246,6 @@ type SyncFragNote struct {
 	AddedOn   int64     `json:"added_on"`
 	EditedOn  int64     `json:"edited_on"`
 	Body      string    `json:"content"`
-	Public    bool      `json:"public"`
 	Deleted   bool      `json:"deleted"`
 }
 
@@ -458,7 +457,6 @@ func CreateNote(ctx context.DnoteCtx, bookUUID, content string) (CreateNoteResp,
 type updateNotePayload struct {
 	BookUUID *string `json:"book_uuid"`
 	Body     *string `json:"content"`
-	Public   *bool   `json:"public"`
 }
 
 // UpdateNoteResp is the response from create book api
@@ -468,11 +466,10 @@ type UpdateNoteResp struct {
 }
 
 // UpdateNote updates a note in the server
-func UpdateNote(ctx context.DnoteCtx, uuid, bookUUID, content string, public bool) (UpdateNoteResp, error) {
+func UpdateNote(ctx context.DnoteCtx, uuid, bookUUID, content string) (UpdateNoteResp, error) {
 	payload := updateNotePayload{
 		BookUUID: &bookUUID,
 		Body:     &content,
-		Public:   &public,
 	}
 	b, err := json.Marshal(payload)
 	if err != nil {
