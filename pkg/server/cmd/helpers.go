@@ -65,6 +65,29 @@ func initApp(cfg config.Config) app.App {
 	}
 }
 
+// printFlags prints flags with -- prefix for consistency with CLI
+func printFlags(fs *flag.FlagSet) {
+	fs.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("  --%s", f.Name)
+
+		// Print type hint for non-boolean flags
+		name, usage := flag.UnquoteUsage(f)
+		if name != "" {
+			fmt.Printf(" %s", name)
+		}
+		fmt.Println()
+
+		// Print usage description with indentation
+		if usage != "" {
+			fmt.Printf("    \t%s", usage)
+			if f.DefValue != "" && f.DefValue != "false" {
+				fmt.Printf(" (default: %s)", f.DefValue)
+			}
+			fmt.Println()
+		}
+	})
+}
+
 // setupFlagSet creates a FlagSet with standard usage format
 func setupFlagSet(name, usageCmd string) *flag.FlagSet {
 	fs := flag.NewFlagSet(name, flag.ExitOnError)
@@ -74,7 +97,7 @@ func setupFlagSet(name, usageCmd string) *flag.FlagSet {
 
 Flags:
 `, usageCmd)
-		fs.PrintDefaults()
+		printFlags(fs)
 	}
 	return fs
 }

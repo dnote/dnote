@@ -50,7 +50,7 @@ func TestServerStart(t *testing.T) {
 	port := "13456" // Use different port to avoid conflicts with main test server
 
 	// Start server in background
-	cmd := exec.Command(testServerBinary, "start", "-port", port)
+	cmd := exec.Command(testServerBinary, "start", "--port", port)
 	cmd.Env = append(os.Environ(),
 		"DBPath="+tmpDB,
 		"WebURL=http://localhost:"+port,
@@ -143,11 +143,11 @@ func TestServerStartHelp(t *testing.T) {
 
 	outputStr := string(output)
 	assert.Equal(t, strings.Contains(outputStr, "dnote-server start [flags]"), true, "output should contain usage")
-	assert.Equal(t, strings.Contains(outputStr, "-appEnv"), true, "output should contain appEnv flag")
-	assert.Equal(t, strings.Contains(outputStr, "-port"), true, "output should contain port flag")
-	assert.Equal(t, strings.Contains(outputStr, "-webUrl"), true, "output should contain webUrl flag")
-	assert.Equal(t, strings.Contains(outputStr, "-dbPath"), true, "output should contain dbPath flag")
-	assert.Equal(t, strings.Contains(outputStr, "-disableRegistration"), true, "output should contain disableRegistration flag")
+	assert.Equal(t, strings.Contains(outputStr, "--appEnv"), true, "output should contain appEnv flag")
+	assert.Equal(t, strings.Contains(outputStr, "--port"), true, "output should contain port flag")
+	assert.Equal(t, strings.Contains(outputStr, "--webUrl"), true, "output should contain webUrl flag")
+	assert.Equal(t, strings.Contains(outputStr, "--dbPath"), true, "output should contain dbPath flag")
+	assert.Equal(t, strings.Contains(outputStr, "--disableRegistration"), true, "output should contain disableRegistration flag")
 }
 
 func TestServerStartInvalidConfig(t *testing.T) {
@@ -166,7 +166,7 @@ func TestServerStartInvalidConfig(t *testing.T) {
 	assert.Equal(t, strings.Contains(outputStr, "Error:"), true, "output should contain error message")
 	assert.Equal(t, strings.Contains(outputStr, "Invalid WebURL"), true, "output should mention invalid WebURL")
 	assert.Equal(t, strings.Contains(outputStr, "dnote-server start [flags]"), true, "output should show usage")
-	assert.Equal(t, strings.Contains(outputStr, "-webUrl"), true, "output should show flags")
+	assert.Equal(t, strings.Contains(outputStr, "--webUrl"), true, "output should show flags")
 }
 
 func TestServerUnknownCommand(t *testing.T) {
@@ -320,4 +320,20 @@ func TestServerUserRemove(t *testing.T) {
 	var count int64
 	db.Table("users").Count(&count)
 	assert.Equal(t, count, int64(0), "should have 0 users after removal")
+}
+
+func TestServerUserCreateHelp(t *testing.T) {
+	cmd := exec.Command(testServerBinary, "user", "create", "--help")
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("help command failed: %v\nOutput: %s", err, output)
+	}
+
+	outputStr := string(output)
+
+	// Verify help shows double-dash flags for consistency with CLI
+	assert.Equal(t, strings.Contains(outputStr, "--email"), true, "help should show --email (double dash)")
+	assert.Equal(t, strings.Contains(outputStr, "--password"), true, "help should show --password (double dash)")
+	assert.Equal(t, strings.Contains(outputStr, "--dbPath"), true, "help should show --dbPath (double dash)")
 }

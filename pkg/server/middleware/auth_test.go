@@ -233,3 +233,37 @@ func TestTokenAuth(t *testing.T) {
 		assert.Equal(t, res.StatusCode, http.StatusUnauthorized, "status code mismatch")
 	})
 }
+
+func TestWithAccount(t *testing.T) {
+	db := testutils.InitMemoryDB(t)
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	t.Run("user with account", func(t *testing.T) {
+		user := testutils.SetupUserData(db)
+		testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+
+		server := httptest.NewServer(Auth(db, handler, nil))
+		defer server.Close()
+
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
+		res := testutils.HTTPAuthDo(t, db, req, user)
+
+		assert.Equal(t, res.StatusCode, http.StatusOK, "status code mismatch")
+	})
+
+	t.Run("user without account", func(t *testing.T) {
+		user := testutils.SetupUserData(db)
+		// Note: not creating account for this user
+
+		server := httptest.NewServer(Auth(db, handler, nil))
+		defer server.Close()
+
+		req := testutils.MakeReq(server.URL, "GET", "/", "")
+		res := testutils.HTTPAuthDo(t, db, req, user)
+
+		assert.Equal(t, res.StatusCode, http.StatusForbidden, "status code mismatch")
+	})
+}

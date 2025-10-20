@@ -101,7 +101,11 @@ func WithAccount(db *gorm.DB, next http.HandlerFunc) http.HandlerFunc {
 		user := context.User(r.Context())
 
 		var account database.Account
-		if err := db.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
+		err := db.Where("user_id = ?", user.ID).First(&account).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			DoError(w, "account not found", err, http.StatusForbidden)
+			return
+		} else if err != nil {
 			DoError(w, "finding account", err, http.StatusInternalServerError)
 			return
 		}
