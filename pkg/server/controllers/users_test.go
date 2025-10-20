@@ -98,15 +98,14 @@ func TestJoin(t *testing.T) {
 			// Test
 			assert.StatusCodeEquals(t, res, http.StatusFound, "")
 
-			var account database.Account
-			testutils.MustExec(t, db.Where("email = ?", tc.email).First(&account), "finding account")
-			assert.Equal(t, account.Email.String, tc.email, "Email mismatch")
-			assert.NotEqual(t, account.UserID, 0, "UserID mismatch")
-			passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte(tc.password))
+			var user database.User
+			testutils.MustExec(t, db.Where("email = ?", tc.email).First(&user), "finding account")
+			assert.Equal(t, user.Email.String, tc.email, "Email mismatch")
+			assert.NotEqual(t, user.ID, 0, "UserID mismatch")
+			passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(tc.password))
 			assert.Equal(t, passwordErr, nil, "Password mismatch")
 
-			var user database.User
-			testutils.MustExec(t, db.Where("id = ?", account.UserID).First(&user), "finding user")
+			testutils.MustExec(t, db.Where("id = ?", user.ID).First(&user), "finding user")
 			assert.Equal(t, user.MaxUSN, 0, "MaxUSN mismatch")
 
 			// welcome email
@@ -140,11 +139,9 @@ func TestJoinError(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
-		var accountCount, userCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 
-		assert.Equal(t, accountCount, int64(0), "accountCount mismatch")
 		assert.Equal(t, userCount, int64(0), "userCount mismatch")
 	})
 
@@ -168,11 +165,9 @@ func TestJoinError(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
-		var accountCount, userCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 
-		assert.Equal(t, accountCount, int64(0), "accountCount mismatch")
 		assert.Equal(t, userCount, int64(0), "userCount mismatch")
 	})
 
@@ -198,11 +193,9 @@ func TestJoinError(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status mismatch")
 
-		var accountCount, userCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 
-		assert.Equal(t, accountCount, int64(0), "accountCount mismatch")
 		assert.Equal(t, userCount, int64(0), "userCount mismatch")
 	})
 }
@@ -217,8 +210,7 @@ func TestJoinDuplicateEmail(t *testing.T) {
 	server := MustNewServer(t, &a)
 	defer server.Close()
 
-	u := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+	u := testutils.SetupUserData(db, "alice@example.com", "somepassword")
 
 	dat := url.Values{}
 	dat.Set("email", "alice@example.com")
@@ -232,15 +224,13 @@ func TestJoinDuplicateEmail(t *testing.T) {
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusBadRequest, "status code mismatch")
 
-	var accountCount, userCount, verificationTokenCount int64
-	testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+	var userCount, verificationTokenCount int64
 	testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 	testutils.MustExec(t, db.Model(&database.Token{}).Count(&verificationTokenCount), "counting verification token")
 
 	var user database.User
 	testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding user")
 
-	assert.Equal(t, accountCount, int64(1), "account count mismatch")
 	assert.Equal(t, userCount, int64(1), "user count mismatch")
 	assert.Equal(t, verificationTokenCount, int64(0), "verification_token should not have been created")
 	assert.Equal(t, user.LastLoginAt, (*time.Time)(nil), "LastLoginAt mismatch")
@@ -268,11 +258,9 @@ func TestJoinDisabled(t *testing.T) {
 	// Test
 	assert.StatusCodeEquals(t, res, http.StatusNotFound, "status code mismatch")
 
-	var accountCount, userCount int64
-	testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
+	var userCount int64
 	testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
 
-	assert.Equal(t, accountCount, int64(0), "account count mismatch")
 	assert.Equal(t, userCount, int64(0), "user count mismatch")
 }
 
@@ -286,8 +274,7 @@ func TestLogin(t *testing.T) {
 		a.DB = db
 		server := MustNewServer(t, &a)
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		_ = testutils.SetupUserData(db, "alice@example.com", "pass1234")
 		defer server.Close()
 
 		// Execute
@@ -346,8 +333,7 @@ func TestLogin(t *testing.T) {
 		a.DB = db
 		server := MustNewServer(t, &a)
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		_ = testutils.SetupUserData(db, "alice@example.com", "pass1234")
 		defer server.Close()
 
 		var req *http.Request
@@ -386,8 +372,7 @@ func TestLogin(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		_ = testutils.SetupUserData(db, "alice@example.com", "pass1234")
 
 		var req *http.Request
 		if target == testutils.EndpointWeb {
@@ -456,9 +441,8 @@ func TestLogout(t *testing.T) {
 		a.DB = db
 		server := MustNewServer(t, &a)
 
-		aliceUser := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, aliceUser, "alice@example.com", "pass1234")
-		anotherUser := testutils.SetupUserData(db)
+		aliceUser := testutils.SetupUserData(db, "alice@example.com", "pass1234")
+		anotherUser := testutils.SetupUserData(db, "bob@example.com", "password123")
 
 		session1ExpiresAt := time.Now().Add(time.Hour * 24)
 		session1 := database.Session{
@@ -570,8 +554,7 @@ func TestResetPassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "oldpassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -593,7 +576,7 @@ func TestResetPassword(t *testing.T) {
 		}
 		testutils.MustExec(t, db.Save(&s2), "preparing user session 2")
 
-		anotherUser := testutils.SetupUserData(db)
+		anotherUser := testutils.SetupUserData(db, "bob@example.com", "password123")
 		testutils.MustExec(t, db.Save(&database.Session{
 			Key:       "some-session-key-3",
 			UserID:    anotherUser.ID,
@@ -613,12 +596,12 @@ func TestResetPassword(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismatch")
 
 		var resetToken database.Token
-		var account database.Account
+		var user database.User
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
-		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
 
 		assert.NotEqual(t, resetToken.UsedAt, nil, "reset_token UsedAt mismatch")
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte("newpassword"))
 		assert.Equal(t, passwordErr, nil, "Password mismatch")
 
 		var s1Count, s2Count int64
@@ -646,8 +629,7 @@ func TestResetPassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -668,12 +650,12 @@ func TestResetPassword(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
 
 		var resetToken database.Token
-		var account database.Account
+		var user database.User
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "finding reset token")
-		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
 
-		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
-		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
+		assert.Equal(t, u.Password, user.Password, "password should not have been updated")
+		assert.Equal(t, u.Password, user.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 
@@ -687,8 +669,7 @@ func TestResetPassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "somepassword")
 		tok := database.Token{
 			UserID: u.ID,
 			Value:  "MivFxYiSMMA4An9dP24DNQ==",
@@ -710,10 +691,10 @@ func TestResetPassword(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusGone, "Status code mismatch")
 
 		var resetToken database.Token
-		var account database.Account
+		var user database.User
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
-		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "failed to find account")
-		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "failed to find account")
+		assert.Equal(t, u.Password, user.Password, "password should not have been updated")
 		assert.Equal(t, resetToken.UsedAt, (*time.Time)(nil), "used_at should be nil")
 	})
 
@@ -727,8 +708,7 @@ func TestResetPassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "somepassword")
 
 		usedAt := time.Now().Add(time.Hour * -11).UTC()
 		tok := database.Token{
@@ -753,10 +733,10 @@ func TestResetPassword(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismatch")
 
 		var resetToken database.Token
-		var account database.Account
+		var user database.User
 		testutils.MustExec(t, db.Where("value = ?", "MivFxYiSMMA4An9dP24DNQ==").First(&resetToken), "failed to find reset_token")
-		testutils.MustExec(t, db.Where("id = ?", acc.ID).First(&account), "failed to find account")
-		assert.Equal(t, acc.Password, account.Password, "password should not have been updated")
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "failed to find account")
+		assert.Equal(t, u.Password, user.Password, "password should not have been updated")
 
 		resetTokenUsedAtUTC := resetToken.UsedAt.UTC()
 		if resetTokenUsedAtUTC.Year() != usedAt.Year() ||
@@ -782,8 +762,7 @@ func TestCreateResetToken(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "somepassword")
 
 		// Execute
 		dat := url.Values{}
@@ -816,8 +795,7 @@ func TestCreateResetToken(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "somepassword")
+		_ = testutils.SetupUserData(db, "alice@example.com", "somepassword")
 
 		// Execute
 		dat := url.Values{}
@@ -846,8 +824,7 @@ func TestUpdatePassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -861,10 +838,9 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismsatch")
 
-		var account database.Account
-		testutils.MustExec(t, db.Where("user_id = ?", user.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&user), "finding account")
 
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(account.Password.String), []byte("newpassword"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte("newpassword"))
 		assert.Equal(t, passwordErr, nil, "Password mismatch")
 	})
 
@@ -877,8 +853,7 @@ func TestUpdatePassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -892,9 +867,9 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
-		var account database.Account
-		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
+		var user database.User
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
+		assert.Equal(t, u.Password.String, user.Password.String, "password should not have been updated")
 	})
 
 	t.Run("password too short", func(t *testing.T) {
@@ -907,8 +882,7 @@ func TestUpdatePassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -922,9 +896,9 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
 
-		var account database.Account
-		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
+		var user database.User
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
+		assert.Equal(t, u.Password.String, user.Password.String, "password should not have been updated")
 	})
 
 	t.Run("password confirmation mismatch", func(t *testing.T) {
@@ -937,8 +911,7 @@ func TestUpdatePassword(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		acc := testutils.SetupAccountData(db, u, "alice@example.com", "oldpassword")
+		u := testutils.SetupUserData(db, "alice@example.com", "oldpassword")
 
 		// Execute
 		dat := url.Values{}
@@ -952,9 +925,9 @@ func TestUpdatePassword(t *testing.T) {
 		// Test
 		assert.StatusCodeEquals(t, res, http.StatusBadRequest, "Status code mismsatch")
 
-		var account database.Account
-		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
-		assert.Equal(t, acc.Password.String, account.Password.String, "password should not have been updated")
+		var user database.User
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
+		assert.Equal(t, u.Password.String, user.Password.String, "password should not have been updated")
 	})
 }
 
@@ -969,8 +942,7 @@ func TestUpdateEmail(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		u := testutils.SetupUserData(db, "alice@example.com", "pass1234")
 
 		// Execute
 		dat := url.Values{}
@@ -984,11 +956,10 @@ func TestUpdateEmail(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusFound, "Status code mismatch")
 
 		var user database.User
-		var account database.Account
 		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding user")
-		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
+		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding account")
 
-		assert.Equal(t, account.Email.String, "alice-new@example.com", "email mismatch")
+		assert.Equal(t, user.Email.String, "alice-new@example.com", "email mismatch")
 	})
 
 	t.Run("password mismatch", func(t *testing.T) {
@@ -1001,8 +972,7 @@ func TestUpdateEmail(t *testing.T) {
 		server := MustNewServer(t, &a)
 		defer server.Close()
 
-		u := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, u, "alice@example.com", "pass1234")
+		u := testutils.SetupUserData(db, "alice@example.com", "pass1234")
 
 		// Execute
 		dat := url.Values{}
@@ -1016,11 +986,9 @@ func TestUpdateEmail(t *testing.T) {
 		assert.StatusCodeEquals(t, res, http.StatusUnauthorized, "Status code mismsatch")
 
 		var user database.User
-		var account database.Account
 		testutils.MustExec(t, db.Where("id = ?", u.ID).First(&user), "finding user")
-		testutils.MustExec(t, db.Where("user_id = ?", u.ID).First(&account), "finding account")
 
-		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, user.Email.String, "alice@example.com", "email mismatch")
 	})
 }
 

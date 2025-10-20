@@ -77,11 +77,11 @@ func TestCreateNote(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 			fmt.Println(user)
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
@@ -130,7 +130,7 @@ func TestCreateNote(t *testing.T) {
 func TestCreateNote_EmptyBody(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
@@ -169,10 +169,10 @@ func TestUpdateNote(t *testing.T) {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), "preparing user max_usn for test case")
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), "preparing user max_usn for test case")
 
 			b1 := database.Book{UserID: user.ID, Label: "js", Deleted: false}
@@ -234,7 +234,7 @@ func TestUpdateNote(t *testing.T) {
 func TestUpdateNote_SameContent(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
@@ -291,10 +291,10 @@ func TestDeleteNote(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			b1 := database.Book{UserID: user.ID, Label: "testBook"}
@@ -351,7 +351,7 @@ func TestDeleteNote(t *testing.T) {
 func TestGetNotes_FTSSearch(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
@@ -415,7 +415,7 @@ func TestGetNotes_FTSSearch(t *testing.T) {
 func TestGetNotes_FTSSearch_Snippet(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
@@ -449,7 +449,7 @@ func TestGetNotes_FTSSearch_Snippet(t *testing.T) {
 func TestGetNotes_FTSSearch_ShortWord(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 
@@ -481,7 +481,7 @@ func TestGetNotes_FTSSearch_ShortWord(t *testing.T) {
 func TestGetNotes_All(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	b1 := database.Book{UserID: user.ID, Label: "testBook"}
 	testutils.MustExec(t, db.Save(&b1), "preparing book")
 

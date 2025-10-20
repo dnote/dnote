@@ -108,14 +108,13 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data *Data, status
 	}
 
 	vd.User = context.User(r.Context())
-	vd.Account = context.Account(r.Context())
 
 	// Put user data in Yield
 	if vd.Yield == nil {
 		vd.Yield = map[string]interface{}{}
 	}
-	if vd.Account != nil {
-		vd.Yield["Email"] = vd.Account.Email.String
+	if vd.User != nil {
+		vd.Yield["Email"] = vd.User.Email.String
 	}
 	vd.Yield["CurrentPath"] = r.URL.Path
 	vd.Yield["Standalone"] = buildinfo.Standalone

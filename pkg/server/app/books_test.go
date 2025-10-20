@@ -56,10 +56,10 @@ func TestCreateBook(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			a := NewTest()
@@ -122,10 +122,10 @@ func TestDeleteBook(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			book := database.Book{UserID: user.ID, Label: "js", Deleted: false}
@@ -201,10 +201,10 @@ func TestUpdateBook(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.userUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
-			anotherUser := testutils.SetupUserData(db)
+			anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 			testutils.MustExec(t, db.Model(&anotherUser).Update("max_usn", 55), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			b := database.Book{UserID: user.ID, Deleted: false, Label: tc.expectedLabel}

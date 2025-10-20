@@ -82,9 +82,6 @@ func ClearData(db *gorm.DB) {
 	if err := db.Where("1 = 1").Delete(&database.Session{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear sessions"))
 	}
-	if err := db.Where("1 = 1").Delete(&database.Account{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear accounts"))
-	}
 	if err := db.Where("1 = 1").Delete(&database.User{}).Error; err != nil {
 		panic(errors.Wrap(err, "Failed to clear users"))
 	}
@@ -99,15 +96,22 @@ func MustUUID(t *testing.T) string {
 	return uuid
 }
 
-// SetupUserData creates and returns a new user for testing purposes
-func SetupUserData(db *gorm.DB) database.User {
+// SetupUserData creates and returns a new user with email and password for testing purposes
+func SetupUserData(db *gorm.DB, email, password string) database.User {
 	uuid, err := helpers.GenUUID()
 	if err != nil {
 		panic(errors.Wrap(err, "Failed to generate UUID"))
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		panic(errors.Wrap(err, "Failed to hash password"))
+	}
+
 	user := database.User{
-		UUID: uuid,
+		UUID:     uuid,
+		Email:    database.ToNullString(email),
+		Password: database.ToNullString(string(hashedPassword)),
 	}
 
 	if err := db.Save(&user).Error; err != nil {
@@ -115,28 +119,6 @@ func SetupUserData(db *gorm.DB) database.User {
 	}
 
 	return user
-}
-
-// SetupAccountData creates and returns a new account for the user
-func SetupAccountData(db *gorm.DB, user database.User, email, password string) database.Account {
-	account := database.Account{
-		UserID: user.ID,
-	}
-	if email != "" {
-		account.Email = database.ToNullString(email)
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		panic(errors.Wrap(err, "Failed to hash password"))
-	}
-	account.Password = database.ToNullString(string(hashedPassword))
-
-	if err := db.Save(&account).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to prepare account"))
-	}
-
-	return account
 }
 
 // SetupSession creates and returns a new user session

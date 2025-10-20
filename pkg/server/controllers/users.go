@@ -307,23 +307,23 @@ func (u *Users) CreateResetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
-	err := u.app.DB.Where("email = ?", form.Email).First(&account).Error
+	var user database.User
+	err := u.app.DB.Where("email = ?", form.Email).First(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return
 	}
 	if err != nil {
-		handleHTMLError(w, r, err, "finding account", u.PasswordResetView, vd)
+		handleHTMLError(w, r, err, "finding user", u.PasswordResetView, vd)
 		return
 	}
 
-	resetToken, err := token.Create(u.app.DB, account.UserID, database.TokenTypeResetPassword)
+	resetToken, err := token.Create(u.app.DB, user.ID, database.TokenTypeResetPassword)
 	if err != nil {
 		handleHTMLError(w, r, err, "generating token", u.PasswordResetView, vd)
 		return
 	}
 
-	if err := u.app.SendPasswordResetEmail(account.Email.String, resetToken.Value); err != nil {
+	if err := u.app.SendPasswordResetEmail(user.Email.String, resetToken.Value); err != nil {
 		handleHTMLError(w, r, err, "sending password reset email", u.PasswordResetView, vd)
 		return
 	}
@@ -396,8 +396,8 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
-	if err := u.app.DB.Where("user_id = ?", token.UserID).First(&account).Error; err != nil {
+	var user database.User
+	if err := u.app.DB.Where("id = ?", token.UserID).First(&user).Error; err != nil {
 		handleHTMLError(w, r, err, "finding user", u.PasswordResetConfirmView, vd)
 		return
 	}
@@ -405,7 +405,7 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 	tx := u.app.DB.Begin()
 
 	// Update the password
-	if err := app.UpdateAccountPassword(tx, &account, params.Password); err != nil {
+	if err := app.UpdateUserPassword(tx, &user, params.Password); err != nil {
 		tx.Rollback()
 		handleHTMLError(w, r, err, "updating password", u.PasswordResetConfirmView, vd)
 		return
@@ -417,7 +417,7 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := u.app.DeleteUserSessions(tx, account.UserID); err != nil {
+	if err := u.app.DeleteUserSessions(tx, user.ID); err != nil {
 		tx.Rollback()
 		handleHTMLError(w, r, err, "deleting user sessions", u.PasswordResetConfirmView, vd)
 		return
@@ -425,19 +425,13 @@ func (u *Users) PasswordReset(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 
-	var user database.User
-	if err := u.app.DB.Where("id = ?", account.UserID).First(&user).Error; err != nil {
-		handleHTMLError(w, r, err, "finding user", u.PasswordResetConfirmView, vd)
-		return
-	}
-
 	alert := views.Alert{
 		Level:   views.AlertLvlSuccess,
 		Message: "Password reset successful",
 	}
 	views.RedirectAlert(w, r, "/login", http.StatusFound, alert)
 
-	if err := u.app.SendPasswordResetAlertEmail(account.Email.String); err != nil {
+	if err := u.app.SendPasswordResetAlertEmail(user.Email.String); err != nil {
 		log.ErrorWrap(err, "sending password reset email")
 	}
 }
@@ -493,14 +487,8 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
-	if err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		handleHTMLError(w, r, err, "getting account", u.SettingView, vd)
-		return
-	}
-
 	password := []byte(form.OldPassword)
-	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password.String), password); err != nil {
 		log.WithFields(log.Fields{
 			"user_id": user.ID,
 		}).Warn("invalid password update attempt")
@@ -508,7 +496,7 @@ func (u *Users) PasswordUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := app.UpdateAccountPassword(u.app.DB, &account, form.NewPassword); err != nil {
+	if err := app.UpdateUserPassword(u.app.DB, user, form.NewPassword); err != nil {
 		handleHTMLError(w, r, err, "updating password", u.SettingView, vd)
 		return
 	}
@@ -534,12 +522,6 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var account database.Account
-	if err := u.app.DB.Where("user_id = ?", user.ID).First(&account).Error; err != nil {
-		handleHTMLError(w, r, err, "getting account", u.SettingView, vd)
-		return
-	}
-
 	var form updateProfileForm
 	if err := parseRequestData(r, &form); err != nil {
 		handleHTMLError(w, r, err, "parsing payload", u.SettingView, vd)
@@ -547,7 +529,7 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	password := []byte(form.Password)
-	if err := bcrypt.CompareHashAndPassword([]byte(account.Password.String), password); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password.String), password); err != nil {
 		log.WithFields(log.Fields{
 			"user_id": user.ID,
 		}).Warn("invalid email update attempt")
@@ -561,22 +543,12 @@ func (u *Users) ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := u.app.DB.Begin()
-	if err := tx.Save(&user).Error; err != nil {
-		tx.Rollback()
+	user.Email.String = form.Email
+
+	if err := u.app.DB.Save(&user).Error; err != nil {
 		handleHTMLError(w, r, err, "saving user", u.SettingView, vd)
 		return
 	}
-
-	account.Email.String = form.Email
-
-	if err := tx.Save(&account).Error; err != nil {
-		tx.Rollback()
-		handleHTMLError(w, r, err, "saving account", u.SettingView, vd)
-		return
-	}
-
-	tx.Commit()
 
 	alert := views.Alert{
 		Level:   views.AlertLvlSuccess,

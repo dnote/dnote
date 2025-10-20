@@ -67,8 +67,6 @@ type AuthParams struct {
 
 // Auth is an authentication middleware
 func Auth(db *gorm.DB, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
-	next = WithAccount(db, next)
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok, err := AuthWithSession(db, r)
 		if !ok {
@@ -91,27 +89,6 @@ func Auth(db *gorm.DB, next http.HandlerFunc, p *AuthParams) http.HandlerFunc {
 		}
 
 		ctx := context.WithUser(r.Context(), &user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-
-}
-
-func WithAccount(db *gorm.DB, next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := context.User(r.Context())
-
-		var account database.Account
-		err := db.Where("user_id = ?", user.ID).First(&account).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			DoError(w, "account not found", err, http.StatusForbidden)
-			return
-		} else if err != nil {
-			DoError(w, "finding account", err, http.StatusInternalServerError)
-			return
-		}
-
-		ctx := context.WithAccount(r.Context(), &account)
-
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

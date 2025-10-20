@@ -29,9 +29,9 @@ type Session struct {
 }
 
 // New returns a new session for the given user
-func New(user database.User, account database.Account) Session {
+func New(user database.User) Session {
 	return Session{
 		UUID:  user.UUID,
-		Email: account.Email.String,
+		Email: user.Email.String,
 	}
 }

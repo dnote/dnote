@@ -47,7 +47,7 @@ func TestGuestOnly(t *testing.T) {
 	})
 
 	t.Run("logged in", func(t *testing.T) {
-		user := testutils.SetupUserData(db)
+		user := testutils.SetupUserData(db, "user@test.com", "password123")
 		req := testutils.MakeReq(server.URL, "GET", "/", "")
 		res := testutils.HTTPAuthDo(t, db, req, user)
 
@@ -67,8 +67,7 @@ func TestGuestOnly(t *testing.T) {
 func TestAuth(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+	user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
 
 	session := database.Session{
 		Key:       "A9xgggqzTHETy++GDi1NpDNe0iyqosPm9bitdeNGkJU=",
@@ -175,7 +174,7 @@ func TestAuth(t *testing.T) {
 func TestTokenAuth(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 	tok := database.Token{
 		UserID: user.ID,
 		Type:   database.TokenTypeResetPassword,
@@ -241,9 +240,8 @@ func TestWithAccount(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	}
 
-	t.Run("user with account", func(t *testing.T) {
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+	t.Run("authenticated user", func(t *testing.T) {
+		user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
 
 		server := httptest.NewServer(Auth(db, handler, nil))
 		defer server.Close()
@@ -252,18 +250,5 @@ func TestWithAccount(t *testing.T) {
 		res := testutils.HTTPAuthDo(t, db, req, user)
 
 		assert.Equal(t, res.StatusCode, http.StatusOK, "status code mismatch")
-	})
-
-	t.Run("user without account", func(t *testing.T) {
-		user := testutils.SetupUserData(db)
-		// Note: not creating account for this user
-
-		server := httptest.NewServer(Auth(db, handler, nil))
-		defer server.Close()
-
-		req := testutils.MakeReq(server.URL, "GET", "/", "")
-		res := testutils.HTTPAuthDo(t, db, req, user)
-
-		assert.Equal(t, res.StatusCode, http.StatusForbidden, "status code mismatch")
 	})
 }

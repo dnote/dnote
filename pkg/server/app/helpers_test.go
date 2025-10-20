@@ -48,7 +48,7 @@ func TestIncremenetUserUSN(t *testing.T) {
 		func() {
 			db := testutils.InitMemoryDB(t)
 
-			user := testutils.SetupUserData(db)
+			user := testutils.SetupUserData(db, "user@test.com", "password123")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", tc.maxUSN), fmt.Sprintf("preparing user max_usn for test case %d", idx))
 
 			// execute

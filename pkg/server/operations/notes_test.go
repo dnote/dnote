@@ -30,8 +30,8 @@ import (
 func TestGetNote(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
-	anotherUser := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
+	anotherUser := testutils.SetupUserData(db, "another@test.com", "password123")
 
 	b1 := database.Book{
 		UUID:   testutils.MustUUID(t),
@@ -98,7 +98,7 @@ func TestGetNote(t *testing.T) {
 func TestGetNote_nonexistent(t *testing.T) {
 	db := testutils.InitMemoryDB(t)
 
-	user := testutils.SetupUserData(db)
+	user := testutils.SetupUserData(db, "user@test.com", "password123")
 
 	b1 := database.Book{
 		UUID:   testutils.MustUUID(t),

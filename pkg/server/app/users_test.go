@@ -82,21 +82,20 @@ func TestCreateUser_ProValue(t *testing.T) {
 
 }
 
-func TestGetAccountByEmail(t *testing.T) {
+func TestGetUserByEmail(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+		user := testutils.SetupUserData(db, "alice@example.com", "password123")
 
 		a := NewTest()
 		a.DB = db
 
-		account, err := a.GetAccountByEmail("alice@example.com")
+		foundUser, err := a.GetUserByEmail("alice@example.com")
 
 		assert.Equal(t, err, nil, "should not error")
-		assert.Equal(t, account.Email.String, "alice@example.com", "email mismatch")
-		assert.Equal(t, account.UserID, user.ID, "user ID mismatch")
+		assert.Equal(t, foundUser.Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, foundUser.ID, user.ID, "user ID mismatch")
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -105,10 +104,10 @@ func TestGetAccountByEmail(t *testing.T) {
 		a := NewTest()
 		a.DB = db
 
-		account, err := a.GetAccountByEmail("nonexistent@example.com")
+		user, err := a.GetUserByEmail("nonexistent@example.com")
 
 		assert.Equal(t, err, ErrNotFound, "should return ErrNotFound")
-		assert.Equal(t, account, (*database.Account)(nil), "account should be nil")
+		assert.Equal(t, user, (*database.User)(nil), "user should be nil")
 	})
 }
 
@@ -124,25 +123,21 @@ func TestCreateUser(t *testing.T) {
 
 		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
-		assert.Equal(t, userCount, int64(1), "book count mismatch")
+		assert.Equal(t, userCount, int64(1), "user count mismatch")
 
-		var accountCount int64
-		var accountRecord database.Account
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
-		testutils.MustExec(t, db.First(&accountRecord), "finding account")
+		var userRecord database.User
+		testutils.MustExec(t, db.First(&userRecord), "finding user")
 
-		assert.Equal(t, accountCount, int64(1), "account count mismatch")
-		assert.Equal(t, accountRecord.Email.String, "alice@example.com", "account email mismatch")
+		assert.Equal(t, userRecord.Email.String, "alice@example.com", "user email mismatch")
 
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(accountRecord.Password.String), []byte("pass1234"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(userRecord.Password.String), []byte("pass1234"))
 		assert.Equal(t, passwordErr, nil, "Password mismatch")
 	})
 
 	t.Run("duplicate email", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		aliceUser := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, aliceUser, "alice@example.com", "somepassword")
+		testutils.SetupUserData(db, "alice@example.com", "somepassword")
 
 		a := NewTest()
 		a.DB = db
@@ -150,116 +145,109 @@ func TestCreateUser(t *testing.T) {
 
 		assert.Equal(t, err, ErrDuplicateEmail, "error mismatch")
 
-		var userCount, accountCount int64
+		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting user")
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting account")
 
 		assert.Equal(t, userCount, int64(1), "user count mismatch")
-		assert.Equal(t, accountCount, int64(1), "account count mismatch")
 	})
 }
 
-func TestUpdateAccountPassword(t *testing.T) {
+func TestUpdateUserPassword(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword123")
 
-		err := UpdateAccountPassword(db, &account, "newpassword123")
+		err := UpdateUserPassword(db, &user, "newpassword123")
 
 		assert.Equal(t, err, nil, "should not error")
 
 		// Verify password was updated in database
-		var updatedAccount database.Account
-		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&updatedAccount), "finding updated account")
+		var updatedUser database.User
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&updatedUser), "finding updated user")
 
 		// Verify new password works
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("newpassword123"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("newpassword123"))
 		assert.Equal(t, passwordErr, nil, "New password should match")
 
 		// Verify old password no longer works
-		oldPasswordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("oldpassword123"))
+		oldPasswordErr := bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("oldpassword123"))
 		assert.NotEqual(t, oldPasswordErr, nil, "Old password should not match")
 	})
 
 	t.Run("password too short", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword123")
 
-		err := UpdateAccountPassword(db, &account, "short")
+		err := UpdateUserPassword(db, &user, "short")
 
 		assert.Equal(t, err, ErrPasswordTooShort, "should return ErrPasswordTooShort")
 
 		// Verify password was NOT updated in database
-		var unchangedAccount database.Account
-		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+		var unchangedUser database.User
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&unchangedUser), "finding unchanged user")
 
 		// Verify old password still works
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedUser.Password.String), []byte("oldpassword123"))
 		assert.Equal(t, passwordErr, nil, "Old password should still match")
 	})
 
 	t.Run("empty password", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword123")
 
-		err := UpdateAccountPassword(db, &account, "")
+		err := UpdateUserPassword(db, &user, "")
 
 		assert.Equal(t, err, ErrPasswordTooShort, "should return ErrPasswordTooShort")
 
 		// Verify password was NOT updated in database
-		var unchangedAccount database.Account
-		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+		var unchangedUser database.User
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&unchangedUser), "finding unchanged user")
 
 		// Verify old password still works
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedUser.Password.String), []byte("oldpassword123"))
 		assert.Equal(t, passwordErr, nil, "Old password should still match")
 	})
 
 	t.Run("transaction rollback", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword123")
 
-		// Start a transaction and rollback to verify UpdateAccountPassword respects transactions
+		// Start a transaction and rollback to verify UpdateUserPassword respects transactions
 		tx := db.Begin()
-		err := UpdateAccountPassword(tx, &account, "newpassword123")
+		err := UpdateUserPassword(tx, &user, "newpassword123")
 		assert.Equal(t, err, nil, "should not error")
 		tx.Rollback()
 
 		// Verify password was NOT updated after rollback
-		var unchangedAccount database.Account
-		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&unchangedAccount), "finding unchanged account")
+		var unchangedUser database.User
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&unchangedUser), "finding unchanged user")
 
 		// Verify old password still works
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedAccount.Password.String), []byte("oldpassword123"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(unchangedUser.Password.String), []byte("oldpassword123"))
 		assert.Equal(t, passwordErr, nil, "Old password should still match after rollback")
 	})
 
 	t.Run("transaction commit", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		account := testutils.SetupAccountData(db, user, "alice@example.com", "oldpassword123")
+		user := testutils.SetupUserData(db, "alice@example.com", "oldpassword123")
 
-		// Start a transaction and commit to verify UpdateAccountPassword respects transactions
+		// Start a transaction and commit to verify UpdateUserPassword respects transactions
 		tx := db.Begin()
-		err := UpdateAccountPassword(tx, &account, "newpassword123")
+		err := UpdateUserPassword(tx, &user, "newpassword123")
 		assert.Equal(t, err, nil, "should not error")
 		tx.Commit()
 
 		// Verify password was updated after commit
-		var updatedAccount database.Account
-		testutils.MustExec(t, db.Where("id = ?", account.ID).First(&updatedAccount), "finding updated account")
+		var updatedUser database.User
+		testutils.MustExec(t, db.Where("id = ?", user.ID).First(&updatedUser), "finding updated user")
 
 		// Verify new password works
-		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("newpassword123"))
+		passwordErr := bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("newpassword123"))
 		assert.Equal(t, passwordErr, nil, "New password should match after commit")
 	})
 }
@@ -268,8 +256,7 @@ func TestRemoveUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+		testutils.SetupUserData(db, "alice@example.com", "password123")
 
 		a := NewTest()
 		a.DB = db
@@ -282,11 +269,6 @@ func TestRemoveUser(t *testing.T) {
 		var userCount int64
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
 		assert.Equal(t, userCount, int64(0), "user should be deleted")
-
-		// Verify account was deleted
-		var accountCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
-		assert.Equal(t, accountCount, int64(0), "account should be deleted")
 	})
 
 	t.Run("user not found", func(t *testing.T) {
@@ -303,8 +285,7 @@ func TestRemoveUser(t *testing.T) {
 	t.Run("user has notes", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+		user := testutils.SetupUserData(db, "alice@example.com", "password123")
 
 		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
 		testutils.MustExec(t, db.Save(&book), "creating book")
@@ -324,17 +305,12 @@ func TestRemoveUser(t *testing.T) {
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
 		assert.Equal(t, userCount, int64(1), "user should not be deleted")
 
-		// Verify account was NOT deleted
-		var accountCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
-		assert.Equal(t, accountCount, int64(1), "account should not be deleted")
 	})
 
 	t.Run("user has books", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+		user := testutils.SetupUserData(db, "alice@example.com", "password123")
 
 		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
 		testutils.MustExec(t, db.Save(&book), "creating book")
@@ -351,17 +327,12 @@ func TestRemoveUser(t *testing.T) {
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
 		assert.Equal(t, userCount, int64(1), "user should not be deleted")
 
-		// Verify account was NOT deleted
-		var accountCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
-		assert.Equal(t, accountCount, int64(1), "account should not be deleted")
 	})
 
 	t.Run("user has deleted notes and books", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
 
-		user := testutils.SetupUserData(db)
-		testutils.SetupAccountData(db, user, "alice@example.com", "password123")
+		user := testutils.SetupUserData(db, "alice@example.com", "password123")
 
 		book := database.Book{UserID: user.ID, Label: "testbook", Deleted: false}
 		testutils.MustExec(t, db.Save(&book), "creating book")
@@ -385,9 +356,5 @@ func TestRemoveUser(t *testing.T) {
 		testutils.MustExec(t, db.Model(&database.User{}).Count(&userCount), "counting users")
 		assert.Equal(t, userCount, int64(0), "user should be deleted")
 
-		// Verify account was deleted
-		var accountCount int64
-		testutils.MustExec(t, db.Model(&database.Account{}).Count(&accountCount), "counting accounts")
-		assert.Equal(t, accountCount, int64(0), "account should be deleted")
 	})
 }

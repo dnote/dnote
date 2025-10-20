@@ -81,12 +81,12 @@ func userRemoveCmd(args []string, stdin io.Reader) {
 	defer cleanup()
 
 	// Check if user exists first
-	_, err := a.GetAccountByEmail(*email)
+	_, err := a.GetUserByEmail(*email)
 	if err != nil {
 		if errors.Is(err, app.ErrNotFound) {
 			fmt.Printf("Error: user with email %s not found\n", *email)
 		} else {
-			log.ErrorWrap(err, "finding account")
+			log.ErrorWrap(err, "finding user")
 		}
 		os.Exit(1)
 	}
@@ -133,19 +133,19 @@ func userResetPasswordCmd(args []string) {
 	a, cleanup := setupAppWithDB(fs, *dbPath)
 	defer cleanup()
 
-	// Find the account
-	account, err := a.GetAccountByEmail(*email)
+	// Find the user
+	user, err := a.GetUserByEmail(*email)
 	if err != nil {
 		if errors.Is(err, app.ErrNotFound) {
 			fmt.Printf("Error: user with email %s not found\n", *email)
 		} else {
-			log.ErrorWrap(err, "finding account")
+			log.ErrorWrap(err, "finding user")
 		}
 		os.Exit(1)
 	}
 
 	// Update the password
-	if err := app.UpdateAccountPassword(a.DB, account, *password); err != nil {
+	if err := app.UpdateUserPassword(a.DB, user, *password); err != nil {
 		log.ErrorWrap(err, "updating password")
 		os.Exit(1)
 	}

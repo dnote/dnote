@@ -63,10 +63,8 @@ func TestGetNotes(t *testing.T) {
 	server := MustNewServer(t, &a)
 	defer server.Close()
 
-	user := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
-	anotherUser := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, anotherUser, "bob@test.com", "pass1234")
+	user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
+	anotherUser := testutils.SetupUserData(db, "bob@test.com", "pass1234")
 
 	b1 := database.Book{
 		UUID:   testutils.MustUUID(t),
@@ -187,10 +185,8 @@ func TestGetNote(t *testing.T) {
 	server := MustNewServer(t, &a)
 	defer server.Close()
 
-	user := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, user, "user@test.com", "pass1234")
-	anotherUser := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, anotherUser, "another@test.com", "pass1234")
+	user := testutils.SetupUserData(db, "user@test.com", "pass1234")
+	anotherUser := testutils.SetupUserData(db, "another@test.com", "pass1234")
 
 	b1 := database.Book{
 		UUID:   testutils.MustUUID(t),
@@ -318,8 +314,7 @@ func TestCreateNote(t *testing.T) {
 	server := MustNewServer(t, &a)
 	defer server.Close()
 
-	user := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+	user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
 	testutils.MustExec(t, db.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 
 	b1 := database.Book{
@@ -400,8 +395,7 @@ func TestDeleteNote(t *testing.T) {
 			server := MustNewServer(t, &a)
 			defer server.Close()
 
-			user := testutils.SetupUserData(db)
-			testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+			user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", 981), "preparing user max_usn")
 
 			b1 := database.Book{
@@ -559,8 +553,7 @@ func TestUpdateNote(t *testing.T) {
 			server := MustNewServer(t, &a)
 			defer server.Close()
 
-			user := testutils.SetupUserData(db)
-			testutils.SetupAccountData(db, user, "alice@test.com", "pass1234")
+			user := testutils.SetupUserData(db, "alice@test.com", "pass1234")
 
 			testutils.MustExec(t, db.Model(&user).Update("max_usn", 101), "preparing user max_usn")
 

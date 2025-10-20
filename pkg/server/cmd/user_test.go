@@ -45,9 +45,9 @@ func TestUserCreateCmd(t *testing.T) {
 	testutils.MustExec(t, db.Model(&database.User{}).Count(&count), "counting users")
 	assert.Equal(t, count, int64(1), "should have 1 user")
 
-	var account database.Account
-	testutils.MustExec(t, db.Where("email = ?", "test@example.com").First(&account), "finding account")
-	assert.Equal(t, account.Email.String, "test@example.com", "email mismatch")
+	var user database.User
+	testutils.MustExec(t, db.Where("email = ?", "test@example.com").First(&user), "finding user")
+	assert.Equal(t, user.Email.String, "test@example.com", "email mismatch")
 }
 
 func TestUserRemoveCmd(t *testing.T) {
@@ -55,8 +55,7 @@ func TestUserRemoveCmd(t *testing.T) {
 
 	// Create a user first
 	db := testutils.InitDB(tmpDB)
-	user := testutils.SetupUserData(db)
-	testutils.SetupAccountData(db, user, "test@example.com", "password123")
+	testutils.SetupUserData(db, "test@example.com", "password123")
 	sqlDB, _ := db.DB()
 	sqlDB.Close()
 
@@ -81,9 +80,8 @@ func TestUserResetPasswordCmd(t *testing.T) {
 
 	// Create a user first
 	db := testutils.InitDB(tmpDB)
-	user := testutils.SetupUserData(db)
-	account := testutils.SetupAccountData(db, user, "test@example.com", "oldpassword123")
-	oldPasswordHash := account.Password.String
+	user := testutils.SetupUserData(db, "test@example.com", "oldpassword123")
+	oldPasswordHash := user.Password.String
 	sqlDB, _ := db.DB()
 	sqlDB.Close()
 
@@ -97,18 +95,18 @@ func TestUserResetPasswordCmd(t *testing.T) {
 		sqlDB2.Close()
 	}()
 
-	var updatedAccount database.Account
-	testutils.MustExec(t, db2.Where("email = ?", "test@example.com").First(&updatedAccount), "finding account")
+	var updatedUser database.User
+	testutils.MustExec(t, db2.Where("email = ?", "test@example.com").First(&updatedUser), "finding user")
 
 	// Verify password hash changed
-	assert.Equal(t, updatedAccount.Password.String != oldPasswordHash, true, "password hash should be different")
-	assert.Equal(t, len(updatedAccount.Password.String) > 0, true, "password should be set")
+	assert.Equal(t, updatedUser.Password.String != oldPasswordHash, true, "password hash should be different")
+	assert.Equal(t, len(updatedUser.Password.String) > 0, true, "password should be set")
 
 	// Verify new password works
-	err := bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("newpassword123"))
+	err := bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("newpassword123"))
 	assert.Equal(t, err, nil, "new password should match")
 
 	// Verify old password doesn't work
-	err = bcrypt.CompareHashAndPassword([]byte(updatedAccount.Password.String), []byte("oldpassword123"))
+	err = bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("oldpassword123"))
 	assert.Equal(t, err != nil, true, "old password should not match")
 }

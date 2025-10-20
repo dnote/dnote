@@ -42,7 +42,7 @@ func TestCreate(t *testing.T) {
 			db := testutils.InitMemoryDB(t)
 
 			// Set up
-			u := testutils.SetupUserData(db)
+			u := testutils.SetupUserData(db, "user@test.com", "password123")
 
 			// Execute
 			tok, err := Create(db, u.ID, tc.kind)

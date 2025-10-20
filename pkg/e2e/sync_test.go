@@ -136,8 +136,7 @@ func TestMain(m *testing.M) {
 
 // helpers
 func setupUser(t *testing.T, db *cliDatabase.DB) database.User {
-	user := apitest.SetupUserData(serverDb)
-	apitest.SetupAccountData(serverDb, user, "alice@example.com", "pass1234")
+	user := apitest.SetupUserData(serverDb, "alice@example.com", "pass1234")
 
 	return user
 }
@@ -4255,8 +4254,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Step 1: Set up user on Server A and sync
 		apiEndpointA := fmt.Sprintf("%s/api", serverA.URL)
 
-		userA := apitest.SetupUserData(serverDbA)
-		apitest.SetupAccountData(serverDbA, userA, "alice@example.com", "pass1234")
+		userA := apitest.SetupUserData(serverDbA, "alice@example.com", "pass1234")
 		sessionA := apitest.SetupSession(serverDbA, userA)
 		cliDatabase.MustExec(t, "inserting session_key", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, sessionA.Key)
 		cliDatabase.MustExec(t, "inserting session_key_expiry", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, sessionA.ExpiresAt.Unix())
@@ -4280,8 +4278,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		apiEndpointB := fmt.Sprintf("%s/api", serverB.URL)
 
 		// Set up user on Server B
-		userB := apitest.SetupUserData(serverDbB)
-		apitest.SetupAccountData(serverDbB, userB, "alice@example.com", "pass1234")
+		userB := apitest.SetupUserData(serverDbB, "alice@example.com", "pass1234")
 		sessionB := apitest.SetupSession(serverDbB, userB)
 		cliDatabase.MustExec(t, "updating session_key for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.Key, consts.SystemSessionKey)
 		cliDatabase.MustExec(t, "updating session_key_expiry for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
