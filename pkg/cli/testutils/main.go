@@ -48,12 +48,15 @@ const (
 // Timeout for waiting for prompts in tests
 const promptTimeout = 10 * time.Second
 
-// Login simulates a logged in user by inserting credentials in the local database
-func Login(t *testing.T, ctx *context.DnoteCtx) {
-	db := ctx.DB
-
+// LoginDB sets up login credentials in the database for tests
+func LoginDB(t *testing.T, db *database.DB) {
 	database.MustExec(t, "inserting sessionKey", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, "someSessionKey")
 	database.MustExec(t, "inserting sessionKeyExpiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, time.Now().Add(24*time.Hour).Unix())
+}
+
+// Login simulates a logged in user by inserting credentials in the local database
+func Login(t *testing.T, ctx *context.DnoteCtx) {
+	LoginDB(t, ctx.DB)
 
 	ctx.SessionKey = "someSessionKey"
 	ctx.SessionKeyExpiry = time.Now().Add(24 * time.Hour).Unix()

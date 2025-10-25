@@ -353,14 +353,19 @@ func TestMigrateToV7(t *testing.T) {
 }
 
 func TestMigrateToV8(t *testing.T) {
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	db := database.InitTestDB(t, "../tmp/.dnote/dnote-test.db", &opts)
+	tmpDir := t.TempDir()
+	dnoteDir := tmpDir + "/.dnote"
+	if err := os.MkdirAll(dnoteDir, 0755); err != nil {
+		t.Fatal(errors.Wrap(err, "creating legacy dnote directory"))
+	}
+
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
 	defer database.TeardownTestDB(t, db)
 
 	ctx := context.DnoteCtx{
 		Paths: context.Paths{
-			Home:        "../tmp",
-			LegacyDnote: "../tmp/.dnote",
+			Home:        tmpDir,
+			LegacyDnote: dnoteDir,
 		},
 		DB: db,
 	}

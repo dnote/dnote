@@ -33,7 +33,7 @@ endif
 test: test-cli test-api test-e2e
 .PHONY: test
 
-test-cli:
+test-cli: generate-cli-schema
 	@echo "==> running CLI test"
 	@(${currentDir}/scripts/cli/test.sh)
 .PHONY: test-cli
@@ -76,7 +76,14 @@ endif
 	@(cd ${currentDir}/host/docker && ./build.sh $(version) $(platform))
 .PHONY: build-server-docker
 
-build-cli:
+generate-cli-schema:
+	@echo "==> generating CLI database schema"
+	@mkdir -p pkg/cli/database
+	@touch pkg/cli/database/schema.sql
+	@go run -tags fts5 pkg/cli/database/cmd/generate-schema.go
+.PHONY: generate-cli-schema
+
+build-cli: generate-cli-schema
 ifeq ($(debug), true)
 	@echo "==> building cli in dev mode"
 	@${currentDir}/scripts/cli/dev.sh

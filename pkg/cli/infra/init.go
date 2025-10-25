@@ -329,6 +329,7 @@ func getEditorCommand() string {
 	return ret
 }
 
+// initDir creates a directory if it doesn't exist
 func initDir(path string) error {
 	ok, err := utils.FileExists(path)
 	if err != nil {

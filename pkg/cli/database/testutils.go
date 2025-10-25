@@ -20,6 +20,7 @@ package database
 
 import (
 	"database/sql"
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,55 +31,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-var defaultSchemaSQL = `CREATE TABLE books
-		(
-			uuid text PRIMARY KEY,
-			label text NOT NULL
-		, dirty bool DEFAULT false, usn int DEFAULT 0 NOT NULL, deleted bool DEFAULT false);
-CREATE TABLE system
-		(
-			key string NOT NULL,
-			value text NOT NULL
-		);
-CREATE UNIQUE INDEX idx_books_label ON books(label);
-CREATE UNIQUE INDEX idx_books_uuid ON books(uuid);
-CREATE TABLE IF NOT EXISTS "notes"
-		(
-			uuid text NOT NULL,
-			book_uuid text NOT NULL,
-			body text NOT NULL,
-			added_on integer NOT NULL,
-			edited_on integer DEFAULT 0,
-			dirty bool DEFAULT false,
-			usn int DEFAULT 0 NOT NULL,
-			deleted bool DEFAULT false
-		);
-CREATE VIRTUAL TABLE note_fts USING fts5(content=notes, body, tokenize="porter unicode61 categories 'L* N* Co Ps Pe'")
-/* note_fts(body) */;
-CREATE TABLE IF NOT EXISTS 'note_fts_data'(id INTEGER PRIMARY KEY, block BLOB);
-CREATE TABLE IF NOT EXISTS 'note_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID;
-CREATE TABLE IF NOT EXISTS 'note_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
-CREATE TABLE IF NOT EXISTS 'note_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID;
-CREATE TRIGGER notes_after_insert AFTER INSERT ON notes BEGIN
-				INSERT INTO note_fts(rowid, body) VALUES (new.rowid, new.body);
-			END;
-CREATE TRIGGER notes_after_delete AFTER DELETE ON notes BEGIN
-				INSERT INTO note_fts(note_fts, rowid, body) VALUES ('delete', old.rowid, old.body);
-			END;
-CREATE TRIGGER notes_after_update AFTER UPDATE ON notes BEGIN
-				INSERT INTO note_fts(note_fts, rowid, body) VALUES ('delete', old.rowid, old.body);
-				INSERT INTO note_fts(rowid, body) VALUES (new.rowid, new.body);
-			END;
-CREATE TABLE actions
-		(
-			uuid text PRIMARY KEY,
-			schema integer NOT NULL,
-			type text NOT NULL,
-			data text NOT NULL,
-			timestamp integer NOT NULL
-		);
-CREATE UNIQUE INDEX idx_notes_uuid ON notes(uuid);
-CREATE INDEX idx_notes_book_uuid ON notes(book_uuid);`
+//go:embed schema.sql
+var defaultSchemaSQL string
+
+// GetDefaultSchemaSQL returns the default schema SQL for tests
+func GetDefaultSchemaSQL() string {
+	return defaultSchemaSQL
+}
 
 // MustScan scans the given row and fails a test in case of any errors
 func MustScan(t *testing.T, message string, row *sql.Row, args ...interface{}) {
@@ -98,39 +57,56 @@ func MustExec(t *testing.T, message string, db *DB, query string, args ...interf
 	return result
 }
 
-// TestDBOptions contains options for test database
-type TestDBOptions struct {
-	SchemaSQLPath string
-	SkipMigration bool
+// InitTestMemoryDB initializes an in-memory test database with the default schema.
+func InitTestMemoryDB(t *testing.T) *DB {
+	db := InitTestMemoryDBRaw(t, "")
+	MarkMigrationComplete(t, db)
+	return db
 }
 
-// InitTestDB initializes a test database and opens connection to it
-func InitTestDB(t *testing.T, dbPath string, options *TestDBOptions) *DB {
+// InitTestFileDB initializes a file-based test database with the default schema.
+func InitTestFileDB(t *testing.T) (*DB, string) {
+	dbPath := filepath.Join(t.TempDir(), "dnote.db")
+
+	return InitTestFileDBRaw(t, dbPath), dbPath
+}
+
+// InitTestFileDBRaw initializes a file-based test database at the specified path with the default schema.
+func InitTestFileDBRaw(t *testing.T, dbPath string) *DB {
 	db, err := Open(dbPath)
 	if err != nil {
-		t.Fatal(errors.Wrap(err, "opening database connection"))
+		t.Fatal(errors.Wrap(err, "opening database"))
 	}
 
-	dir, _ := filepath.Split(dbPath)
-	err = os.MkdirAll(dir, 0777)
+	if _, err := db.Exec(defaultSchemaSQL); err != nil {
+		t.Fatal(errors.Wrap(err, "running schema sql"))
+	}
+
+	MarkMigrationComplete(t, db)
+
+	return db
+}
+
+// InitTestMemoryDBRaw initializes an in-memory test database without marking migrations complete.
+// If schemaPath is empty, uses the default schema. Used for migration testing.
+func InitTestMemoryDBRaw(t *testing.T, schemaPath string) *DB {
+	uuid := mustGenerateTestUUID(t)
+	dbName := fmt.Sprintf("file:%s?mode=memory&cache=shared", uuid)
+
+	db, err := Open(dbName)
 	if err != nil {
-		t.Fatal(errors.Wrap(err, "creating the directory for test database file"))
+		t.Fatal(errors.Wrap(err, "opening in-memory database"))
 	}
 
 	var schemaSQL string
-	if options != nil && options.SchemaSQLPath != "" {
-		b := utils.ReadFileAbs(options.SchemaSQLPath)
-		schemaSQL = string(b)
+	if schemaPath != "" {
+		schemaSQL = string(utils.ReadFileAbs(schemaPath))
 	} else {
 		schemaSQL = defaultSchemaSQL
 	}
 
 	if _, err := db.Exec(schemaSQL); err != nil {
 		t.Fatal(errors.Wrap(err, "running schema sql"))
-	}
-
-	if options == nil || !options.SkipMigration {
-		MarkMigrationComplete(t, db)
 	}
 
 	return db
@@ -161,10 +137,19 @@ func OpenTestDB(t *testing.T, dnoteDir string) *DB {
 
 // MarkMigrationComplete marks all migrations as complete in the database
 func MarkMigrationComplete(t *testing.T, db *DB) {
-	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemSchema, 12); err != nil {
+	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemSchema, 14); err != nil {
 		t.Fatal(errors.Wrap(err, "inserting schema"))
 	}
 	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemRemoteSchema, 1); err != nil {
 		t.Fatal(errors.Wrap(err, "inserting remote schema"))
 	}
+}
+
+// mustGenerateTestUUID generates a UUID for test databases and fails the test on error
+func mustGenerateTestUUID(t *testing.T) string {
+	uuid, err := utils.GenerateUUID()
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "generating UUID for test database"))
+	}
+	return uuid
 }

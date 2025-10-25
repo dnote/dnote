@@ -36,6 +36,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+// getTestPaths creates unique test paths for parallel test execution
+func getTestPaths(t *testing.T) context.Paths {
+	testDir := t.TempDir()
+	return context.Paths{
+		Home:   testDir,
+		Cache:  testDir,
+		Config: testDir,
+		Data:   testDir,
+	}
+}
+
 func TestProcessFragments(t *testing.T) {
 	fragments := []client.SyncFragment{
 		{
@@ -106,8 +117,7 @@ func TestProcessFragments(t *testing.T) {
 
 func TestGetLastSyncAt(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 	database.MustExec(t, "setting up last_sync_at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, 1541108743)
 
 	// exec
@@ -129,8 +139,7 @@ func TestGetLastSyncAt(t *testing.T) {
 
 func TestGetLastMaxUSN(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 	database.MustExec(t, "setting up last_max_usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 20001)
 
 	// exec
@@ -176,8 +185,7 @@ func TestResolveLabel(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-			defer database.TeardownTestDB(t, db)
+			db := database.InitTestMemoryDB(t)
 
 			database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b1-uuid", "js")
 			database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b2-uuid", "css_2")
@@ -206,8 +214,7 @@ func TestResolveLabel(t *testing.T) {
 func TestSyncDeleteNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		// execute
 		tx, err := db.Begin()
@@ -235,8 +242,7 @@ func TestSyncDeleteNote(t *testing.T) {
 		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -305,8 +311,7 @@ func TestSyncDeleteNote(t *testing.T) {
 		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
@@ -361,8 +366,7 @@ func TestSyncDeleteNote(t *testing.T) {
 func TestSyncDeleteBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", "b1-uuid", "b1-label")
 
 		var b1 database.Book
@@ -406,8 +410,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 12, true)
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -472,8 +475,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		b2UUID := testutils.MustGenerateUUID(t)
 
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, false)
@@ -538,8 +540,7 @@ func TestSyncDeleteBook(t *testing.T) {
 		b1UUID := testutils.MustGenerateUUID(t)
 
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting b1 for test case %d", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 		database.MustExec(t, "inserting n1 for test case %d", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 10, "n1 body", 1541108743, false, true)
@@ -590,8 +591,7 @@ func TestSyncDeleteBook(t *testing.T) {
 func TestFullSyncNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
@@ -822,8 +822,7 @@ n1 body edited
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				db := database.InitTestDB(t, dbPath, nil)
-				defer database.TeardownTestDB(t, db)
+				db := database.InitTestMemoryDB(t)
 
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
@@ -884,8 +883,7 @@ n1 body edited
 func TestFullSyncBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
@@ -1023,8 +1021,7 @@ func TestFullSyncBook(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				db := database.InitTestDB(t, dbPath, nil)
-				defer database.TeardownTestDB(t, db)
+				db := database.InitTestMemoryDB(t)
 
 				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
@@ -1076,8 +1073,7 @@ func TestFullSyncBook(t *testing.T) {
 func TestStepSyncNote(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
@@ -1234,8 +1230,7 @@ n1 body edited
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				db := database.InitTestDB(t, dbPath, nil)
-				defer database.TeardownTestDB(t, db)
+				db := database.InitTestMemoryDB(t)
 
 				database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1-label")
 				database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b2UUID, "b2-label")
@@ -1296,8 +1291,7 @@ n1 body edited
 func TestStepSyncBook(t *testing.T) {
 	t.Run("exists on server only", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		b1UUID := testutils.MustGenerateUUID(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, 555, "b1-label", true, false)
@@ -1419,8 +1413,7 @@ func TestStepSyncBook(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				db := database.InitTestDB(t, dbPath, nil)
-				defer database.TeardownTestDB(t, db)
+				db := database.InitTestMemoryDB(t)
 
 				b1UUID := testutils.MustGenerateUUID(t)
 				database.MustExec(t, fmt.Sprintf("inserting book for test case %d", idx), db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", b1UUID, tc.clientUSN, tc.clientLabel, tc.clientDirty, tc.clientDeleted)
@@ -1483,8 +1476,7 @@ func TestStepSyncBook(t *testing.T) {
 func TestMergeBook(t *testing.T) {
 	t.Run("insert, no duplicates", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		// test
 		tx, err := db.Begin()
@@ -1527,8 +1519,7 @@ func TestMergeBook(t *testing.T) {
 
 	t.Run("insert, 1 duplicate", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 
 		// test
@@ -1579,8 +1570,7 @@ func TestMergeBook(t *testing.T) {
 
 	t.Run("insert, 3 duplicates", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "foo_2", true, false)
@@ -1648,8 +1638,7 @@ func TestMergeBook(t *testing.T) {
 
 	t.Run("update, no duplicates", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		// test
 		tx, err := db.Begin()
@@ -1695,8 +1684,7 @@ func TestMergeBook(t *testing.T) {
 
 	t.Run("update, 1 duplicate", func(t *testing.T) {
 		// set up
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
@@ -1749,8 +1737,7 @@ func TestMergeBook(t *testing.T) {
 
 	t.Run("update, 3 duplicate", func(t *testing.T) {
 		// set uj
-		db := database.InitTestDB(t, dbPath, nil)
-		defer database.TeardownTestDB(t, db)
+		db := database.InitTestMemoryDB(t)
 
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b1-uuid", 1, "foo", false, false)
 		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, usn, label, dirty, deleted) VALUES (?, ?, ?, ?, ?)", "b2-uuid", 2, "bar", false, false)
@@ -1820,11 +1807,8 @@ func TestMergeBook(t *testing.T) {
 
 func TestSaveServerState(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, paths, nil)
-	defer context.TeardownTestCtx(t, ctx)
-	testutils.Login(t, &ctx)
-
-	db := ctx.DB
+	db := database.InitTestMemoryDB(t)
+	testutils.LoginDB(t, db)
 
 	database.MustExec(t, "inserting last synced at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, int64(1231108742))
 	database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 8)
@@ -1864,7 +1848,7 @@ func TestSaveServerState(t *testing.T) {
 // are updated accordingly based on the server response.
 func TestSendBooks(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, paths, nil)
+	ctx := context.InitTestCtx(t, getTestPaths(t))
 	defer context.TeardownTestCtx(t, ctx)
 	testutils.Login(t, &ctx)
 
@@ -1900,7 +1884,7 @@ func TestSendBooks(t *testing.T) {
 	var updatesUUIDs []string
 	var deletedUUIDs []string
 
-	// fire up a test server. It decrypts the payload for test purposes.
+	// fire up a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/v3/books" && r.Method == "POST" {
 			var payload client.CreateBookPayload
@@ -1967,7 +1951,7 @@ func TestSendBooks(t *testing.T) {
 
 	// test
 
-	// First, decrypt data so that they can be asserted
+	// First, sort data so that they can be asserted
 	sort.SliceStable(createdLabels, func(i, j int) bool {
 		return strings.Compare(createdLabels[i], createdLabels[j]) < 0
 	})
@@ -2097,7 +2081,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				ctx.APIEndpoint = ts.URL
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
@@ -2145,7 +2129,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				ctx.APIEndpoint = ts.URL
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
@@ -2193,7 +2177,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				ctx.APIEndpoint = ts.URL
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
@@ -2228,7 +2212,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 // uuid from the incoming data.
 func TestSendNotes(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, paths, nil)
+	ctx := context.InitTestCtx(t, getTestPaths(t))
 	defer context.TeardownTestCtx(t, ctx)
 	testutils.Login(t, &ctx)
 
@@ -2264,7 +2248,7 @@ func TestSendNotes(t *testing.T) {
 	var updatedUUIDs []string
 	var deletedUUIDs []string
 
-	// fire up a test server. It decrypts the payload for test purposes.
+	// fire up a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			var payload client.CreateNotePayload
@@ -2381,7 +2365,7 @@ func TestSendNotes(t *testing.T) {
 
 func TestSendNotes_addedOn(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, paths, nil)
+	ctx := context.InitTestCtx(t, getTestPaths(t))
 	defer context.TeardownTestCtx(t, ctx)
 	testutils.Login(t, &ctx)
 
@@ -2393,7 +2377,7 @@ func TestSendNotes_addedOn(t *testing.T) {
 	b1UUID := "b1-uuid"
 	database.MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, body, added_on, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?)", "n1-uuid", b1UUID, 0, "n1-body", 1541108743, false, true)
 
-	// fire up a test server. It decrypts the payload for test purposes.
+	// fire up a test server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.String() == "/v3/notes" && r.Method == "POST" {
 			resp := client.CreateNoteResp{
@@ -2513,7 +2497,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
@@ -2562,7 +2546,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
@@ -2611,7 +2595,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, paths, nil)
+				ctx := context.InitTestCtx(t, getTestPaths(t))
 				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
@@ -2777,8 +2761,7 @@ n1 body edited
 	for idx, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-			defer database.TeardownTestDB(t, db)
+			db := database.InitTestMemoryDB(t)
 
 			database.MustExec(t, fmt.Sprintf("inserting b1 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b1UUID, "b1-label", 5, false)
 			database.MustExec(t, fmt.Sprintf("inserting b2 for test case %d", idx), db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", b2UUID, "b2-label", 6, false)
@@ -2859,8 +2842,7 @@ n1 body edited
 
 func TestCheckBookPristine(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 
 	database.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b1-uuid", "b1-label", 5, false)
 	database.MustExec(t, "inserting b2", db, "INSERT INTO books (uuid, label, usn, dirty) VALUES (?, ?, ?, ?)", "b2-uuid", "b2-label", 6, false)
@@ -3033,8 +3015,7 @@ func TestCheckBookInList(t *testing.T) {
 
 func TestCleanLocalNotes(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
@@ -3105,8 +3086,7 @@ func TestCleanLocalNotes(t *testing.T) {
 
 func TestCleanLocalBooks(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 
 	list := syncList{
 		Notes: map[string]client.SyncFragNote{
@@ -3173,8 +3153,7 @@ func TestCleanLocalBooks(t *testing.T) {
 
 func TestPrepareEmptyServerSync(t *testing.T) {
 	// set up
-	db := database.InitTestDB(t, "../../tmp/.dnote", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
 
 	// Setup: local has synced data (usn > 0, dirty = false) and some deleted items
 	database.MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", "b1-uuid", "b1-label", 5, false, false)

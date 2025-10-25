@@ -38,14 +38,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-var paths context.Paths = context.Paths{
-	Home:   "../../tmp",
-	Cache:  "../../tmp",
-	Config: "../../tmp",
-	Data:   "../../tmp",
+func getTestPaths(t *testing.T) context.Paths {
+	tmpDir := t.TempDir()
+	return context.Paths{
+		Home:   tmpDir,
+		Cache:  tmpDir,
+		Config: tmpDir,
+		Data:   tmpDir,
+	}
 }
 
 func TestExecute_bump_schema(t *testing.T) {
+	paths := getTestPaths(t)
 	testCases := []struct {
 		schemaKey string
 	}{
@@ -60,11 +64,9 @@ func TestExecute_bump_schema(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, paths, &opts)
+			db := database.InitTestMemoryDBRaw(t, "")
+			ctx := context.InitTestCtxWithDB(t, paths, db)
 			defer context.TeardownTestCtx(t, ctx)
-
-			db := ctx.DB
 
 			database.MustExec(t, "inserting a schema", db, "INSERT INTO system (key, value) VALUES (?, ?)", tc.schemaKey, 8)
 
@@ -100,6 +102,7 @@ func TestExecute_bump_schema(t *testing.T) {
 }
 
 func TestRun_nonfresh(t *testing.T) {
+	paths := getTestPaths(t)
 	testCases := []struct {
 		mode      int
 		schemaKey string
@@ -117,11 +120,9 @@ func TestRun_nonfresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, paths, &opts)
+			db := database.InitTestMemoryDBRaw(t, "")
+			ctx := context.InitTestCtxWithDB(t, paths, db)
 			defer context.TeardownTestCtx(t, ctx)
-
-			db := ctx.DB
 			database.MustExec(t, "inserting a schema", db, "INSERT INTO system (key, value) VALUES (?, ?)", tc.schemaKey, 2)
 			database.MustExec(t, "creating a temporary table for testing", db,
 				"CREATE TABLE migrate_run_test ( name string )")
@@ -180,6 +181,7 @@ func TestRun_nonfresh(t *testing.T) {
 }
 
 func TestRun_fresh(t *testing.T) {
+	paths := getTestPaths(t)
 	testCases := []struct {
 		mode      int
 		schemaKey string
@@ -197,11 +199,9 @@ func TestRun_fresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, paths, &opts)
+			db := database.InitTestMemoryDBRaw(t, "")
+			ctx := context.InitTestCtxWithDB(t, paths, db)
 			defer context.TeardownTestCtx(t, ctx)
-
-			db := ctx.DB
 
 			database.MustExec(t, "creating a temporary table for testing", db,
 				"CREATE TABLE migrate_run_test ( name string )")
@@ -254,6 +254,7 @@ func TestRun_fresh(t *testing.T) {
 }
 
 func TestRun_up_to_date(t *testing.T) {
+	paths := getTestPaths(t)
 	testCases := []struct {
 		mode      int
 		schemaKey string
@@ -271,11 +272,9 @@ func TestRun_up_to_date(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			opts := database.TestDBOptions{SkipMigration: true}
-			ctx := context.InitTestCtx(t, paths, &opts)
+			db := database.InitTestMemoryDBRaw(t, "")
+			ctx := context.InitTestCtxWithDB(t, paths, db)
 			defer context.TeardownTestCtx(t, ctx)
-
-			db := ctx.DB
 
 			database.MustExec(t, "creating a temporary table for testing", db,
 				"CREATE TABLE migrate_run_test ( name string )")
@@ -325,12 +324,11 @@ func TestRun_up_to_date(t *testing.T) {
 }
 
 func TestLocalMigration1(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
 	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
@@ -403,12 +401,11 @@ func TestLocalMigration1(t *testing.T) {
 }
 
 func TestLocalMigration2(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 	c1 := "note 1 - v1"
 	c2 := "note 1 - v2"
 	css := "css"
@@ -490,12 +487,11 @@ func TestLocalMigration2(t *testing.T) {
 }
 
 func TestLocalMigration3(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 	data := testutils.MustMarshalJSON(t, actions.AddNoteDataV2{NoteUUID: "note-1-uuid", BookName: "js", Content: "note 1", Public: false})
 	a1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting action", db,
@@ -565,12 +561,11 @@ func TestLocalMigration3(t *testing.T) {
 }
 
 func TestLocalMigration4(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
@@ -609,12 +604,11 @@ func TestLocalMigration4(t *testing.T) {
 }
 
 func TestLocalMigration5(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-5-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-5-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "css")
@@ -671,12 +665,11 @@ func TestLocalMigration5(t *testing.T) {
 }
 
 func TestLocalMigration6(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-5-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-5-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	data := testutils.MustMarshalJSON(t, actions.AddBookDataV1{BookName: "js"})
 	a1UUID := testutils.MustGenerateUUID(t)
@@ -704,12 +697,11 @@ func TestLocalMigration6(t *testing.T) {
 }
 
 func TestLocalMigration7_trash(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-7-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting trash book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "trash")
@@ -737,12 +729,11 @@ func TestLocalMigration7_trash(t *testing.T) {
 }
 
 func TestLocalMigration7_conflicts(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-7-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
@@ -770,12 +761,11 @@ func TestLocalMigration7_conflicts(t *testing.T) {
 }
 
 func TestLocalMigration7_conflicts_dup(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-7-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-7-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "conflicts")
@@ -808,12 +798,11 @@ func TestLocalMigration7_conflicts_dup(t *testing.T) {
 }
 
 func TestLocalMigration8(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-8-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-8-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
@@ -874,12 +863,11 @@ func TestLocalMigration8(t *testing.T) {
 }
 
 func TestLocalMigration9(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-9-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-9-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
@@ -920,12 +908,11 @@ func TestLocalMigration9(t *testing.T) {
 }
 
 func TestLocalMigration10(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-10-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-10-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book ", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "123")
@@ -992,12 +979,11 @@ func TestLocalMigration10(t *testing.T) {
 }
 
 func TestLocalMigration11(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-11-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-11-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book 1", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "foo")
@@ -1072,9 +1058,10 @@ func TestLocalMigration11(t *testing.T) {
 }
 
 func TestLocalMigration12(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-12-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-12-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
 
 	data := []byte("editor: vim")
@@ -1109,9 +1096,10 @@ func TestLocalMigration12(t *testing.T) {
 }
 
 func TestLocalMigration13(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-12-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-12-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
 
 	data := []byte("editor: vim\napiEndpoint: https://test.com/api")
@@ -1151,12 +1139,11 @@ func TestLocalMigration13(t *testing.T) {
 }
 
 func TestLocalMigration14(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/local-14-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-14-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
-
-	db := ctx.DB
 
 	b1UUID := testutils.MustGenerateUUID(t)
 	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", b1UUID, "b1")
@@ -1201,9 +1188,10 @@ func TestLocalMigration14(t *testing.T) {
 }
 
 func TestRemoteMigration1(t *testing.T) {
+	paths := getTestPaths(t)
 	// set up
-	opts := database.TestDBOptions{SchemaSQLPath: "./fixtures/remote-1-pre-schema.sql", SkipMigration: true}
-	ctx := context.InitTestCtx(t, paths, &opts)
+	db := database.InitTestMemoryDBRaw(t, "./fixtures/remote-1-pre-schema.sql")
+	ctx := context.InitTestCtxWithDB(t, paths, db)
 	defer context.TeardownTestCtx(t, ctx)
 	testutils.Login(t, &ctx)
 
@@ -1244,7 +1232,6 @@ func TestRemoteMigration1(t *testing.T) {
 
 	ctx.APIEndpoint = server.URL
 
-	db := ctx.DB
 	database.MustExec(t, "inserting js book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", JSBookUUID, "js")
 	database.MustExec(t, "inserting css book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", CSSBookUUID, "css")
 	database.MustExec(t, "inserting linux book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", linuxBookUUID, "linux")

@@ -35,14 +35,17 @@ import (
 
 var binaryName = "test-dnote"
 
-var testDir = "./tmp/.dnote"
-
-var opts = testutils.RunDnoteCmdOptions{
-	Env: []string{
-		fmt.Sprintf("XDG_CONFIG_HOME=%s", testDir),
-		fmt.Sprintf("XDG_DATA_HOME=%s", testDir),
-		fmt.Sprintf("XDG_CACHE_HOME=%s", testDir),
-	},
+// setupTestEnv creates a unique test directory for parallel test execution
+func setupTestEnv(t *testing.T) (string, testutils.RunDnoteCmdOptions) {
+	testDir := t.TempDir()
+	opts := testutils.RunDnoteCmdOptions{
+		Env: []string{
+			fmt.Sprintf("XDG_CONFIG_HOME=%s", testDir),
+			fmt.Sprintf("XDG_DATA_HOME=%s", testDir),
+			fmt.Sprintf("XDG_CACHE_HOME=%s", testDir),
+		},
+	}
+	return testDir, opts
 }
 
 func TestMain(m *testing.M) {
@@ -55,10 +58,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestInit(t *testing.T) {
+	testDir, opts := setupTestEnv(t)
+
 	// Execute
 	// run an arbitrary command "view" due to https://github.com/spf13/cobra/issues/1056
 	testutils.RunDnoteCmd(t, opts, binaryName, "view")
-	defer testutils.RemoveDir(t, testDir)
 
 	db := database.OpenTestDB(t, testDir)
 
@@ -107,11 +111,11 @@ func TestInit(t *testing.T) {
 
 func TestAddNote(t *testing.T) {
 	t.Run("new book", func(t *testing.T) {
+		testDir, opts := setupTestEnv(t)
+
 		// Set up and execute
 		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
 		testutils.MustWaitDnoteCmd(t, opts, testutils.UserContent, binaryName, "add", "js")
-
-		defer testutils.RemoveDir(t, testDir)
 
 		db := database.OpenTestDB(t, testDir)
 
@@ -138,13 +142,15 @@ func TestAddNote(t *testing.T) {
 	})
 
 	t.Run("existing book", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		db, dbPath := database.InitTestFileDB(t)
+		defer database.TeardownTestDB(t, db)
 		testutils.Setup3(t, db)
 
 		// Execute
-		testutils.RunDnoteCmd(t, opts, binaryName, "add", "js", "-c", "foo")
-		defer testutils.RemoveDir(t, testDir)
+		testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "add", "js", "-c", "foo")
 
 		// Test
 
@@ -179,13 +185,15 @@ func TestAddNote(t *testing.T) {
 
 func TestEditNote(t *testing.T) {
 	t.Run("content flag", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		db, dbPath := database.InitTestFileDB(t)
+		defer database.TeardownTestDB(t, db)
 		testutils.Setup4(t, db)
 
 		// Execute
-		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-c", "foo bar")
-		defer testutils.RemoveDir(t, testDir)
+		testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "edit", "2", "-c", "foo bar")
 
 		// Test
 		var noteCount, bookCount int
@@ -212,13 +220,15 @@ func TestEditNote(t *testing.T) {
 	})
 
 	t.Run("book flag", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		db, dbPath := database.InitTestFileDB(t)
+		defer database.TeardownTestDB(t, db)
 		testutils.Setup5(t, db)
 
 		// Execute
-		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux")
-		defer testutils.RemoveDir(t, testDir)
+		testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "edit", "2", "-b", "linux")
 
 		// Test
 		var noteCount, bookCount int
@@ -246,13 +256,15 @@ func TestEditNote(t *testing.T) {
 	})
 
 	t.Run("book flag and content flag", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		db, dbPath := database.InitTestFileDB(t)
+		defer database.TeardownTestDB(t, db)
 		testutils.Setup5(t, db)
 
 		// Execute
-		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "2", "-b", "linux", "-c", "n2 body updated")
-		defer testutils.RemoveDir(t, testDir)
+		testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "edit", "2", "-b", "linux", "-c", "n2 body updated")
 
 		// Test
 		var noteCount, bookCount int
@@ -282,13 +294,15 @@ func TestEditNote(t *testing.T) {
 
 func TestEditBook(t *testing.T) {
 	t.Run("name flag", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
 		// Setup
-		db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+		db, dbPath := database.InitTestFileDB(t)
+		defer database.TeardownTestDB(t, db)
 		testutils.Setup1(t, db)
 
 		// Execute
-		testutils.RunDnoteCmd(t, opts, binaryName, "edit", "js", "-n", "js-edited")
-		defer testutils.RemoveDir(t, testDir)
+		testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "edit", "js", "-n", "js-edited")
 
 		// Test
 		var noteCount, bookCount int
@@ -341,17 +355,19 @@ func TestRemoveNote(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("--yes=%t", tc.yesFlag), func(t *testing.T) {
+			_, opts := setupTestEnv(t)
+
 			// Setup
-			db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+			db, dbPath := database.InitTestFileDB(t)
+			defer database.TeardownTestDB(t, db)
 			testutils.Setup2(t, db)
 
 			// Execute
 			if tc.yesFlag {
-				testutils.RunDnoteCmd(t, opts, binaryName, "remove", "-y", "1")
+				testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "remove", "-y", "1")
 			} else {
-				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveNote, binaryName, "remove", "1")
+				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveNote, binaryName, "--dbPath", dbPath, "remove", "1")
 			}
-			defer testutils.RemoveDir(t, testDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int
@@ -428,18 +444,19 @@ func TestRemoveBook(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("--yes=%t", tc.yesFlag), func(t *testing.T) {
+			_, opts := setupTestEnv(t)
+
 			// Setup
-			db := database.InitTestDB(t, fmt.Sprintf("%s/%s/%s", testDir, consts.DnoteDirName, consts.DnoteDBFileName), nil)
+			db, dbPath := database.InitTestFileDB(t)
+			defer database.TeardownTestDB(t, db)
 			testutils.Setup2(t, db)
 
 			// Execute
 			if tc.yesFlag {
-				testutils.RunDnoteCmd(t, opts, binaryName, "remove", "-y", "js")
+				testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "remove", "-y", "js")
 			} else {
-				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveBook, binaryName, "remove", "js")
+				testutils.MustWaitDnoteCmd(t, opts, testutils.ConfirmRemoveBook, binaryName, "--dbPath", dbPath, "remove", "js")
 			}
-
-			defer testutils.RemoveDir(t, testDir)
 
 			// Test
 			var noteCount, bookCount, jsNoteCount, linuxNoteCount int
@@ -537,17 +554,9 @@ func TestDBPathFlag(t *testing.T) {
 	}
 
 	// Setup - use two different custom database paths
-	customDBPath1 := "./tmp/custom-test1.db"
-	customDBPath2 := "./tmp/custom-test2.db"
-	defer testutils.RemoveDir(t, "./tmp")
-
-	customOpts := testutils.RunDnoteCmdOptions{
-		Env: []string{
-			fmt.Sprintf("XDG_CONFIG_HOME=%s", testDir),
-			fmt.Sprintf("XDG_DATA_HOME=%s", testDir),
-			fmt.Sprintf("XDG_CACHE_HOME=%s", testDir),
-		},
-	}
+	testDir, customOpts := setupTestEnv(t)
+	customDBPath1 := fmt.Sprintf("%s/custom-test1.db", testDir)
+	customDBPath2 := fmt.Sprintf("%s/custom-test2.db", testDir)
 
 	// Execute - add different notes to each database
 	testutils.RunDnoteCmd(t, customOpts, binaryName, "--dbPath", customDBPath1, "add", "db1-book", "-c", "content in db1")

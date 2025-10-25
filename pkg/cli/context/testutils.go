@@ -19,8 +19,8 @@
 package context
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/cli/consts"
@@ -29,11 +29,69 @@ import (
 	"github.com/pkg/errors"
 )
 
-// InitTestCtx initializes a test context
-func InitTestCtx(t *testing.T, paths Paths, dbOpts *database.TestDBOptions) DnoteCtx {
-	dbPath := fmt.Sprintf("%s/%s/%s", paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
+// createTestDirectories creates test directories for the given paths
+func createTestDirectories(t *testing.T, paths Paths) {
+	if paths.Config != "" {
+		configDir := filepath.Join(paths.Config, consts.DnoteDirName)
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			t.Fatal(errors.Wrap(err, "creating test config directory"))
+		}
+	}
+	if paths.Data != "" {
+		dataDir := filepath.Join(paths.Data, consts.DnoteDirName)
+		if err := os.MkdirAll(dataDir, 0755); err != nil {
+			t.Fatal(errors.Wrap(err, "creating test data directory"))
+		}
+	}
+	if paths.Cache != "" {
+		cacheDir := filepath.Join(paths.Cache, consts.DnoteDirName)
+		if err := os.MkdirAll(cacheDir, 0755); err != nil {
+			t.Fatal(errors.Wrap(err, "creating test cache directory"))
+		}
+	}
+}
 
-	db := database.InitTestDB(t, dbPath, dbOpts)
+// InitTestCtx initializes a test context with an in-memory database
+func InitTestCtx(t *testing.T, paths Paths) DnoteCtx {
+	db := database.InitTestMemoryDB(t)
+	createTestDirectories(t, paths)
+
+	return DnoteCtx{
+		DB:    db,
+		Paths: paths,
+		Clock: clock.NewMock(), // Use a mock clock to test times
+	}
+}
+
+// InitTestCtxWithDB initializes a test context with the provided database.
+// Used when you need full control over database initialization (e.g. migration tests).
+func InitTestCtxWithDB(t *testing.T, paths Paths, db *database.DB) DnoteCtx {
+	createTestDirectories(t, paths)
+
+	return DnoteCtx{
+		DB:    db,
+		Paths: paths,
+		Clock: clock.NewMock(), // Use a mock clock to test times
+	}
+}
+
+// InitTestCtxWithFileDB initializes a test context with a file-based database
+// at the expected XDG path. This is used for e2e tests that spawn CLI processes
+// which need to access the database file.
+func InitTestCtxWithFileDB(t *testing.T, paths Paths) DnoteCtx {
+	createTestDirectories(t, paths)
+
+	dbPath := filepath.Join(paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
+	db, err := database.Open(dbPath)
+	if err != nil {
+		t.Fatal(errors.Wrap(err, "opening database"))
+	}
+
+	if _, err := db.Exec(database.GetDefaultSchemaSQL()); err != nil {
+		t.Fatal(errors.Wrap(err, "running schema sql"))
+	}
+
+	database.MarkMigrationComplete(t, db)
 
 	return DnoteCtx{
 		DB:    db,

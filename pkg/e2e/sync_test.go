@@ -28,13 +28,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/dnote/dnote/pkg/assert"
 	"github.com/dnote/dnote/pkg/cli/consts"
-	"github.com/dnote/dnote/pkg/cli/context"
 	cliDatabase "github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/testutils"
 	clitest "github.com/dnote/dnote/pkg/cli/testutils"
@@ -49,37 +49,59 @@ import (
 )
 
 var cliBinaryName string
-var server *httptest.Server
-var serverDb *gorm.DB
 var serverTime = time.Date(2017, time.March, 14, 21, 15, 0, 0, time.UTC)
-
-var tmpDirPath string
-var dnoteCmdOpts clitest.RunDnoteCmdOptions
-var paths context.Paths
 
 var testDir = "./tmp/.dnote"
 
 func init() {
-	tmpDirPath = fmt.Sprintf("%s/tmp", testDir)
 	cliBinaryName = fmt.Sprintf("%s/test/cli/test-cli", testDir)
-	dnoteCmdOpts = clitest.RunDnoteCmdOptions{
+}
+
+// testEnv holds the test environment for a single test
+type testEnv struct {
+	DB       *cliDatabase.DB
+	CmdOpts  clitest.RunDnoteCmdOptions
+	Server   *httptest.Server
+	ServerDB *gorm.DB
+	TmpDir   string
+}
+
+// setupTestEnv creates an isolated test environment with its own database and temp directory
+func setupTestEnv(t *testing.T) testEnv {
+	tmpDir := t.TempDir()
+
+	// Create .dnote directory
+	dnoteDir := filepath.Join(tmpDir, consts.DnoteDirName)
+	if err := os.MkdirAll(dnoteDir, 0755); err != nil {
+		t.Fatal(errors.Wrap(err, "creating dnote directory"))
+	}
+
+	// Create database at the expected path
+	dbPath := filepath.Join(dnoteDir, consts.DnoteDBFileName)
+	db := cliDatabase.InitTestFileDBRaw(t, dbPath)
+
+	// Create server
+	server, serverDB := setupNewServer(t, tmpDir)
+
+	// Create config file with this server's endpoint
+	apiEndpoint := fmt.Sprintf("%s/api", server.URL)
+	updateConfigAPIEndpoint(t, tmpDir, apiEndpoint)
+
+	// Create command options with XDG paths pointing to temp dir
+	cmdOpts := clitest.RunDnoteCmdOptions{
 		Env: []string{
-			fmt.Sprintf("XDG_CONFIG_HOME=%s", tmpDirPath),
-			fmt.Sprintf("XDG_DATA_HOME=%s", tmpDirPath),
-			fmt.Sprintf("XDG_CACHE_HOME=%s", tmpDirPath),
+			fmt.Sprintf("XDG_CONFIG_HOME=%s", tmpDir),
+			fmt.Sprintf("XDG_DATA_HOME=%s", tmpDir),
+			fmt.Sprintf("XDG_CACHE_HOME=%s", tmpDir),
 		},
 	}
 
-	paths = context.Paths{
-		Data:   tmpDirPath,
-		Cache:  tmpDirPath,
-		Config: tmpDirPath,
-	}
-}
-
-func clearTmp(t *testing.T) {
-	if err := os.RemoveAll(tmpDirPath); err != nil {
-		t.Fatal("cleaning tmp dir")
+	return testEnv{
+		DB:       db,
+		CmdOpts:  cmdOpts,
+		Server:   server,
+		ServerDB: serverDB,
+		TmpDir:   tmpDir,
 	}
 }
 
@@ -104,23 +126,48 @@ func setupTestServer(dbPath string, serverTime time.Time) (*httptest.Server, *go
 	return server, db, nil
 }
 
-func TestMain(m *testing.M) {
-	// Set up server database - use file-based DB for e2e tests
-	dbPath := fmt.Sprintf("%s/server.db", testDir)
-
-	var err error
-	server, serverDb, err = setupTestServer(dbPath, serverTime)
+// setupNewServer creates a new server and returns the server and database.
+// This is useful when a test needs to switch to a new empty server.
+func setupNewServer(t *testing.T, tmpDir string) (*httptest.Server, *gorm.DB) {
+	// Create new server with its own database (unique name to avoid conflicts)
+	serverDBPath := filepath.Join(tmpDir, fmt.Sprintf("server-%d.db", time.Now().UnixNano()))
+	server, serverDB, err := setupTestServer(serverDBPath, serverTime)
 	if err != nil {
-		panic(err)
+		t.Fatal(errors.Wrap(err, "setting up new test server"))
 	}
+	t.Cleanup(func() { server.Close() })
 
-	defer server.Close()
+	return server, serverDB
+}
 
-	// Build binaries
-	apiEndpoint := fmt.Sprintf("%s/api", server.URL)
-	ldflags := fmt.Sprintf("-X main.apiEndpoint=%s", apiEndpoint)
+// updateConfigAPIEndpoint updates the config file with the given API endpoint
+func updateConfigAPIEndpoint(t *testing.T, tmpDir string, apiEndpoint string) {
+	dnoteDir := filepath.Join(tmpDir, consts.DnoteDirName)
+	configPath := filepath.Join(dnoteDir, consts.ConfigFilename)
+	configContent := fmt.Sprintf("apiEndpoint: %s\n", apiEndpoint)
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatal(errors.Wrap(err, "writing config file"))
+	}
+}
 
-	cmd := exec.Command("go", "build", "--tags", "fts5", "-o", cliBinaryName, "-ldflags", ldflags, "github.com/dnote/dnote/pkg/cli")
+// switchToEmptyServer closes the current server and creates a new empty server,
+// updating the config file to point to it.
+func switchToEmptyServer(t *testing.T, env *testEnv) {
+	// Close old server
+	env.Server.Close()
+
+	// Create new empty server with unique database file
+	env.Server, env.ServerDB = setupNewServer(t, t.TempDir())
+
+	// Update config file to point to new server
+	apiEndpoint := fmt.Sprintf("%s/api", env.Server.URL)
+	updateConfigAPIEndpoint(t, env.TmpDir, apiEndpoint)
+}
+
+func TestMain(m *testing.M) {
+	// Build CLI binary without hardcoded API endpoint
+	// Each test will create its own server and config file
+	cmd := exec.Command("go", "build", "--tags", "fts5", "-o", cliBinaryName, "github.com/dnote/dnote/pkg/cli")
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -135,29 +182,29 @@ func TestMain(m *testing.M) {
 }
 
 // helpers
-func setupUser(t *testing.T, db *cliDatabase.DB) database.User {
-	user := apitest.SetupUserData(serverDb, "alice@example.com", "pass1234")
+func setupUser(t *testing.T, env testEnv) database.User {
+	user := apitest.SetupUserData(env.ServerDB, "alice@example.com", "pass1234")
 
 	return user
 }
 
-func setupUserAndLogin(t *testing.T, db *cliDatabase.DB) database.User {
-	user := setupUser(t, db)
-	login(t, db, user)
+func setupUserAndLogin(t *testing.T, env testEnv) database.User {
+	user := setupUser(t, env)
+	login(t, env.DB, env.ServerDB, user)
 
 	return user
 }
 
 // log in the user in CLI
-func login(t *testing.T, db *cliDatabase.DB, user database.User) {
-	session := apitest.SetupSession(serverDb, user)
+func login(t *testing.T, db *cliDatabase.DB, serverDB *gorm.DB, user database.User) {
+	session := apitest.SetupSession(serverDB, user)
 
 	cliDatabase.MustExec(t, "inserting session_key", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, session.Key)
 	cliDatabase.MustExec(t, "inserting session_key_expiry", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, session.ExpiresAt.Unix())
 }
 
-func apiCreateBook(t *testing.T, user database.User, name, message string) string {
-	res := doHTTPReq(t, "POST", "/v3/books", fmt.Sprintf(`{"name": "%s"}`, name), message, user)
+func apiCreateBook(t *testing.T, env testEnv, user database.User, name, message string) string {
+	res := doHTTPReq(t, env, "POST", "/v3/books", fmt.Sprintf(`{"name": "%s"}`, name), message, user)
 
 	var resp controllers.CreateBookResp
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
@@ -168,16 +215,16 @@ func apiCreateBook(t *testing.T, user database.User, name, message string) strin
 	return resp.Book.UUID
 }
 
-func apiPatchBook(t *testing.T, user database.User, uuid, payload, message string) {
-	doHTTPReq(t, "PATCH", fmt.Sprintf("/v3/books/%s", uuid), payload, message, user)
+func apiPatchBook(t *testing.T, env testEnv, user database.User, uuid, payload, message string) {
+	doHTTPReq(t, env, "PATCH", fmt.Sprintf("/v3/books/%s", uuid), payload, message, user)
 }
 
-func apiDeleteBook(t *testing.T, user database.User, uuid, message string) {
-	doHTTPReq(t, "DELETE", fmt.Sprintf("/v3/books/%s", uuid), "", message, user)
+func apiDeleteBook(t *testing.T, env testEnv, user database.User, uuid, message string) {
+	doHTTPReq(t, env, "DELETE", fmt.Sprintf("/v3/books/%s", uuid), "", message, user)
 }
 
-func apiCreateNote(t *testing.T, user database.User, bookUUID, body, message string) string {
-	res := doHTTPReq(t, "POST", "/v3/notes", fmt.Sprintf(`{"book_uuid": "%s", "content": "%s"}`, bookUUID, body), message, user)
+func apiCreateNote(t *testing.T, env testEnv, user database.User, bookUUID, body, message string) string {
+	res := doHTTPReq(t, env, "POST", "/v3/notes", fmt.Sprintf(`{"book_uuid": "%s", "content": "%s"}`, bookUUID, body), message, user)
 
 	var resp controllers.CreateNoteResp
 	if err := json.NewDecoder(res.Body).Decode(&resp); err != nil {
@@ -188,16 +235,16 @@ func apiCreateNote(t *testing.T, user database.User, bookUUID, body, message str
 	return resp.Result.UUID
 }
 
-func apiPatchNote(t *testing.T, user database.User, noteUUID, payload, message string) {
-	doHTTPReq(t, "PATCH", fmt.Sprintf("/v3/notes/%s", noteUUID), payload, message, user)
+func apiPatchNote(t *testing.T, env testEnv, user database.User, noteUUID, payload, message string) {
+	doHTTPReq(t, env, "PATCH", fmt.Sprintf("/v3/notes/%s", noteUUID), payload, message, user)
 }
 
-func apiDeleteNote(t *testing.T, user database.User, noteUUID, message string) {
-	doHTTPReq(t, "DELETE", fmt.Sprintf("/v3/notes/%s", noteUUID), "", message, user)
+func apiDeleteNote(t *testing.T, env testEnv, user database.User, noteUUID, message string) {
+	doHTTPReq(t, env, "DELETE", fmt.Sprintf("/v3/notes/%s", noteUUID), "", message, user)
 }
 
-func doHTTPReq(t *testing.T, method, path, payload, message string, user database.User) *http.Response {
-	apiEndpoint := fmt.Sprintf("%s/api", server.URL)
+func doHTTPReq(t *testing.T, env testEnv, method, path, payload, message string, user database.User) *http.Response {
+	apiEndpoint := fmt.Sprintf("%s/api", env.Server.URL)
 	endpoint := fmt.Sprintf("%s%s", apiEndpoint, path)
 
 	req, err := http.NewRequest(method, endpoint, strings.NewReader(payload))
@@ -205,7 +252,7 @@ func doHTTPReq(t *testing.T, method, path, payload, message string, user databas
 		panic(errors.Wrap(err, "constructing http request"))
 	}
 
-	res := apitest.HTTPAuthDo(t, serverDb, req, user)
+	res := apitest.HTTPAuthDo(t, env.ServerDB, req, user)
 	if res.StatusCode >= 400 {
 		bs, err := io.ReadAll(res.Body)
 		if err != nil {
@@ -218,29 +265,22 @@ func doHTTPReq(t *testing.T, method, path, payload, message string, user databas
 	return res
 }
 
-type setupFunc func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string
-type assertFunc func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string)
+type setupFunc func(t *testing.T, env testEnv, user database.User) map[string]string
+type assertFunc func(t *testing.T, env testEnv, user database.User, ids map[string]string)
 
 func testSyncCmd(t *testing.T, fullSync bool, setup setupFunc, assert assertFunc) {
-	// clean up
-	apitest.ClearData(serverDb)
-	defer apitest.ClearData(serverDb)
+	env := setupTestEnv(t)
 
-	clearTmp(t)
-
-	ctx := context.InitTestCtx(t, paths, nil)
-	defer context.TeardownTestCtx(t, ctx)
-
-	user := setupUserAndLogin(t, ctx.DB)
-	ids := setup(t, ctx, user)
+	user := setupUserAndLogin(t, env)
+	ids := setup(t, env, user)
 
 	if fullSync {
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "-f")
 	} else {
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 	}
 
-	assert(t, ctx, user, ids)
+	assert(t, env, user, ids)
 }
 
 type systemState struct {
@@ -254,11 +294,7 @@ type systemState struct {
 }
 
 // checkState compares the state of the client and the server with the given system state
-func checkState(t *testing.T, ctx context.DnoteCtx, user database.User, expected systemState) {
-	checkStateWithDB(t, ctx.DB, user, serverDb, expected)
-}
-
-func checkStateWithDB(t *testing.T, clientDB *cliDatabase.DB, user database.User, serverDB *gorm.DB, expected systemState) {
+func checkState(t *testing.T, clientDB *cliDatabase.DB, user database.User, serverDB *gorm.DB, expected systemState) {
 	var clientBookCount, clientNoteCount int
 	cliDatabase.MustScan(t, "counting client notes", clientDB.QueryRow("SELECT count(*) FROM notes"), &clientNoteCount)
 	cliDatabase.MustScan(t, "counting client books", clientDB.QueryRow("SELECT count(*) FROM books"), &clientBookCount)
@@ -284,13 +320,13 @@ func checkStateWithDB(t *testing.T, clientDB *cliDatabase.DB, user database.User
 
 // tests
 func TestSync_Empty(t *testing.T) {
-	setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+	setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 		return map[string]string{}
 	}
 
-	assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
+	assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
 		// Test
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  0,
 			clientBookCount:  0,
 			clientLastMaxUSN: 0,
@@ -307,19 +343,19 @@ func TestSync_Empty(t *testing.T) {
 
 func TestSync_oneway(t *testing.T) {
 	t.Run("cli to api only", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			apitest.MustExec(t, serverDb.Model(&user).Update("max_usn", 0), "updating user max_usn")
+		setup := func(t *testing.T, env testEnv, user database.User) {
+			apitest.MustExec(t, env.ServerDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js2")
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			cliDB := ctx.DB
+		assert := func(t *testing.T, env testEnv, user database.User) {
+			cliDB := env.DB
 
 			// test client
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  3,
 				clientBookCount:  2,
 				clientLastMaxUSN: 5,
@@ -359,11 +395,11 @@ func TestSync_oneway(t *testing.T) {
 			// test server
 			var apiBookJS, apiBookCSS database.Book
 			var apiNote1JS, apiNote2JS, apiNote1CSS database.Note
-			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote1JS.UUID).First(&apiNote1JS), "getting js1 note")
-			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote2JS.UUID).First(&apiNote2JS), "getting js2 note")
-			apitest.MustExec(t, serverDb.Model(&database.Note{}).Where("uuid = ?", cliNote1CSS.UUID).First(&apiNote1CSS), "getting css1 note")
-			apitest.MustExec(t, serverDb.Model(&database.Book{}).Where("uuid = ?", cliBookJS.UUID).First(&apiBookJS), "getting js book")
-			apitest.MustExec(t, serverDb.Model(&database.Book{}).Where("uuid = ?", cliBookCSS.UUID).First(&apiBookCSS), "getting css book")
+			apitest.MustExec(t, env.ServerDB.Model(&database.Note{}).Where("uuid = ?", cliNote1JS.UUID).First(&apiNote1JS), "getting js1 note")
+			apitest.MustExec(t, env.ServerDB.Model(&database.Note{}).Where("uuid = ?", cliNote2JS.UUID).First(&apiNote2JS), "getting js2 note")
+			apitest.MustExec(t, env.ServerDB.Model(&database.Note{}).Where("uuid = ?", cliNote1CSS.UUID).First(&apiNote1CSS), "getting css1 note")
+			apitest.MustExec(t, env.ServerDB.Model(&database.Book{}).Where("uuid = ?", cliBookJS.UUID).First(&apiBookJS), "getting js book")
+			apitest.MustExec(t, env.ServerDB.Model(&database.Book{}).Where("uuid = ?", cliBookCSS.UUID).First(&apiBookCSS), "getting css book")
 
 			// assert usn
 			assert.NotEqual(t, apiNote1JS.USN, 0, "apiNote1JS usn mismatch")
@@ -390,62 +426,56 @@ func TestSync_oneway(t *testing.T) {
 		}
 
 		t.Run("stepSync", func(t *testing.T) {
-			clearTmp(t)
-			defer apitest.ClearData(serverDb)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
-			user := setupUserAndLogin(t, ctx.DB)
-			setup(t, ctx, user)
+			env := setupTestEnv(t)
+			user := setupUserAndLogin(t, env)
+			setup(t, env, user)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
-			assert(t, ctx, user)
+			assert(t, env, user)
 		})
 
 		t.Run("fullSync", func(t *testing.T) {
-			clearTmp(t)
-			defer apitest.ClearData(serverDb)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
-			user := setupUserAndLogin(t, ctx.DB)
-			setup(t, ctx, user)
+			env := setupTestEnv(t)
+			user := setupUserAndLogin(t, env)
+			setup(t, env, user)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "-f")
 
-			assert(t, ctx, user)
+			assert(t, env, user)
 		})
 	})
 
 	t.Run("cli to api with edit and delete", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			apiDB := serverDb
+		setup := func(t *testing.T, env testEnv, user database.User) {
+			apiDB := env.ServerDB
 			apitest.MustExec(t, apiDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js3")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js3")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css2")
 
 			var nid, nid2 string
-			cliDB := ctx.DB
+			cliDB := env.DB
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js3"), &nid)
 			cliDatabase.MustScan(t, "getting id of note to delete", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "css2"), &nid2)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js3-edited")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "css", nid2)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js3-edited")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "css", nid2)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css3")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css4")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css3")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css4")
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  6,
 				clientBookCount:  2,
 				clientLastMaxUSN: 8,
@@ -546,62 +576,56 @@ func TestSync_oneway(t *testing.T) {
 		}
 
 		t.Run("stepSync", func(t *testing.T) {
-			clearTmp(t)
-			defer apitest.ClearData(serverDb)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
-			user := setupUserAndLogin(t, ctx.DB)
-			setup(t, ctx, user)
+			env := setupTestEnv(t)
+			user := setupUserAndLogin(t, env)
+			setup(t, env, user)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
-			assert(t, ctx, user)
+			assert(t, env, user)
 		})
 
 		t.Run("fullSync", func(t *testing.T) {
-			clearTmp(t)
-			defer apitest.ClearData(serverDb)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
-			user := setupUserAndLogin(t, ctx.DB)
-			setup(t, ctx, user)
+			env := setupTestEnv(t)
+			user := setupUserAndLogin(t, env)
+			setup(t, env, user)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "-f")
 
-			assert(t, ctx, user)
+			assert(t, env, user)
 		})
 	})
 
 	t.Run("api to cli", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			apiDB := serverDb
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			apiDB := env.ServerDB
 
 			apitest.MustExec(t, apiDB.Model(&user).Update("max_usn", 0), "updating user max_usn")
 
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
-			cssNote1UUID := apiCreateNote(t, user, cssBookUUID, "css1", "adding css note 1")
-			jsNote2UUID := apiCreateNote(t, user, jsBookUUID, "js2", "adding js note 2")
-			cssNote2UUID := apiCreateNote(t, user, cssBookUUID, "css2", "adding css note 2")
-			linuxBookUUID := apiCreateBook(t, user, "linux", "adding linux book")
-			linuxNote1UUID := apiCreateNote(t, user, linuxBookUUID, "linux1", "adding linux note 1")
-			apiPatchNote(t, user, jsNote2UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, linuxBookUUID), "moving js note 2 to linux")
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
-			cssNote3UUID := apiCreateNote(t, user, cssBookUUID, "css3", "adding css note 3")
-			bashBookUUID := apiCreateBook(t, user, "bash", "adding bash book")
-			bashNote1UUID := apiCreateNote(t, user, bashBookUUID, "bash1", "adding bash note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
+			cssNote1UUID := apiCreateNote(t, env, user, cssBookUUID, "css1", "adding css note 1")
+			jsNote2UUID := apiCreateNote(t, env, user, jsBookUUID, "js2", "adding js note 2")
+			cssNote2UUID := apiCreateNote(t, env, user, cssBookUUID, "css2", "adding css note 2")
+			linuxBookUUID := apiCreateBook(t, env, user, "linux", "adding linux book")
+			linuxNote1UUID := apiCreateNote(t, env, user, linuxBookUUID, "linux1", "adding linux note 1")
+			apiPatchNote(t, env, user, jsNote2UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, linuxBookUUID), "moving js note 2 to linux")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
+			cssNote3UUID := apiCreateNote(t, env, user, cssBookUUID, "css3", "adding css note 3")
+			bashBookUUID := apiCreateBook(t, env, user, "bash", "adding bash book")
+			bashNote1UUID := apiCreateNote(t, env, user, bashBookUUID, "bash1", "adding bash note 1")
 
 			// delete the linux book and its two notes
-			apiDeleteBook(t, user, linuxBookUUID, "deleting linux book")
+			apiDeleteBook(t, env, user, linuxBookUUID, "deleting linux book")
 
-			apiPatchNote(t, user, cssNote2UUID, fmt.Sprintf(`{"content": "%s"}`, "css2-edited"), "editing css 2 body")
-			bashNote2UUID := apiCreateNote(t, user, bashBookUUID, "bash2", "adding bash note 2")
-			linuxBook2UUID := apiCreateBook(t, user, "linux", "adding new linux book")
-			linux2Note1UUID := apiCreateNote(t, user, linuxBookUUID, "linux-new-1", "adding linux note 1")
-			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
+			apiPatchNote(t, env, user, cssNote2UUID, fmt.Sprintf(`{"content": "%s"}`, "css2-edited"), "editing css 2 body")
+			bashNote2UUID := apiCreateNote(t, env, user, bashBookUUID, "bash2", "adding bash note 2")
+			linuxBook2UUID := apiCreateBook(t, env, user, "linux", "adding new linux book")
+			linux2Note1UUID := apiCreateNote(t, env, user, linuxBookUUID, "linux-new-1", "adding linux note 1")
+			apiDeleteBook(t, env, user, jsBookUUID, "deleting js book")
 
 			return map[string]string{
 				"jsBookUUID":      jsBookUUID,
@@ -621,11 +645,11 @@ func TestSync_oneway(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  6,
 				clientBookCount:  3,
 				clientLastMaxUSN: 21,
@@ -768,41 +792,41 @@ func TestSync_oneway(t *testing.T) {
 
 func TestSync_twoway(t *testing.T) {
 	t.Run("once", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
-			cssNote1UUID := apiCreateNote(t, user, cssBookUUID, "css1", "adding css note 1")
-			jsNote2UUID := apiCreateNote(t, user, jsBookUUID, "js2", "adding js note 2")
-			cssNote2UUID := apiCreateNote(t, user, cssBookUUID, "css2", "adding css note 2")
-			linuxBookUUID := apiCreateBook(t, user, "linux", "adding linux book")
-			linuxNote1UUID := apiCreateNote(t, user, linuxBookUUID, "linux1", "adding linux note 1")
-			apiPatchNote(t, user, jsNote2UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, linuxBookUUID), "moving js note 2 to linux")
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
-			cssNote3UUID := apiCreateNote(t, user, cssBookUUID, "css3", "adding css note 3")
-			bashBookUUID := apiCreateBook(t, user, "bash", "adding bash book")
-			bashNote1UUID := apiCreateNote(t, user, bashBookUUID, "bash1", "adding bash note 1")
-			apiDeleteBook(t, user, linuxBookUUID, "deleting linux book")
-			apiPatchNote(t, user, cssNote2UUID, fmt.Sprintf(`{"content": "%s"}`, "css2-edited"), "editing css 2 body")
-			bashNote2UUID := apiCreateNote(t, user, bashBookUUID, "bash2", "adding bash note 2")
-			linuxBook2UUID := apiCreateBook(t, user, "linux", "adding new linux book")
-			linux2Note1UUID := apiCreateNote(t, user, linuxBookUUID, "linux-new-1", "adding linux note 1")
-			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
+			cssNote1UUID := apiCreateNote(t, env, user, cssBookUUID, "css1", "adding css note 1")
+			jsNote2UUID := apiCreateNote(t, env, user, jsBookUUID, "js2", "adding js note 2")
+			cssNote2UUID := apiCreateNote(t, env, user, cssBookUUID, "css2", "adding css note 2")
+			linuxBookUUID := apiCreateBook(t, env, user, "linux", "adding linux book")
+			linuxNote1UUID := apiCreateNote(t, env, user, linuxBookUUID, "linux1", "adding linux note 1")
+			apiPatchNote(t, env, user, jsNote2UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, linuxBookUUID), "moving js note 2 to linux")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
+			cssNote3UUID := apiCreateNote(t, env, user, cssBookUUID, "css3", "adding css note 3")
+			bashBookUUID := apiCreateBook(t, env, user, "bash", "adding bash book")
+			bashNote1UUID := apiCreateNote(t, env, user, bashBookUUID, "bash1", "adding bash note 1")
+			apiDeleteBook(t, env, user, linuxBookUUID, "deleting linux book")
+			apiPatchNote(t, env, user, cssNote2UUID, fmt.Sprintf(`{"content": "%s"}`, "css2-edited"), "editing css 2 body")
+			bashNote2UUID := apiCreateNote(t, env, user, bashBookUUID, "bash2", "adding bash note 2")
+			linuxBook2UUID := apiCreateBook(t, env, user, "linux", "adding new linux book")
+			linux2Note1UUID := apiCreateNote(t, env, user, linuxBookUUID, "linux-new-1", "adding linux note 1")
+			apiDeleteBook(t, env, user, jsBookUUID, "deleting js book")
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js3")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js4")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms2")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "math", "-c", "math1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js3")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js4")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "math", "-c", "math1")
 
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js3"), &nid)
 
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "algorithms")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css4")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "algorithms")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css4")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":      jsBookUUID,
@@ -822,11 +846,11 @@ func TestSync_twoway(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  9,
 				clientBookCount:  6,
 				clientLastMaxUSN: 27,
@@ -1002,43 +1026,43 @@ func TestSync_twoway(t *testing.T) {
 	})
 
 	t.Run("twice", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
-			cssNote1UUID := apiCreateNote(t, user, cssBookUUID, "css1", "adding css note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
+			cssNote1UUID := apiCreateNote(t, env, user, cssBookUUID, "css1", "adding css note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "math", "-c", "math1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js2")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "math", "-c", "math1")
 
 			var nid string
-			cliDB := ctx.DB
+			cliDB := env.DB
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "math1"), &nid)
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "math", nid, "-c", "math1-edited")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "math", nid, "-c", "math1-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			scssBookUUID := apiCreateBook(t, user, "scss", "adding a scss book")
-			apiPatchNote(t, user, cssNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, scssBookUUID), "moving css note 1 to scss")
+			scssBookUUID := apiCreateBook(t, env, user, "scss", "adding a scss book")
+			apiPatchNote(t, env, user, cssNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, scssBookUUID), "moving css note 1 to scss")
 
 			var n1UUID string
 			cliDatabase.MustScan(t, "getting math1-edited note UUID", cliDB.QueryRow("SELECT uuid FROM notes WHERE body = ?", "math1-edited"), &n1UUID)
-			apiPatchNote(t, user, n1UUID, fmt.Sprintf(`{"content": "%s", "public": true}`, "math1-edited"), "editing math1 note")
+			apiPatchNote(t, env, user, n1UUID, fmt.Sprintf(`{"content": "%s", "public": true}`, "math1-edited"), "editing math1 note")
 
-			cssNote2UUID := apiCreateNote(t, user, cssBookUUID, "css2", "adding css note 2")
-			apiDeleteBook(t, user, cssBookUUID, "deleting css book")
+			cssNote2UUID := apiCreateNote(t, env, user, cssBookUUID, "css2", "adding css note 2")
+			apiDeleteBook(t, env, user, cssBookUUID, "deleting css book")
 
-			bashBookUUID := apiCreateBook(t, user, "bash", "adding a bash book")
-			algorithmsBookUUID := apiCreateBook(t, user, "algorithms", "adding a algorithms book")
+			bashBookUUID := apiCreateBook(t, env, user, "bash", "adding a bash book")
+			algorithmsBookUUID := apiCreateBook(t, env, user, "algorithms", "adding a algorithms book")
 
 			// 4. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js3")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js3")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "algorithms", "-c", "algorithms1")
 
 			return map[string]string{
 				"jsBookUUID":         jsBookUUID,
@@ -1052,11 +1076,11 @@ func TestSync_twoway(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
-			cliDB := ctx.DB
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
+			cliDB := env.DB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  5,
 				clientBookCount:  6,
 				clientLastMaxUSN: 17,
@@ -1182,21 +1206,21 @@ func TestSync_twoway(t *testing.T) {
 	})
 
 	t.Run("three times", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			goBookUUID := apiCreateBook(t, user, "go", "adding a go book")
-			goNote1UUID := apiCreateNote(t, user, goBookUUID, "go1", "adding go note 1")
+			goBookUUID := apiCreateBook(t, env, user, "go", "adding a go book")
+			goNote1UUID := apiCreateNote(t, env, user, goBookUUID, "go1", "adding go note 1")
 
 			// 4. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "html", "-c", "html1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "html", "-c", "html1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1206,11 +1230,11 @@ func TestSync_twoway(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  4,
 				clientBookCount:  4,
 				clientLastMaxUSN: 8,
@@ -1299,17 +1323,17 @@ func TestSync_twoway(t *testing.T) {
 
 func TestSync(t *testing.T) {
 	t.Run("client adds a book and a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
 
 			return map[string]string{}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 2,
@@ -1353,14 +1377,14 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client deletes a book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1368,10 +1392,10 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  0,
 				clientLastMaxUSN: 5,
@@ -1403,18 +1427,18 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client deletes a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1422,11 +1446,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -1469,19 +1493,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client edits a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1489,11 +1513,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -1540,14 +1564,14 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client edits a book by renaming it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1555,11 +1579,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -1611,19 +1635,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server adds a book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
 
 			return map[string]string{
 				"jsBookUUID": jsBookUUID,
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 1,
@@ -1658,26 +1682,26 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server edits a book by renaming it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchBook(t, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-new-label"), "editing js book")
+			apiPatchBook(t, env, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-new-label"), "editing js book")
 
 			return map[string]string{
 				"jsBookUUID": jsBookUUID,
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 2,
@@ -1712,25 +1736,25 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server deletes a book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
+			apiDeleteBook(t, env, user, jsBookUUID, "deleting js book")
 
 			return map[string]string{
 				"jsBookUUID": jsBookUUID,
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  0,
 				clientLastMaxUSN: 2,
@@ -1757,10 +1781,10 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server adds a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1768,11 +1792,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 2,
@@ -1817,16 +1841,16 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server edits a note body", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js note 1")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js note 1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1834,11 +1858,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -1883,17 +1907,17 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server moves a note to another book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1902,11 +1926,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -1958,16 +1982,16 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server deletes a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -1975,11 +1999,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -2020,19 +2044,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server deletes the same book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
+			apiDeleteBook(t, env, user, jsBookUUID, "deleting js book")
 
 			// 4. on cli
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2040,10 +2064,10 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  0,
 				clientLastMaxUSN: 6,
@@ -2076,23 +2100,23 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server deletes the same note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
 
 			// 4. on cli
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2100,11 +2124,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
-			cliDB := ctx.DB
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
+			cliDB := env.DB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -2148,19 +2172,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server and client adds a note with same body", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 4. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2168,11 +2192,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -2222,13 +2246,13 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server and client adds a book with same label", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2236,11 +2260,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -2297,16 +2321,16 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server and client adds two sets of books with same labels", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
-			cssNote1UUID := apiCreateNote(t, user, cssBookUUID, "css1", "adding css note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
+			cssNote1UUID := apiCreateNote(t, env, user, cssBookUUID, "css1", "adding css note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
 
 			return map[string]string{
 				"jsBookUUID":   jsBookUUID,
@@ -2316,11 +2340,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  4,
 				clientBookCount:  4,
 				clientLastMaxUSN: 8,
@@ -2402,19 +2426,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server and client adds notes to the same book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 4. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js2")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2422,11 +2446,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -2476,13 +2500,13 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server and client adds a book with the same label and notes in it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js2")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js2")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2490,11 +2514,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -2550,22 +2574,22 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server edits bodys of the same note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited-from-client")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited-from-client")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited-from-server"), "editing js note 1")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited-from-server"), "editing js note 1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2573,13 +2597,13 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
 			resolvedBody := "<<<<<<< Local\njs1-edited-from-client\n=======\njs1-edited-from-server\n>>>>>>> Server\n"
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -2626,21 +2650,21 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("clients deletes a note and server edits its body", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js note 1")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js note 1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2648,11 +2672,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 3,
@@ -2699,22 +2723,22 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("clients deletes a note and server moves it to another book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding css book")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding css book")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to remove", cliDB.QueryRow("SELECT rowid FROM notes WHERE uuid = ?", jsNote1UUID), &nid)
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveNote, cliBinaryName, "remove", "js", nid)
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2723,11 +2747,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -2783,23 +2807,23 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server deletes a note and client edits it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
 
 			// 4. on cli
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2807,11 +2831,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -2860,19 +2884,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server deletes a book and client edits it by renaming it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteNote(t, user, jsNote1UUID, "deleting js note 1")
+			apiDeleteNote(t, env, user, jsNote1UUID, "deleting js note 1")
 
 			// 4. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2880,11 +2904,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -2928,23 +2952,23 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("server deletes a book and client edits a note in it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			cliDB := ctx.DB
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			cliDB := env.DB
 
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiDeleteBook(t, user, jsBookUUID, "deleting js book")
+			apiDeleteBook(t, env, user, jsBookUUID, "deleting js book")
 
 			// 4. on cli
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-c", "js1-edited")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -2952,11 +2976,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 6,
@@ -3005,17 +3029,17 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client deletes a book and server edits it by renaming it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			// 3. on server
-			apiPatchBook(t, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited"), "editing js book")
+			apiPatchBook(t, env, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited"), "editing js book")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3023,11 +3047,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  1,
 				clientLastMaxUSN: 5,
@@ -3071,19 +3095,19 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client deletes a book and server edits a note in it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js1 note")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"content": "%s"}`, "js1-edited"), "editing js1 note")
 
 			// 4. on cli
-			clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
+			clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.ConfirmRemoveBook, cliBinaryName, "remove", "js")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3091,10 +3115,10 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  0,
 				clientBookCount:  0,
 				clientLastMaxUSN: 6,
@@ -3127,17 +3151,17 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server edit a book by renaming it to a same name", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited")
 
 			// 3. on server
-			apiPatchBook(t, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited"), "editing js book")
+			apiPatchBook(t, env, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited"), "editing js book")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3145,11 +3169,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -3201,17 +3225,17 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server edit a book by renaming it to different names", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited-client")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", "-n", "js-edited-client")
 
 			// 3. on server
-			apiPatchBook(t, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited-server"), "editing js book")
+			apiPatchBook(t, env, user, jsBookUUID, fmt.Sprintf(`{"name": "%s"}`, "js-edited-server"), "editing js book")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3219,13 +3243,13 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
 			// In this case, server's change wins and overwrites that of client's
 
-			cliDB := ctx.DB
-			apiDB := serverDb
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  1,
 				clientLastMaxUSN: 4,
@@ -3277,17 +3301,17 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client moves a note", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding a css book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding a css book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "1", "-b", "css")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "1", "-b", "css")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3296,11 +3320,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -3361,20 +3385,20 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server each moves a note to a same book", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding a css book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding a css book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
 
 			// 3. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "1", "-b", "css")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "1", "-b", "css")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3383,11 +3407,11 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  2,
 				clientLastMaxUSN: 5,
@@ -3448,21 +3472,21 @@ func TestSync(t *testing.T) {
 	})
 
 	t.Run("client and server each moves a note to different books", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			cssBookUUID := apiCreateBook(t, user, "css", "adding a css book")
-			linuxBookUUID := apiCreateBook(t, user, "linux", "adding a linux book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding a css book")
+			linuxBookUUID := apiCreateBook(t, env, user, "linux", "adding a linux book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			apiPatchNote(t, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
+			apiPatchNote(t, env, user, jsNote1UUID, fmt.Sprintf(`{"book_uuid": "%s"}`, cssBookUUID), "moving js note 1 to css book")
 
 			// 3. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "1", "-b", "linux")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "1", "-b", "linux")
 
 			return map[string]string{
 				"jsBookUUID":    jsBookUUID,
@@ -3472,9 +3496,9 @@ func TestSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
 			expectedNote1JSBody := `<<<<<<< Local
 Moved to the book linux
@@ -3484,7 +3508,7 @@ Moved to the book css
 
 js1`
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  1,
 				clientBookCount:  4,
 				clientLastMaxUSN: 7,
@@ -3563,20 +3587,20 @@ js1`
 	})
 
 	t.Run("client adds a new book and moves a note into it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
 
-			cliDB := ctx.DB
+			cliDB := env.DB
 			var nid string
 			cliDatabase.MustScan(t, "getting id of note to edit", cliDB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", "js", nid, "-b", "css")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", "js", nid, "-b", "css")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3584,11 +3608,11 @@ js1`
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  2,
 				clientLastMaxUSN: 5,
@@ -3661,23 +3685,23 @@ js1`
 	})
 
 	t.Run("client adds a duplicate book and moves a note into it", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
 			// 1. on server
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
 			// 2. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 			// 3. on server
-			cssBookUUID := apiCreateBook(t, user, "css", "adding a css book")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "adding a css book")
 
 			// 3. on cli
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
 
 			var nid string
-			cliDatabase.MustScan(t, "getting id of note to edit", ctx.DB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "edit", nid, "-b", "css")
+			cliDatabase.MustScan(t, "getting id of note to edit", env.DB.QueryRow("SELECT rowid FROM notes WHERE body = ?", "js1"), &nid)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "edit", nid, "-b", "css")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3686,11 +3710,11 @@ js1`
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  3,
 				clientLastMaxUSN: 6,
@@ -3774,11 +3798,11 @@ js1`
 
 func TestFullSync(t *testing.T) {
 	t.Run("consecutively with stepSync", func(t *testing.T) {
-		setup := func(t *testing.T, ctx context.DnoteCtx, user database.User) map[string]string {
-			jsBookUUID := apiCreateBook(t, user, "js", "adding a js book")
-			jsNote1UUID := apiCreateNote(t, user, jsBookUUID, "js1", "adding js note 1")
+		setup := func(t *testing.T, env testEnv, user database.User) map[string]string {
+			jsBookUUID := apiCreateBook(t, env, user, "js", "adding a js book")
+			jsNote1UUID := apiCreateNote(t, env, user, jsBookUUID, "js1", "adding js note 1")
 
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
 
 			return map[string]string{
 				"jsBookUUID":  jsBookUUID,
@@ -3786,11 +3810,11 @@ func TestFullSync(t *testing.T) {
 			}
 		}
 
-		assert := func(t *testing.T, ctx context.DnoteCtx, user database.User, ids map[string]string) {
-			cliDB := ctx.DB
-			apiDB := serverDb
+		assert := func(t *testing.T, env testEnv, user database.User, ids map[string]string) {
+			cliDB := env.DB
+			apiDB := env.ServerDB
 
-			checkState(t, ctx, user, systemState{
+			checkState(t, env.DB, user, env.ServerDB, systemState{
 				clientNoteCount:  2,
 				clientBookCount:  2,
 				clientLastMaxUSN: 4,
@@ -3850,38 +3874,26 @@ func TestFullSync(t *testing.T) {
 		}
 
 		t.Run("stepSync then fullSync", func(t *testing.T) {
-			// clean up
-			os.RemoveAll(tmpDirPath)
-			apitest.ClearData(serverDb)
-			defer apitest.ClearData(serverDb)
+			env := setupTestEnv(t)
+			user := setupUserAndLogin(t, env)
+			ids := setup(t, env, user)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
-			user := setupUserAndLogin(t, ctx.DB)
-			ids := setup(t, ctx, user)
-
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			assert(t, ctx, user, ids)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
-			assert(t, ctx, user, ids)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			assert(t, env, user, ids)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "-f")
+			assert(t, env, user, ids)
 		})
 
 		t.Run("fullSync then stepSync", func(t *testing.T) {
-			// clean up
-			os.RemoveAll(tmpDirPath)
-			apitest.ClearData(serverDb)
-			defer apitest.ClearData(serverDb)
+			env := setupTestEnv(t)
 
-			ctx := context.InitTestCtx(t, paths, nil)
-			defer context.TeardownTestCtx(t, ctx)
+			user := setupUserAndLogin(t, env)
+			ids := setup(t, env, user)
 
-			user := setupUserAndLogin(t, ctx.DB)
-			ids := setup(t, ctx, user)
-
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "-f")
-			assert(t, ctx, user, ids)
-			clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
-			assert(t, ctx, user, ids)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "-f")
+			assert(t, env, user, ids)
+			clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
+			assert(t, env, user, ids)
 		})
 	})
 }
@@ -3891,24 +3903,17 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Test server data loss/wipe scenario (disaster recovery):
 		// Verify empty server detection works when the server loses all its data
 
-		// clean up
-		apitest.ClearData(serverDb)
-		defer apitest.ClearData(serverDb)
+		env := setupTestEnv(t)
 
-		clearTmp(t)
-
-		ctx := context.InitTestCtx(t, paths, nil)
-		defer context.TeardownTestCtx(t, ctx)
-
-		user := setupUserAndLogin(t, ctx.DB)
+		user := setupUserAndLogin(t, env)
 
 		// Step 1: Create local data and sync to server
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 		// Verify sync succeeded
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -3918,17 +3923,18 @@ func TestSync_EmptyServer(t *testing.T) {
 			serverUserMaxUSN: 4,
 		})
 
-		// Step 2: Clear all server data to simulate switching to a completely new empty server
-		apitest.ClearData(serverDb)
-		// Recreate user and session (simulating a new server)
-		user = setupUserAndLogin(t, ctx.DB)
+		// Step 2: Switch to a completely new empty server
+		switchToEmptyServer(t, &env)
+
+		// Recreate user and session on new server
+		user = setupUserAndLogin(t, env)
 
 		// Step 3: Sync again - should detect empty server and prompt user
 		// User confirms with "y"
-		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync")
+		clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync")
 
 		// Step 4: Verify data was uploaded to the empty server
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -3941,10 +3947,10 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Verify the content is correct on both client and server
 		var cliNote1JS, cliNote1CSS cliDatabase.Note
 		var cliBookJS, cliBookCSS cliDatabase.Book
-		cliDatabase.MustScan(t, "finding cliNote1JS", ctx.DB.QueryRow("SELECT uuid, body FROM notes WHERE body = ?", "js1"), &cliNote1JS.UUID, &cliNote1JS.Body)
-		cliDatabase.MustScan(t, "finding cliNote1CSS", ctx.DB.QueryRow("SELECT uuid, body FROM notes WHERE body = ?", "css1"), &cliNote1CSS.UUID, &cliNote1CSS.Body)
-		cliDatabase.MustScan(t, "finding cliBookJS", ctx.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label)
-		cliDatabase.MustScan(t, "finding cliBookCSS", ctx.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label)
+		cliDatabase.MustScan(t, "finding cliNote1JS", env.DB.QueryRow("SELECT uuid, body FROM notes WHERE body = ?", "js1"), &cliNote1JS.UUID, &cliNote1JS.Body)
+		cliDatabase.MustScan(t, "finding cliNote1CSS", env.DB.QueryRow("SELECT uuid, body FROM notes WHERE body = ?", "css1"), &cliNote1CSS.UUID, &cliNote1CSS.Body)
+		cliDatabase.MustScan(t, "finding cliBookJS", env.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label)
+		cliDatabase.MustScan(t, "finding cliBookCSS", env.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label)
 
 		assert.Equal(t, cliNote1JS.Body, "js1", "js note body mismatch")
 		assert.Equal(t, cliNote1CSS.Body, "css1", "css note body mismatch")
@@ -3954,10 +3960,10 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Verify on server side
 		var serverNoteJS, serverNoteCSS database.Note
 		var serverBookJS, serverBookCSS database.Book
-		apitest.MustExec(t, serverDb.Where("body = ?", "js1").First(&serverNoteJS), "finding server note js1")
-		apitest.MustExec(t, serverDb.Where("body = ?", "css1").First(&serverNoteCSS), "finding server note css1")
-		apitest.MustExec(t, serverDb.Where("label = ?", "js").First(&serverBookJS), "finding server book js")
-		apitest.MustExec(t, serverDb.Where("label = ?", "css").First(&serverBookCSS), "finding server book css")
+		apitest.MustExec(t, env.ServerDB.Where("body = ?", "js1").First(&serverNoteJS), "finding server note js1")
+		apitest.MustExec(t, env.ServerDB.Where("body = ?", "css1").First(&serverNoteCSS), "finding server note css1")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "js").First(&serverBookJS), "finding server book js")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "css").First(&serverBookCSS), "finding server book css")
 
 		assert.Equal(t, serverNoteJS.Body, "js1", "server js note body mismatch")
 		assert.Equal(t, serverNoteCSS.Body, "css1", "server css note body mismatch")
@@ -3966,24 +3972,17 @@ func TestSync_EmptyServer(t *testing.T) {
 	})
 
 	t.Run("user cancels empty server prompt", func(t *testing.T) {
-		// clean up
-		apitest.ClearData(serverDb)
-		defer apitest.ClearData(serverDb)
+		env := setupTestEnv(t)
 
-		clearTmp(t)
-
-		ctx := context.InitTestCtx(t, paths, nil)
-		defer context.TeardownTestCtx(t, ctx)
-
-		user := setupUserAndLogin(t, ctx.DB)
+		user := setupUserAndLogin(t, env)
 
 		// Step 1: Create local data and sync to server
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 		// Verify initial sync succeeded
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -3993,12 +3992,12 @@ func TestSync_EmptyServer(t *testing.T) {
 			serverUserMaxUSN: 4,
 		})
 
-		// Step 2: Clear all server data
-		apitest.ClearData(serverDb)
-		user = setupUserAndLogin(t, ctx.DB)
+		// Step 2: Switch to empty server
+		switchToEmptyServer(t, &env)
+		user = setupUserAndLogin(t, env)
 
 		// Step 3: Sync again but user cancels with "n"
-		output, err := clitest.WaitDnoteCmd(t, dnoteCmdOpts, clitest.UserCancelEmptyServerSync, cliBinaryName, "sync")
+		output, err := clitest.WaitDnoteCmd(t, env.CmdOpts, clitest.UserCancelEmptyServerSync, cliBinaryName, "sync")
 		if err == nil {
 			t.Fatal("Expected sync to fail when user cancels, but it succeeded")
 		}
@@ -4009,7 +4008,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		}
 
 		// Step 4: Verify local state unchanged (transaction rolled back)
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4022,8 +4021,8 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Verify items still have original USN and dirty=false
 		var book cliDatabase.Book
 		var note cliDatabase.Note
-		cliDatabase.MustScan(t, "checking book state", ctx.DB.QueryRow("SELECT usn, dirty FROM books WHERE label = ?", "js"), &book.USN, &book.Dirty)
-		cliDatabase.MustScan(t, "checking note state", ctx.DB.QueryRow("SELECT usn, dirty FROM notes WHERE body = ?", "js1"), &note.USN, &note.Dirty)
+		cliDatabase.MustScan(t, "checking book state", env.DB.QueryRow("SELECT usn, dirty FROM books WHERE label = ?", "js"), &book.USN, &book.Dirty)
+		cliDatabase.MustScan(t, "checking note state", env.DB.QueryRow("SELECT usn, dirty FROM notes WHERE body = ?", "js1"), &note.USN, &note.Dirty)
 
 		assert.NotEqual(t, book.USN, 0, "book USN should not be reset")
 		assert.NotEqual(t, note.USN, 0, "note USN should not be reset")
@@ -4035,24 +4034,17 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Test edge case: Server MaxUSN=0, local MaxUSN>0, but all items are deleted=true
 		// Should NOT prompt because there's nothing to upload
 
-		// clean up
-		apitest.ClearData(serverDb)
-		defer apitest.ClearData(serverDb)
+		env := setupTestEnv(t)
 
-		clearTmp(t)
-
-		ctx := context.InitTestCtx(t, paths, nil)
-		defer context.TeardownTestCtx(t, ctx)
-
-		user := setupUserAndLogin(t, ctx.DB)
+		user := setupUserAndLogin(t, env)
 
 		// Step 1: Create local data and sync to server
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 		// Verify initial sync succeeded
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4063,35 +4055,35 @@ func TestSync_EmptyServer(t *testing.T) {
 		})
 
 		// Step 2: Delete all local notes and books (mark as deleted)
-		cliDatabase.MustExec(t, "marking all books deleted", ctx.DB, "UPDATE books SET deleted = 1")
-		cliDatabase.MustExec(t, "marking all notes deleted", ctx.DB, "UPDATE notes SET deleted = 1")
+		cliDatabase.MustExec(t, "marking all books deleted", env.DB, "UPDATE books SET deleted = 1")
+		cliDatabase.MustExec(t, "marking all notes deleted", env.DB, "UPDATE notes SET deleted = 1")
 
-		// Step 3: Clear server data to simulate switching to empty server
-		apitest.ClearData(serverDb)
-		user = setupUserAndLogin(t, ctx.DB)
+		// Step 3: Switch to empty server
+		switchToEmptyServer(t, &env)
+		user = setupUserAndLogin(t, env)
 
 		// Step 4: Sync - should NOT prompt because bookCount=0 and noteCount=0 (counting only deleted=0)
 		// This should complete without user interaction
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 		// Verify no data was uploaded (server still empty, but client still has deleted items)
 		// Check server is empty
 		var serverNoteCount, serverBookCount int64
-		apitest.MustExec(t, serverDb.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
-		apitest.MustExec(t, serverDb.Model(&database.Book{}).Count(&serverBookCount), "counting server books")
+		apitest.MustExec(t, env.ServerDB.Model(&database.Note{}).Count(&serverNoteCount), "counting server notes")
+		apitest.MustExec(t, env.ServerDB.Model(&database.Book{}).Count(&serverBookCount), "counting server books")
 		assert.Equal(t, serverNoteCount, int64(0), "server should have no notes")
 		assert.Equal(t, serverBookCount, int64(0), "server should have no books")
 
 		// Check client still has the deleted items locally
 		var clientNoteCount, clientBookCount int
-		cliDatabase.MustScan(t, "counting client notes", ctx.DB.QueryRow("SELECT count(*) FROM notes WHERE deleted = 1"), &clientNoteCount)
-		cliDatabase.MustScan(t, "counting client books", ctx.DB.QueryRow("SELECT count(*) FROM books WHERE deleted = 1"), &clientBookCount)
+		cliDatabase.MustScan(t, "counting client notes", env.DB.QueryRow("SELECT count(*) FROM notes WHERE deleted = 1"), &clientNoteCount)
+		cliDatabase.MustScan(t, "counting client books", env.DB.QueryRow("SELECT count(*) FROM books WHERE deleted = 1"), &clientBookCount)
 		assert.Equal(t, clientNoteCount, 2, "client should still have 2 deleted notes")
 		assert.Equal(t, clientBookCount, 2, "client should still have 2 deleted books")
 
 		// Verify lastMaxUSN was reset to 0
 		var lastMaxUSN int
-		cliDatabase.MustScan(t, "getting lastMaxUSN", ctx.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+		cliDatabase.MustScan(t, "getting lastMaxUSN", env.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
 		assert.Equal(t, lastMaxUSN, 0, "lastMaxUSN should be reset to 0")
 	})
 
@@ -4113,23 +4105,17 @@ func TestSync_EmptyServer(t *testing.T) {
 		//   4. Retrying sendChanges to upload the renamed books
 		// - Result: Both clients' data is preserved (4 books total)
 
-		// Clean up
-		apitest.ClearData(serverDb)
-		defer apitest.ClearData(serverDb)
-		clearTmp(t)
+		env := setupTestEnv(t)
 
-		ctx := context.InitTestCtx(t, paths, nil)
-		defer context.TeardownTestCtx(t, ctx)
-
-		user := setupUserAndLogin(t, ctx.DB)
+		user := setupUserAndLogin(t, env)
 
 		// Step 1: Create local data and sync to establish lastMaxUSN > 0
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 		// Verify initial sync succeeded
-		checkState(t, ctx, user, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4139,9 +4125,11 @@ func TestSync_EmptyServer(t *testing.T) {
 			serverUserMaxUSN: 4,
 		})
 
-		// Step 2: Clear server to simulate switching to empty server
-		apitest.ClearData(serverDb)
-		user = setupUserAndLogin(t, ctx.DB)
+		// Step 2: Switch to new empty server to simulate switching to empty server
+		switchToEmptyServer(t, &env)
+
+		// Create user on new server and login
+		user = setupUserAndLogin(t, env)
 
 		// Step 3: Trigger sync which will detect empty server and prompt user
 		// Inside the callback (before confirming), we simulate Client B uploading via API.
@@ -4154,10 +4142,10 @@ func TestSync_EmptyServer(t *testing.T) {
 			// Now Client B uploads the same data via API (after Client A got the sync state from the server
 			// but before its sync decision)
 			// This creates the race condition: Client A thinks server is empty, but Client B uploads data
-			jsBookUUID := apiCreateBook(t, user, "js", "client B creating js book")
-			cssBookUUID := apiCreateBook(t, user, "css", "client B creating css book")
-			apiCreateNote(t, user, jsBookUUID, "js1", "client B creating js note")
-			apiCreateNote(t, user, cssBookUUID, "css1", "client B creating css note")
+			jsBookUUID := apiCreateBook(t, env, user, "js", "client B creating js book")
+			cssBookUUID := apiCreateBook(t, env, user, "css", "client B creating css book")
+			apiCreateNote(t, env, user, jsBookUUID, "js1", "client B creating js note")
+			apiCreateNote(t, env, user, cssBookUUID, "css1", "client B creating css note")
 
 			// Now user confirms
 			if _, err := io.WriteString(stdin, "y\n"); err != nil {
@@ -4174,10 +4162,10 @@ func TestSync_EmptyServer(t *testing.T) {
 		// - mergeBook renames Client A's books to js_2, css_2
 		// - Renamed books are uploaded
 		// - Both clients' data is preserved.
-		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, raceCallback, cliBinaryName, "sync")
+		clitest.MustWaitDnoteCmd(t, env.CmdOpts, raceCallback, cliBinaryName, "sync")
 
 		// Verify final state - both clients' data preserved
-		checkStateWithDB(t, ctx.DB, user, serverDb, systemState{
+		checkState(t, env.DB, user, env.ServerDB, systemState{
 			clientNoteCount:  4, // Both clients' notes
 			clientBookCount:  4, // js, css, js_2, css_2
 			clientLastMaxUSN: 8, // 4 from Client B + 4 from Client A's renamed books/notes
@@ -4189,10 +4177,10 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Verify server has both clients' books
 		var svrBookJS, svrBookCSS, svrBookJS2, svrBookCSS2 database.Book
-		apitest.MustExec(t, serverDb.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
-		apitest.MustExec(t, serverDb.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
-		apitest.MustExec(t, serverDb.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
-		apitest.MustExec(t, serverDb.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
+		apitest.MustExec(t, env.ServerDB.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
 
 		assert.Equal(t, svrBookJS.Label, "js", "server should have book 'js' (Client B)")
 		assert.Equal(t, svrBookCSS.Label, "css", "server should have book 'css' (Client B)")
@@ -4201,10 +4189,10 @@ func TestSync_EmptyServer(t *testing.T) {
 
 		// Verify client has all books
 		var cliBookJS, cliBookCSS, cliBookJS2, cliBookCSS2 cliDatabase.Book
-		cliDatabase.MustScan(t, "finding client book 'js'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
-		cliDatabase.MustScan(t, "finding client book 'css'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
-		cliDatabase.MustScan(t, "finding client book 'js_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
-		cliDatabase.MustScan(t, "finding client book 'css_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
+		cliDatabase.MustScan(t, "finding client book 'js'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
+		cliDatabase.MustScan(t, "finding client book 'css'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
+		cliDatabase.MustScan(t, "finding client book 'js_2'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
+		cliDatabase.MustScan(t, "finding client book 'css_2'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
 
 		// Verify client UUIDs match server
 		assert.Equal(t, cliBookJS.UUID, svrBookJS.UUID, "client 'js' UUID should match server")
@@ -4225,17 +4213,13 @@ func TestSync_EmptyServer(t *testing.T) {
 		// 2. No false detection when switching back to non-empty servers
 		// 3. Both servers maintain independent state across multiple switches
 
-		// Clean up
-		clearTmp(t)
-
-		ctx := context.InitTestCtx(t, paths, nil)
-		defer context.TeardownTestCtx(t, ctx)
+		env := setupTestEnv(t)
 
 		// Create Server A with its own database
 		dbPathA := fmt.Sprintf("%s/serverA.db", testDir)
 		defer os.Remove(dbPathA)
 
-		serverA, serverDbA, err := setupTestServer(dbPathA, serverTime)
+		serverA, serverDBA, err := setupTestServer(dbPathA, serverTime)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "setting up server A"))
 		}
@@ -4245,7 +4229,7 @@ func TestSync_EmptyServer(t *testing.T) {
 		dbPathB := fmt.Sprintf("%s/serverB.db", testDir)
 		defer os.Remove(dbPathB)
 
-		serverB, serverDbB, err := setupTestServer(dbPathB, serverTime)
+		serverB, serverDBB, err := setupTestServer(dbPathB, serverTime)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "setting up server B"))
 		}
@@ -4254,17 +4238,17 @@ func TestSync_EmptyServer(t *testing.T) {
 		// Step 1: Set up user on Server A and sync
 		apiEndpointA := fmt.Sprintf("%s/api", serverA.URL)
 
-		userA := apitest.SetupUserData(serverDbA, "alice@example.com", "pass1234")
-		sessionA := apitest.SetupSession(serverDbA, userA)
-		cliDatabase.MustExec(t, "inserting session_key", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, sessionA.Key)
-		cliDatabase.MustExec(t, "inserting session_key_expiry", ctx.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, sessionA.ExpiresAt.Unix())
+		userA := apitest.SetupUserData(serverDBA, "alice@example.com", "pass1234")
+		sessionA := apitest.SetupSession(serverDBA, userA)
+		cliDatabase.MustExec(t, "inserting session_key", env.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKey, sessionA.Key)
+		cliDatabase.MustExec(t, "inserting session_key_expiry", env.DB, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemSessionKeyExpiry, sessionA.ExpiresAt.Unix())
 
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify sync to Server A succeeded
-		checkStateWithDB(t, ctx.DB, userA, serverDbA, systemState{
+		checkState(t, env.DB, userA, serverDBA, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4278,16 +4262,16 @@ func TestSync_EmptyServer(t *testing.T) {
 		apiEndpointB := fmt.Sprintf("%s/api", serverB.URL)
 
 		// Set up user on Server B
-		userB := apitest.SetupUserData(serverDbB, "alice@example.com", "pass1234")
-		sessionB := apitest.SetupSession(serverDbB, userB)
-		cliDatabase.MustExec(t, "updating session_key for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.Key, consts.SystemSessionKey)
-		cliDatabase.MustExec(t, "updating session_key_expiry for B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
+		userB := apitest.SetupUserData(serverDBB, "alice@example.com", "pass1234")
+		sessionB := apitest.SetupSession(serverDBB, userB)
+		cliDatabase.MustExec(t, "updating session_key for B", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.Key, consts.SystemSessionKey)
+		cliDatabase.MustExec(t, "updating session_key_expiry for B", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should detect empty server and prompt
-		clitest.MustWaitDnoteCmd(t, dnoteCmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
+		clitest.MustWaitDnoteCmd(t, env.CmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify Server B now has data
-		checkStateWithDB(t, ctx.DB, userB, serverDbB, systemState{
+		checkState(t, env.DB, userB, serverDBB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4298,14 +4282,14 @@ func TestSync_EmptyServer(t *testing.T) {
 		})
 
 		// Step 3: Switch back to Server A and sync
-		cliDatabase.MustExec(t, "updating session_key back to A", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionA.Key, consts.SystemSessionKey)
-		cliDatabase.MustExec(t, "updating session_key_expiry back to A", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionA.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
+		cliDatabase.MustExec(t, "updating session_key back to A", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionA.Key, consts.SystemSessionKey)
+		cliDatabase.MustExec(t, "updating session_key_expiry back to A", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionA.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should NOT trigger empty server detection (Server A has MaxUSN > 0)
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointA)
 
 		// Verify Server A still has its data
-		checkStateWithDB(t, ctx.DB, userA, serverDbA, systemState{
+		checkState(t, env.DB, userA, serverDBA, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4316,14 +4300,14 @@ func TestSync_EmptyServer(t *testing.T) {
 		})
 
 		// Step 4: Switch back to Server B and sync again
-		cliDatabase.MustExec(t, "updating session_key back to B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.Key, consts.SystemSessionKey)
-		cliDatabase.MustExec(t, "updating session_key_expiry back to B", ctx.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
+		cliDatabase.MustExec(t, "updating session_key back to B", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.Key, consts.SystemSessionKey)
+		cliDatabase.MustExec(t, "updating session_key_expiry back to B", env.DB, "UPDATE system SET value = ? WHERE key = ?", sessionB.ExpiresAt.Unix(), consts.SystemSessionKeyExpiry)
 
 		// Should NOT trigger empty server detection (Server B now has MaxUSN > 0 from Step 2)
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync", "--apiEndpoint", apiEndpointB)
 
 		// Verify both servers maintain independent state
-		checkStateWithDB(t, ctx.DB, userB, serverDbB, systemState{
+		checkState(t, env.DB, userB, serverDBB, systemState{
 			clientNoteCount:  2,
 			clientBookCount:  2,
 			clientLastMaxUSN: 4,
@@ -4347,33 +4331,27 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 	// Expected: Client A should pull server data first, detect duplicate book names,
 	// rename local books to avoid conflicts (js→js_2), then upload successfully.
 
-	// Clean up
-	apitest.ClearData(serverDb)
-	defer apitest.ClearData(serverDb)
-	clearTmp(t)
+	env := setupTestEnv(t)
 
-	ctx := context.InitTestCtx(t, paths, nil)
-	defer context.TeardownTestCtx(t, ctx)
-
-	user := setupUserAndLogin(t, ctx.DB)
+	user := setupUserAndLogin(t, env)
 
 	// Client A: Create local data (never sync)
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "js", "-c", "js1")
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
 
 	// Client B: Upload same book names to server via API
-	jsBookUUID := apiCreateBook(t, user, "js", "client B creating js book")
-	cssBookUUID := apiCreateBook(t, user, "css", "client B creating css book")
-	apiCreateNote(t, user, jsBookUUID, "js2", "client B note")
-	apiCreateNote(t, user, cssBookUUID, "css2", "client B note")
+	jsBookUUID := apiCreateBook(t, env, user, "js", "client B creating js book")
+	cssBookUUID := apiCreateBook(t, env, user, "css", "client B creating css book")
+	apiCreateNote(t, env, user, jsBookUUID, "js2", "client B note")
+	apiCreateNote(t, env, user, cssBookUUID, "css2", "client B note")
 
 	// Client A syncs - should handle the conflict gracefully
 	// Expected: pulls server data, renames local books to js_2/css_2, uploads successfully
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "sync")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "sync")
 
 	// Verify: Should have 4 books and 4 notes on both client and server
 	// USN breakdown: 2 books + 2 notes from Client B (USN 1-4), then 2 books + 2 notes from Client A (USN 5-8)
-	checkStateWithDB(t, ctx.DB, user, serverDb, systemState{
+	checkState(t, env.DB, user, env.ServerDB, systemState{
 		clientNoteCount:  4,
 		clientBookCount:  4,
 		clientLastMaxUSN: 8,
@@ -4385,10 +4363,10 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 
 	// Verify server has all 4 books with correct names
 	var svrBookJS, svrBookCSS, svrBookJS2, svrBookCSS2 database.Book
-	apitest.MustExec(t, serverDb.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
-	apitest.MustExec(t, serverDb.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
-	apitest.MustExec(t, serverDb.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
-	apitest.MustExec(t, serverDb.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
+	apitest.MustExec(t, env.ServerDB.Where("label = ?", "js").First(&svrBookJS), "finding server book 'js'")
+	apitest.MustExec(t, env.ServerDB.Where("label = ?", "css").First(&svrBookCSS), "finding server book 'css'")
+	apitest.MustExec(t, env.ServerDB.Where("label = ?", "js_2").First(&svrBookJS2), "finding server book 'js_2'")
+	apitest.MustExec(t, env.ServerDB.Where("label = ?", "css_2").First(&svrBookCSS2), "finding server book 'css_2'")
 
 	assert.Equal(t, svrBookJS.Label, "js", "server should have book 'js' (Client B)")
 	assert.Equal(t, svrBookCSS.Label, "css", "server should have book 'css' (Client B)")
@@ -4397,10 +4375,10 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 
 	// Verify server has all 4 notes with correct content
 	var svrNoteJS1, svrNoteJS2, svrNoteCSS1, svrNoteCSS2 database.Note
-	apitest.MustExec(t, serverDb.Where("body = ?", "js1").First(&svrNoteJS1), "finding server note 'js1'")
-	apitest.MustExec(t, serverDb.Where("body = ?", "js2").First(&svrNoteJS2), "finding server note 'js2'")
-	apitest.MustExec(t, serverDb.Where("body = ?", "css1").First(&svrNoteCSS1), "finding server note 'css1'")
-	apitest.MustExec(t, serverDb.Where("body = ?", "css2").First(&svrNoteCSS2), "finding server note 'css2'")
+	apitest.MustExec(t, env.ServerDB.Where("body = ?", "js1").First(&svrNoteJS1), "finding server note 'js1'")
+	apitest.MustExec(t, env.ServerDB.Where("body = ?", "js2").First(&svrNoteJS2), "finding server note 'js2'")
+	apitest.MustExec(t, env.ServerDB.Where("body = ?", "css1").First(&svrNoteCSS1), "finding server note 'css1'")
+	apitest.MustExec(t, env.ServerDB.Where("body = ?", "css2").First(&svrNoteCSS2), "finding server note 'css2'")
 
 	assert.Equal(t, svrNoteJS1.BookUUID, svrBookJS2.UUID, "note 'js1' should belong to book 'js_2' (Client A)")
 	assert.Equal(t, svrNoteJS2.BookUUID, svrBookJS.UUID, "note 'js2' should belong to book 'js' (Client B)")
@@ -4409,10 +4387,10 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 
 	// Verify client has all 4 books
 	var cliBookJS, cliBookCSS, cliBookJS2, cliBookCSS2 cliDatabase.Book
-	cliDatabase.MustScan(t, "finding client book 'js'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
-	cliDatabase.MustScan(t, "finding client book 'css'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
-	cliDatabase.MustScan(t, "finding client book 'js_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
-	cliDatabase.MustScan(t, "finding client book 'css_2'", ctx.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
+	cliDatabase.MustScan(t, "finding client book 'js'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js"), &cliBookJS.UUID, &cliBookJS.Label, &cliBookJS.USN)
+	cliDatabase.MustScan(t, "finding client book 'css'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css"), &cliBookCSS.UUID, &cliBookCSS.Label, &cliBookCSS.USN)
+	cliDatabase.MustScan(t, "finding client book 'js_2'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "js_2"), &cliBookJS2.UUID, &cliBookJS2.Label, &cliBookJS2.USN)
+	cliDatabase.MustScan(t, "finding client book 'css_2'", env.DB.QueryRow("SELECT uuid, label, usn FROM books WHERE label = ?", "css_2"), &cliBookCSS2.UUID, &cliBookCSS2.Label, &cliBookCSS2.USN)
 
 	// Verify client UUIDs match server
 	assert.Equal(t, cliBookJS.UUID, svrBookJS.UUID, "client 'js' UUID should match server")
@@ -4428,10 +4406,10 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 
 	// Verify client has all 4 notes
 	var cliNoteJS1, cliNoteJS2, cliNoteCSS1, cliNoteCSS2 cliDatabase.Note
-	cliDatabase.MustScan(t, "finding client note 'js1'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js1"), &cliNoteJS1.UUID, &cliNoteJS1.Body, &cliNoteJS1.USN)
-	cliDatabase.MustScan(t, "finding client note 'js2'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js2"), &cliNoteJS2.UUID, &cliNoteJS2.Body, &cliNoteJS2.USN)
-	cliDatabase.MustScan(t, "finding client note 'css1'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css1"), &cliNoteCSS1.UUID, &cliNoteCSS1.Body, &cliNoteCSS1.USN)
-	cliDatabase.MustScan(t, "finding client note 'css2'", ctx.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css2"), &cliNoteCSS2.UUID, &cliNoteCSS2.Body, &cliNoteCSS2.USN)
+	cliDatabase.MustScan(t, "finding client note 'js1'", env.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js1"), &cliNoteJS1.UUID, &cliNoteJS1.Body, &cliNoteJS1.USN)
+	cliDatabase.MustScan(t, "finding client note 'js2'", env.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "js2"), &cliNoteJS2.UUID, &cliNoteJS2.Body, &cliNoteJS2.USN)
+	cliDatabase.MustScan(t, "finding client note 'css1'", env.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css1"), &cliNoteCSS1.UUID, &cliNoteCSS1.Body, &cliNoteCSS1.USN)
+	cliDatabase.MustScan(t, "finding client note 'css2'", env.DB.QueryRow("SELECT uuid, body, usn FROM notes WHERE body = ?", "css2"), &cliNoteCSS2.UUID, &cliNoteCSS2.Body, &cliNoteCSS2.USN)
 
 	// Verify client note UUIDs match server
 	assert.Equal(t, cliNoteJS1.UUID, svrNoteJS1.UUID, "client note 'js1' UUID should match server")
@@ -4449,34 +4427,28 @@ func TestSync_FreshClientConcurrent(t *testing.T) {
 // TestSync_ConvergeSameBookNames tests that two clients don't enter an infinite sync loop if they
 // try to sync books with the same names. Books shouldn't get marked dirty when re-downloaded from server.
 func TestSync_ConvergeSameBookNames(t *testing.T) {
-	// Clean up and prepare server
-	apitest.ClearData(serverDb)
-	defer apitest.ClearData(serverDb)
-
-	clearTmp(t)
-
-	ctx := context.InitTestCtx(t, paths, nil)
-	defer context.TeardownTestCtx(t, ctx)
+	env := setupTestEnv(t)
+	tmpDir := t.TempDir()
 
 	// Setup two separate client databases
-	client1DB := fmt.Sprintf("%s/client1.db", tmpDirPath)
-	client2DB := fmt.Sprintf("%s/client2.db", tmpDirPath)
+	client1DB := fmt.Sprintf("%s/client1.db", tmpDir)
+	client2DB := fmt.Sprintf("%s/client2.db", tmpDir)
 	defer os.Remove(client1DB)
 	defer os.Remove(client2DB)
 
 	// Set up sessions
-	user := setupUser(t, ctx.DB)
+	user := setupUser(t, env)
 	db1 := testutils.MustOpenDatabase(t, client1DB)
 	db2 := testutils.MustOpenDatabase(t, client2DB)
 	defer db1.Close()
 	defer db2.Close()
 
 	// Client 1: First sync to empty server
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "testbook", "-c", "client1 note1")
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "anotherbook", "-c", "client1 note2")
-	login(t, db1, user)
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
-	checkStateWithDB(t, db1, user, serverDb, systemState{
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "testbook", "-c", "client1 note1")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client1DB, "add", "anotherbook", "-c", "client1 note2")
+	login(t, db1, env.ServerDB, user)
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+	checkState(t, db1, user, env.ServerDB, systemState{
 		clientNoteCount:  2,
 		clientBookCount:  2,
 		clientLastMaxUSN: 4,
@@ -4487,12 +4459,12 @@ func TestSync_ConvergeSameBookNames(t *testing.T) {
 	})
 
 	// Client 2: Sync (downloads client 1's data, adds own notes) =====
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "testbook", "-c", "client2 note1")
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "anotherbook", "-c", "client2 note2")
-	login(t, db2, user)
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "testbook", "-c", "client2 note1")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client2DB, "add", "anotherbook", "-c", "client2 note2")
+	login(t, db2, env.ServerDB, user)
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
 	// Verify state after client2 sync
-	checkStateWithDB(t, db2, user, serverDb, systemState{
+	checkState(t, db2, user, env.ServerDB, systemState{
 		clientNoteCount:  4,
 		clientBookCount:  2,
 		clientLastMaxUSN: 8,
@@ -4503,11 +4475,11 @@ func TestSync_ConvergeSameBookNames(t *testing.T) {
 	})
 
 	// Client 1: Sync again. It downloads client2's changes (2 extra notes).
-	clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+	clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
 
 	// Verify MaxUSN did not increase (client1 should only download, not upload)
 	// Client1 still has: 2 original books + 4 notes (2 own + 2 from client2)
-	checkStateWithDB(t, db1, user, serverDb, systemState{
+	checkState(t, db1, user, env.ServerDB, systemState{
 		clientNoteCount:  4,
 		clientBookCount:  2,
 		clientLastMaxUSN: 8,
@@ -4521,10 +4493,10 @@ func TestSync_ConvergeSameBookNames(t *testing.T) {
 	// Both clients should be able to sync without any changes (MaxUSN stays at 8)
 	for range 3 {
 		// Client 2 syncs
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client2DB, "sync")
 
 		// Verify client2 state unchanged
-		checkStateWithDB(t, db2, user, serverDb, systemState{
+		checkState(t, db2, user, env.ServerDB, systemState{
 			clientNoteCount:  4,
 			clientBookCount:  2,
 			clientLastMaxUSN: 8,
@@ -4535,10 +4507,10 @@ func TestSync_ConvergeSameBookNames(t *testing.T) {
 		})
 
 		// Client 1 syncs
-		clitest.RunDnoteCmd(t, dnoteCmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
+		clitest.RunDnoteCmd(t, env.CmdOpts, cliBinaryName, "--dbPath", client1DB, "sync")
 
 		// Verify client1 state unchanged
-		checkStateWithDB(t, db1, user, serverDb, systemState{
+		checkState(t, db1, user, env.ServerDB, systemState{
 			clientNoteCount:  4,
 			clientBookCount:  2,
 			clientLastMaxUSN: 8,

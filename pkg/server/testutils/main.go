@@ -67,26 +67,6 @@ func InitMemoryDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-// ClearData deletes all records from the database
-func ClearData(db *gorm.DB) {
-	// Delete in order: child tables first, parent tables last
-	if err := db.Where("1 = 1").Delete(&database.Note{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear notes"))
-	}
-	if err := db.Where("1 = 1").Delete(&database.Book{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear books"))
-	}
-	if err := db.Where("1 = 1").Delete(&database.Token{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear tokens"))
-	}
-	if err := db.Where("1 = 1").Delete(&database.Session{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear sessions"))
-	}
-	if err := db.Where("1 = 1").Delete(&database.User{}).Error; err != nil {
-		panic(errors.Wrap(err, "Failed to clear users"))
-	}
-}
-
 // MustUUID generates a UUID and fails the test on error
 func MustUUID(t *testing.T) string {
 	uuid, err := helpers.GenUUID()

@@ -32,8 +32,8 @@ import (
 
 func TestInitSystemKV(t *testing.T) {
 	// Setup
-	db := database.InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
+	defer db.Close()
 
 	var originalCount int
 	database.MustScan(t, "counting system configs", db.QueryRow("SELECT count(*) FROM system"), &originalCount)
@@ -64,8 +64,8 @@ func TestInitSystemKV(t *testing.T) {
 
 func TestInitSystemKV_existing(t *testing.T) {
 	// Setup
-	db := database.InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer database.TeardownTestDB(t, db)
+	db := database.InitTestMemoryDB(t)
+	defer db.Close()
 
 	database.MustExec(t, "inserting a system config", db, "INSERT INTO system (key, value) VALUES (?, ?)", "testKey", "testVal")
 

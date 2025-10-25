@@ -109,8 +109,8 @@ func TestNoteInsert(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			n := Note{
 				UUID:     tc.uuid,
@@ -243,8 +243,8 @@ func TestNoteUpdate(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			n1 := Note{
 				UUID:     tc.uuid,
@@ -335,8 +335,8 @@ func TestNoteUpdateUUID(t *testing.T) {
 	for idx, tc := range testCases {
 		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			n1 := Note{
 				UUID:     "n1-uuid",
@@ -390,8 +390,8 @@ func TestNoteUpdateUUID(t *testing.T) {
 
 func TestNoteExpunge(t *testing.T) {
 	// Setup
-	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer TeardownTestDB(t, db)
+	db := InitTestMemoryDB(t)
+	defer db.Close()
 
 	n1 := Note{
 		UUID:     "n1-uuid",
@@ -513,8 +513,8 @@ func TestBookInsert(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			b := Book{
 				UUID:    tc.uuid,
@@ -594,8 +594,8 @@ func TestBookUpdate(t *testing.T) {
 	for idx, tc := range testCases {
 		func() {
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -673,8 +673,8 @@ func TestBookUpdateUUID(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
 
 			// Setup
-			db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-			defer TeardownTestDB(t, db)
+			db := InitTestMemoryDB(t)
+			defer db.Close()
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -724,8 +724,8 @@ func TestBookUpdateUUID(t *testing.T) {
 
 func TestBookExpunge(t *testing.T) {
 	// Setup
-	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer TeardownTestDB(t, db)
+	db := InitTestMemoryDB(t)
+	defer db.Close()
 
 	b1 := Book{
 		UUID:    "b1-uuid",
@@ -779,8 +779,8 @@ func TestBookExpunge(t *testing.T) {
 // TestNoteFTS tests that note full text search indices stay in sync with the notes after insert, update and delete
 func TestNoteFTS(t *testing.T) {
 	// set up
-	db := InitTestDB(t, "../tmp/dnote-test.db", nil)
-	defer TeardownTestDB(t, db)
+	db := InitTestMemoryDB(t)
+	defer db.Close()
 
 	// execute - insert
 	n := Note{
