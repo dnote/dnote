@@ -36,16 +36,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// getTestPaths creates unique test paths for parallel test execution
-func getTestPaths(t *testing.T) context.Paths {
-	testDir := t.TempDir()
-	return context.Paths{
-		Home:   testDir,
-		Cache:  testDir,
-		Config: testDir,
-		Data:   testDir,
-	}
-}
 
 func TestProcessFragments(t *testing.T) {
 	fragments := []client.SyncFragment{
@@ -1848,8 +1838,7 @@ func TestSaveServerState(t *testing.T) {
 // are updated accordingly based on the server response.
 func TestSendBooks(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, getTestPaths(t))
-	defer context.TeardownTestCtx(t, ctx)
+	ctx := context.InitTestCtx(t)
 	testutils.Login(t, &ctx)
 
 	db := ctx.DB
@@ -2081,9 +2070,8 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
+				ctx := context.InitTestCtx(t)
 				ctx.APIEndpoint = ts.URL
-				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 
 				db := ctx.DB
@@ -2129,9 +2117,8 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
+				ctx := context.InitTestCtx(t)
 				ctx.APIEndpoint = ts.URL
-				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 
 				db := ctx.DB
@@ -2177,9 +2164,8 @@ func TestSendBooks_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
+				ctx := context.InitTestCtx(t)
 				ctx.APIEndpoint = ts.URL
-				defer context.TeardownTestCtx(t, ctx)
 				testutils.Login(t, &ctx)
 
 				db := ctx.DB
@@ -2212,8 +2198,7 @@ func TestSendBooks_isBehind(t *testing.T) {
 // uuid from the incoming data.
 func TestSendNotes(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, getTestPaths(t))
-	defer context.TeardownTestCtx(t, ctx)
+	ctx := context.InitTestCtx(t)
 	testutils.Login(t, &ctx)
 
 	db := ctx.DB
@@ -2365,8 +2350,7 @@ func TestSendNotes(t *testing.T) {
 
 func TestSendNotes_addedOn(t *testing.T) {
 	// set up
-	ctx := context.InitTestCtx(t, getTestPaths(t))
-	defer context.TeardownTestCtx(t, ctx)
+	ctx := context.InitTestCtx(t)
 	testutils.Login(t, &ctx)
 
 	db := ctx.DB
@@ -2497,8 +2481,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
-				defer context.TeardownTestCtx(t, ctx)
+				ctx := context.InitTestCtx(t)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 
@@ -2546,8 +2529,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
-				defer context.TeardownTestCtx(t, ctx)
+				ctx := context.InitTestCtx(t)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 
@@ -2595,8 +2577,7 @@ func TestSendNotes_isBehind(t *testing.T) {
 		for idx, tc := range testCases {
 			func() {
 				// set up
-				ctx := context.InitTestCtx(t, getTestPaths(t))
-				defer context.TeardownTestCtx(t, ctx)
+				ctx := context.InitTestCtx(t)
 				testutils.Login(t, &ctx)
 				ctx.APIEndpoint = ts.URL
 

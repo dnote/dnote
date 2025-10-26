@@ -360,7 +360,6 @@ func TestMigrateToV8(t *testing.T) {
 	}
 
 	db := database.InitTestMemoryDBRaw(t, "./fixtures/local-1-pre-schema.sql")
-	defer database.TeardownTestDB(t, db)
 
 	ctx := context.DnoteCtx{
 		Paths: context.Paths{

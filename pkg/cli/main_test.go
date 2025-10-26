@@ -146,7 +146,6 @@ func TestAddNote(t *testing.T) {
 
 		// Setup
 		db, dbPath := database.InitTestFileDB(t)
-		defer database.TeardownTestDB(t, db)
 		testutils.Setup3(t, db)
 
 		// Execute
@@ -189,7 +188,6 @@ func TestEditNote(t *testing.T) {
 
 		// Setup
 		db, dbPath := database.InitTestFileDB(t)
-		defer database.TeardownTestDB(t, db)
 		testutils.Setup4(t, db)
 
 		// Execute
@@ -224,7 +222,6 @@ func TestEditNote(t *testing.T) {
 
 		// Setup
 		db, dbPath := database.InitTestFileDB(t)
-		defer database.TeardownTestDB(t, db)
 		testutils.Setup5(t, db)
 
 		// Execute
@@ -260,7 +257,6 @@ func TestEditNote(t *testing.T) {
 
 		// Setup
 		db, dbPath := database.InitTestFileDB(t)
-		defer database.TeardownTestDB(t, db)
 		testutils.Setup5(t, db)
 
 		// Execute
@@ -298,7 +294,6 @@ func TestEditBook(t *testing.T) {
 
 		// Setup
 		db, dbPath := database.InitTestFileDB(t)
-		defer database.TeardownTestDB(t, db)
 		testutils.Setup1(t, db)
 
 		// Execute
@@ -359,7 +354,6 @@ func TestRemoveNote(t *testing.T) {
 
 			// Setup
 			db, dbPath := database.InitTestFileDB(t)
-			defer database.TeardownTestDB(t, db)
 			testutils.Setup2(t, db)
 
 			// Execute
@@ -448,7 +442,6 @@ func TestRemoveBook(t *testing.T) {
 
 			// Setup
 			db, dbPath := database.InitTestFileDB(t)
-			defer database.TeardownTestDB(t, db)
 			testutils.Setup2(t, db)
 
 			// Execute

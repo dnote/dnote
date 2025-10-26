@@ -33,8 +33,6 @@ import (
 
 func TestCreateNote(t *testing.T) {
 	serverTime := time.Date(2017, time.March, 14, 21, 15, 0, 0, time.UTC)
-	mockClock := clock.NewMock()
-	mockClock.SetNow(serverTime)
 
 	ts1 := time.Date(2018, time.November, 12, 10, 11, 0, 0, time.UTC).UnixNano()
 	ts2 := time.Date(2018, time.November, 15, 0, 1, 10, 0, time.UTC).UnixNano()
@@ -75,6 +73,10 @@ func TestCreateNote(t *testing.T) {
 
 	for idx, tc := range testCases {
 		func() {
+			// Create a new clock for each test case to avoid race conditions in parallel tests
+			mockClock := clock.NewMock()
+			mockClock.SetNow(serverTime)
+
 			db := testutils.InitMemoryDB(t)
 
 			user := testutils.SetupUserData(db, "user@test.com", "password123")

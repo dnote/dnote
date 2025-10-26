@@ -29,6 +29,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+// getDefaultTestPaths creates default test paths with all paths pointing to a temp directory
+func getDefaultTestPaths(t *testing.T) Paths {
+	tmpDir := t.TempDir()
+	return Paths{
+		Home:   tmpDir,
+		Cache:  tmpDir,
+		Config: tmpDir,
+		Data:   tmpDir,
+	}
+}
+
 // createTestDirectories creates test directories for the given paths
 func createTestDirectories(t *testing.T, paths Paths) {
 	if paths.Config != "" {
@@ -52,7 +63,9 @@ func createTestDirectories(t *testing.T, paths Paths) {
 }
 
 // InitTestCtx initializes a test context with an in-memory database
-func InitTestCtx(t *testing.T, paths Paths) DnoteCtx {
+// and a temporary directory for all paths
+func InitTestCtx(t *testing.T) DnoteCtx {
+	paths := getDefaultTestPaths(t)
 	db := database.InitTestMemoryDB(t)
 	createTestDirectories(t, paths)
 
@@ -63,9 +76,11 @@ func InitTestCtx(t *testing.T, paths Paths) DnoteCtx {
 	}
 }
 
-// InitTestCtxWithDB initializes a test context with the provided database.
+// InitTestCtxWithDB initializes a test context with the provided database
+// and a temporary directory for all paths.
 // Used when you need full control over database initialization (e.g. migration tests).
-func InitTestCtxWithDB(t *testing.T, paths Paths, db *database.DB) DnoteCtx {
+func InitTestCtxWithDB(t *testing.T, db *database.DB) DnoteCtx {
+	paths := getDefaultTestPaths(t)
 	createTestDirectories(t, paths)
 
 	return DnoteCtx{
@@ -76,9 +91,9 @@ func InitTestCtxWithDB(t *testing.T, paths Paths, db *database.DB) DnoteCtx {
 }
 
 // InitTestCtxWithFileDB initializes a test context with a file-based database
-// at the expected XDG path. This is used for e2e tests that spawn CLI processes
-// which need to access the database file.
-func InitTestCtxWithFileDB(t *testing.T, paths Paths) DnoteCtx {
+// at the expected path.
+func InitTestCtxWithFileDB(t *testing.T) DnoteCtx {
+	paths := getDefaultTestPaths(t)
 	createTestDirectories(t, paths)
 
 	dbPath := filepath.Join(paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
@@ -92,25 +107,11 @@ func InitTestCtxWithFileDB(t *testing.T, paths Paths) DnoteCtx {
 	}
 
 	database.MarkMigrationComplete(t, db)
+	t.Cleanup(func() { db.Close() })
 
 	return DnoteCtx{
 		DB:    db,
 		Paths: paths,
 		Clock: clock.NewMock(), // Use a mock clock to test times
-	}
-}
-
-// TeardownTestCtx cleans up the test context
-func TeardownTestCtx(t *testing.T, ctx DnoteCtx) {
-	database.TeardownTestDB(t, ctx.DB)
-
-	if err := os.RemoveAll(ctx.Paths.Data); err != nil {
-		t.Fatal(errors.Wrap(err, "removing test data directory"))
-	}
-	if err := os.RemoveAll(ctx.Paths.Config); err != nil {
-		t.Fatal(errors.Wrap(err, "removing test config directory"))
-	}
-	if err := os.RemoveAll(ctx.Paths.Cache); err != nil {
-		t.Fatal(errors.Wrap(err, "removing test cache directory"))
 	}
 }

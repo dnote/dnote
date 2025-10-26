@@ -22,7 +22,6 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -67,8 +66,8 @@ func InitTestMemoryDB(t *testing.T) *DB {
 // InitTestFileDB initializes a file-based test database with the default schema.
 func InitTestFileDB(t *testing.T) (*DB, string) {
 	dbPath := filepath.Join(t.TempDir(), "dnote.db")
-
-	return InitTestFileDBRaw(t, dbPath), dbPath
+	db := InitTestFileDBRaw(t, dbPath)
+	return db, dbPath
 }
 
 // InitTestFileDBRaw initializes a file-based test database at the specified path with the default schema.
@@ -84,6 +83,7 @@ func InitTestFileDBRaw(t *testing.T, dbPath string) *DB {
 
 	MarkMigrationComplete(t, db)
 
+	t.Cleanup(func() { db.Close() })
 	return db
 }
 
@@ -109,18 +109,8 @@ func InitTestMemoryDBRaw(t *testing.T, schemaPath string) *DB {
 		t.Fatal(errors.Wrap(err, "running schema sql"))
 	}
 
+	t.Cleanup(func() { db.Close() })
 	return db
-}
-
-// TeardownTestDB closes the test database and removes the its file
-func TeardownTestDB(t *testing.T, db *DB) {
-	if err := db.Close(); err != nil {
-		t.Fatal(errors.Wrap(err, "closing database"))
-	}
-
-	if err := os.RemoveAll(db.Filepath); err != nil {
-		t.Fatal(errors.Wrap(err, "removing database file"))
-	}
 }
 
 // OpenTestDB opens the database connection to a test database

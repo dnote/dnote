@@ -80,7 +80,7 @@ generate-cli-schema:
 	@echo "==> generating CLI database schema"
 	@mkdir -p pkg/cli/database
 	@touch pkg/cli/database/schema.sql
-	@go run -tags fts5 pkg/cli/database/cmd/generate-schema.go
+	@go run -tags fts5 ./pkg/cli/database/schema
 .PHONY: generate-cli-schema
 
 build-cli: generate-cli-schema

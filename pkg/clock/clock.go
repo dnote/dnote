@@ -20,10 +20,9 @@
 package clock
 
 import (
+	"sync"
 	"time"
 )
-
-//TODO: use mutex to avoid race
 
 // Clock is an interface to the standard library time.
 // It is used to implement a real or a mock clock. The latter is used in tests.
@@ -39,16 +38,21 @@ func (c *clock) Now() time.Time {
 
 // Mock is a mock instance of clock
 type Mock struct {
+	mu          sync.RWMutex
 	currentTime time.Time
 }
 
 // SetNow sets the current time for the mock clock
 func (c *Mock) SetNow(t time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.currentTime = t
 }
 
 // Now returns the current time
 func (c *Mock) Now() time.Time {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.currentTime
 }
 

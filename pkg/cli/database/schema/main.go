@@ -16,7 +16,7 @@
  * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// generate-schema creates a schema.sql file
+// Command schema generates the CLI database schema.sql file.
 package main
 
 import (

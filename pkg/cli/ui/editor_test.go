@@ -30,12 +30,7 @@ import (
 
 func TestGetTmpContentPath(t *testing.T) {
 	t.Run("no collision", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		ctx := context.InitTestCtx(t, context.Paths{
-			Data:  tmpDir,
-			Cache: tmpDir,
-		})
-		defer context.TeardownTestCtx(t, ctx)
+		ctx := context.InitTestCtx(t)
 
 		res, err := GetTmpContentPath(ctx)
 		if err != nil {
@@ -48,12 +43,7 @@ func TestGetTmpContentPath(t *testing.T) {
 
 	t.Run("one existing session", func(t *testing.T) {
 		// set up
-		tmpDir := t.TempDir()
-		ctx := context.InitTestCtx(t, context.Paths{
-			Data:  tmpDir,
-			Cache: tmpDir,
-		})
-		defer context.TeardownTestCtx(t, ctx)
+		ctx := context.InitTestCtx(t)
 
 		p := fmt.Sprintf("%s/%s", ctx.Paths.Cache, "DNOTE_TMPCONTENT_0.md")
 		if _, err := os.Create(p); err != nil {
@@ -73,12 +63,7 @@ func TestGetTmpContentPath(t *testing.T) {
 
 	t.Run("two existing sessions", func(t *testing.T) {
 		// set up
-		tmpDir := t.TempDir()
-		ctx := context.InitTestCtx(t, context.Paths{
-			Data:  tmpDir,
-			Cache: tmpDir,
-		})
-		defer context.TeardownTestCtx(t, ctx)
+		ctx := context.InitTestCtx(t)
 
 		p1 := fmt.Sprintf("%s/%s", ctx.Paths.Cache, "DNOTE_TMPCONTENT_0.md")
 		if _, err := os.Create(p1); err != nil {
