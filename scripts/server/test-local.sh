@@ -5,8 +5,4 @@ set -ex
 
 dir=$(dirname "${BASH_SOURCE[0]}")
 
-set -a
-source "$dir/../../pkg/server/.env.test"
-set +a
-
 "$dir/test.sh" "$1"

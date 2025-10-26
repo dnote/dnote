@@ -81,7 +81,7 @@ func setupTestEnv(t *testing.T) testEnv {
 	db := cliDatabase.InitTestFileDBRaw(t, dbPath)
 
 	// Create server
-	server, serverDB := setupNewServer(t, tmpDir)
+	server, serverDB := setupNewServer(t)
 
 	// Create config file with this server's endpoint
 	apiEndpoint := fmt.Sprintf("%s/api", server.URL)
@@ -106,8 +106,8 @@ func setupTestEnv(t *testing.T) testEnv {
 }
 
 // setupTestServer creates a test server with its own database
-func setupTestServer(dbPath string, serverTime time.Time) (*httptest.Server, *gorm.DB, error) {
-	db := apitest.InitDB(dbPath)
+func setupTestServer(t *testing.T, serverTime time.Time) (*httptest.Server, *gorm.DB, error) {
+	db := apitest.InitMemoryDB(t)
 
 	mockClock := clock.NewMock()
 	mockClock.SetNow(serverTime)
@@ -128,10 +128,8 @@ func setupTestServer(dbPath string, serverTime time.Time) (*httptest.Server, *go
 
 // setupNewServer creates a new server and returns the server and database.
 // This is useful when a test needs to switch to a new empty server.
-func setupNewServer(t *testing.T, tmpDir string) (*httptest.Server, *gorm.DB) {
-	// Create new server with its own database (unique name to avoid conflicts)
-	serverDBPath := filepath.Join(tmpDir, fmt.Sprintf("server-%d.db", time.Now().UnixNano()))
-	server, serverDB, err := setupTestServer(serverDBPath, serverTime)
+func setupNewServer(t *testing.T) (*httptest.Server, *gorm.DB) {
+	server, serverDB, err := setupTestServer(t, serverTime)
 	if err != nil {
 		t.Fatal(errors.Wrap(err, "setting up new test server"))
 	}
@@ -156,8 +154,8 @@ func switchToEmptyServer(t *testing.T, env *testEnv) {
 	// Close old server
 	env.Server.Close()
 
-	// Create new empty server with unique database file
-	env.Server, env.ServerDB = setupNewServer(t, t.TempDir())
+	// Create new empty server
+	env.Server, env.ServerDB = setupNewServer(t)
 
 	// Update config file to point to new server
 	apiEndpoint := fmt.Sprintf("%s/api", env.Server.URL)
@@ -4216,20 +4214,14 @@ func TestSync_EmptyServer(t *testing.T) {
 		env := setupTestEnv(t)
 
 		// Create Server A with its own database
-		dbPathA := fmt.Sprintf("%s/serverA.db", testDir)
-		defer os.Remove(dbPathA)
-
-		serverA, serverDBA, err := setupTestServer(dbPathA, serverTime)
+		serverA, serverDBA, err := setupTestServer(t, serverTime)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "setting up server A"))
 		}
 		defer serverA.Close()
 
 		// Create Server B with its own database
-		dbPathB := fmt.Sprintf("%s/serverB.db", testDir)
-		defer os.Remove(dbPathB)
-
-		serverB, serverDBB, err := setupTestServer(dbPathB, serverTime)
+		serverB, serverDBB, err := setupTestServer(t, serverTime)
 		if err != nil {
 			t.Fatal(errors.Wrap(err, "setting up server B"))
 		}
