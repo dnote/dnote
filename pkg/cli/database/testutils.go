@@ -63,7 +63,8 @@ func InitTestMemoryDB(t *testing.T) *DB {
 
 // InitTestFileDB initializes a file-based test database with the default schema.
 func InitTestFileDB(t *testing.T) (*DB, string) {
-	dbPath := filepath.Join(t.TempDir(), "dnote.db")
+	uuid := mustGenerateTestUUID(t)
+	dbPath := filepath.Join(t.TempDir(), fmt.Sprintf("dnote-%s.db", uuid))
 	db := InitTestFileDBRaw(t, dbPath)
 	return db, dbPath
 }
