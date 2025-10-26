@@ -61,11 +61,12 @@ type Note struct {
 // User is a model for a user
 type User struct {
 	Model
-	UUID        string     `json:"uuid" gorm:"type:text;index"`
-	Email       NullString `gorm:"index"`
-	Password    NullString `json:"-"`
-	LastLoginAt *time.Time `json:"-"`
-	MaxUSN      int        `json:"-" gorm:"default:0"`
+	UUID           string     `json:"uuid" gorm:"type:text;index"`
+	Email          NullString `gorm:"index"`
+	Password       NullString `json:"-"`
+	LastLoginAt    *time.Time `json:"-"`
+	MaxUSN         int        `json:"-" gorm:"default:0"`
+	FullSyncBefore int64      `json:"-" gorm:"default:0"`
 }
 
 // Token is a model for a token

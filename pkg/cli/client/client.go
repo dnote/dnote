@@ -285,6 +285,9 @@ func GetSyncFragment(ctx context.DnoteCtx, afterUSN int) (GetSyncFragmentResp, e
 
 	path := fmt.Sprintf("/v3/sync/fragment?%s", queryStr)
 	res, err := doAuthorizedReq(ctx, "GET", path, "", nil)
+	if err != nil {
+		return GetSyncFragmentResp{}, errors.Wrap(err, "making the request")
+	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

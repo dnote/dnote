@@ -19,8 +19,11 @@
 package sync
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -445,5 +448,188 @@ func TestSync_EmptyServer(t *testing.T) {
 			serverBookCount:  2,
 			serverUserMaxUSN: 4,
 		})
+	})
+
+	t.Run("two clients with identical copied database sync to empty server", func(t *testing.T) {
+		// Suppose we have two clients and server becomes empty (migration).
+		// After the first client sync to empty server, the second client should trigger full sync.
+		// Without the full sync, client2 will do step sync asking for changes after its stale USN,
+		// get nothing from server, and potentially orphan notes during full sync.
+
+		// Step 1: Create client1 with data and sync to ORIGINAL server
+		env1 := setupTestEnv(t)
+		user := setupUserAndLogin(t, env1)
+
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "add", "js", "-c", "js1")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "add", "css", "-c", "css1")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "sync")
+		// Add more data to create a higher USN
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "add", "go", "-c", "go1")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "add", "rust", "-c", "rust1")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "sync")
+		// Verify initial sync succeeded (now with 4 notes, 4 books, USN=8)
+		checkState(t, env1.DB, user, env1.ServerDB, systemState{
+			clientNoteCount:  4,
+			clientBookCount:  4,
+			clientLastMaxUSN: 8,
+			clientLastSyncAt: serverTime.Unix(),
+			serverNoteCount:  4,
+			serverBookCount:  4,
+			serverUserMaxUSN: 8,
+		})
+
+		// Step 2: Create client2 by copying client1's database (simulating same DB on two devices)
+		env2 := setupTestEnv(t)
+		// Copy the database file from client1 to client2
+		dbPath1 := env1.DB.Filepath
+		dbPath2 := env2.DB.Filepath
+		// Close both DBs before copying
+		env1.DB.Close()
+		env2.DB.Close()
+
+		// Copy the database file
+		input, err := os.ReadFile(dbPath1)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reading client1 database"))
+		}
+		if err := os.WriteFile(dbPath2, input, 0644); err != nil {
+			t.Fatal(errors.Wrap(err, "writing client2 database"))
+		}
+
+		// Reopen databases
+		env1.DB, err = cliDatabase.Open(dbPath1)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reopening client1 database"))
+		}
+		env2.DB, err = cliDatabase.Open(dbPath2)
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "reopening client2 database"))
+		}
+
+		// Verify client2 has identical data and USN=8 (stale) - same as client1
+		// Note: at this point there's no server to compare against, we just check counts
+		var client2MaxUSN, client2NoteCount, client2BookCount int
+		cliDatabase.MustScan(t, "getting client2 maxUSN",
+			env2.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN),
+			&client2MaxUSN)
+		cliDatabase.MustScan(t, "counting client2 notes",
+			env2.DB.QueryRow("SELECT count(*) FROM notes WHERE deleted = 0"),
+			&client2NoteCount)
+		cliDatabase.MustScan(t, "counting client2 books",
+			env2.DB.QueryRow("SELECT count(*) FROM books WHERE deleted = 0"),
+			&client2BookCount)
+
+		assert.Equal(t, client2MaxUSN, 8, "client2 should have same maxUSN=8 as client1")
+		assert.Equal(t, client2NoteCount, 4, "client2 should have 4 notes")
+		assert.Equal(t, client2BookCount, 4, "client2 should have 4 books")
+
+		// Step 3: Switch client1 to new empty server
+		switchToEmptyServer(t, &env1)
+
+		// Point client2 to the same new server
+		env2.Server = env1.Server
+		env2.ServerDB = env1.ServerDB
+
+		// Update client2's API endpoint config to point to env1's server
+		apiEndpoint := fmt.Sprintf("%s/api", env1.Server.URL)
+		updateConfigAPIEndpoint(t, env2.TmpDir, apiEndpoint)
+
+		// Create same user on new server
+		user = setupUserAndLogin(t, env1)
+
+		// Setup session for client2 (same user, same server)
+		login(t, env2.DB, env2.ServerDB, user)
+
+		// Step 4: Client1 syncs ONLY FIRST 2 BOOKS to empty server (simulates partial upload)
+		// This creates the stale USN scenario: client2 has maxUSN=8, but server will only have maxUSN=4
+		clitest.MustWaitDnoteCmd(t, env1.CmdOpts, clitest.UserConfirmEmptyServerSync,
+			cliBinaryName, "sync")
+
+		// Delete the last 2 books from client1 to prevent them being on server
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "remove", "go", "-y")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "remove", "rust", "-y")
+
+		// Sync deletions to server
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "sync")
+
+		// Verify server has 2 active books/notes (go/rust deleted)
+		var serverNoteCount, serverBookCount int64
+		apitest.MustExec(t, env1.ServerDB.Model(&database.Note{}).Where("deleted = ?", false).Count(&serverNoteCount), "counting active server notes")
+		apitest.MustExec(t, env1.ServerDB.Model(&database.Book{}).Where("deleted = ?", false).Count(&serverBookCount), "counting active server books")
+		assert.Equal(t, int(serverNoteCount), 2, "server should have 2 active notes (go/rust deleted)")
+		assert.Equal(t, int(serverBookCount), 2, "server should have 2 active books (go/rust deleted)")
+
+		// Step 5: Client2 syncs
+		// CRITICAL: Client2 has lastMaxUSN=8 (from copied DB), but server's max_usn is now ~8 but only has 2 books
+		// Client2 will ask for changes after USN=8, get nothing, then try to upload its 4 books
+		// This should trigger the orphaned notes scenario or require full sync
+		clitest.RunDnoteCmd(t, env2.CmdOpts, cliBinaryName, "sync")
+
+		// Step 6: Verify client2 has all data and NO orphaned notes
+		var orphanedCount int
+		cliDatabase.MustScan(t, "checking for orphaned notes",
+			env2.DB.QueryRow(`
+				SELECT COUNT(*) FROM notes
+				WHERE deleted = 0
+				AND book_uuid NOT IN (SELECT uuid FROM books WHERE deleted = 0)
+			`), &orphanedCount)
+
+		assert.Equal(t, orphanedCount, 0, "client2 should have no orphaned notes")
+
+		// Verify client2 converged with server state
+		// Note: checkState counts ALL records (including deleted ones)
+		// During full sync, cleanLocalBooks/cleanLocalNotes DELETE local records not on server
+		// So client2 ends up with only the 2 active books/notes
+		// Server has 4 total (2 active + 2 deleted)
+		var client2LastMaxUSN, client2LastSyncAt int
+		var serverUserMaxUSN int
+		cliDatabase.MustScan(t, "getting client2 lastMaxUSN",
+			env2.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN),
+			&client2LastMaxUSN)
+		var lastSyncAtStr string
+		cliDatabase.MustScan(t, "getting client2 lastSyncAt",
+			env2.DB.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt),
+			&lastSyncAtStr)
+		lastSyncAtInt, _ := strconv.ParseInt(lastSyncAtStr, 10, 64)
+		client2LastSyncAt = int(lastSyncAtInt)
+
+		apitest.MustExec(t, env2.ServerDB.Table("users").Select("max_usn").Where("id = ?", user.ID).Scan(&serverUserMaxUSN), "getting server user max_usn")
+
+		checkState(t, env2.DB, user, env2.ServerDB, systemState{
+			clientNoteCount:  2, // Only active notes (deleted ones removed by cleanLocalNotes)
+			clientBookCount:  2, // Only active books (deleted ones removed by cleanLocalBooks)
+			clientLastMaxUSN: client2LastMaxUSN,
+			clientLastSyncAt: int64(client2LastSyncAt),
+			serverNoteCount:  4, // 2 active + 2 deleted
+			serverBookCount:  4, // 2 active + 2 deleted
+			serverUserMaxUSN: serverUserMaxUSN,
+		})
+
+		// Verify both clients have the expected books (css, js only - go/rust deleted)
+		var client1BookCSS, client1BookJS, client2BookCSS, client2BookJS cliDatabase.Book
+		cliDatabase.MustScan(t, "finding client1 book 'css'",
+			env1.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "css"),
+			&client1BookCSS.UUID, &client1BookCSS.Label)
+		cliDatabase.MustScan(t, "finding client1 book 'js'",
+			env1.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "js"),
+			&client1BookJS.UUID, &client1BookJS.Label)
+		cliDatabase.MustScan(t, "finding client2 book 'css'",
+			env2.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "css"),
+			&client2BookCSS.UUID, &client2BookCSS.Label)
+		cliDatabase.MustScan(t, "finding client2 book 'js'",
+			env2.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "js"),
+			&client2BookJS.UUID, &client2BookJS.Label)
+
+		assert.Equal(t, client1BookCSS.Label, "css", "client1 should have css book")
+		assert.Equal(t, client1BookJS.Label, "js", "client1 should have js book")
+		assert.Equal(t, client2BookCSS.Label, "css", "client2 should have css book")
+		assert.Equal(t, client2BookJS.Label, "js", "client2 should have js book")
+
+		// Verify go and rust books are deleted/absent on both clients
+		var client2BookGo, client2BookRust cliDatabase.Book
+		errGo := env2.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "go").Scan(&client2BookGo.UUID, &client2BookGo.Label)
+		assert.Equal(t, errGo, sql.ErrNoRows, "client2 should not have non-deleted 'go' book")
+		errRust := env2.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "rust").Scan(&client2BookRust.UUID, &client2BookRust.Label)
+		assert.Equal(t, errRust, sql.ErrNoRows, "client2 should not have non-deleted 'rust' book")
 	})
 }

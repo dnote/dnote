@@ -301,7 +301,7 @@ func (s *Sync) GetSyncState(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := GetSyncStateResp{
-		FullSyncBefore: fullSyncBefore,
+		FullSyncBefore: int(user.FullSyncBefore),
 		MaxUSN:         user.MaxUSN,
 		// TODO: exposing server time means we probably shouldn't seed random generator with time?
 		CurrentTime: s.app.Clock.Now().Unix(),
