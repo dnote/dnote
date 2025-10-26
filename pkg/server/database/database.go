@@ -21,6 +21,7 @@ package database
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
@@ -58,5 +59,67 @@ func Open(dbPath string) *gorm.DB {
 		panic(errors.Wrap(err, "opening database conection"))
 	}
 
+	// Get underlying *sql.DB to configure connection pool
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(errors.Wrap(err, "getting underlying database connection"))
+	}
+
+	// Configure connection pool for SQLite with WAL mode
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(0) // Doesn't expire.
+
+	// Apply performance PRAGMAs
+	pragmas := []string{
+		"PRAGMA journal_mode=WAL",   // Enable WAL mode for better concurrency
+		"PRAGMA synchronous=NORMAL", // Balance between safety and speed
+		"PRAGMA cache_size=-64000",  // 64MB cache (negative = KB)
+		"PRAGMA busy_timeout=5000",  // Wait up to 5s for locks
+		"PRAGMA foreign_keys=ON",    // Enforce foreign key constraints
+		"PRAGMA temp_store=MEMORY",  // Store temp tables in memory
+	}
+
+	for _, pragma := range pragmas {
+		if err := db.Exec(pragma).Error; err != nil {
+			panic(errors.Wrapf(err, "executing pragma: %s", pragma))
+		}
+	}
+
 	return db
+}
+
+// StartWALCheckpointing starts a background goroutine that periodically
+// checkpoints the WAL file to prevent it from growing unbounded
+func StartWALCheckpointing(db *gorm.DB, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			// TRUNCATE mode removes the WAL file after checkpointing
+			if err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)").Error; err != nil {
+				// Log error but don't panic - this is a background maintenance task
+				// TODO: Use proper logging once available
+				_ = err
+			}
+		}
+	}()
+}
+
+// StartPeriodicVacuum runs full VACUUM on a schedule to reclaim space and defragment.
+// WARNING: VACUUM acquires an exclusive lock and blocks all database operations briefly.
+func StartPeriodicVacuum(db *gorm.DB, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if err := db.Exec("VACUUM").Error; err != nil {
+				// Log error but don't panic - this is a background maintenance task
+				// TODO: Use proper logging once available
+				_ = err
+			}
+		}
+	}()
 }

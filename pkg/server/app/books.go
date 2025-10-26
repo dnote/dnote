@@ -37,6 +37,7 @@ func (a *App) CreateBook(user database.User, name string) (database.Book, error)
 
 	uuid, err := helpers.GenUUID()
 	if err != nil {
+		tx.Rollback()
 		return database.Book{}, err
 	}
 

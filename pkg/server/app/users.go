@@ -66,9 +66,11 @@ func (a *App) CreateUser(email, password string, passwordConfirmation string) (d
 
 	var count int64
 	if err := tx.Model(&database.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		tx.Rollback()
 		return database.User{}, pkgErrors.Wrap(err, "counting user")
 	}
 	if count > 0 {
+		tx.Rollback()
 		return database.User{}, ErrDuplicateEmail
 	}
 

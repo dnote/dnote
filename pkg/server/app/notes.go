@@ -55,6 +55,7 @@ func (a *App) CreateNote(user database.User, bookUUID, content string, addedOn *
 
 	uuid, err := helpers.GenUUID()
 	if err != nil {
+		tx.Rollback()
 		return database.Note{}, err
 	}
 

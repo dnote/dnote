@@ -203,11 +203,13 @@ func (b *Books) update(r *http.Request) (database.Book, error) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
+		tx.Rollback()
 		return database.Book{}, pkgErrors.Wrap(err, "finding book")
 	}
 
 	var params updateBookPayload
 	if err := parseRequestData(r, &params); err != nil {
+		tx.Rollback()
 		return database.Book{}, pkgErrors.Wrap(err, "decoding payload")
 	}
 
@@ -253,11 +255,13 @@ func (b *Books) del(r *http.Request) (database.Book, error) {
 
 	var book database.Book
 	if err := tx.Where("user_id = ? AND uuid = ?", user.ID, uuid).First(&book).Error; err != nil {
+		tx.Rollback()
 		return database.Book{}, pkgErrors.Wrap(err, "finding a book")
 	}
 
 	var notes []database.Note
 	if err := tx.Where("book_uuid = ? AND NOT deleted", uuid).Order("usn ASC").Find(&notes).Error; err != nil {
+		tx.Rollback()
 		return database.Book{}, pkgErrors.Wrap(err, "finding notes for the book")
 	}
 
@@ -270,6 +274,7 @@ func (b *Books) del(r *http.Request) (database.Book, error) {
 
 	book, err := b.app.DeleteBook(tx, *user, book)
 	if err != nil {
+		tx.Rollback()
 		return database.Book{}, pkgErrors.Wrap(err, "deleting the book")
 	}
 

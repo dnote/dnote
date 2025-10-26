@@ -22,10 +22,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dnote/dnote/pkg/server/buildinfo"
 	"github.com/dnote/dnote/pkg/server/config"
 	"github.com/dnote/dnote/pkg/server/controllers"
+	"github.com/dnote/dnote/pkg/server/database"
 	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 )
@@ -66,6 +68,12 @@ func startCmd(args []string) {
 			sqlDB.Close()
 		}
 	}()
+
+	// Start WAL checkpointing to prevent WAL file from growing unbounded.
+	database.StartWALCheckpointing(app.DB, 5*time.Minute)
+
+	// Start periodic VACUUM to reclaim space and defragment database.
+	database.StartPeriodicVacuum(app.DB, 24*time.Hour)
 
 	ctl := controllers.New(&app)
 	rc := controllers.RouteConfig{
