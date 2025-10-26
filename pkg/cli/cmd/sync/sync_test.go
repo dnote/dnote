@@ -36,7 +36,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 func TestProcessFragments(t *testing.T) {
 	fragments := []client.SyncFragment{
 		{
@@ -98,6 +97,7 @@ func TestProcessFragments(t *testing.T) {
 		ExpungedNotes:  map[string]bool{},
 		ExpungedBooks:  map[string]bool{},
 		MaxUSN:         10,
+		UserMaxUSN:     10,
 		MaxCurrentTime: 1550436136,
 	}
 
@@ -1796,41 +1796,132 @@ func TestMergeBook(t *testing.T) {
 }
 
 func TestSaveServerState(t *testing.T) {
-	// set up
-	db := database.InitTestMemoryDB(t)
-	testutils.LoginDB(t, db)
+	t.Run("with data received", func(t *testing.T) {
+		// set up
+		db := database.InitTestMemoryDB(t)
+		testutils.LoginDB(t, db)
 
-	database.MustExec(t, "inserting last synced at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, int64(1231108742))
-	database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 8)
+		database.MustExec(t, "inserting last synced at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, int64(1231108742))
+		database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 8)
 
-	// execute
-	tx, err := db.Begin()
-	if err != nil {
-		t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
-	}
+		// execute
+		tx, err := db.Begin()
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
+		}
 
-	serverTime := int64(1541108743)
-	serverMaxUSN := 100
+		serverTime := int64(1541108743)
+		serverMaxUSN := 100
+		userMaxUSN := 100
 
-	err = saveSyncState(tx, serverTime, serverMaxUSN)
-	if err != nil {
-		tx.Rollback()
-		t.Fatal(errors.Wrap(err, "executing").Error())
-	}
+		err = saveSyncState(tx, serverTime, serverMaxUSN, userMaxUSN)
+		if err != nil {
+			tx.Rollback()
+			t.Fatal(errors.Wrap(err, "executing").Error())
+		}
 
-	tx.Commit()
+		tx.Commit()
 
-	// test
-	var lastSyncedAt int64
-	var lastMaxUSN int
+		// test
+		var lastSyncedAt int64
+		var lastMaxUSN int
 
-	database.MustScan(t, "getting system value",
-		db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
-	database.MustScan(t, "getting system value",
-		db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
 
-	assert.Equal(t, lastSyncedAt, serverTime, "last synced at mismatch")
-	assert.Equal(t, lastMaxUSN, serverMaxUSN, "last max usn mismatch")
+		assert.Equal(t, lastSyncedAt, serverTime, "last synced at mismatch")
+		assert.Equal(t, lastMaxUSN, serverMaxUSN, "last max usn mismatch")
+	})
+
+	t.Run("with empty fragment but server has data - preserves last_max_usn", func(t *testing.T) {
+		// This tests the fix for the infinite sync bug where empty fragments
+		// would reset last_max_usn to 0, causing the client to re-download all data.
+		// When serverMaxUSN=0 (no data in fragment) but userMaxUSN>0 (server has data),
+		// we're caught up and should preserve the existing last_max_usn.
+
+		// set up
+		db := database.InitTestMemoryDB(t)
+		testutils.LoginDB(t, db)
+
+		existingLastMaxUSN := 100
+		database.MustExec(t, "inserting last synced at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, int64(1231108742))
+		database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, existingLastMaxUSN)
+
+		// execute
+		tx, err := db.Begin()
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
+		}
+
+		serverTime := int64(1541108743)
+		serverMaxUSN := 0 // Empty fragment (no data in this sync)
+		userMaxUSN := 150 // Server's actual max USN (higher than ours)
+
+		err = saveSyncState(tx, serverTime, serverMaxUSN, userMaxUSN)
+		if err != nil {
+			tx.Rollback()
+			t.Fatal(errors.Wrap(err, "executing").Error())
+		}
+
+		tx.Commit()
+
+		// test
+		var lastSyncedAt int64
+		var lastMaxUSN int
+
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+
+		assert.Equal(t, lastSyncedAt, serverTime, "last synced at should be updated")
+		// last_max_usn should NOT be updated to 0, it should preserve the existing value
+		assert.Equal(t, lastMaxUSN, existingLastMaxUSN, "last max usn should be preserved when fragment is empty but server has data")
+	})
+
+	t.Run("with empty server - resets last_max_usn to 0", func(t *testing.T) {
+		// When both serverMaxUSN=0 and userMaxUSN=0, the server is truly empty
+		// and we should reset last_max_usn to 0.
+
+		// set up
+		db := database.InitTestMemoryDB(t)
+		testutils.LoginDB(t, db)
+
+		database.MustExec(t, "inserting last synced at", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastSyncAt, int64(1231108742))
+		database.MustExec(t, "inserting last max usn", db, "INSERT INTO system (key, value) VALUES (?, ?)", consts.SystemLastMaxUSN, 50)
+
+		// execute
+		tx, err := db.Begin()
+		if err != nil {
+			t.Fatal(errors.Wrap(err, "beginning a transaction").Error())
+		}
+
+		serverTime := int64(1541108743)
+		serverMaxUSN := 0 // Empty fragment
+		userMaxUSN := 0   // Server is actually empty
+
+		err = saveSyncState(tx, serverTime, serverMaxUSN, userMaxUSN)
+		if err != nil {
+			tx.Rollback()
+			t.Fatal(errors.Wrap(err, "executing").Error())
+		}
+
+		tx.Commit()
+
+		// test
+		var lastSyncedAt int64
+		var lastMaxUSN int
+
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastSyncAt), &lastSyncedAt)
+		database.MustScan(t, "getting system value",
+			db.QueryRow("SELECT value FROM system WHERE key = ?", consts.SystemLastMaxUSN), &lastMaxUSN)
+
+		assert.Equal(t, lastSyncedAt, serverTime, "last synced at should be updated")
+		assert.Equal(t, lastMaxUSN, 0, "last max usn should be reset to 0 when server is empty")
+	})
 }
 
 // TestSendBooks tests that books are put to correct 'buckets' by running a test server and recording the

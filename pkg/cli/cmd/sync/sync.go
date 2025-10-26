@@ -90,6 +90,7 @@ type syncList struct {
 	ExpungedNotes  map[string]bool
 	ExpungedBooks  map[string]bool
 	MaxUSN         int
+	UserMaxUSN     int // Server's actual max USN (for distinguishing empty fragment vs empty server)
 	MaxCurrentTime int64
 }
 
@@ -104,6 +105,7 @@ func processFragments(fragments []client.SyncFragment) (syncList, error) {
 	expungedNotes := map[string]bool{}
 	expungedBooks := map[string]bool{}
 	var maxUSN int
+	var userMaxUSN int
 	var maxCurrentTime int64
 
 	for _, fragment := range fragments {
@@ -120,12 +122,11 @@ func processFragments(fragments []client.SyncFragment) (syncList, error) {
 			expungedNotes[uuid] = true
 		}
 
-		// Use UserMaxUSN instead of FragMaxUSN to track the server's actual max USN.
-		// FragMaxUSN is the max USN in THIS fragment (can be 0 if empty),
-		// while UserMaxUSN is the server's current max USN (always accurate).
-		// This prevents last_max_usn from being reset to 0 when we get empty fragments.
-		if fragment.UserMaxUSN > maxUSN {
-			maxUSN = fragment.UserMaxUSN
+		if fragment.FragMaxUSN > maxUSN {
+			maxUSN = fragment.FragMaxUSN
+		}
+		if fragment.UserMaxUSN > userMaxUSN {
+			userMaxUSN = fragment.UserMaxUSN
 		}
 		if fragment.CurrentTime > maxCurrentTime {
 			maxCurrentTime = fragment.CurrentTime
@@ -138,6 +139,7 @@ func processFragments(fragments []client.SyncFragment) (syncList, error) {
 		ExpungedNotes:  expungedNotes,
 		ExpungedBooks:  expungedBooks,
 		MaxUSN:         maxUSN,
+		UserMaxUSN:     userMaxUSN,
 		MaxCurrentTime: maxCurrentTime,
 	}
 
@@ -581,7 +583,7 @@ func fullSync(ctx context.DnoteCtx, tx *database.DB) error {
 		}
 	}
 
-	err = saveSyncState(tx, list.MaxCurrentTime, list.MaxUSN)
+	err = saveSyncState(tx, list.MaxCurrentTime, list.MaxUSN, list.UserMaxUSN)
 	if err != nil {
 		return errors.Wrap(err, "saving sync state")
 	}
@@ -625,7 +627,7 @@ func stepSync(ctx context.DnoteCtx, tx *database.DB, afterUSN int) error {
 		}
 	}
 
-	err = saveSyncState(tx, list.MaxCurrentTime, list.MaxUSN)
+	err = saveSyncState(tx, list.MaxCurrentTime, list.MaxUSN, list.UserMaxUSN)
 	if err != nil {
 		return errors.Wrap(err, "saving sync state")
 	}
@@ -681,13 +683,9 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 			} else {
 				resp, err := client.CreateBook(ctx, book.Label)
 				if err != nil {
-					// If we get a 409 conflict, it means another client uploaded data.
-					if isConflictError(err) {
-						log.Debug("409 conflict creating book %s, will retry after sync\n", book.Label)
-						isBehind = true
-						continue
-					}
-					return isBehind, errors.Wrap(err, "creating a book")
+					log.Debug("error creating book (will retry after stepSync): %v\n", err)
+					isBehind = true
+					continue
 				}
 
 				_, err = tx.Exec("UPDATE notes SET book_uuid = ? WHERE book_uuid = ?", resp.Book.UUID, book.UUID)
@@ -792,8 +790,7 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 			} else {
 				resp, err := client.CreateNote(ctx, note.BookUUID, note.Body)
 				if err != nil {
-					// If we get a 409 conflict, it means another client uploaded data.
-					log.Debug("error creating note (will retry after sync): %v\n", err)
+					log.Debug("error creating note (will retry after stepSync): %v\n", err)
 					isBehind = true
 					continue
 				}
@@ -903,10 +900,24 @@ func updateLastSyncAt(tx *database.DB, val int64) error {
 	return nil
 }
 
-func saveSyncState(tx *database.DB, serverTime int64, serverMaxUSN int) error {
-	if err := updateLastMaxUSN(tx, serverMaxUSN); err != nil {
-		return errors.Wrap(err, "updating last max usn")
+func saveSyncState(tx *database.DB, serverTime int64, serverMaxUSN int, userMaxUSN int) error {
+	// Handle last_max_usn update based on server state:
+	// - If serverMaxUSN > 0: we got data, update to serverMaxUSN
+	// - If serverMaxUSN == 0 && userMaxUSN > 0: empty fragment (caught up), preserve existing
+	// - If serverMaxUSN == 0 && userMaxUSN == 0: empty server, reset to 0
+	if serverMaxUSN > 0 {
+		if err := updateLastMaxUSN(tx, serverMaxUSN); err != nil {
+			return errors.Wrap(err, "updating last max usn")
+		}
+	} else if userMaxUSN == 0 {
+		// Server is empty, reset to 0
+		if err := updateLastMaxUSN(tx, 0); err != nil {
+			return errors.Wrap(err, "updating last max usn")
+		}
 	}
+	// else: empty fragment but server has data, preserve existing last_max_usn
+
+	// Always update last_sync_at (we did communicate with server)
 	if err := updateLastSyncAt(tx, serverTime); err != nil {
 		return errors.Wrap(err, "updating last sync at")
 	}
