@@ -120,8 +120,12 @@ func processFragments(fragments []client.SyncFragment) (syncList, error) {
 			expungedNotes[uuid] = true
 		}
 
-		if fragment.FragMaxUSN > maxUSN {
-			maxUSN = fragment.FragMaxUSN
+		// Use UserMaxUSN instead of FragMaxUSN to track the server's actual max USN.
+		// FragMaxUSN is the max USN in THIS fragment (can be 0 if empty),
+		// while UserMaxUSN is the server's current max USN (always accurate).
+		// This prevents last_max_usn from being reset to 0 when we get empty fragments.
+		if fragment.UserMaxUSN > maxUSN {
+			maxUSN = fragment.UserMaxUSN
 		}
 		if fragment.CurrentTime > maxCurrentTime {
 			maxCurrentTime = fragment.CurrentTime
