@@ -218,7 +218,7 @@ func (n *Notes) create(r *http.Request) (database.Note, error) {
 
 	var book database.Book
 	if err := n.app.DB.Where("uuid = ? AND user_id = ?", params.BookUUID, user.ID).First(&book).Error; err != nil {
-		return database.Note{}, errors.Wrap(err, "finding book")
+		return database.Note{}, errors.Wrapf(err, "finding book %s", params.BookUUID)
 	}
 
 	client := getClientType(r)

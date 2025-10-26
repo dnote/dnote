@@ -186,9 +186,66 @@ func getSyncFragments(ctx context.DnoteCtx, afterUSN int) ([]client.SyncFragment
 		}
 	}
 
-	log.Debug("received sync fragments: %+v\n", buf)
+	log.Debug("received sync fragments: %+v\n", redactSyncFragments(buf))
 
 	return buf, nil
+}
+
+// redactSyncFragments returns a deep copy of sync fragments with sensitive fields (note body, book label) removed for safe logging
+func redactSyncFragments(fragments []client.SyncFragment) []client.SyncFragment {
+	redacted := make([]client.SyncFragment, len(fragments))
+	for i, frag := range fragments {
+		// Create new notes with redacted bodies
+		notes := make([]client.SyncFragNote, len(frag.Notes))
+		for j, note := range frag.Notes {
+			notes[j] = client.SyncFragNote{
+				UUID:      note.UUID,
+				BookUUID:  note.BookUUID,
+				USN:       note.USN,
+				CreatedAt: note.CreatedAt,
+				UpdatedAt: note.UpdatedAt,
+				AddedOn:   note.AddedOn,
+				EditedOn:  note.EditedOn,
+				Body: func() string {
+					if note.Body != "" {
+						return "<redacted>"
+					}
+					return ""
+				}(),
+				Deleted: note.Deleted,
+			}
+		}
+
+		// Create new books with redacted labels
+		books := make([]client.SyncFragBook, len(frag.Books))
+		for j, book := range frag.Books {
+			books[j] = client.SyncFragBook{
+				UUID:      book.UUID,
+				USN:       book.USN,
+				CreatedAt: book.CreatedAt,
+				UpdatedAt: book.UpdatedAt,
+				AddedOn:   book.AddedOn,
+				Label: func() string {
+					if book.Label != "" {
+						return "<redacted>"
+					}
+					return ""
+				}(),
+				Deleted: book.Deleted,
+			}
+		}
+
+		redacted[i] = client.SyncFragment{
+			FragMaxUSN:    frag.FragMaxUSN,
+			UserMaxUSN:    frag.UserMaxUSN,
+			CurrentTime:   frag.CurrentTime,
+			Notes:         notes,
+			Books:         books,
+			ExpungedNotes: frag.ExpungedNotes,
+			ExpungedBooks: frag.ExpungedBooks,
+		}
+	}
+	return redacted
 }
 
 // resolveLabel resolves a book label conflict by repeatedly appending an increasing integer
@@ -546,12 +603,16 @@ func fullSync(ctx context.DnoteCtx, tx *database.DB) error {
 	log.Debug("performing a full sync\n")
 	log.Info("resolving delta.")
 
+	log.DebugNewline()
+
 	list, err := getSyncList(ctx, 0)
 	if err != nil {
 		return errors.Wrap(err, "getting sync list")
 	}
 
 	fmt.Printf(" (total %d).", list.getLength())
+
+	log.DebugNewline()
 
 	// clean resources that are in erroneous states
 	if err := cleanLocalNotes(tx, &list); err != nil {
@@ -597,6 +658,8 @@ func stepSync(ctx context.DnoteCtx, tx *database.DB, afterUSN int) error {
 	log.Debug("performing a step sync\n")
 
 	log.Info("resolving delta.")
+
+	log.DebugNewline()
 
 	list, err := getSyncList(ctx, afterUSN)
 	if err != nil {
@@ -757,8 +820,90 @@ func sendBooks(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	return isBehind, nil
 }
 
+// findOrphanedNotes returns a list of all orphaned notes
+func findOrphanedNotes(db *database.DB) (int, []struct{ noteUUID, bookUUID string }, error) {
+	var orphanCount int
+	err := db.QueryRow(`
+		SELECT COUNT(*) FROM notes n
+		WHERE NOT EXISTS (
+			SELECT 1 FROM books b
+			WHERE b.uuid = n.book_uuid
+			AND NOT b.deleted
+		)
+	`).Scan(&orphanCount)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	if orphanCount == 0 {
+		return 0, nil, nil
+	}
+
+	rows, err := db.Query(`
+		SELECT n.uuid, n.book_uuid
+		FROM notes n
+		WHERE NOT EXISTS (
+			SELECT 1 FROM books b
+			WHERE b.uuid = n.book_uuid
+			AND NOT b.deleted
+		)
+	`)
+	if err != nil {
+		return orphanCount, nil, err
+	}
+	defer rows.Close()
+
+	var orphans []struct{ noteUUID, bookUUID string }
+	for rows.Next() {
+		var noteUUID, bookUUID string
+		if err := rows.Scan(&noteUUID, &bookUUID); err != nil {
+			continue
+		}
+		orphans = append(orphans, struct{ noteUUID, bookUUID string }{noteUUID, bookUUID})
+	}
+
+	return orphanCount, orphans, nil
+}
+
+func warnOrphanedNotes(tx *database.DB) {
+	count, orphans, err := findOrphanedNotes(tx)
+	if err != nil {
+		log.Debug("error checking orphaned notes: %v\n", err)
+		return
+	}
+
+	if count == 0 {
+		return
+	}
+
+	log.Debug("Found %d orphaned notes (book doesn't exist locally):\n", count)
+	for _, o := range orphans {
+		log.Debug("note %s (book %s)\n", o.noteUUID, o.bookUUID)
+	}
+}
+
+// checkPostSyncIntegrity checks for data integrity issues after sync and warns the user
+func checkPostSyncIntegrity(db *database.DB) {
+	count, orphans, err := findOrphanedNotes(db)
+	if err != nil {
+		log.Debug("error checking orphaned notes: %v\n", err)
+		return
+	}
+
+	if count == 0 {
+		return
+	}
+
+	log.Warnf("Found %d orphaned notes (referencing non-existent or deleted books):\n", count)
+	for _, o := range orphans {
+		log.Plainf("  - note %s (missing book: %s)\n", o.noteUUID, o.bookUUID)
+	}
+}
+
 func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	isBehind := false
+
+	warnOrphanedNotes(tx)
 
 	rows, err := tx.Query("SELECT uuid, book_uuid, body, deleted, usn, added_on FROM notes WHERE dirty")
 	if err != nil {
@@ -773,7 +918,7 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 			return isBehind, errors.Wrap(err, "scanning a syncable note")
 		}
 
-		log.Debug("sending note %s\n", note.UUID)
+		log.Debug("sending note %s (book: %s)\n", note.UUID, note.BookUUID)
 
 		var respUSN int
 
@@ -790,7 +935,7 @@ func sendNotes(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 			} else {
 				resp, err := client.CreateNote(ctx, note.BookUUID, note.Body)
 				if err != nil {
-					log.Debug("error creating note (will retry after stepSync): %v\n", err)
+					log.Debug("failed to create note %s (book: %s): %v\n", note.UUID, note.BookUUID, err)
 					isBehind = true
 					continue
 				}
@@ -866,6 +1011,8 @@ func sendChanges(ctx context.DnoteCtx, tx *database.DB) (bool, error) {
 	err := tx.QueryRow("SELECT (SELECT count(*) FROM notes WHERE dirty) + (SELECT count(*) FROM books WHERE dirty)").Scan(&delta)
 
 	fmt.Printf(" (total %d).", delta)
+
+	log.DebugNewline()
 
 	behind1, err := sendBooks(ctx, tx)
 	if err != nil {
@@ -1079,6 +1226,8 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 		}
 
 		log.Success("success\n")
+
+		checkPostSyncIntegrity(ctx.DB)
 
 		if err := upgrade.Check(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())

@@ -25,6 +25,11 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	debugEnvName  = "DNOTE_DEBUG"
+	debugEnvValue = "1"
+)
+
 var (
 	// ColorRed is a red foreground color
 	ColorRed = color.New(color.FgRed)
@@ -105,9 +110,21 @@ func Askf(msg string, masked bool, v ...interface{}) {
 	fmt.Fprintf(color.Output, "%s%s %s: ", indent, symbol, fmt.Sprintf(msg, v...))
 }
 
+// isDebug returns true if debug mode is enabled
+func isDebug() bool {
+	return os.Getenv(debugEnvName) == debugEnvValue
+}
+
 // Debug prints to the console if DNOTE_DEBUG is set
 func Debug(msg string, v ...interface{}) {
-	if os.Getenv("DNOTE_DEBUG") == "1" {
+	if isDebug() {
 		fmt.Fprintf(color.Output, "%s %s", ColorGray.Sprint("DEBUG:"), fmt.Sprintf(msg, v...))
+	}
+}
+
+// DebugNewline prints a newline only in debug mode
+func DebugNewline() {
+	if isDebug() {
+		fmt.Println()
 	}
 }

@@ -176,7 +176,7 @@ func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOpti
 		return nil, errors.Wrap(err, "getting request")
 	}
 
-	log.Debug("HTTP request: %+v\n", req)
+	log.Debug("HTTP %s %s\n", method, path)
 
 	hc := getHTTPClient(ctx, options)
 	res, err := hc.Do(req)
@@ -184,7 +184,7 @@ func doReq(ctx context.DnoteCtx, method, path, body string, options *requestOpti
 		return res, errors.Wrap(err, "making http request")
 	}
 
-	log.Debug("HTTP response: %+v\n", res)
+	log.Debug("HTTP %d %s\n", res.StatusCode, res.Status)
 
 	if err = checkRespErr(res); err != nil {
 		return res, errors.Wrap(err, "server responded with an error")

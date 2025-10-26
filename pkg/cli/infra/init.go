@@ -137,7 +137,7 @@ func Init(versionTag, apiEndpoint, dbPath string) (*context.DnoteCtx, error) {
 		return nil, errors.Wrap(err, "setting up the context")
 	}
 
-	log.Debug("Running with Dnote context: %+v\n", context.Redact(ctx))
+	log.Debug("context: %+v\n", context.Redact(ctx))
 
 	return &ctx, nil
 }
