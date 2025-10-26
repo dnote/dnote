@@ -34,3 +34,7 @@ CREATE TRIGGER notes_after_update AFTER UPDATE ON notes BEGIN
 				INSERT INTO note_fts(note_fts, rowid, body) VALUES ('delete', old.rowid, old.body);
 				INSERT INTO note_fts(rowid, body) VALUES (new.rowid, new.body);
 			END;
+
+-- Migration version data.
+INSERT INTO system (key, value) VALUES ('schema', 14);
+INSERT INTO system (key, value) VALUES ('remote_schema', 1);

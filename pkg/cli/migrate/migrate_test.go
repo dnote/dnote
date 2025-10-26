@@ -38,6 +38,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+// initTestDBNoMigration initializes a test database with schema.sql but removes
+// migration version data so tests can control the migration state themselves.
+func initTestDBNoMigration(t *testing.T) *database.DB {
+	db := database.InitTestMemoryDBRaw(t, "")
+	// Remove migration versions from schema.sql so tests can set their own
+	database.MustExec(t, "clearing schema versions", db, "DELETE FROM system WHERE key IN (?, ?)", consts.SystemSchema, consts.SystemRemoteSchema)
+	return db
+}
 
 func TestExecute_bump_schema(t *testing.T) {
 	testCases := []struct {
@@ -54,7 +62,7 @@ func TestExecute_bump_schema(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestMemoryDBRaw(t, "")
+			db := initTestDBNoMigration(t)
 			ctx := context.InitTestCtxWithDB(t, db)
 
 			database.MustExec(t, "inserting a schema", db, "INSERT INTO system (key, value) VALUES (?, ?)", tc.schemaKey, 8)
@@ -108,7 +116,7 @@ func TestRun_nonfresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestMemoryDBRaw(t, "")
+			db := initTestDBNoMigration(t)
 			ctx := context.InitTestCtxWithDB(t, db)
 			database.MustExec(t, "inserting a schema", db, "INSERT INTO system (key, value) VALUES (?, ?)", tc.schemaKey, 2)
 			database.MustExec(t, "creating a temporary table for testing", db,
@@ -185,7 +193,7 @@ func TestRun_fresh(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestMemoryDBRaw(t, "")
+			db := initTestDBNoMigration(t)
 			ctx := context.InitTestCtxWithDB(t, db)
 
 			database.MustExec(t, "creating a temporary table for testing", db,
@@ -256,7 +264,7 @@ func TestRun_up_to_date(t *testing.T) {
 	for _, tc := range testCases {
 		func() {
 			// set up
-			db := database.InitTestMemoryDBRaw(t, "")
+			db := initTestDBNoMigration(t)
 			ctx := context.InitTestCtxWithDB(t, db)
 
 			database.MustExec(t, "creating a temporary table for testing", db,

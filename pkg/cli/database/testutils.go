@@ -58,9 +58,7 @@ func MustExec(t *testing.T, message string, db *DB, query string, args ...interf
 
 // InitTestMemoryDB initializes an in-memory test database with the default schema.
 func InitTestMemoryDB(t *testing.T) *DB {
-	db := InitTestMemoryDBRaw(t, "")
-	MarkMigrationComplete(t, db)
-	return db
+	return InitTestMemoryDBRaw(t, "")
 }
 
 // InitTestFileDB initializes a file-based test database with the default schema.
@@ -80,8 +78,6 @@ func InitTestFileDBRaw(t *testing.T, dbPath string) *DB {
 	if _, err := db.Exec(defaultSchemaSQL); err != nil {
 		t.Fatal(errors.Wrap(err, "running schema sql"))
 	}
-
-	MarkMigrationComplete(t, db)
 
 	t.Cleanup(func() { db.Close() })
 	return db
@@ -123,16 +119,6 @@ func OpenTestDB(t *testing.T, dnoteDir string) *DB {
 	}
 
 	return db
-}
-
-// MarkMigrationComplete marks all migrations as complete in the database
-func MarkMigrationComplete(t *testing.T, db *DB) {
-	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemSchema, 14); err != nil {
-		t.Fatal(errors.Wrap(err, "inserting schema"))
-	}
-	if _, err := db.Exec("INSERT INTO system (key, value) VALUES (? , ?);", consts.SystemRemoteSchema, 1); err != nil {
-		t.Fatal(errors.Wrap(err, "inserting remote schema"))
-	}
 }
 
 // mustGenerateTestUUID generates a UUID for test databases and fails the test on error

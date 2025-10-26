@@ -19,7 +19,6 @@
 package context
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -40,34 +39,16 @@ func getDefaultTestPaths(t *testing.T) Paths {
 	}
 }
 
-// createTestDirectories creates test directories for the given paths
-func createTestDirectories(t *testing.T, paths Paths) {
-	if paths.Config != "" {
-		configDir := filepath.Join(paths.Config, consts.DnoteDirName)
-		if err := os.MkdirAll(configDir, 0755); err != nil {
-			t.Fatal(errors.Wrap(err, "creating test config directory"))
-		}
-	}
-	if paths.Data != "" {
-		dataDir := filepath.Join(paths.Data, consts.DnoteDirName)
-		if err := os.MkdirAll(dataDir, 0755); err != nil {
-			t.Fatal(errors.Wrap(err, "creating test data directory"))
-		}
-	}
-	if paths.Cache != "" {
-		cacheDir := filepath.Join(paths.Cache, consts.DnoteDirName)
-		if err := os.MkdirAll(cacheDir, 0755); err != nil {
-			t.Fatal(errors.Wrap(err, "creating test cache directory"))
-		}
-	}
-}
 
 // InitTestCtx initializes a test context with an in-memory database
 // and a temporary directory for all paths
 func InitTestCtx(t *testing.T) DnoteCtx {
 	paths := getDefaultTestPaths(t)
 	db := database.InitTestMemoryDB(t)
-	createTestDirectories(t, paths)
+
+	if err := InitDnoteDirs(paths); err != nil {
+		t.Fatal(errors.Wrap(err, "creating test directories"))
+	}
 
 	return DnoteCtx{
 		DB:    db,
@@ -81,7 +62,10 @@ func InitTestCtx(t *testing.T) DnoteCtx {
 // Used when you need full control over database initialization (e.g. migration tests).
 func InitTestCtxWithDB(t *testing.T, db *database.DB) DnoteCtx {
 	paths := getDefaultTestPaths(t)
-	createTestDirectories(t, paths)
+
+	if err := InitDnoteDirs(paths); err != nil {
+		t.Fatal(errors.Wrap(err, "creating test directories"))
+	}
 
 	return DnoteCtx{
 		DB:    db,
@@ -94,7 +78,10 @@ func InitTestCtxWithDB(t *testing.T, db *database.DB) DnoteCtx {
 // at the expected path.
 func InitTestCtxWithFileDB(t *testing.T) DnoteCtx {
 	paths := getDefaultTestPaths(t)
-	createTestDirectories(t, paths)
+
+	if err := InitDnoteDirs(paths); err != nil {
+		t.Fatal(errors.Wrap(err, "creating test directories"))
+	}
 
 	dbPath := filepath.Join(paths.Data, consts.DnoteDirName, consts.DnoteDBFileName)
 	db, err := database.Open(dbPath)
@@ -106,7 +93,6 @@ func InitTestCtxWithFileDB(t *testing.T) DnoteCtx {
 		t.Fatal(errors.Wrap(err, "running schema sql"))
 	}
 
-	database.MarkMigrationComplete(t, db)
 	t.Cleanup(func() { db.Close() })
 
 	return DnoteCtx{

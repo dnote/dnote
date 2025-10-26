@@ -24,7 +24,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -329,37 +328,6 @@ func getEditorCommand() string {
 	return ret
 }
 
-// initDir creates a directory if it doesn't exist
-func initDir(path string) error {
-	ok, err := utils.FileExists(path)
-	if err != nil {
-		return errors.Wrapf(err, "checking if dir exists at %s", path)
-	}
-	if ok {
-		return nil
-	}
-
-	if err := os.MkdirAll(path, 0755); err != nil {
-		return errors.Wrapf(err, "creating a directory at %s", path)
-	}
-
-	return nil
-}
-
-// initDnoteDir initializes missing directories that Dnote uses
-func initDnoteDir(ctx context.DnoteCtx) error {
-	if err := initDir(filepath.Join(ctx.Paths.Config, consts.DnoteDirName)); err != nil {
-		return errors.Wrap(err, "initializing config dir")
-	}
-	if err := initDir(filepath.Join(ctx.Paths.Data, consts.DnoteDirName)); err != nil {
-		return errors.Wrap(err, "initializing data dir")
-	}
-	if err := initDir(filepath.Join(ctx.Paths.Cache, consts.DnoteDirName)); err != nil {
-		return errors.Wrap(err, "initializing cache dir")
-	}
-
-	return nil
-}
 
 // initConfigFile populates a new config file if it does not exist yet
 func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
@@ -395,7 +363,7 @@ func initConfigFile(ctx context.DnoteCtx, apiEndpoint string) error {
 
 // initFiles creates, if necessary, the dnote directory and files inside
 func initFiles(ctx context.DnoteCtx, apiEndpoint string) error {
-	if err := initDnoteDir(ctx); err != nil {
+	if err := context.InitDnoteDirs(ctx.Paths); err != nil {
 		return errors.Wrap(err, "creating the dnote dir")
 	}
 	if err := initConfigFile(ctx, apiEndpoint); err != nil {

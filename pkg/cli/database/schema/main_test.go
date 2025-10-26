@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
+	"github.com/dnote/dnote/pkg/cli/consts"
 )
 
 func TestRun(t *testing.T) {
@@ -73,4 +74,11 @@ func TestRun(t *testing.T) {
 
 	// Verify schema does not contain sqlite internal tables
 	assert.Equal(t, strings.Contains(schema, "sqlite_sequence"), false, "schema should not contain sqlite_sequence")
+
+	// Verify system key-value pairs for schema versions are present
+	expectedSchemaKey := fmt.Sprintf("INSERT INTO system (key, value) VALUES ('%s',", consts.SystemSchema)
+	assert.Equal(t, strings.Contains(schema, expectedSchemaKey), true, "schema should contain schema version INSERT statement")
+
+	expectedRemoteSchemaKey := fmt.Sprintf("INSERT INTO system (key, value) VALUES ('%s',", consts.SystemRemoteSchema)
+	assert.Equal(t, strings.Contains(schema, expectedRemoteSchemaKey), true, "schema should contain remote_schema version INSERT statement")
 }

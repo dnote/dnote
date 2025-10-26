@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/dnote/dnote/pkg/cli/config"
+	"github.com/dnote/dnote/pkg/cli/consts"
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/infra"
@@ -118,7 +119,12 @@ func generateSchema(tmpDir string) (string, error) {
 		return "", fmt.Errorf("extracting schema: %w", err)
 	}
 
-	return schema, nil
+	// Add INSERT statements for migration versions.
+	systemData := "\n-- Migration version data.\n"
+	systemData += fmt.Sprintf("INSERT INTO system (key, value) VALUES ('%s', %d);\n", consts.SystemSchema, len(migrate.LocalSequence))
+	systemData += fmt.Sprintf("INSERT INTO system (key, value) VALUES ('%s', %d);\n", consts.SystemRemoteSchema, len(migrate.RemoteSequence))
+
+	return schema + systemData, nil
 }
 
 // extractSchema extracts the complete schema by querying sqlite_master

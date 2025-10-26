@@ -110,7 +110,6 @@ func TestNoteInsert(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			n := Note{
 				UUID:     tc.uuid,
@@ -244,7 +243,6 @@ func TestNoteUpdate(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			n1 := Note{
 				UUID:     tc.uuid,
@@ -267,8 +265,8 @@ func TestNoteUpdate(t *testing.T) {
 				Dirty:    false,
 			}
 
-			MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body,  n1.Deleted, n1.Dirty)
-			MustExec(t, fmt.Sprintf("inserting n2 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body,  n2.Deleted, n2.Dirty)
+			MustExec(t, fmt.Sprintf("inserting n1 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body, n1.Deleted, n1.Dirty)
+			MustExec(t, fmt.Sprintf("inserting n2 for test case %d", idx), db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Deleted, n2.Dirty)
 
 			// execute
 			tx, err := db.Begin()
@@ -336,7 +334,6 @@ func TestNoteUpdateUUID(t *testing.T) {
 		t.Run(fmt.Sprintf("testCase%d", idx), func(t *testing.T) {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			n1 := Note{
 				UUID:     "n1-uuid",
@@ -391,7 +388,6 @@ func TestNoteUpdateUUID(t *testing.T) {
 func TestNoteExpunge(t *testing.T) {
 	// Setup
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	n1 := Note{
 		UUID:     "n1-uuid",
@@ -414,8 +410,8 @@ func TestNoteExpunge(t *testing.T) {
 		Dirty:    false,
 	}
 
-	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body,  n1.Deleted, n1.Dirty)
-	MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body,  n2.Deleted, n2.Dirty)
+	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1.UUID, n1.BookUUID, n1.USN, n1.AddedOn, n1.EditedOn, n1.Body, n1.Deleted, n1.Dirty)
+	MustExec(t, "inserting n2", db, "INSERT INTO notes (uuid, book_uuid, usn, added_on, edited_on, body, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n2.UUID, n2.BookUUID, n2.USN, n2.AddedOn, n2.EditedOn, n2.Body, n2.Deleted, n2.Dirty)
 
 	// execute
 	tx, err := db.Begin()
@@ -514,7 +510,6 @@ func TestBookInsert(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			b := Book{
 				UUID:    tc.uuid,
@@ -595,7 +590,6 @@ func TestBookUpdate(t *testing.T) {
 		func() {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -674,7 +668,6 @@ func TestBookUpdateUUID(t *testing.T) {
 
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			b1 := Book{
 				UUID:    "b1-uuid",
@@ -725,7 +718,6 @@ func TestBookUpdateUUID(t *testing.T) {
 func TestBookExpunge(t *testing.T) {
 	// Setup
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	b1 := Book{
 		UUID:    "b1-uuid",
@@ -780,7 +772,6 @@ func TestBookExpunge(t *testing.T) {
 func TestNoteFTS(t *testing.T) {
 	// set up
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	// execute - insert
 	n := Note{

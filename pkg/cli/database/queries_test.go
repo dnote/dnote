@@ -48,7 +48,6 @@ func TestInsertSystem(t *testing.T) {
 		t.Run(fmt.Sprintf("insert %s %s", tc.key, tc.val), func(t *testing.T) {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			// execute
 			tx, err := db.Begin()
@@ -96,7 +95,6 @@ func TestUpsertSystem(t *testing.T) {
 		t.Run(fmt.Sprintf("insert %s %s", tc.key, tc.val), func(t *testing.T) {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "baz", "quz")
 
@@ -135,7 +133,6 @@ func TestGetSystem(t *testing.T) {
 	t.Run(fmt.Sprintf("get string value"), func(t *testing.T) {
 		// Setup
 		db := InitTestMemoryDB(t)
-		defer db.Close()
 
 		// execute
 		MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "foo", "bar")
@@ -158,7 +155,6 @@ func TestGetSystem(t *testing.T) {
 	t.Run(fmt.Sprintf("get int64 value"), func(t *testing.T) {
 		// Setup
 		db := InitTestMemoryDB(t)
-		defer db.Close()
 
 		// execute
 		MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "foo", 1234)
@@ -199,7 +195,6 @@ func TestUpdateSystem(t *testing.T) {
 		t.Run(fmt.Sprintf("update %s %s", tc.key, tc.val), func(t *testing.T) {
 			// Setup
 			db := InitTestMemoryDB(t)
-			defer db.Close()
 
 			MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "foo", "fuz")
 			MustExec(t, "inserting a system configuration", db, "INSERT INTO system (key, value) VALUES (?, ?)", "baz", "quz")
@@ -239,7 +234,6 @@ func TestGetActiveNote(t *testing.T) {
 	t.Run("not deleted", func(t *testing.T) {
 		// set up
 		db := InitTestMemoryDB(t)
-		defer db.Close()
 
 		n1UUID := "n1-uuid"
 		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1,  false, true)
@@ -268,7 +262,6 @@ func TestGetActiveNote(t *testing.T) {
 	t.Run("deleted", func(t *testing.T) {
 		// set up
 		db := InitTestMemoryDB(t)
-		defer db.Close()
 
 		n1UUID := "n1-uuid"
 		MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", n1UUID, "b1-uuid", "n1 content", 1542058875, 1542058876, 1,  true, true)
@@ -292,7 +285,6 @@ func TestGetActiveNote(t *testing.T) {
 func TestUpdateNoteContent(t *testing.T) {
 	// set up
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	uuid := "n1-uuid"
 	MustExec(t, "inserting n1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on, edited_on, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", uuid, "b1-uuid", "n1 content", 1542058875, 0, 1,  false, false)
@@ -324,7 +316,6 @@ func TestUpdateNoteContent(t *testing.T) {
 func TestUpdateNoteBook(t *testing.T) {
 	// set up
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	b1UUID := "b1-uuid"
 	b2UUID := "b2-uuid"
@@ -361,7 +352,6 @@ func TestUpdateNoteBook(t *testing.T) {
 func TestUpdateBookName(t *testing.T) {
 	// set up
 	db := InitTestMemoryDB(t)
-	defer db.Close()
 
 	b1UUID := "b1-uuid"
 	MustExec(t, "inserting b1", db, "INSERT INTO books (uuid, label, usn, deleted, dirty) VALUES (?, ?, ?, ?, ?)", b1UUID, "b1-label", 8, false, false)
