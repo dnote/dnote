@@ -1173,6 +1173,28 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			log.Debug("prepared empty server sync: marked %d books and %d notes as dirty\n", bookCount, noteCount)
 		}
 
+		// If full sync will be triggered by FullSyncBefore (not manual --full flag),
+		// and client has more data than server, prepare local data for upload to avoid orphaning notes.
+		// The lastMaxUSN > syncState.MaxUSN check prevents duplicate uploads when switching
+		// back to a server that already has our data.
+		if !isFullSync && lastSyncAt < syncState.FullSyncBefore && lastMaxUSN > syncState.MaxUSN {
+			log.Debug("full sync triggered by FullSyncBefore: preparing local data for upload\n")
+			log.Debug("server.FullSyncBefore=%d, local.lastSyncAt=%d, local.MaxUSN=%d, server.MaxUSN=%d, books=%d, notes=%d\n",
+				syncState.FullSyncBefore, lastSyncAt, lastMaxUSN, syncState.MaxUSN, bookCount, noteCount)
+
+			if err := prepareEmptyServerSync(tx); err != nil {
+				return errors.Wrap(err, "preparing local data for full sync")
+			}
+
+			// Re-fetch lastMaxUSN after prepareEmptyServerSync
+			lastMaxUSN, err = getLastMaxUSN(tx)
+			if err != nil {
+				return errors.Wrap(err, "getting the last max_usn after prepare")
+			}
+
+			log.Debug("prepared for full sync: marked %d books and %d notes as dirty\n", bookCount, noteCount)
+		}
+
 		var syncErr error
 		if isFullSync || lastSyncAt < syncState.FullSyncBefore {
 			syncErr = fullSync(ctx, tx)

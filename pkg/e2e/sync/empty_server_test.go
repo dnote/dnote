@@ -632,4 +632,100 @@ func TestSync_EmptyServer(t *testing.T) {
 		errRust := env2.DB.QueryRow("SELECT uuid, label FROM books WHERE label = ? AND deleted = 0", "rust").Scan(&client2BookRust.UUID, &client2BookRust.Label)
 		assert.Equal(t, errRust, sql.ErrNoRows, "client2 should not have non-deleted 'rust' book")
 	})
+
+	t.Run("client with local data syncs after another client uploads to empty server - should not orphan notes", func(t *testing.T) {
+		// This test reproduces the scenario where:
+		// 1. Client1 has local data and syncs to original server
+		// 2. Client2 has DIFFERENT local data and syncs to SAME original server
+		// 3. Both clients switch to NEW empty server
+		// 4. Client1 uploads to the new empty server (sets FullSyncBefore)
+		// 5. Client2 syncs - should trigger full sync AND upload its local data
+		//    WITHOUT orphaning notes due to cleanLocalBooks deleting them first
+
+		// Step 1: Create client1 with local data on original server
+		env1 := setupTestEnv(t)
+		user := setupUserAndLogin(t, env1)
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "add", "client1-book", "-c", "client1-note")
+		clitest.RunDnoteCmd(t, env1.CmdOpts, cliBinaryName, "sync")
+
+		// Step 2: Create client2 with DIFFERENT local data on SAME original server
+		env2 := setupTestEnv(t)
+		// Point env2 to env1's server (the original server)
+		env2.Server = env1.Server
+		env2.ServerDB = env1.ServerDB
+		apiEndpoint := fmt.Sprintf("%s/api", env1.Server.URL)
+		updateConfigAPIEndpoint(t, env2.TmpDir, apiEndpoint)
+
+		// Login client2 to the same server
+		login(t, env2.DB, env2.ServerDB, user)
+		clitest.RunDnoteCmd(t, env2.CmdOpts, cliBinaryName, "add", "client2-book", "-c", "client2-note")
+		clitest.RunDnoteCmd(t, env2.CmdOpts, cliBinaryName, "sync")
+
+		// Step 3: Both clients switch to NEW empty server
+		switchToEmptyServer(t, &env1)
+		env2.Server = env1.Server
+		env2.ServerDB = env1.ServerDB
+		apiEndpoint = fmt.Sprintf("%s/api", env1.Server.URL)
+		updateConfigAPIEndpoint(t, env2.TmpDir, apiEndpoint)
+
+		// Create same user on new server
+		user = setupUserAndLogin(t, env1)
+		login(t, env2.DB, env2.ServerDB, user)
+
+		// Step 4: Client1 uploads to empty server
+		clitest.MustWaitDnoteCmd(t, env1.CmdOpts, clitest.UserConfirmEmptyServerSync, cliBinaryName, "sync")
+
+		// Verify server has client1's data and FullSyncBefore is set
+		var serverUser database.User
+		apitest.MustExec(t, env1.ServerDB.Where("id = ?", user.ID).First(&serverUser), "getting server user state")
+		assert.Equal(t, serverUser.MaxUSN > 0, true, "server should have data after client1 upload")
+		assert.Equal(t, serverUser.FullSyncBefore > 0, true, "server should have FullSyncBefore set")
+
+		// Step 5: Client2 syncs - should trigger full sync due to FullSyncBefore
+		// CRITICAL: Client2 has local data (client2-book, client2-note) that should be uploaded
+		// Without the fix, cleanLocalBooks will delete client2-book before upload, orphaning client2-note
+		clitest.RunDnoteCmd(t, env2.CmdOpts, cliBinaryName, "sync")
+
+		// Step 6: Verify NO orphaned notes on client2
+		var orphanedCount int
+		cliDatabase.MustScan(t, "checking for orphaned notes on client2",
+			env2.DB.QueryRow(`
+				SELECT COUNT(*) FROM notes
+				WHERE deleted = 0
+				AND book_uuid NOT IN (SELECT uuid FROM books WHERE deleted = 0)
+			`), &orphanedCount)
+
+		assert.Equal(t, orphanedCount, 0, "client2 should have no orphaned notes after sync")
+
+		// Step 7: Verify client2's data was uploaded to server
+		var client2BookOnServer database.Book
+		err := env2.ServerDB.Where("label = ? AND deleted = ?", "client2-book", false).First(&client2BookOnServer).Error
+		assert.Equal(t, err, nil, "client2-book should exist on server")
+
+		var client2NoteOnServer database.Note
+		err = env2.ServerDB.Where("body = ? AND deleted = ?", "client2-note", false).First(&client2NoteOnServer).Error
+		assert.Equal(t, err, nil, "client2-note should exist on server")
+
+		// Step 8: Verify server has data from BOTH clients
+		// Note: Both clients had synced to original server, so they each have 2 books + 2 notes locally.
+		// When switching to new empty server, client1 uploads 2 books + 2 notes (USN 1-4).
+		// Client2 then does full sync, downloads client1's uploads, marks its local data as dirty,
+		// and uploads its version of the same 2 books + 2 notes with potentially different UUIDs.
+		// The exact count depends on UUID conflict resolution, but we verify both original books exist.
+		var serverBookCount, serverNoteCount int64
+		apitest.MustExec(t, env2.ServerDB.Model(&database.Book{}).Where("deleted = ?", false).Count(&serverBookCount), "counting active server books")
+		apitest.MustExec(t, env2.ServerDB.Model(&database.Note{}).Where("deleted = ?", false).Count(&serverNoteCount), "counting active server notes")
+
+		// The main assertion: both original client books should exist
+		var client1BookExists, client2BookExists bool
+		err = env2.ServerDB.Model(&database.Book{}).Where("label = ? AND deleted = ?", "client1-book", false).First(&database.Book{}).Error
+		client1BookExists = (err == nil)
+		err = env2.ServerDB.Model(&database.Book{}).Where("label = ? AND deleted = ?", "client2-book", false).First(&database.Book{}).Error
+		client2BookExists = (err == nil)
+
+		assert.Equal(t, client1BookExists, true, "server should have client1-book")
+		assert.Equal(t, client2BookExists, true, "server should have client2-book")
+		assert.Equal(t, serverBookCount >= 2, true, "server should have at least 2 books")
+		assert.Equal(t, serverNoteCount >= 2, true, "server should have at least 2 notes")
+	})
 }
