@@ -2,74 +2,45 @@
 set -eux
 
 function remove_notice {
-  sed -i -e '/\/\* Copyright/,/\*\//d' "$1"
-
-  # remove leading newline
-  sed -i '/./,$!d' "$1"
+  # Remove old copyright notice - matches /* Copyright ... */ including the trailing newline
+  # The 's' flag makes . match newlines, allowing multi-line matching
+  # The \n? matches an optional newline after the closing */
+  perl -i -0pe 's/\/\* Copyright.*?\*\/\n?//s' "$1"
 }
 
 function add_notice {
   ed "$1" <<END
 0i
 $2
-
 .
 w
 q
 END
 }
 
-gpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
+license="/* Copyright 2025 Dnote Authors
  *
- * This file is part of Dnote.
+ * Licensed under the Apache License, Version 2.0 (the \"License\");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Dnote is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Dnote is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
- */"
-
-agpl="/* Copyright (C) 2019, 2020, 2021, 2022, 2023, 2024, 2025 Dnote contributors
- *
- * This file is part of Dnote.
- *
- * Dnote is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Dnote is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Dnote.  If not, see <https://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an \"AS IS\" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */"
 
 dir=$(dirname "${BASH_SOURCE[0]}")
 basedir="$dir/.."
 pkgPath="$basedir/pkg"
-serverPath="$basedir/pkg/server"
 
-gplFiles=$(find "$pkgPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "$serverPath/*")
+# Apply license to all source files
+allFiles=$(find "$pkgPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
 
-for file in $gplFiles; do
+for file in $allFiles; do
   remove_notice "$file"
-  add_notice "$file" "$gpl"
-done
-
-agplFiles=$(find "$serverPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css" \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
-
-for file in $agplFiles; do
-  remove_notice "$file"
-  add_notice "$file" "$agpl"
+  add_notice "$file" "$license"
 done

@@ -98,7 +98,7 @@ build() {
   tarballName="dnote_${version}_${platform}_${arch}.tar.gz"
   tarballPath="$outputDir/$tarballName"
 
-  cp "$projectDir/licenses/GPLv3.txt" "$destDir"
+  cp "$projectDir/LICENSE" "$destDir"
   cp "$basedir/README.md" "$destDir"
   tar -C "$destDir" -zcvf "$tarballPath" "."
   rm -rf "$destDir"
