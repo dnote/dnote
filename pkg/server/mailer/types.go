@@ -19,17 +19,17 @@ package mailer
 type EmailResetPasswordTmplData struct {
 	AccountEmail string
 	Token        string
-	WebURL       string
+	BaseURL      string
 }
 
 // EmailResetPasswordAlertTmplData is a template data for reset password emails
 type EmailResetPasswordAlertTmplData struct {
 	AccountEmail string
-	WebURL       string
+	BaseURL      string
 }
 
 // WelcomeTmplData is a template data for welcome emails
 type WelcomeTmplData struct {
 	AccountEmail string
-	WebURL       string
+	BaseURL      string
 }

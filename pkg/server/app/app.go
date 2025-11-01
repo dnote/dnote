@@ -27,8 +27,8 @@ var (
 	ErrEmptyDB = errors.New("No database connection was provided")
 	// ErrEmptyClock is an error for missing clock in the app configuration
 	ErrEmptyClock = errors.New("No clock was provided")
-	// ErrEmptyWebURL is an error for missing WebURL content in the app configuration
-	ErrEmptyWebURL = errors.New("No WebURL was provided")
+	// ErrEmptyBaseURL is an error for missing BaseURL content in the app configuration
+	ErrEmptyBaseURL = errors.New("No BaseURL was provided")
 	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 	// ErrEmptyHTTP500Page is an error for missing HTTP 500 page content
@@ -42,7 +42,7 @@ type App struct {
 	EmailBackend        mailer.Backend
 	Files               map[string][]byte
 	HTTP500Page         []byte
-	WebURL              string
+	BaseURL             string
 	DisableRegistration bool
 	Port                string
 	DBPath              string
@@ -51,8 +51,8 @@ type App struct {
 
 // Validate validates the app configuration
 func (a *App) Validate() error {
-	if a.WebURL == "" {
-		return ErrEmptyWebURL
+	if a.BaseURL == "" {
+		return ErrEmptyBaseURL
 	}
 	if a.Clock == nil {
 		return ErrEmptyClock

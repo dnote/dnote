@@ -44,26 +44,26 @@ func TestAllTemplatesInitialized(t *testing.T) {
 
 func TestResetPasswordEmail(t *testing.T) {
 	testCases := []struct {
-		token  string
-		webURL string
+		token   string
+		baseURL string
 	}{
 		{
-			token:  "someRandomToken1",
-			webURL: "http://localhost:3000",
+			token:   "someRandomToken1",
+			baseURL: "http://localhost:3000",
 		},
 		{
-			token:  "someRandomToken2",
-			webURL: "http://localhost:3001",
+			token:   "someRandomToken2",
+			baseURL: "http://localhost:3001",
 		},
 	}
 
 	tmpl := NewTemplates()
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("with WebURL %s", tc.webURL), func(t *testing.T) {
+		t.Run(fmt.Sprintf("with BaseURL %s", tc.baseURL), func(t *testing.T) {
 			dat := EmailResetPasswordTmplData{
-				Token:  tc.token,
-				WebURL: tc.webURL,
+				Token:   tc.token,
+				BaseURL: tc.baseURL,
 			}
 			subject, body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindText, dat)
 			if err != nil {
@@ -73,8 +73,8 @@ func TestResetPasswordEmail(t *testing.T) {
 			if subject != "Reset your Dnote password" {
 				t.Errorf("expected subject 'Reset your Dnote password', got '%s'", subject)
 			}
-			if ok := strings.Contains(body, tc.webURL); !ok {
-				t.Errorf("email body did not contain %s", tc.webURL)
+			if ok := strings.Contains(body, tc.baseURL); !ok {
+				t.Errorf("email body did not contain %s", tc.baseURL)
 			}
 			if ok := strings.Contains(body, tc.token); !ok {
 				t.Errorf("email body did not contain %s", tc.token)
@@ -86,25 +86,25 @@ func TestResetPasswordEmail(t *testing.T) {
 func TestWelcomeEmail(t *testing.T) {
 	testCases := []struct {
 		accountEmail string
-		webURL       string
+		baseURL      string
 	}{
 		{
 			accountEmail: "test@example.com",
-			webURL:       "http://localhost:3000",
+			baseURL:      "http://localhost:3000",
 		},
 		{
 			accountEmail: "user@example.org",
-			webURL:       "http://localhost:3001",
+			baseURL:      "http://localhost:3001",
 		},
 	}
 
 	tmpl := NewTemplates()
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("with WebURL %s and email %s", tc.webURL, tc.accountEmail), func(t *testing.T) {
+		t.Run(fmt.Sprintf("with BaseURL %s and email %s", tc.baseURL, tc.accountEmail), func(t *testing.T) {
 			dat := WelcomeTmplData{
 				AccountEmail: tc.accountEmail,
-				WebURL:       tc.webURL,
+				BaseURL:      tc.baseURL,
 			}
 			subject, body, err := tmpl.Execute(EmailTypeWelcome, EmailKindText, dat)
 			if err != nil {
@@ -114,8 +114,8 @@ func TestWelcomeEmail(t *testing.T) {
 			if subject != "Welcome to Dnote!" {
 				t.Errorf("expected subject 'Welcome to Dnote!', got '%s'", subject)
 			}
-			if ok := strings.Contains(body, tc.webURL); !ok {
-				t.Errorf("email body did not contain %s", tc.webURL)
+			if ok := strings.Contains(body, tc.baseURL); !ok {
+				t.Errorf("email body did not contain %s", tc.baseURL)
 			}
 			if ok := strings.Contains(body, tc.accountEmail); !ok {
 				t.Errorf("email body did not contain %s", tc.accountEmail)
@@ -127,25 +127,25 @@ func TestWelcomeEmail(t *testing.T) {
 func TestResetPasswordAlertEmail(t *testing.T) {
 	testCases := []struct {
 		accountEmail string
-		webURL       string
+		baseURL      string
 	}{
 		{
 			accountEmail: "test@example.com",
-			webURL:       "http://localhost:3000",
+			baseURL:      "http://localhost:3000",
 		},
 		{
 			accountEmail: "user@example.org",
-			webURL:       "http://localhost:3001",
+			baseURL:      "http://localhost:3001",
 		},
 	}
 
 	tmpl := NewTemplates()
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("with WebURL %s and email %s", tc.webURL, tc.accountEmail), func(t *testing.T) {
+		t.Run(fmt.Sprintf("with BaseURL %s and email %s", tc.baseURL, tc.accountEmail), func(t *testing.T) {
 			dat := EmailResetPasswordAlertTmplData{
 				AccountEmail: tc.accountEmail,
-				WebURL:       tc.webURL,
+				BaseURL:      tc.baseURL,
 			}
 			subject, body, err := tmpl.Execute(EmailTypeResetPasswordAlert, EmailKindText, dat)
 			if err != nil {
@@ -155,8 +155,8 @@ func TestResetPasswordAlertEmail(t *testing.T) {
 			if subject != "Your Dnote password was changed" {
 				t.Errorf("expected subject 'Your Dnote password was changed', got '%s'", subject)
 			}
-			if ok := strings.Contains(body, tc.webURL); !ok {
-				t.Errorf("email body did not contain %s", tc.webURL)
+			if ok := strings.Contains(body, tc.baseURL); !ok {
+				t.Errorf("email body did not contain %s", tc.baseURL)
 			}
 			if ok := strings.Contains(body, tc.accountEmail); !ok {
 				t.Errorf("email body did not contain %s", tc.accountEmail)

@@ -41,7 +41,7 @@ func TestDefaultBackendSendEmail(t *testing.T) {
 
 		data := WelcomeTmplData{
 			AccountEmail: "bob@example.com",
-			WebURL:       "https://example.com",
+			BaseURL:      "https://example.com",
 		}
 
 		err := backend.SendEmail(EmailTypeWelcome, "alice@example.com", []string{"bob@example.com"}, data)
@@ -94,7 +94,7 @@ func TestStdoutBackendSendEmail(t *testing.T) {
 
 		data := WelcomeTmplData{
 			AccountEmail: "bob@example.com",
-			WebURL:       "https://example.com",
+			BaseURL:      "https://example.com",
 		}
 
 		err := backend.SendEmail(EmailTypeWelcome, "alice@example.com", []string{"bob@example.com"}, data)

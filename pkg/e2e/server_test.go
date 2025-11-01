@@ -139,15 +139,15 @@ func TestServerStartHelp(t *testing.T) {
 	outputStr := string(output)
 	assert.Equal(t, strings.Contains(outputStr, "dnote-server start [flags]"), true, "output should contain usage")
 	assert.Equal(t, strings.Contains(outputStr, "--port"), true, "output should contain port flag")
-	assert.Equal(t, strings.Contains(outputStr, "--webUrl"), true, "output should contain webUrl flag")
+	assert.Equal(t, strings.Contains(outputStr, "--baseUrl"), true, "output should contain baseUrl flag")
 	assert.Equal(t, strings.Contains(outputStr, "--dbPath"), true, "output should contain dbPath flag")
 	assert.Equal(t, strings.Contains(outputStr, "--disableRegistration"), true, "output should contain disableRegistration flag")
 }
 
 func TestServerStartInvalidConfig(t *testing.T) {
 	cmd := exec.Command(testServerBinary, "start")
-	// Set invalid WebURL to trigger validation failure
-	cmd.Env = []string{"WebURL=not-a-valid-url"}
+	// Set invalid BaseURL to trigger validation failure
+	cmd.Env = []string{"BaseURL=not-a-valid-url"}
 
 	output, err := cmd.CombinedOutput()
 
@@ -158,9 +158,9 @@ func TestServerStartInvalidConfig(t *testing.T) {
 
 	outputStr := string(output)
 	assert.Equal(t, strings.Contains(outputStr, "Error:"), true, "output should contain error message")
-	assert.Equal(t, strings.Contains(outputStr, "Invalid WebURL"), true, "output should mention invalid WebURL")
+	assert.Equal(t, strings.Contains(outputStr, "Invalid BaseURL"), true, "output should mention invalid BaseURL")
 	assert.Equal(t, strings.Contains(outputStr, "dnote-server start [flags]"), true, "output should show usage")
-	assert.Equal(t, strings.Contains(outputStr, "--webUrl"), true, "output should show flags")
+	assert.Equal(t, strings.Contains(outputStr, "--baseUrl"), true, "output should show flags")
 }
 
 func TestServerUnknownCommand(t *testing.T) {

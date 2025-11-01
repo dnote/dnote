@@ -27,7 +27,7 @@ func TestSendWelcomeEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
 	a := NewTest()
 	a.EmailBackend = &emailBackend
-	a.WebURL = "http://example.com"
+	a.BaseURL = "http://example.com"
 
 	if err := a.SendWelcomeEmail("alice@example.com"); err != nil {
 		t.Fatal(err, "failed to perform")
@@ -43,7 +43,7 @@ func TestSendPasswordResetEmail(t *testing.T) {
 	emailBackend := testutils.MockEmailbackendImplementation{}
 	a := NewTest()
 	a.EmailBackend = &emailBackend
-	a.WebURL = "http://example.com"
+	a.BaseURL = "http://example.com"
 
 	if err := a.SendPasswordResetEmail("alice@example.com", "mockTokenValue"); err != nil {
 		t.Fatal(err, "failed to perform")
@@ -57,21 +57,21 @@ func TestSendPasswordResetEmail(t *testing.T) {
 
 func TestGetSenderEmail(t *testing.T) {
 	testCases := []struct {
-		webURL         string
+		baseURL        string
 		expectedSender string
 	}{
 		{
-			webURL:         "https://www.example.com",
+			baseURL:        "https://www.example.com",
 			expectedSender: "noreply@example.com",
 		},
 		{
-			webURL:         "https://www.example2.com",
+			baseURL:        "https://www.example2.com",
 			expectedSender: "alice@example2.com",
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("web url %s", tc.webURL), func(t *testing.T) {
+		t.Run(fmt.Sprintf("base url %s", tc.baseURL), func(t *testing.T) {
 		})
 	}
 }

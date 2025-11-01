@@ -27,7 +27,7 @@ func NewTest() App {
 		Clock:               clock.NewMock(),
 		EmailBackend:        &testutils.MockEmailbackendImplementation{},
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
-		WebURL:              "http://127.0.0.0.1",
+		BaseURL:             "http://127.0.0.0.1",
 		Port:                "3000",
 		DisableRegistration: false,
 		DBPath:              "",

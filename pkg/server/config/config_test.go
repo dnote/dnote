@@ -30,17 +30,17 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			config: Config{
-				DBPath: "test.db",
-				WebURL: "http://mock.url",
-				Port:   "3000",
+				DBPath:  "test.db",
+				BaseURL: "http://mock.url",
+				Port:    "3000",
 			},
 			expectedErr: nil,
 		},
 		{
 			config: Config{
-				DBPath: "",
-				WebURL: "http://mock.url",
-				Port:   "3000",
+				DBPath:  "",
+				BaseURL: "http://mock.url",
+				Port:    "3000",
 			},
 			expectedErr: ErrDBMissingPath,
 		},
@@ -48,12 +48,12 @@ func TestValidate(t *testing.T) {
 			config: Config{
 				DBPath: "test.db",
 			},
-			expectedErr: ErrWebURLInvalid,
+			expectedErr: ErrBaseURLInvalid,
 		},
 		{
 			config: Config{
-				DBPath: "test.db",
-				WebURL: "http://mock.url",
+				DBPath:  "test.db",
+				BaseURL: "http://mock.url",
 			},
 			expectedErr: ErrPortInvalid,
 		},

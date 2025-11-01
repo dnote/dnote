@@ -57,7 +57,7 @@ func initApp(cfg config.Config) app.App {
 		Clock:               clock.New(),
 		EmailBackend:        emailBackend,
 		HTTP500Page:         cfg.HTTP500Page,
-		WebURL:              cfg.WebURL,
+		BaseURL:             cfg.BaseURL,
 		DisableRegistration: cfg.DisableRegistration,
 		Port:                cfg.Port,
 		DBPath:              cfg.DBPath,

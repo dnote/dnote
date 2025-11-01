@@ -40,8 +40,8 @@ var (
 var (
 	// ErrDBMissingPath is an error for an incomplete configuration missing the database path
 	ErrDBMissingPath = errors.New("DB Path is empty")
-	// ErrWebURLInvalid is an error for an incomplete configuration with invalid web url
-	ErrWebURLInvalid = errors.New("Invalid WebURL")
+	// ErrBaseURLInvalid is an error for an incomplete configuration with invalid base url
+	ErrBaseURLInvalid = errors.New("Invalid BaseURL")
 	// ErrPortInvalid is an error for an incomplete configuration with invalid port
 	ErrPortInvalid = errors.New("Invalid Port")
 )
@@ -63,7 +63,7 @@ func getOrEnv(value, envKey, defaultVal string) string {
 
 // Config is an application configuration
 type Config struct {
-	WebURL              string
+	BaseURL             string
 	DisableRegistration bool
 	Port                string
 	DBPath              string
@@ -75,7 +75,7 @@ type Config struct {
 // Params are the configuration parameters for creating a new Config
 type Params struct {
 	Port                string
-	WebURL              string
+	BaseURL             string
 	DBPath              string
 	DisableRegistration bool
 	LogLevel            string
@@ -86,7 +86,7 @@ type Params struct {
 func New(p Params) (Config, error) {
 	c := Config{
 		Port:                getOrEnv(p.Port, "PORT", "3001"),
-		WebURL:              getOrEnv(p.WebURL, "WebURL", "http://localhost:3001"),
+		BaseURL:             getOrEnv(p.BaseURL, "BaseURL", "http://localhost:3001"),
 		DBPath:              getOrEnv(p.DBPath, "DBPath", DefaultDBPath),
 		DisableRegistration: p.DisableRegistration || readBoolEnv("DisableRegistration"),
 		LogLevel:            getOrEnv(p.LogLevel, "LOG_LEVEL", "info"),
@@ -102,8 +102,8 @@ func New(p Params) (Config, error) {
 }
 
 func validate(c Config) error {
-	if _, err := url.ParseRequestURI(c.WebURL); err != nil {
-		return errors.Wrapf(ErrWebURLInvalid, "'%s'", c.WebURL)
+	if _, err := url.ParseRequestURI(c.BaseURL); err != nil {
+		return errors.Wrapf(ErrBaseURLInvalid, "'%s'", c.BaseURL)
 	}
 	if c.Port == "" {
 		return ErrPortInvalid

@@ -4,8 +4,8 @@ Dnote is a simple command-line notebook.
 
 YOUR ACCOUNT
 
-Your {{ .WebURL }} account is "{{ .AccountEmail }}". Log in at {{ .WebURL }}/login
-If you ever forget your password, you can reset it at {{ .WebURL }}/password-reset
+Your {{ .BaseURL }} account is "{{ .AccountEmail }}". Log in at {{ .BaseURL }}/login
+If you ever forget your password, you can reset it at {{ .BaseURL }}/password-reset
 
 SOURCE CODE
 

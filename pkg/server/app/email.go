@@ -27,8 +27,8 @@ import (
 var defaultSender = "admin@getdnote.com"
 
 // GetSenderEmail returns the sender email
-func GetSenderEmail(webURL, want string) (string, error) {
-	addr, err := getNoreplySender(webURL)
+func GetSenderEmail(baseURL, want string) (string, error) {
+	addr, err := getNoreplySender(baseURL)
 	if err != nil {
 		return "", errors.Wrap(err, "getting sender email address")
 	}
@@ -52,10 +52,10 @@ func getDomainFromURL(rawURL string) (string, error) {
 	return domain, nil
 }
 
-func getNoreplySender(webURL string) (string, error) {
-	domain, err := getDomainFromURL(webURL)
+func getNoreplySender(baseURL string) (string, error) {
+	domain, err := getDomainFromURL(baseURL)
 	if err != nil {
-		return "", errors.Wrap(err, "parsing web url")
+		return "", errors.Wrap(err, "parsing base url")
 	}
 
 	addr := fmt.Sprintf("noreply@%s", domain)
@@ -64,14 +64,14 @@ func getNoreplySender(webURL string) (string, error) {
 
 // SendWelcomeEmail sends welcome email
 func (a *App) SendWelcomeEmail(email string) error {
-	from, err := GetSenderEmail(a.WebURL, defaultSender)
+	from, err := GetSenderEmail(a.BaseURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
 
 	data := mailer.WelcomeTmplData{
 		AccountEmail: email,
-		WebURL:       a.WebURL,
+		BaseURL:      a.BaseURL,
 	}
 
 	if err := a.EmailBackend.SendEmail(mailer.EmailTypeWelcome, from, []string{email}, data); err != nil {
@@ -87,7 +87,7 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 		return ErrEmailRequired
 	}
 
-	from, err := GetSenderEmail(a.WebURL, defaultSender)
+	from, err := GetSenderEmail(a.BaseURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
@@ -95,7 +95,7 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 	data := mailer.EmailResetPasswordTmplData{
 		AccountEmail: email,
 		Token:        tokenValue,
-		WebURL:       a.WebURL,
+		BaseURL:      a.BaseURL,
 	}
 
 	if err := a.EmailBackend.SendEmail(mailer.EmailTypeResetPassword, from, []string{email}, data); err != nil {
@@ -111,14 +111,14 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 
 // SendPasswordResetAlertEmail sends email that notifies users of a password change
 func (a *App) SendPasswordResetAlertEmail(email string) error {
-	from, err := GetSenderEmail(a.WebURL, defaultSender)
+	from, err := GetSenderEmail(a.BaseURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
 
 	data := mailer.EmailResetPasswordAlertTmplData{
 		AccountEmail: email,
-		WebURL:       a.WebURL,
+		BaseURL:      a.BaseURL,
 	}
 
 	if err := a.EmailBackend.SendEmail(mailer.EmailTypeResetPasswordAlert, from, []string{email}, data); err != nil {

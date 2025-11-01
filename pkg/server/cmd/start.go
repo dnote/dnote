@@ -33,7 +33,7 @@ func startCmd(args []string) {
 	fs := setupFlagSet("start", "dnote-server start")
 
 	port := fs.String("port", "", "Server port (env: PORT, default: 3001)")
-	webURL := fs.String("webUrl", "", "Full URL to server without trailing slash (env: WebURL, default: http://localhost:3001)")
+	baseURL := fs.String("baseUrl", "", "Full URL to server without trailing slash (env: BaseURL, default: http://localhost:3001)")
 	dbPath := fs.String("dbPath", "", "Path to SQLite database file (env: DBPath, default: $XDG_DATA_HOME/dnote/server.db)")
 	disableRegistration := fs.Bool("disableRegistration", false, "Disable user registration (env: DisableRegistration, default: false)")
 	logLevel := fs.String("logLevel", "", "Log level: debug, info, warn, or error (env: LOG_LEVEL, default: info)")
@@ -42,7 +42,7 @@ func startCmd(args []string) {
 
 	cfg, err := config.New(config.Params{
 		Port:                *port,
-		WebURL:              *webURL,
+		BaseURL:             *baseURL,
 		DBPath:              *dbPath,
 		DisableRegistration: *disableRegistration,
 		LogLevel:            *logLevel,
