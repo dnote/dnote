@@ -35,9 +35,9 @@ Or [download binary](https://github.com/dnote/dnote/releases).
 
 ## Server (Optional)
 
-Just run a binary. No database setup required.
+Server is a binary with SQLite embedded. No database setup is required.
 
-Run with Docker Compose using [compose.yml](./host/docker/compose.yml):
+If using docker, create a compose.yml:
 
 ```yaml
 services:
@@ -49,6 +49,12 @@ services:
     volumes:
       - ./dnote_data:/data
     restart: unless-stopped
+```
+
+Then run:
+
+```bash
+docker-compose up -d
 ```
 
 Or see the [guide](https://www.getdnote.com/docs/server/manual) for binary installation.

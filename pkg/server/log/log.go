@@ -75,25 +75,35 @@ func GetLevel() string {
 	return currentLevel
 }
 
-// levelPriority returns a numeric priority for comparison
-func levelPriority(level string) int {
-	switch level {
-	case LevelDebug:
-		return 0
-	case LevelInfo:
-		return 1
-	case LevelWarn:
-		return 2
-	case LevelError:
-		return 3
-	default:
-		return 1
-	}
-}
-
-// shouldLog returns true if the given level should be logged based on currentLevel
+// shouldLog returns true if the given level should be logged based on currentLevel.
+//
+// Log level behavior (hierarchical):
+//   - LevelDebug: shows all messages (debug, info, warn, error)
+//   - LevelInfo: shows info, warn, and error messages
+//   - LevelWarn: shows warn and error messages
+//   - LevelError: shows only error messages
 func shouldLog(level string) bool {
-	return levelPriority(level) >= levelPriority(currentLevel)
+	// Debug level shows everything
+	if currentLevel == LevelDebug {
+		return true
+	}
+
+	// Info level shows info + warn + error
+	if currentLevel == LevelInfo {
+		return level == LevelInfo || level == LevelWarn || level == LevelError
+	}
+
+	// Warn level shows warn + error
+	if currentLevel == LevelWarn {
+		return level == LevelWarn || level == LevelError
+	}
+
+	// Error level shows only error
+	if currentLevel == LevelError {
+		return level == LevelError
+	}
+
+	return false
 }
 
 // Debug logs the given entry at a debug level

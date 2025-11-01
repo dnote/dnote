@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 set -eux
 
-function remove_notice {
-  # Remove old copyright notice - matches /* Copyright ... */ including the trailing newline
-  # The 's' flag makes . match newlines, allowing multi-line matching
-  # The \n? matches an optional newline after the closing */
-  perl -i -0pe 's/\/\* Copyright.*?\*\/\n?//s' "$1"
+function has_license {
+  # Check if file already has a copyright notice
+  grep -q "Copyright.*Dnote Authors" "$1"
 }
 
 function add_notice {
@@ -18,7 +16,8 @@ q
 END
 }
 
-license="/* Copyright 2025 Dnote Authors
+year=$(date +%Y)
+license="/* Copyright $year Dnote Authors
  *
  * Licensed under the Apache License, Version 2.0 (the \"License\");
  * you may not use this file except in compliance with the License.
@@ -41,6 +40,7 @@ pkgPath="$basedir/pkg"
 allFiles=$(find "$pkgPath" -type f \( -name "*.go" -o -name "*.js" -o -name "*.ts" -o -name "*.tsx" -o -name "*.scss" -o -name "*.css"  \) ! -path "**/vendor/*" ! -path "**/node_modules/*" ! -path "**/dist/*")
 
 for file in $allFiles; do
-  remove_notice "$file"
-  add_notice "$file" "$license"
+  if ! has_license "$file"; then
+    add_notice "$file" "$license"
+  fi
 done

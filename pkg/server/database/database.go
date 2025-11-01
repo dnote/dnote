@@ -38,13 +38,13 @@ func getDBLogLevel(level string) logger.LogLevel {
 	case log.LevelDebug:
 		return logger.Info
 	case log.LevelInfo:
-		return logger.Info
+		return logger.Silent
 	case log.LevelWarn:
 		return logger.Warn
 	case log.LevelError:
 		return logger.Error
 	default:
-		return logger.Error
+		return logger.Silent
 	}
 }
 
