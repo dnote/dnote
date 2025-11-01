@@ -20,15 +20,32 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dnote/dnote/pkg/server/log"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
 	// MigrationTableName is the name of the table that keeps track of migrations
 	MigrationTableName = "migrations"
 )
+
+// getDBLogLevel converts application log level to GORM log level
+func getDBLogLevel(level string) logger.LogLevel {
+	switch level {
+	case log.LevelDebug:
+	case log.LevelInfo:
+		return logger.Info
+	case log.LevelWarn:
+		return logger.Warn
+	case log.LevelError:
+		return logger.Error
+	default:
+		return logger.Error
+	}
+}
 
 // InitSchema migrates database schema to reflect the latest model definition
 func InitSchema(db *gorm.DB) {
@@ -51,7 +68,9 @@ func Open(dbPath string) *gorm.DB {
 		panic(errors.Wrapf(err, "creating database directory at %s", dir))
 	}
 
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		Logger: logger.Default.LogMode(getDBLogLevel(log.GetLevel())),
+	})
 	if err != nil {
 		panic(errors.Wrap(err, "opening database conection"))
 	}
@@ -96,16 +115,14 @@ func StartWALCheckpointing(db *gorm.DB, interval time.Duration) {
 		for range ticker.C {
 			// TRUNCATE mode removes the WAL file after checkpointing
 			if err := db.Exec("PRAGMA wal_checkpoint(TRUNCATE)").Error; err != nil {
-				// Log error but don't panic - this is a background maintenance task
-				// TODO: Use proper logging once available
-				_ = err
+				log.ErrorWrap(err, "WAL checkpoint failed")
 			}
 		}
 	}()
 }
 
 // StartPeriodicVacuum runs full VACUUM on a schedule to reclaim space and defragment.
-// WARNING: VACUUM acquires an exclusive lock and blocks all database operations briefly.
+// VACUUM acquires an exclusive lock and blocks all database operations briefly.
 func StartPeriodicVacuum(db *gorm.DB, interval time.Duration) {
 	go func() {
 		ticker := time.NewTicker(interval)
@@ -113,9 +130,7 @@ func StartPeriodicVacuum(db *gorm.DB, interval time.Duration) {
 
 		for range ticker.C {
 			if err := db.Exec("VACUUM").Error; err != nil {
-				// Log error but don't panic - this is a background maintenance task
-				// TODO: Use proper logging once available
-				_ = err
+				log.ErrorWrap(err, "VACUUM failed")
 			}
 		}
 	}()

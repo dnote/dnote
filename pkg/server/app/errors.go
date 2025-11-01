@@ -73,7 +73,7 @@ var (
 	// ErrInvalidPasswordChangeInput is an error for changing password
 	ErrInvalidPasswordChangeInput appError = "Both current and new passwords are required to change the password."
 
-	ErrInvalidPassword appError = "Invalid currnet password."
+	ErrInvalidPassword appError = "Invalid current password."
 	// ErrEmailTooLong is an error for email length exceeding the limit
 	ErrEmailTooLong appError = "Email is too long."
 

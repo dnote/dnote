@@ -48,7 +48,7 @@ func (a *App) CreateSession(userID int) (database.Session, error) {
 // DeleteUserSessions deletes all existing sessions for the given user. It effectively
 // invalidates all existing sessions.
 func (a *App) DeleteUserSessions(db *gorm.DB, userID int) error {
-	if err := db.Debug().Where("user_id = ?", userID).Delete(&database.Session{}).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).Delete(&database.Session{}).Error; err != nil {
 		return errors.Wrap(err, "deleting sessions")
 	}
 

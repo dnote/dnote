@@ -70,6 +70,11 @@ func SetLevel(level string) {
 	currentLevel = level
 }
 
+// GetLevel returns the current global log level
+func GetLevel() string {
+	return currentLevel
+}
+
 // levelPriority returns a numeric priority for comparison
 func levelPriority(level string) int {
 	switch level {
