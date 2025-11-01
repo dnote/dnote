@@ -82,7 +82,7 @@ func getSMTPParams() (*dialerParams, error) {
 }
 
 // NewDefaultBackend creates a default backend
-func NewDefaultBackend(enabled bool) (*DefaultBackend, error) {
+func NewDefaultBackend() (*DefaultBackend, error) {
 	p, err := getSMTPParams()
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func NewDefaultBackend(enabled bool) (*DefaultBackend, error) {
 
 	return &DefaultBackend{
 		Dialer:  &gomailDialer{Dialer: d},
-		Enabled: enabled,
+		Enabled: true,
 	}, nil
 }
 

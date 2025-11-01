@@ -26,8 +26,6 @@ import (
 )
 
 const (
-	// AppEnvProduction represents an app environment for production.
-	AppEnvProduction string = "PRODUCTION"
 	// DefaultDBDir is the default directory name for Dnote data
 	DefaultDBDir = "dnote"
 	// DefaultDBFilename is the default database filename
@@ -65,7 +63,6 @@ func getOrEnv(value, envKey, defaultVal string) string {
 
 // Config is an application configuration
 type Config struct {
-	AppEnv              string
 	WebURL              string
 	DisableRegistration bool
 	Port                string
@@ -77,7 +74,6 @@ type Config struct {
 
 // Params are the configuration parameters for creating a new Config
 type Params struct {
-	AppEnv              string
 	Port                string
 	WebURL              string
 	DBPath              string
@@ -89,7 +85,6 @@ type Params struct {
 // Empty string params will fall back to environment variables and defaults.
 func New(p Params) (Config, error) {
 	c := Config{
-		AppEnv:              getOrEnv(p.AppEnv, "APP_ENV", AppEnvProduction),
 		Port:                getOrEnv(p.Port, "PORT", "3001"),
 		WebURL:              getOrEnv(p.WebURL, "WebURL", "http://localhost:3001"),
 		DBPath:              getOrEnv(p.DBPath, "DBPath", DefaultDBPath),
@@ -104,11 +99,6 @@ func New(p Params) (Config, error) {
 	}
 
 	return c, nil
-}
-
-// IsProd checks if the app environment is configured to be production.
-func (c Config) IsProd() bool {
-	return c.AppEnv == AppEnvProduction
 }
 
 func validate(c Config) error {

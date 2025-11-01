@@ -36,6 +36,7 @@ var (
 func getDBLogLevel(level string) logger.LogLevel {
 	switch level {
 	case log.LevelDebug:
+		return logger.Info
 	case log.LevelInfo:
 		return logger.Info
 	case log.LevelWarn:

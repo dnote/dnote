@@ -40,7 +40,7 @@ func initDB(dbPath string) *gorm.DB {
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg.DBPath)
 
-	emailBackend, err := mailer.NewDefaultBackend(cfg.IsProd())
+	emailBackend, err := mailer.NewDefaultBackend()
 	if err != nil {
 		emailBackend = &mailer.DefaultBackend{Enabled: false}
 	} else {
@@ -53,7 +53,6 @@ func initApp(cfg config.Config) app.App {
 		EmailTemplates:      mailer.NewTemplates(),
 		EmailBackend:        emailBackend,
 		HTTP500Page:         cfg.HTTP500Page,
-		AppEnv:              cfg.AppEnv,
 		WebURL:              cfg.WebURL,
 		DisableRegistration: cfg.DisableRegistration,
 		Port:                cfg.Port,

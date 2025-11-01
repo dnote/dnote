@@ -29,7 +29,6 @@ func NewTest() App {
 		EmailTemplates:      mailer.NewTemplates(),
 		EmailBackend:        &testutils.MockEmailbackendImplementation{},
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
-		AppEnv:              "TEST",
 		WebURL:              "http://127.0.0.0.1",
 		Port:                "3000",
 		DisableRegistration: false,

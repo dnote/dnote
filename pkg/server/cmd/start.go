@@ -32,7 +32,6 @@ import (
 func startCmd(args []string) {
 	fs := setupFlagSet("start", "dnote-server start")
 
-	appEnv := fs.String("appEnv", "", "Application environment (env: APP_ENV, default: PRODUCTION)")
 	port := fs.String("port", "", "Server port (env: PORT, default: 3001)")
 	webURL := fs.String("webUrl", "", "Full URL to server without trailing slash (env: WebURL, default: http://localhost:3001)")
 	dbPath := fs.String("dbPath", "", "Path to SQLite database file (env: DBPath, default: $XDG_DATA_HOME/dnote/server.db)")
@@ -42,7 +41,6 @@ func startCmd(args []string) {
 	fs.Parse(args)
 
 	cfg, err := config.New(config.Params{
-		AppEnv:              *appEnv,
 		Port:                *port,
 		WebURL:              *webURL,
 		DBPath:              *dbPath,

@@ -74,7 +74,7 @@ func TestNewDefaultBackend(t *testing.T) {
 		t.Setenv("SmtpUsername", "user@example.com")
 		t.Setenv("SmtpPassword", "secret")
 
-		backend, err := NewDefaultBackend(true)
+		backend, err := NewDefaultBackend()
 		if err != nil {
 			t.Fatalf("NewDefaultBackend failed: %v", err)
 		}
@@ -93,7 +93,7 @@ func TestNewDefaultBackend(t *testing.T) {
 		t.Setenv("SmtpUsername", "")
 		t.Setenv("SmtpPassword", "")
 
-		_, err := NewDefaultBackend(true)
+		_, err := NewDefaultBackend()
 		if err == nil {
 			t.Error("expected error when SMTP not configured")
 		}

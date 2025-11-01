@@ -45,7 +45,6 @@ type App struct {
 	EmailBackend        mailer.Backend
 	Files               map[string][]byte
 	HTTP500Page         []byte
-	AppEnv              string
 	WebURL              string
 	DisableRegistration bool
 	Port                string
