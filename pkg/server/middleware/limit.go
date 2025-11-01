@@ -17,7 +17,6 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -143,7 +142,7 @@ func (rl *RateLimiter) Limit(next http.Handler) http.HandlerFunc {
 func ApplyLimit(h http.HandlerFunc, rateLimit bool) http.Handler {
 	ret := h
 
-	if rateLimit && os.Getenv("APP_ENV") != "TEST" {
+	if rateLimit {
 		ret = defaultLimiter.Limit(ret)
 	}
 

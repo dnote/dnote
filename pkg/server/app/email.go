@@ -64,21 +64,18 @@ func getNoreplySender(webURL string) (string, error) {
 
 // SendWelcomeEmail sends welcome email
 func (a *App) SendWelcomeEmail(email string) error {
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeWelcome, mailer.EmailKindText, mailer.WelcomeTmplData{
-		AccountEmail: email,
-		WebURL:       a.WebURL,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "executing reset verification template for %s", email)
-	}
-
 	from, err := GetSenderEmail(a.WebURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
 
-	if err := a.EmailBackend.Queue("Welcome to Dnote!", from, []string{email}, mailer.EmailKindText, body); err != nil {
-		return errors.Wrapf(err, "queueing email for %s", email)
+	data := mailer.WelcomeTmplData{
+		AccountEmail: email,
+		WebURL:       a.WebURL,
+	}
+
+	if err := a.EmailBackend.SendEmail(mailer.EmailTypeWelcome, from, []string{email}, data); err != nil {
+		return errors.Wrapf(err, "sending welcome email for %s", email)
 	}
 
 	return nil
@@ -90,26 +87,23 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 		return ErrEmailRequired
 	}
 
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPassword, mailer.EmailKindText, mailer.EmailResetPasswordTmplData{
-		AccountEmail: email,
-		Token:        tokenValue,
-		WebURL:       a.WebURL,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "executing reset password template for %s", email)
-	}
-
 	from, err := GetSenderEmail(a.WebURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
 
-	if err := a.EmailBackend.Queue("Reset your password", from, []string{email}, mailer.EmailKindText, body); err != nil {
+	data := mailer.EmailResetPasswordTmplData{
+		AccountEmail: email,
+		Token:        tokenValue,
+		WebURL:       a.WebURL,
+	}
+
+	if err := a.EmailBackend.SendEmail(mailer.EmailTypeResetPassword, from, []string{email}, data); err != nil {
 		if errors.Cause(err) == mailer.ErrSMTPNotConfigured {
 			return ErrInvalidSMTPConfig
 		}
 
-		return errors.Wrapf(err, "queueing email for %s", email)
+		return errors.Wrapf(err, "sending password reset email for %s", email)
 	}
 
 	return nil
@@ -117,21 +111,18 @@ func (a *App) SendPasswordResetEmail(email, tokenValue string) error {
 
 // SendPasswordResetAlertEmail sends email that notifies users of a password change
 func (a *App) SendPasswordResetAlertEmail(email string) error {
-	body, err := a.EmailTemplates.Execute(mailer.EmailTypeResetPasswordAlert, mailer.EmailKindText, mailer.EmailResetPasswordAlertTmplData{
-		AccountEmail: email,
-		WebURL:       a.WebURL,
-	})
-	if err != nil {
-		return errors.Wrapf(err, "executing reset password alert template for %s", email)
-	}
-
 	from, err := GetSenderEmail(a.WebURL, defaultSender)
 	if err != nil {
 		return errors.Wrap(err, "getting the sender email")
 	}
 
-	if err := a.EmailBackend.Queue("Dnote password changed", from, []string{email}, mailer.EmailKindText, body); err != nil {
-		return errors.Wrapf(err, "queueing email for %s", email)
+	data := mailer.EmailResetPasswordAlertTmplData{
+		AccountEmail: email,
+		WebURL:       a.WebURL,
+	}
+
+	if err := a.EmailBackend.SendEmail(mailer.EmailTypeResetPasswordAlert, from, []string{email}, data); err != nil {
+		return errors.Wrapf(err, "sending password reset alert email for %s", email)
 	}
 
 	return nil

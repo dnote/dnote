@@ -65,11 +65,14 @@ func TestResetPasswordEmail(t *testing.T) {
 				Token:  tc.token,
 				WebURL: tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindText, dat)
+			subject, body, err := tmpl.Execute(EmailTypeResetPassword, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
+			if subject != "Reset your Dnote password" {
+				t.Errorf("expected subject 'Reset your Dnote password', got '%s'", subject)
+			}
 			if ok := strings.Contains(body, tc.webURL); !ok {
 				t.Errorf("email body did not contain %s", tc.webURL)
 			}
@@ -103,11 +106,14 @@ func TestWelcomeEmail(t *testing.T) {
 				AccountEmail: tc.accountEmail,
 				WebURL:       tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeWelcome, EmailKindText, dat)
+			subject, body, err := tmpl.Execute(EmailTypeWelcome, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
+			if subject != "Welcome to Dnote!" {
+				t.Errorf("expected subject 'Welcome to Dnote!', got '%s'", subject)
+			}
 			if ok := strings.Contains(body, tc.webURL); !ok {
 				t.Errorf("email body did not contain %s", tc.webURL)
 			}
@@ -141,11 +147,14 @@ func TestResetPasswordAlertEmail(t *testing.T) {
 				AccountEmail: tc.accountEmail,
 				WebURL:       tc.webURL,
 			}
-			body, err := tmpl.Execute(EmailTypeResetPasswordAlert, EmailKindText, dat)
+			subject, body, err := tmpl.Execute(EmailTypeResetPasswordAlert, EmailKindText, dat)
 			if err != nil {
 				t.Fatal(errors.Wrap(err, "executing"))
 			}
 
+			if subject != "Your Dnote password was changed" {
+				t.Errorf("expected subject 'Your Dnote password was changed', got '%s'", subject)
+			}
 			if ok := strings.Contains(body, tc.webURL); !ok {
 				t.Errorf("email body did not contain %s", tc.webURL)
 			}

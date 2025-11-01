@@ -31,38 +31,26 @@ func (m *mockDialer) DialAndSend(msgs ...*gomail.Message) error {
 	return m.err
 }
 
-func TestDefaultBackendQueue(t *testing.T) {
-	t.Run("enabled sends email", func(t *testing.T) {
+func TestDefaultBackendSendEmail(t *testing.T) {
+	t.Run("sends email", func(t *testing.T) {
 		mock := &mockDialer{}
 		backend := &DefaultBackend{
-			Dialer:  mock,
-			Enabled: true,
+			Dialer:    mock,
+			Templates: NewTemplates(),
 		}
 
-		err := backend.Queue("Test Subject", "alice@example.com", []string{"bob@example.com"}, "text/plain", "Test body")
+		data := WelcomeTmplData{
+			AccountEmail: "bob@example.com",
+			WebURL:       "https://example.com",
+		}
+
+		err := backend.SendEmail(EmailTypeWelcome, "alice@example.com", []string{"bob@example.com"}, data)
 		if err != nil {
-			t.Fatalf("Queue failed: %v", err)
+			t.Fatalf("SendEmail failed: %v", err)
 		}
 
 		if len(mock.sentMessages) != 1 {
 			t.Errorf("expected 1 message sent, got %d", len(mock.sentMessages))
-		}
-	})
-
-	t.Run("disabled does not send email", func(t *testing.T) {
-		mock := &mockDialer{}
-		backend := &DefaultBackend{
-			Dialer:  mock,
-			Enabled: false,
-		}
-
-		err := backend.Queue("Test Subject", "alice@example.com", []string{"bob@example.com"}, "text/plain", "Test body")
-		if err != nil {
-			t.Fatalf("Queue failed: %v", err)
-		}
-
-		if len(mock.sentMessages) != 0 {
-			t.Errorf("expected 0 messages sent when disabled, got %d", len(mock.sentMessages))
 		}
 	})
 }
@@ -79,9 +67,6 @@ func TestNewDefaultBackend(t *testing.T) {
 			t.Fatalf("NewDefaultBackend failed: %v", err)
 		}
 
-		if backend.Enabled != true {
-			t.Errorf("expected Enabled to be true, got %v", backend.Enabled)
-		}
 		if backend.Dialer == nil {
 			t.Error("expected Dialer to be set")
 		}
@@ -100,5 +85,23 @@ func TestNewDefaultBackend(t *testing.T) {
 		if err != ErrSMTPNotConfigured {
 			t.Errorf("expected ErrSMTPNotConfigured, got %v", err)
 		}
+	})
+}
+
+func TestStdoutBackendSendEmail(t *testing.T) {
+	t.Run("logs email without sending", func(t *testing.T) {
+		backend := NewStdoutBackend()
+
+		data := WelcomeTmplData{
+			AccountEmail: "bob@example.com",
+			WebURL:       "https://example.com",
+		}
+
+		err := backend.SendEmail(EmailTypeWelcome, "alice@example.com", []string{"bob@example.com"}, data)
+		if err != nil {
+			t.Fatalf("SendEmail failed: %v", err)
+		}
+
+		// StdoutBackend should never return an error, just log
 	})
 }

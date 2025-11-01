@@ -210,10 +210,10 @@ func MustRespondJSON(t *testing.T, w http.ResponseWriter, i interface{}, message
 
 // MockEmail is a mock email data
 type MockEmail struct {
-	Subject string
-	From    string
-	To      []string
-	Body    string
+	TemplateType string
+	From         string
+	To           []string
+	Data         interface{}
 }
 
 // MockEmailbackendImplementation is an email backend that simply discards the emails
@@ -230,16 +230,16 @@ func (b *MockEmailbackendImplementation) Clear() {
 	b.Emails = []MockEmail{}
 }
 
-// Queue is an implementation of Backend.Queue.
-func (b *MockEmailbackendImplementation) Queue(subject, from string, to []string, contentType, body string) error {
+// SendEmail is an implementation of Backend.SendEmail.
+func (b *MockEmailbackendImplementation) SendEmail(templateType, from string, to []string, data interface{}) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
 	b.Emails = append(b.Emails, MockEmail{
-		Subject: subject,
-		From:    from,
-		To:      to,
-		Body:    body,
+		TemplateType: templateType,
+		From:         from,
+		To:           to,
+		Data:         data,
 	})
 
 	return nil

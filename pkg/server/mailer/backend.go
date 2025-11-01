@@ -29,7 +29,7 @@ var ErrSMTPNotConfigured = errors.New("SMTP is not configured")
 
 // Backend is an interface for sending emails.
 type Backend interface {
-	Queue(subject, from string, to []string, contentType, body string) error
+	SendEmail(templateType, from string, to []string, data interface{}) error
 }
 
 // EmailDialer is an interface for sending email messages
@@ -44,9 +44,10 @@ type gomailDialer struct {
 
 // DefaultBackend is an implementation of the Backend
 // that sends an email without queueing.
+// This backend is always enabled and will send emails via SMTP.
 type DefaultBackend struct {
-	Dialer  EmailDialer
-	Enabled bool
+	Dialer    EmailDialer
+	Templates Templates
 }
 
 type dialerParams struct {
@@ -91,24 +92,24 @@ func NewDefaultBackend() (*DefaultBackend, error) {
 	d := gomail.NewDialer(p.Host, p.Port, p.Username, p.Password)
 
 	return &DefaultBackend{
-		Dialer:  &gomailDialer{Dialer: d},
-		Enabled: true,
+		Dialer:    &gomailDialer{Dialer: d},
+		Templates: NewTemplates(),
 	}, nil
 }
 
-// Queue is an implementation of Backend.Queue.
-func (b *DefaultBackend) Queue(subject, from string, to []string, contentType, body string) error {
-	// If not enabled, just log the email
-	if !b.Enabled {
-		log.WithFields(log.Fields{
-			"subject": subject,
-			"to":      to,
-			"from":    from,
-			"body":    body,
-		}).Info("Not sending email because email backend is not configured.")
-		return nil
+// SendEmail is an implementation of Backend.SendEmail.
+// It renders the template and sends the email immediately via SMTP.
+func (b *DefaultBackend) SendEmail(templateType, from string, to []string, data interface{}) error {
+	subject, body, err := b.Templates.Execute(templateType, EmailKindText, data)
+	if err != nil {
+		return errors.Wrap(err, "executing template")
 	}
 
+	return b.queue(subject, from, to, EmailKindText, body)
+}
+
+// queue sends the email immediately via SMTP.
+func (b *DefaultBackend) queue(subject, from string, to []string, contentType, body string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", from)
 	m.SetHeader("To", to...)
@@ -119,5 +120,36 @@ func (b *DefaultBackend) Queue(subject, from string, to []string, contentType, b
 		return errors.Wrap(err, "dialing and sending email")
 	}
 
+	return nil
+}
+
+// StdoutBackend is an implementation of the Backend
+// that prints emails to stdout instead of sending them.
+// This is useful for development and testing.
+type StdoutBackend struct {
+	Templates Templates
+}
+
+// NewStdoutBackend creates a stdout backend
+func NewStdoutBackend() *StdoutBackend {
+	return &StdoutBackend{
+		Templates: NewTemplates(),
+	}
+}
+
+// SendEmail is an implementation of Backend.SendEmail.
+// It renders the template and logs the email to stdout instead of sending it.
+func (b *StdoutBackend) SendEmail(templateType, from string, to []string, data interface{}) error {
+	subject, body, err := b.Templates.Execute(templateType, EmailKindText, data)
+	if err != nil {
+		return errors.Wrap(err, "executing template")
+	}
+
+	log.WithFields(log.Fields{
+		"subject": subject,
+		"to":      to,
+		"from":    from,
+		"body":    body,
+	}).Info("Email (not sent, using StdoutBackend)")
 	return nil
 }

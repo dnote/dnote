@@ -35,7 +35,6 @@ import (
 	"github.com/dnote/dnote/pkg/server/app"
 	"github.com/dnote/dnote/pkg/server/controllers"
 	"github.com/dnote/dnote/pkg/server/database"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	apitest "github.com/dnote/dnote/pkg/server/testutils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -98,7 +97,6 @@ func setupTestServer(t *testing.T, serverTime time.Time) (*httptest.Server, *gor
 
 	a := app.NewTest()
 	a.Clock = mockClock
-	a.EmailTemplates = mailer.Templates{}
 	a.EmailBackend = &apitest.MockEmailbackendImplementation{}
 	a.DB = db
 

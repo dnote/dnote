@@ -7,11 +7,8 @@ dir=$(dirname "${BASH_SOURCE[0]}")
 basePath="$dir/../.."
 serverPath="$basePath/pkg/server"
 
-# load env
-set -a
-dotenvPath="$serverPath/.env.dev"
-source "$dotenvPath"
-set +a
+# Set env
+DBPath=../../dev-server.db
 
 # copy assets
 mkdir -p "$basePath/pkg/server/static"

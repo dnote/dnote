@@ -37,20 +37,24 @@ func initDB(dbPath string) *gorm.DB {
 	return db
 }
 
+func getEmailBackend() mailer.Backend {
+	defaultBackend, err := mailer.NewDefaultBackend()
+	if err != nil {
+		log.Debug("SMTP not configured, using StdoutBackend for emails")
+		return mailer.NewStdoutBackend()
+	}
+
+	log.Debug("Email backend configured")
+	return defaultBackend
+}
+
 func initApp(cfg config.Config) app.App {
 	db := initDB(cfg.DBPath)
-
-	emailBackend, err := mailer.NewDefaultBackend()
-	if err != nil {
-		emailBackend = &mailer.DefaultBackend{Enabled: false}
-	} else {
-		log.Info("Email backend configured")
-	}
+	emailBackend := getEmailBackend()
 
 	return app.App{
 		DB:                  db,
 		Clock:               clock.New(),
-		EmailTemplates:      mailer.NewTemplates(),
 		EmailBackend:        emailBackend,
 		HTTP500Page:         cfg.HTTP500Page,
 		WebURL:              cfg.WebURL,

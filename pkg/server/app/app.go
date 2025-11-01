@@ -29,8 +29,6 @@ var (
 	ErrEmptyClock = errors.New("No clock was provided")
 	// ErrEmptyWebURL is an error for missing WebURL content in the app configuration
 	ErrEmptyWebURL = errors.New("No WebURL was provided")
-	// ErrEmptyEmailTemplates is an error for missing EmailTemplates content in the app configuration
-	ErrEmptyEmailTemplates = errors.New("No EmailTemplate store was provided")
 	// ErrEmptyEmailBackend is an error for missing EmailBackend content in the app configuration
 	ErrEmptyEmailBackend = errors.New("No EmailBackend was provided")
 	// ErrEmptyHTTP500Page is an error for missing HTTP 500 page content
@@ -41,7 +39,6 @@ var (
 type App struct {
 	DB                  *gorm.DB
 	Clock               clock.Clock
-	EmailTemplates      mailer.Templates
 	EmailBackend        mailer.Backend
 	Files               map[string][]byte
 	HTTP500Page         []byte
@@ -59,9 +56,6 @@ func (a *App) Validate() error {
 	}
 	if a.Clock == nil {
 		return ErrEmptyClock
-	}
-	if a.EmailTemplates == nil {
-		return ErrEmptyEmailTemplates
 	}
 	if a.EmailBackend == nil {
 		return ErrEmptyEmailBackend

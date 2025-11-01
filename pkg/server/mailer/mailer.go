@@ -40,13 +40,19 @@ var (
 	EmailKindText = "text/plain"
 )
 
-// template is the common interface shared between Template from
+// tmpl is the common interface shared between Template from
 // html/template and text/template
-type template interface {
+type tmpl interface {
 	Execute(wr io.Writer, data interface{}) error
 }
 
-// Templates holds the parsed email templates
+// template wraps a template with its subject line
+type template struct {
+	tmpl    tmpl
+	subject string
+}
+
+// Templates holds the parsed email templates with their subjects
 type Templates map[string]template
 
 func getTemplateKey(name, kind string) string {
@@ -56,16 +62,19 @@ func getTemplateKey(name, kind string) string {
 func (tmpl Templates) get(name, kind string) (template, error) {
 	key := getTemplateKey(name, kind)
 	t := tmpl[key]
-	if t == nil {
-		return nil, errors.Errorf("unsupported template '%s' with type '%s'", name, kind)
+	if t.tmpl == nil {
+		return template{}, errors.Errorf("unsupported template '%s' with type '%s'", name, kind)
 	}
 
 	return t, nil
 }
 
-func (tmpl Templates) set(name, kind string, t template) {
+func (tmpl Templates) set(name, kind string, t tmpl, subject string) {
 	key := getTemplateKey(name, kind)
-	tmpl[key] = t
+	tmpl[key] = template{
+		tmpl:    t,
+		subject: subject,
+	}
 }
 
 // NewTemplates initializes templates
@@ -84,15 +93,15 @@ func NewTemplates() Templates {
 	}
 
 	T := Templates{}
-	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText)
-	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText)
-	T.set(EmailTypeWelcome, EmailKindText, welcomeText)
+	T.set(EmailTypeResetPassword, EmailKindText, passwordResetText, "Reset your Dnote password")
+	T.set(EmailTypeResetPasswordAlert, EmailKindText, passwordResetAlertText, "Your Dnote password was changed")
+	T.set(EmailTypeWelcome, EmailKindText, welcomeText, "Welcome to Dnote!")
 
 	return T
 }
 
 // initTextTmpl returns a template instance by parsing the template with the given name
-func initTextTmpl(templateName string) (template, error) {
+func initTextTmpl(templateName string) (tmpl, error) {
 	filename := fmt.Sprintf("%s.txt", templateName)
 
 	content, err := templates.Files.ReadFile(filename)
@@ -108,17 +117,17 @@ func initTextTmpl(templateName string) (template, error) {
 	return t, nil
 }
 
-// Execute executes the template with the given name with the givn data
-func (tmpl Templates) Execute(name, kind string, data any) (string, error) {
+// Execute executes the template and returns the subject, body, and any error
+func (tmpl Templates) Execute(name, kind string, data any) (subject, body string, err error) {
 	t, err := tmpl.get(name, kind)
 	if err != nil {
-		return "", errors.Wrap(err, "getting template")
+		return "", "", errors.Wrap(err, "getting template")
 	}
 
 	buf := new(bytes.Buffer)
-	if err := t.Execute(buf, data); err != nil {
-		return "", errors.Wrap(err, "executing the template")
+	if err := t.tmpl.Execute(buf, data); err != nil {
+		return "", "", errors.Wrap(err, "executing the template")
 	}
 
-	return buf.String(), nil
+	return t.subject, buf.String(), nil
 }

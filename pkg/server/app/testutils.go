@@ -18,7 +18,6 @@ package app
 import (
 	"github.com/dnote/dnote/pkg/clock"
 	"github.com/dnote/dnote/pkg/server/assets"
-	"github.com/dnote/dnote/pkg/server/mailer"
 	"github.com/dnote/dnote/pkg/server/testutils"
 )
 
@@ -26,7 +25,6 @@ import (
 func NewTest() App {
 	return App{
 		Clock:               clock.NewMock(),
-		EmailTemplates:      mailer.NewTemplates(),
 		EmailBackend:        &testutils.MockEmailbackendImplementation{},
 		HTTP500Page:         assets.MustGetHTTP500ErrorPage(),
 		WebURL:              "http://127.0.0.0.1",

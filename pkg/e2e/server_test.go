@@ -50,8 +50,6 @@ func TestServerStart(t *testing.T) {
 	cmd := exec.Command(testServerBinary, "start", "--port", port)
 	cmd.Env = append(os.Environ(),
 		"DBPath="+tmpDB,
-		"WebURL=http://localhost:"+port,
-		"APP_ENV=PRODUCTION",
 	)
 
 	if err := cmd.Start(); err != nil {
@@ -140,7 +138,6 @@ func TestServerStartHelp(t *testing.T) {
 
 	outputStr := string(output)
 	assert.Equal(t, strings.Contains(outputStr, "dnote-server start [flags]"), true, "output should contain usage")
-	assert.Equal(t, strings.Contains(outputStr, "--appEnv"), true, "output should contain appEnv flag")
 	assert.Equal(t, strings.Contains(outputStr, "--port"), true, "output should contain port flag")
 	assert.Equal(t, strings.Contains(outputStr, "--webUrl"), true, "output should contain webUrl flag")
 	assert.Equal(t, strings.Contains(outputStr, "--dbPath"), true, "output should contain dbPath flag")
