@@ -16,6 +16,8 @@
 package cmd
 
 import (
+	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -106,4 +108,51 @@ func TestUserResetPasswordCmd(t *testing.T) {
 	// Verify old password doesn't work
 	err = bcrypt.CompareHashAndPassword([]byte(updatedUser.Password.String), []byte("oldpassword123"))
 	assert.Equal(t, err != nil, true, "old password should not match")
+}
+
+func TestUserListCmd(t *testing.T) {
+	t.Run("multiple users", func(t *testing.T) {
+		tmpDB := t.TempDir() + "/test.db"
+
+		// Create multiple users
+		db := testutils.InitDB(tmpDB)
+		user1 := testutils.SetupUserData(db, "alice@example.com", "password123")
+		user2 := testutils.SetupUserData(db, "bob@example.com", "password123")
+		user3 := testutils.SetupUserData(db, "charlie@example.com", "password123")
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+
+		// Capture output
+		var buf bytes.Buffer
+		userListCmd([]string{"--dbPath", tmpDB}, &buf)
+
+		// Verify output matches expected format
+		output := strings.TrimSpace(buf.String())
+		lines := strings.Split(output, "\n")
+
+		expectedLine1 := fmt.Sprintf("%s,alice@example.com,%s", user1.UUID, user1.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"))
+		expectedLine2 := fmt.Sprintf("%s,bob@example.com,%s", user2.UUID, user2.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"))
+		expectedLine3 := fmt.Sprintf("%s,charlie@example.com,%s", user3.UUID, user3.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"))
+
+		assert.Equal(t, lines[0], expectedLine1, "line 1 should match")
+		assert.Equal(t, lines[1], expectedLine2, "line 2 should match")
+		assert.Equal(t, lines[2], expectedLine3, "line 3 should match")
+	})
+
+	t.Run("empty database", func(t *testing.T) {
+		tmpDB := t.TempDir() + "/test.db"
+
+		// Initialize empty database
+		db := testutils.InitDB(tmpDB)
+		sqlDB, _ := db.DB()
+		sqlDB.Close()
+
+		// Capture output
+		var buf bytes.Buffer
+		userListCmd([]string{"--dbPath", tmpDB}, &buf)
+
+		// Verify no output
+		output := buf.String()
+		assert.Equal(t, output, "", "should have no output for empty database")
+	})
 }

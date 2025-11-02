@@ -51,7 +51,7 @@ func userCreateCmd(args []string) {
 	requireString(fs, *email, "email")
 	requireString(fs, *password, "password")
 
-	a, cleanup := setupAppWithDB(fs, *dbPath)
+	a, cleanup := createApp(fs, *dbPath)
 	defer cleanup()
 
 	_, err := a.CreateUser(*email, *password, *password)
@@ -74,7 +74,7 @@ func userRemoveCmd(args []string, stdin io.Reader) {
 
 	requireString(fs, *email, "email")
 
-	a, cleanup := setupAppWithDB(fs, *dbPath)
+	a, cleanup := createApp(fs, *dbPath)
 	defer cleanup()
 
 	// Check if user exists first
@@ -127,7 +127,7 @@ func userResetPasswordCmd(args []string) {
 	requireString(fs, *email, "email")
 	requireString(fs, *password, "password")
 
-	a, cleanup := setupAppWithDB(fs, *dbPath)
+	a, cleanup := createApp(fs, *dbPath)
 	defer cleanup()
 
 	// Find the user
@@ -151,6 +151,27 @@ func userResetPasswordCmd(args []string) {
 	fmt.Printf("Email: %s\n", *email)
 }
 
+func userListCmd(args []string, output io.Writer) {
+	fs := setupFlagSet("list", "dnote-server user list")
+
+	dbPath := fs.String("dbPath", "", "Path to SQLite database file (env: DBPath, default: $XDG_DATA_HOME/dnote/server.db)")
+
+	fs.Parse(args)
+
+	a, cleanup := createApp(fs, *dbPath)
+	defer cleanup()
+
+	users, err := a.GetAllUsers()
+	if err != nil {
+		log.ErrorWrap(err, "listing users")
+		os.Exit(1)
+	}
+
+	for _, user := range users {
+		fmt.Fprintf(output, "%s,%s,%s\n", user.UUID, user.Email.String, user.CreatedAt.UTC().Format("2006-01-02T15:04:05Z"))
+	}
+}
+
 func userCmd(args []string) {
 	if len(args) < 1 {
 		fmt.Println(`Usage:
@@ -158,6 +179,7 @@ func userCmd(args []string) {
 
 Available commands:
   create: Create a new user
+  list: List all users
   remove: Remove a user
   reset-password: Reset a user's password`)
 		os.Exit(1)
@@ -172,6 +194,8 @@ Available commands:
 	switch subcommand {
 	case "create":
 		userCreateCmd(subArgs)
+	case "list":
+		userListCmd(subArgs, os.Stdout)
 	case "remove":
 		userRemoveCmd(subArgs, os.Stdin)
 	case "reset-password":
@@ -180,6 +204,7 @@ Available commands:
 		fmt.Printf("Unknown subcommand: %s\n\n", subcommand)
 		fmt.Println(`Available commands:
   create: Create a new user
+  list: List all users
   remove: Remove a user (only if they have no notes or books)
   reset-password: Reset a user's password`)
 		os.Exit(1)

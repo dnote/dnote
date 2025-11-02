@@ -331,3 +331,23 @@ func TestServerUserCreateHelp(t *testing.T) {
 	assert.Equal(t, strings.Contains(outputStr, "--password"), true, "help should show --password (double dash)")
 	assert.Equal(t, strings.Contains(outputStr, "--dbPath"), true, "help should show --dbPath (double dash)")
 }
+
+func TestServerUserList(t *testing.T) {
+	tmpDB := t.TempDir() + "/test.db"
+
+	// Create two users
+	exec.Command(testServerBinary, "user", "create", "--dbPath", tmpDB, "--email", "alice@example.com", "--password", "password123").CombinedOutput()
+	exec.Command(testServerBinary, "user", "create", "--dbPath", tmpDB, "--email", "bob@example.com", "--password", "password123").CombinedOutput()
+
+	// List users
+	listCmd := exec.Command(testServerBinary, "user", "list", "--dbPath", tmpDB)
+	output, err := listCmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("user list failed: %v\nOutput: %s", err, output)
+	}
+
+	outputStr := string(output)
+	assert.Equal(t, strings.Contains(outputStr, "alice@example.com"), true, "output should have alice")
+	assert.Equal(t, strings.Contains(outputStr, "bob@example.com"), true, "output should have bob")
+}

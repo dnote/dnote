@@ -116,6 +116,17 @@ func (a *App) GetUserByEmail(email string) (*database.User, error) {
 	return &user, nil
 }
 
+// GetAllUsers retrieves all users from the database
+func (a *App) GetAllUsers() ([]database.User, error) {
+	var users []database.User
+	err := a.DB.Find(&users).Error
+	if err != nil {
+		return nil, pkgErrors.Wrap(err, "finding users")
+	}
+
+	return users, nil
+}
+
 // Authenticate authenticates a user
 func (a *App) Authenticate(email, password string) (*database.User, error) {
 	user, err := a.GetUserByEmail(email)

@@ -111,8 +111,8 @@ func requireString(fs *flag.FlagSet, value, fieldName string) {
 	}
 }
 
-// setupAppWithDB creates config, initializes app, and returns cleanup function
-func setupAppWithDB(fs *flag.FlagSet, dbPath string) (*app.App, func()) {
+// createApp creates config, initializes app, and returns cleanup function
+func createApp(fs *flag.FlagSet, dbPath string) (*app.App, func()) {
 	cfg, err := config.New(config.Params{
 		DBPath: dbPath,
 	})

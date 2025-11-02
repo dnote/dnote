@@ -108,6 +108,72 @@ func TestGetUserByEmail(t *testing.T) {
 	})
 }
 
+func TestGetAllUsers(t *testing.T) {
+	t.Run("success with multiple users", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user1 := testutils.SetupUserData(db, "alice@example.com", "password123")
+		user2 := testutils.SetupUserData(db, "bob@example.com", "password123")
+		user3 := testutils.SetupUserData(db, "charlie@example.com", "password123")
+
+		a := NewTest()
+		a.DB = db
+
+		users, err := a.GetAllUsers()
+
+		assert.Equal(t, err, nil, "should not error")
+		assert.Equal(t, len(users), 3, "should return 3 users")
+
+		// Verify all users are returned
+		emails := make(map[string]bool)
+		for _, user := range users {
+			emails[user.Email.String] = true
+		}
+		assert.Equal(t, emails["alice@example.com"], true, "alice should be in results")
+		assert.Equal(t, emails["bob@example.com"], true, "bob should be in results")
+		assert.Equal(t, emails["charlie@example.com"], true, "charlie should be in results")
+
+		// Verify user details match
+		for _, user := range users {
+			if user.Email.String == "alice@example.com" {
+				assert.Equal(t, user.ID, user1.ID, "alice ID mismatch")
+			} else if user.Email.String == "bob@example.com" {
+				assert.Equal(t, user.ID, user2.ID, "bob ID mismatch")
+			} else if user.Email.String == "charlie@example.com" {
+				assert.Equal(t, user.ID, user3.ID, "charlie ID mismatch")
+			}
+		}
+	})
+
+	t.Run("empty database", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		a := NewTest()
+		a.DB = db
+
+		users, err := a.GetAllUsers()
+
+		assert.Equal(t, err, nil, "should not error")
+		assert.Equal(t, len(users), 0, "should return 0 users")
+	})
+
+	t.Run("single user", func(t *testing.T) {
+		db := testutils.InitMemoryDB(t)
+
+		user := testutils.SetupUserData(db, "alice@example.com", "password123")
+
+		a := NewTest()
+		a.DB = db
+
+		users, err := a.GetAllUsers()
+
+		assert.Equal(t, err, nil, "should not error")
+		assert.Equal(t, len(users), 1, "should return 1 user")
+		assert.Equal(t, users[0].Email.String, "alice@example.com", "email mismatch")
+		assert.Equal(t, users[0].ID, user.ID, "user ID mismatch")
+	})
+}
+
 func TestCreateUser(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db := testutils.InitMemoryDB(t)
