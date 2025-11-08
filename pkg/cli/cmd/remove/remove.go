@@ -17,6 +17,7 @@ package remove
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/dnote/dnote/pkg/cli/context"
@@ -129,7 +130,7 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 		return err
 	}
 
-	output.NoteInfo(noteInfo)
+	output.NoteInfo(os.Stdout, noteInfo)
 
 	ok, err := maybeConfirm("remove this note?", false)
 	if err != nil {

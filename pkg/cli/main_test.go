@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/dnote/dnote/pkg/assert"
@@ -567,4 +568,66 @@ func TestDBPathFlag(t *testing.T) {
 	var db2HasDB1Book int
 	db2.QueryRow("SELECT count(*) FROM books WHERE label = ?", "db1-book").Scan(&db2HasDB1Book)
 	assert.Equal(t, db2HasDB1Book, 0, "db2 should not have db1's book")
+}
+
+func TestView(t *testing.T) {
+	t.Run("view note by rowid", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		testutils.Setup4(t, db)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view", "1")
+
+		assert.Equal(t, strings.Contains(output, "Booleans have toString()"), true, "should contain note content")
+		assert.Equal(t, strings.Contains(output, "book name"), true, "should show metadata")
+	})
+
+	t.Run("view note content only", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		testutils.Setup4(t, db)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view", "1", "--content-only")
+
+		assert.Equal(t, strings.Contains(output, "Booleans have toString()"), true, "should contain note content")
+		assert.Equal(t, strings.Contains(output, "book name"), false, "should not show metadata")
+	})
+
+	t.Run("list books", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		testutils.Setup1(t, db)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view")
+
+		assert.Equal(t, strings.Contains(output, "js"), true, "should list js book")
+		assert.Equal(t, strings.Contains(output, "linux"), true, "should list linux book")
+	})
+
+	t.Run("list notes in book", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		testutils.Setup2(t, db)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view", "js")
+
+		assert.Equal(t, strings.Contains(output, "n1 body"), true, "should list note 1")
+		assert.Equal(t, strings.Contains(output, "n2 body"), true, "should list note 2")
+	})
+
+	t.Run("view note by book name and rowid", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		testutils.Setup4(t, db)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view", "js", "2")
+
+		assert.Equal(t, strings.Contains(output, "Date object implements mathematical comparisons"), true, "should contain note content")
+		assert.Equal(t, strings.Contains(output, "book name"), true, "should show metadata")
+	})
 }

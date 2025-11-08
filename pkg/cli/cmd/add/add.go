@@ -131,7 +131,7 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 			return err
 		}
 
-		output.NoteInfo(info)
+		output.NoteInfo(os.Stdout, info)
 
 		if err := upgrade.Check(ctx); err != nil {
 			log.Error(errors.Wrap(err, "automatically checking updates").Error())

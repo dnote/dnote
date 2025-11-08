@@ -166,7 +166,7 @@ func runNote(ctx context.DnoteCtx, rowIDArg string) error {
 	}
 
 	log.Success("edited the note\n")
-	output.NoteInfo(noteInfo)
+	output.NoteInfo(os.Stdout, noteInfo)
 
 	return nil
 }

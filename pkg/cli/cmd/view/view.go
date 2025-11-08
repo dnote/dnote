@@ -16,14 +16,13 @@
 package view
 
 import (
+	"os"
+
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
+	"github.com/dnote/dnote/pkg/cli/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
-	"github.com/dnote/dnote/pkg/cli/cmd/cat"
-	"github.com/dnote/dnote/pkg/cli/cmd/ls"
-	"github.com/dnote/dnote/pkg/cli/utils"
 )
 
 var example = `
@@ -68,27 +67,26 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
-		var run infra.RunEFunc
-
 		if len(args) == 0 {
-			run = ls.NewRun(ctx, nameOnly)
+			// List all books
+			return listBooks(ctx, os.Stdout, nameOnly)
 		} else if len(args) == 1 {
 			if nameOnly {
 				return errors.New("--name-only flag is only valid when viewing books")
 			}
 
 			if utils.IsNumber(args[0]) {
-				run = cat.NewRun(ctx, contentOnly)
+				// View a note by index
+				return viewNote(ctx, os.Stdout, args[0], contentOnly)
 			} else {
-				run = ls.NewRun(ctx, false)
+				// List notes in a book
+				return listNotes(ctx, os.Stdout, args[0])
 			}
 		} else if len(args) == 2 {
-			// DEPRECATED: passing book name to view command is deprecated
-			run = cat.NewRun(ctx, false)
-		} else {
-			return errors.New("Incorrect number of arguments")
+			// View a note in a book (book name + note index)
+			return viewNote(ctx, os.Stdout, args[1], contentOnly)
 		}
 
-		return run(cmd, args)
+		return errors.New("Incorrect number of arguments")
 	}
 }

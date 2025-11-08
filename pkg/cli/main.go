@@ -26,12 +26,10 @@ import (
 
 	// commands
 	"github.com/dnote/dnote/pkg/cli/cmd/add"
-	"github.com/dnote/dnote/pkg/cli/cmd/cat"
 	"github.com/dnote/dnote/pkg/cli/cmd/edit"
 	"github.com/dnote/dnote/pkg/cli/cmd/find"
 	"github.com/dnote/dnote/pkg/cli/cmd/login"
 	"github.com/dnote/dnote/pkg/cli/cmd/logout"
-	"github.com/dnote/dnote/pkg/cli/cmd/ls"
 	"github.com/dnote/dnote/pkg/cli/cmd/remove"
 	"github.com/dnote/dnote/pkg/cli/cmd/root"
 	"github.com/dnote/dnote/pkg/cli/cmd/sync"
@@ -79,10 +77,8 @@ func main() {
 	root.Register(login.NewCmd(*ctx))
 	root.Register(logout.NewCmd(*ctx))
 	root.Register(add.NewCmd(*ctx))
-	root.Register(ls.NewCmd(*ctx))
 	root.Register(sync.NewCmd(*ctx))
 	root.Register(version.NewCmd(*ctx))
-	root.Register(cat.NewCmd(*ctx))
 	root.Register(view.NewCmd(*ctx))
 	root.Register(find.NewCmd(*ctx))
 

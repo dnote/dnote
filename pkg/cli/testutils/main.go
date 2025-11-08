@@ -144,7 +144,7 @@ type RunDnoteCmdOptions struct {
 }
 
 // RunDnoteCmd runs a dnote command
-func RunDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, binaryName string, arg ...string) {
+func RunDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, binaryName string, arg ...string) string {
 	t.Logf("running: %s %s", binaryName, strings.Join(arg, " "))
 
 	cmd, stderr, stdout, err := NewDnoteCmd(opts, binaryName, arg...)
@@ -162,6 +162,8 @@ func RunDnoteCmd(t *testing.T, opts RunDnoteCmdOptions, binaryName string, arg .
 
 	// Print stdout if and only if test fails later
 	t.Logf("\n%s", stdout)
+
+	return stdout.String()
 }
 
 // WaitDnoteCmd runs a dnote command and passes stdout to the callback.

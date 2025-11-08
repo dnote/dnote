@@ -13,75 +13,18 @@
  * limitations under the License.
  */
 
-package ls
+package view
 
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/dnote/dnote/pkg/cli/context"
-	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
-
-var example = `
- * List all books
- dnote ls
-
- * List notes in a book
- dnote ls javascript
- `
-
-var deprecationWarning = `and "view" will replace it in the future version.
-
-Run "dnote view --help" for more information.
-`
-
-func preRun(cmd *cobra.Command, args []string) error {
-	if len(args) > 1 {
-		return errors.New("Incorrect number of argument")
-	}
-
-	return nil
-}
-
-// NewCmd returns a new ls command
-func NewCmd(ctx context.DnoteCtx) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:        "ls <book name?>",
-		Aliases:    []string{"l", "notes"},
-		Short:      "List all notes",
-		Example:    example,
-		RunE:       NewRun(ctx, false),
-		PreRunE:    preRun,
-		Deprecated: deprecationWarning,
-	}
-
-	return cmd
-}
-
-// NewRun returns a new run function for ls
-func NewRun(ctx context.DnoteCtx, nameOnly bool) infra.RunEFunc {
-	return func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			if err := printBooks(ctx, nameOnly); err != nil {
-				return errors.Wrap(err, "viewing books")
-			}
-
-			return nil
-		}
-
-		bookName := args[0]
-		if err := printNotes(ctx, bookName); err != nil {
-			return errors.Wrapf(err, "viewing book '%s'", bookName)
-		}
-
-		return nil
-	}
-}
 
 // bookInfo is an information about the book to be printed on screen
 type bookInfo struct {
@@ -97,15 +40,13 @@ type noteInfo struct {
 
 // getNewlineIdx returns the index of newline character in a string
 func getNewlineIdx(str string) int {
-	var ret int
-
-	ret = strings.Index(str, "\n")
-
-	if ret == -1 {
-		ret = strings.Index(str, "\r\n")
+	// Check for \r\n first
+	if idx := strings.Index(str, "\r\n"); idx != -1 {
+		return idx
 	}
 
-	return ret
+	// Then check for \n
+	return strings.Index(str, "\n")
 }
 
 // formatBody returns an excerpt of the given raw note content and a boolean
@@ -123,15 +64,15 @@ func formatBody(noteBody string) (string, bool) {
 	return strings.Trim(trimmed, " "), false
 }
 
-func printBookLine(info bookInfo, nameOnly bool) {
+func printBookLine(w io.Writer, info bookInfo, nameOnly bool) {
 	if nameOnly {
-		fmt.Println(info.BookLabel)
+		fmt.Fprintln(w, info.BookLabel)
 	} else {
-		log.Printf("%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
+		fmt.Fprintf(w, "%s %s\n", info.BookLabel, log.ColorYellow.Sprintf("(%d)", info.NoteCount))
 	}
 }
 
-func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
+func listBooks(ctx context.DnoteCtx, w io.Writer, nameOnly bool) error {
 	db := ctx.DB
 
 	rows, err := db.Query(`SELECT books.label, count(notes.uuid) note_count
@@ -157,13 +98,13 @@ func printBooks(ctx context.DnoteCtx, nameOnly bool) error {
 	}
 
 	for _, info := range infos {
-		printBookLine(info, nameOnly)
+		printBookLine(w, info, nameOnly)
 	}
 
 	return nil
 }
 
-func printNotes(ctx context.DnoteCtx, bookName string) error {
+func listNotes(ctx context.DnoteCtx, w io.Writer, bookName string) error {
 	db := ctx.DB
 
 	var bookUUID string
@@ -191,7 +132,7 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 		infos = append(infos, info)
 	}
 
-	log.Infof("on book %s\n", bookName)
+	fmt.Fprintf(w, "on book %s\n", bookName)
 
 	for _, info := range infos {
 		body, isExcerpt := formatBody(info.Body)
@@ -201,7 +142,7 @@ func printNotes(ctx context.DnoteCtx, bookName string) error {
 			body = fmt.Sprintf("%s %s", body, log.ColorYellow.Sprintf("[---More---]"))
 		}
 
-		log.Plainf("%s %s\n", rowid, body)
+		fmt.Fprintf(w, "%s %s\n", rowid, body)
 	}
 
 	return nil
