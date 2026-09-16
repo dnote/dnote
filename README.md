@@ -57,6 +57,12 @@ Then run:
 docker-compose up -d
 ```
 
+### Easypanel
+
+[Easypanel](https://easypanel.io) is a self-hosted Docker deployment platform. It has a one-click Easypanel template for the Dnote server, which runs the image above with a persistent volume for `/data`.
+
+[![Deploy on Easypanel](https://easypanel.io/img/deploy-on-easypanel-40.svg)](https://easypanel.io/templates/dnote)
+
 Or see the [guide](https://www.getdnote.com/docs/server/manual) for binary installation.
 
 ## Documentation
