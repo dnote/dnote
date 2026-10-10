@@ -55,6 +55,30 @@ func TestGetNewlineIdx(t *testing.T) {
 			input:    "\r\n",
 			expected: 0,
 		},
+		{
+			input:    "你好\n世界",
+			expected: 2,
+		},
+		{
+			input:    "你好\r\n世界",
+			expected: 2,
+		},
+		{
+			input:    "こんにちは\n世界",
+			expected: 5,
+		},
+		{
+			input:    "这是第一条工作总结了。\n这个工具看起来还是不错的。",
+			expected: 11,
+		},
+		{
+			input:    "这是第一条工作总结了。\r\n这个工具看起来还是不错的。",
+			expected: 11,
+		},
+		{
+			input:    "🚀\nnewline",
+			expected: 1,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -111,6 +135,46 @@ func TestFormatBody(t *testing.T) {
 			expectedBody:    "line with trailing newlines",
 			expectedExcerpt: false,
 		},
+		{
+			input:           "这是第一条工作总结了。\n这个工具看起来还是不错的。",
+			expectedBody:    "这是第一条工作总结了。",
+			expectedExcerpt: true,
+		},
+		{
+			input:           "这是第一条工作总结了。\r\n这个工具看起来还是不错的。",
+			expectedBody:    "这是第一条工作总结了。",
+			expectedExcerpt: true,
+		},
+		{
+			input:           "这是第一条工作总结了。",
+			expectedBody:    "这是第一条工作总结了。",
+			expectedExcerpt: false,
+		},
+		{
+			input:           "这是第一条工作总结了。\n",
+			expectedBody:    "这是第一条工作总结了。",
+			expectedExcerpt: false,
+		},
+		{
+			input:           "  这是第一条工作总结了。  \n第二行",
+			expectedBody:    "这是第一条工作总结了。",
+			expectedExcerpt: true,
+		},
+		{
+			input:           "こんにちは世界\n二行目",
+			expectedBody:    "こんにちは世界",
+			expectedExcerpt: true,
+		},
+		{
+			input:           "こんにちは世界\r\n二行目",
+			expectedBody:    "こんにちは世界",
+			expectedExcerpt: true,
+		},
+		{
+			input:           "🚀 note with emoji 🎉\nsecond line",
+			expectedBody:    "🚀 note with emoji 🎉",
+			expectedExcerpt: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -149,6 +213,32 @@ func TestListNotes(t *testing.T) {
 	assert.Equal(t, strings.Contains(got, "multiline note"), true, "should show first line of multiline note")
 	assert.Equal(t, strings.Contains(got, "[---More---]"), true, "should show more indicator for multiline note")
 	assert.Equal(t, strings.Contains(got, "with second line"), false, "should not show second line of multiline note")
+}
+
+func TestListNotesMultibyte(t *testing.T) {
+	db := database.InitTestMemoryDB(t)
+	defer db.Close()
+
+	bookUUID := "multibyte-book-uuid"
+	database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", bookUUID, "working_summary")
+	database.MustExec(t, "inserting note 1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?)", "note-1", bookUUID, "这是第一条工作总结了。\n这个工具看起来还是不错的。", 1515199943)
+	database.MustExec(t, "inserting note 2", db, "INSERT INTO notes (uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?)", "note-2", bookUUID, "こんにちは世界\n二行目", 1515199944)
+	database.MustExec(t, "inserting note 3", db, "INSERT INTO notes (uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?)", "note-3", bookUUID, "Emoji test 🚀🌟\nline 2", 1515199945)
+
+	ctx := context.DnoteCtx{DB: db}
+	var buf bytes.Buffer
+
+	err := listNotes(ctx, &buf, "working_summary")
+	assert.Equal(t, err, nil, "listNotes should succeed")
+
+	got := buf.String()
+	assert.Equal(t, strings.Contains(got, "on book working_summary"), true, "should show book name")
+	assert.Equal(t, strings.Contains(got, "这是第一条工作总结了。"), true, "should contain full first line of Chinese note")
+	assert.Equal(t, strings.Contains(got, "这个工具看起来还是不错的。"), false, "should not contain second line of Chinese note")
+	assert.Equal(t, strings.Contains(got, "こんにちは世界"), true, "should contain full first line of Japanese note")
+	assert.Equal(t, strings.Contains(got, "二行目"), false, "should not contain second line of Japanese note")
+	assert.Equal(t, strings.Contains(got, "Emoji test 🚀🌟"), true, "should contain full first line of emoji note")
+	assert.Equal(t, strings.Contains(got, "[---More---]"), true, "should show more indicator")
 }
 
 func TestListBooks(t *testing.T) {

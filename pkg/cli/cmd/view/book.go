@@ -38,30 +38,35 @@ type noteInfo struct {
 	Body  string
 }
 
-// getNewlineIdx returns the index of newline character in a string
+// getNewlineIdx returns the rune index of newline character in a string
 func getNewlineIdx(str string) int {
-	// Check for \r\n first
-	if idx := strings.Index(str, "\r\n"); idx != -1 {
-		return idx
+	runes := []rune(str)
+	for i, r := range runes {
+		if r == '\r' && i+1 < len(runes) && runes[i+1] == '\n' {
+			return i
+		}
+		if r == '\n' {
+			return i
+		}
 	}
 
-	// Then check for \n
-	return strings.Index(str, "\n")
+	return -1
 }
 
 // formatBody returns an excerpt of the given raw note content and a boolean
 // indicating if the returned string has been excertped
 func formatBody(noteBody string) (string, bool) {
 	trimmed := strings.TrimRight(noteBody, "\r\n")
+	runes := []rune(trimmed)
 	newlineIdx := getNewlineIdx(trimmed)
 
 	if newlineIdx > -1 {
-		ret := strings.Trim(trimmed[0:newlineIdx], " ")
+		ret := strings.Trim(string(runes[0:newlineIdx]), " ")
 
 		return ret, true
 	}
 
-	return strings.Trim(trimmed, " "), false
+	return strings.Trim(string(runes), " "), false
 }
 
 func printBookLine(w io.Writer, info bookInfo, nameOnly bool) {
