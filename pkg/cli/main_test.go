@@ -630,4 +630,18 @@ func TestView(t *testing.T) {
 		assert.Equal(t, strings.Contains(output, "Date object implements mathematical comparisons"), true, "should contain note content")
 		assert.Equal(t, strings.Contains(output, "book name"), true, "should show metadata")
 	})
+
+	t.Run("list notes with multibyte and cjk content", func(t *testing.T) {
+		_, opts := setupTestEnv(t)
+
+		db, dbPath := database.InitTestFileDB(t)
+		bUUID := "cjk-book-uuid"
+		database.MustExec(t, "inserting book", db, "INSERT INTO books (uuid, label) VALUES (?, ?)", bUUID, "cjk")
+		database.MustExec(t, "inserting note 1", db, "INSERT INTO notes (uuid, book_uuid, body, added_on) VALUES (?, ?, ?, ?)", "n1", bUUID, "这是第一条工作总结了。\n这个工具看起来还是不错的。", 1515199943)
+
+		output := testutils.RunDnoteCmd(t, opts, binaryName, "--dbPath", dbPath, "view", "cjk")
+
+		assert.Equal(t, strings.Contains(output, "这是第一条工作总结了。"), true, "should display complete first line of Chinese note")
+		assert.Equal(t, strings.Contains(output, "[---More---]"), true, "should show more indicator")
+	})
 }

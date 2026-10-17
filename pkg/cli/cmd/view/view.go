@@ -16,11 +16,10 @@
 package view
 
 import (
-	"os"
-
 	"github.com/dnote/dnote/pkg/cli/context"
 	"github.com/dnote/dnote/pkg/cli/infra"
 	"github.com/dnote/dnote/pkg/cli/utils"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -67,9 +66,11 @@ func NewCmd(ctx context.DnoteCtx) *cobra.Command {
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		out := color.Output
+
 		if len(args) == 0 {
 			// List all books
-			return listBooks(ctx, os.Stdout, nameOnly)
+			return listBooks(ctx, out, nameOnly)
 		} else if len(args) == 1 {
 			if nameOnly {
 				return errors.New("--name-only flag is only valid when viewing books")
@@ -77,14 +78,14 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 			if utils.IsNumber(args[0]) {
 				// View a note by index
-				return viewNote(ctx, os.Stdout, args[0], contentOnly)
+				return viewNote(ctx, out, args[0], contentOnly)
 			} else {
 				// List notes in a book
-				return listNotes(ctx, os.Stdout, args[0])
+				return listNotes(ctx, out, args[0])
 			}
 		} else if len(args) == 2 {
 			// View a note in a book (book name + note index)
-			return viewNote(ctx, os.Stdout, args[1], contentOnly)
+			return viewNote(ctx, out, args[1], contentOnly)
 		}
 
 		return errors.New("Incorrect number of arguments")
