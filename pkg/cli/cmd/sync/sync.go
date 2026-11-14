@@ -1090,15 +1090,16 @@ func prepareEmptyServerSync(tx *database.DB) error {
 }
 
 // prepareLocalDataForUpload marks local data as dirty if the server is missing data that the client
-// has previously synced, so that it gets uploaded. It returns the last max USN to use for the rest of the sync.
-func prepareLocalDataForUpload(tx *database.DB, syncState client.GetSyncStateResp, lastSyncAt, lastMaxUSN int) (int, error) {
+// has previously synced, so that it gets uploaded. It resets the last max USN in the database when it
+// does so, and the caller must read it again afterwards.
+func prepareLocalDataForUpload(tx *database.DB, syncState client.GetSyncStateResp, lastSyncAt, lastMaxUSN int) error {
 	// Handle a case where server has MaxUSN=0 but local has data (server switch)
 	var bookCount, noteCount int
 	if err := tx.QueryRow("SELECT count(*) FROM books WHERE deleted = 0").Scan(&bookCount); err != nil {
-		return lastMaxUSN, errors.Wrap(err, "counting local books")
+		return errors.Wrap(err, "counting local books")
 	}
 	if err := tx.QueryRow("SELECT count(*) FROM notes WHERE deleted = 0").Scan(&noteCount); err != nil {
-		return lastMaxUSN, errors.Wrap(err, "counting local notes")
+		return errors.Wrap(err, "counting local notes")
 	}
 
 	// If a client has previously synced (lastMaxUSN > 0) but the server was never synced to (MaxUSN = 0),
@@ -1114,23 +1115,23 @@ func prepareLocalDataForUpload(tx *database.DB, syncState client.GetSyncStateRes
 
 		confirmed, err := ui.Confirm(fmt.Sprintf("Upload %d books and %d notes to the server?", bookCount, noteCount), false)
 		if err != nil {
-			return lastMaxUSN, errors.Wrap(err, "getting user confirmation")
+			return errors.Wrap(err, "getting user confirmation")
 		}
 
 		if !confirmed {
-			return lastMaxUSN, errors.New("sync cancelled by user")
+			return errors.New("sync cancelled by user")
 		}
 
 		fmt.Println() // Add newline after confirmation.
 
 		if err := prepareEmptyServerSync(tx); err != nil {
-			return lastMaxUSN, errors.Wrap(err, "preparing for empty server sync")
+			return errors.Wrap(err, "preparing for empty server sync")
 		}
 
 		// Re-fetch lastMaxUSN after prepareEmptyServerSync
 		lastMaxUSN, err = getLastMaxUSN(tx)
 		if err != nil {
-			return lastMaxUSN, errors.Wrap(err, "getting the last max_usn after prepare")
+			return errors.Wrap(err, "getting the last max_usn after prepare")
 		}
 
 		log.Debug("prepared empty server sync: marked %d books and %d notes as dirty\n", bookCount, noteCount)
@@ -1146,20 +1147,20 @@ func prepareLocalDataForUpload(tx *database.DB, syncState client.GetSyncStateRes
 			syncState.FullSyncBefore, lastSyncAt, lastMaxUSN, syncState.MaxUSN, bookCount, noteCount)
 
 		if err := prepareEmptyServerSync(tx); err != nil {
-			return lastMaxUSN, errors.Wrap(err, "preparing local data for full sync")
+			return errors.Wrap(err, "preparing local data for full sync")
 		}
 
 		// Re-fetch lastMaxUSN after prepareEmptyServerSync
 		var err error
 		lastMaxUSN, err = getLastMaxUSN(tx)
 		if err != nil {
-			return lastMaxUSN, errors.Wrap(err, "getting the last max_usn after prepare")
+			return errors.Wrap(err, "getting the last max_usn after prepare")
 		}
 
 		log.Debug("prepared for full sync: marked %d books and %d notes as dirty\n", bookCount, noteCount)
 	}
 
-	return lastMaxUSN, nil
+	return nil
 }
 
 func newRun(ctx context.DnoteCtx) infra.RunEFunc {
@@ -1199,9 +1200,13 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		log.Debug("lastSyncAt: %d, lastMaxUSN: %d, syncState: %+v\n", lastSyncAt, lastMaxUSN, syncState)
 
-		lastMaxUSN, err = prepareLocalDataForUpload(tx, syncState, lastSyncAt, lastMaxUSN)
-		if err != nil {
+		if err := prepareLocalDataForUpload(tx, syncState, lastSyncAt, lastMaxUSN); err != nil {
 			return err
+		}
+		// The preparation may have reset the last max USN
+		lastMaxUSN, err = getLastMaxUSN(tx)
+		if err != nil {
+			return errors.Wrap(err, "getting the last max_usn after prepare")
 		}
 
 		var syncErr error
