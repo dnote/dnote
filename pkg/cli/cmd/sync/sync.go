@@ -1089,10 +1089,13 @@ func prepareEmptyServerSync(tx *database.DB) error {
 	return nil
 }
 
-// prepareLocalDataForUpload marks local data as dirty if the server is missing data that the client
-// has previously synced, so that it gets uploaded. It resets the last max USN in the database when it
-// does so, and the caller must read it again afterwards.
-func prepareLocalDataForUpload(tx *database.DB, syncState client.GetSyncStateResp, lastSyncAt, lastMaxUSN int) error {
+// markLocalDataDirtyIfServerBehind handles a server that has less data than this client has already
+// synced, which happens when the user switches to a new server or the server is reset. In that case it
+// marks every undeleted local book and note as dirty and resets their USNs and the last max USN to 0,
+// so that the rest of the sync uploads them again. If the server is empty, it asks the user to confirm first.
+//
+// Because it may reset the last max USN in the database, the caller must read it again afterwards.
+func markLocalDataDirtyIfServerBehind(tx *database.DB, syncState client.GetSyncStateResp, lastSyncAt, lastMaxUSN int) error {
 	// Handle a case where server has MaxUSN=0 but local has data (server switch)
 	var bookCount, noteCount int
 	if err := tx.QueryRow("SELECT count(*) FROM books WHERE deleted = 0").Scan(&bookCount); err != nil {
@@ -1200,10 +1203,10 @@ func newRun(ctx context.DnoteCtx) infra.RunEFunc {
 
 		log.Debug("lastSyncAt: %d, lastMaxUSN: %d, syncState: %+v\n", lastSyncAt, lastMaxUSN, syncState)
 
-		if err := prepareLocalDataForUpload(tx, syncState, lastSyncAt, lastMaxUSN); err != nil {
+		if err := markLocalDataDirtyIfServerBehind(tx, syncState, lastSyncAt, lastMaxUSN); err != nil {
 			return err
 		}
-		// The preparation may have reset the last max USN
+		// The last max USN may have been reset
 		lastMaxUSN, err = getLastMaxUSN(tx)
 		if err != nil {
 			return errors.Wrap(err, "getting the last max_usn after prepare")
