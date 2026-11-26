@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/dnote/dnote/pkg/cli/database"
 	"github.com/dnote/dnote/pkg/cli/log"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 type migration struct {
@@ -536,10 +538,11 @@ var lm12 = migration{
 			return errors.Wrap(err, "reading config")
 		}
 
-		// Only set if not already configured
-		if cf.APIEndpoint == "" {
-			cf.APIEndpoint = "https://api.getdnote.com"
+		// The config file is shared by all databases, so leave a configured value alone
+		if cf.APIEndpoint != "" {
+			return nil
 		}
+		cf.APIEndpoint = "https://api.getdnote.com"
 
 		err = config.Write(ctx, cf)
 		if err != nil {
@@ -553,6 +556,20 @@ var lm12 = migration{
 var lm13 = migration{
 	name: "add enableUpgradeCheck to the configuration file",
 	run: func(ctx context.DnoteCtx, tx *database.DB) error {
+		// This runs once per database, but the config file is shared: keep a
+		// value that is already there, including false.
+		raw, err := os.ReadFile(config.GetPath(ctx))
+		if err != nil {
+			return errors.Wrap(err, "reading config file")
+		}
+		var keys map[string]interface{}
+		if err := yaml.Unmarshal(raw, &keys); err != nil {
+			return errors.Wrap(err, "unmarshalling config")
+		}
+		if _, ok := keys["enableUpgradeCheck"]; ok {
+			return nil
+		}
+
 		cf, err := config.Read(ctx)
 		if err != nil {
 			return errors.Wrap(err, "reading config")
